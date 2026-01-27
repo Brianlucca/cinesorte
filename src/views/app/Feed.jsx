@@ -47,6 +47,8 @@ export default function Feed() {
                         item={review}
                         currentUser={user}
                         onDelete={actions.promptDelete}
+                        onLike={actions.handleLike}
+                        onLoadComments={actions.handleLoadComments}
                     />
                     ))
                 ) : (
@@ -61,7 +63,7 @@ export default function Feed() {
                             {state.feedType === 'mine' 
                                 ? 'Você ainda não compartilhou nada.' 
                                 : state.feedType === 'collections'
-                                ? 'Siga usuários para ver suas coleções compartilhadas aqui.'
+                                ? 'Siga usuários para ver suas coleções compartilhadas aqui ou crie a sua.'
                                 : 'Siga outros usuários ou seja o primeiro a postar algo incrível!'}
                         </p>
                         {state.feedType !== 'collections' && (

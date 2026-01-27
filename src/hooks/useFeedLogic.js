@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   getGlobalFeed, 
   getFollowingFeed, 
@@ -11,7 +11,9 @@ import {
   getSuggestions,
   searchUsers,
   getUserStats,
-  getSharedListsFeed
+  getSharedListsFeed,
+  toggleLikeReview, 
+  getComments
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -41,6 +43,9 @@ export function useFeedLogic() {
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userSearchResults, setUserSearchResults] = useState([]);
 
+  const likeTimeouts = useRef({});
+  const likeClickCounts = useRef({});
+
   useEffect(() => {
       async function syncUserStats() {
           if (user?.uid) {
@@ -62,6 +67,7 @@ export function useFeedLogic() {
 
   const loadFeed = useCallback(async () => {
     setLoading(true);
+    setReviews([]); 
     try {
       let data = [];
       if (feedType === 'global') {
@@ -70,10 +76,20 @@ export function useFeedLogic() {
         data = await getFollowingFeed(); 
       } else if (feedType === 'collections') {
         data = await getSharedListsFeed();
+        if (Array.isArray(data)) {
+            data = data.filter(item => item.listCount > 0 && item.listItems && item.listItems.length > 0);
+        }
       } else if (feedType === 'mine' && localUser?.username) {
         data = await getUserReviews(localUser.username);
       }
-      setReviews(Array.isArray(data) ? data : []);
+      
+      const safeData = Array.isArray(data) ? data.map(item => ({
+          ...item,
+          isLikedByCurrentUser: !!item.isLikedByCurrentUser, 
+          replies: item.replies || []
+      })) : [];
+
+      setReviews(safeData);
     } catch (error) { 
       setReviews([]);
     } finally { 
@@ -154,23 +170,27 @@ export function useFeedLogic() {
 
   const handlePostSubmit = async () => {
     if (!postText.trim()) return toast.error('Atenção', 'Escreva algo sobre o título.');
+    if (!selectedMedia) return toast.error('Erro', 'Selecione um filme ou série.');
     
     setIsSubmitting(true);
     try {
-        await postReview({
-            mediaId: selectedMedia.id,
+        const payload = {
+            mediaId: selectedMedia.id.toString(), // Converter para string
             mediaType: selectedMedia.media_type || 'movie',
-            mediaTitle: selectedMedia.title || selectedMedia.name,
+            mediaTitle: selectedMedia.title || selectedMedia.name || "Sem Título",
             posterPath: selectedMedia.poster_path || selectedMedia.profile_path || "",
             backdropPath: selectedMedia.backdrop_path || selectedMedia.profile_path || "",
-            rating: rating,
+            rating: Number(rating),
             text: postText
-        });
+        };
+
+        await postReview(payload);
+        
         toast.success('Publicado', 'Sua avaliação foi postada!');
         handleClosePostModal();
-        loadFeed();
+        loadFeed(); 
     } catch (error) { 
-        toast.error('Erro', 'Falha ao publicar avaliação.');
+        toast.error('Erro', 'Falha ao publicar avaliação. Verifique os dados.');
     } finally {
         setIsSubmitting(false);
     }
@@ -220,6 +240,60 @@ export function useFeedLogic() {
       }
   };
 
+  const handleLike = async (reviewId) => {
+    likeClickCounts.current[reviewId] = (likeClickCounts.current[reviewId] || 0) + 1;
+
+    setReviews(prev => prev.map(r => {
+        if (r.id === reviewId) {
+            const isCurrentlyLiked = !!r.isLikedByCurrentUser;
+            const currentCount = Number(r.likesCount) || 0;
+            
+            const nextState = !isCurrentlyLiked;
+            let nextCount = nextState ? currentCount + 1 : currentCount - 1;
+            if (nextCount < 0) nextCount = 0;
+
+            return {
+                ...r,
+                isLikedByCurrentUser: nextState,
+                likesCount: nextCount
+            };
+        }
+        return r;
+    }));
+
+    if (likeTimeouts.current[reviewId]) {
+        clearTimeout(likeTimeouts.current[reviewId]);
+    }
+
+    likeTimeouts.current[reviewId] = setTimeout(async () => {
+        const clicks = likeClickCounts.current[reviewId] || 0;
+        
+        if (clicks % 2 !== 0) {
+            try {
+                await toggleLikeReview(reviewId);
+            } catch (error) {
+            }
+        }
+        
+        delete likeClickCounts.current[reviewId];
+        delete likeTimeouts.current[reviewId];
+    }, 1000); 
+  };
+
+  const handleLoadComments = async (reviewId) => {
+    try {
+        const comments = await getComments(reviewId);
+        setReviews(prev => prev.map(r => {
+            if (r.id === reviewId) {
+                return { ...r, replies: comments };
+            }
+            return r;
+        }));
+    } catch (error) {
+        toast.error("Erro", "Falha ao carregar comentários.");
+    }
+  };
+
   return {
     user: localUser,
     state: {
@@ -257,7 +331,9 @@ export function useFeedLogic() {
         promptDelete,
         confirmDelete,
         closeDeleteModal: () => setDeleteModal({ isOpen: false, reviewId: null }),
-        setUserSearchQuery
+        setUserSearchQuery,
+        handleLike,
+        handleLoadComments
     }
   };
 }
