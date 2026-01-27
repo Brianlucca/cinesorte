@@ -27,10 +27,14 @@ export function usePublicProfileLogic(username) {
             
             profileData.followersCount = stats.followersCount;
             profileData.followingCount = stats.followingCount;
-            profileData.xp = stats.xp;
+            
+            profileData.xp = stats.totalXp || stats.xp || 0;
+            profileData.levelProgress = stats.xp || 0; 
+            
+            profileData.totalXp = stats.totalXp || 0;
+            profileData.level = stats.level || 1;
             profileData.levelTitle = stats.levelTitle;
             profileData.trophies = stats.trophies || [];
-            profileData.reviewsCount = reviewsData.length;
 
             if (user) {
                 const [followStatus, matchData] = await Promise.all([
