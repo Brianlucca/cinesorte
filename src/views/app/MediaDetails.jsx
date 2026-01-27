@@ -177,7 +177,7 @@ export default function MediaDetails() {
                 <span className="flex items-center gap-2 text-zinc-300">
                     <Calendar size={20} className="text-zinc-400" />{" "}
                     {new Date(
-                        media.release_date || media.first_air_date,
+                      media.release_date || media.first_air_date,
                     ).toLocaleDateString("pt-BR", {
                         year: "numeric",
                         month: "long",
@@ -396,6 +396,7 @@ export default function MediaDetails() {
             onReply={actions.handlePostReply}
             onDelete={actions.handleDeleteReview}
             onDeleteComment={actions.handleDeleteComment}
+            onLike={actions.handleLikeReview}
           />
         </div>
 

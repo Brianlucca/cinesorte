@@ -1,24 +1,45 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Star, MoreVertical, Trash2, MessageCircle, User, Share2, CornerDownRight, ChevronDown, ChevronUp, Crown, Layers, Film } from "lucide-react";
+import { Star, MoreVertical, Trash2, MessageCircle, User, Share2, Heart, ChevronDown, ChevronUp, Crown, Layers, Film, Loader2 } from "lucide-react";
 
-export default function FeedCard({ item, currentUser, onDelete }) {
+export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadComments }) {
   const [showMenu, setShowMenu] = useState(false);
   const [visibleComments, setVisibleComments] = useState(3);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [isLikeAnimating, setIsLikeAnimating] = useState(false);
 
   const isListShare = item.type === 'list_share';
   const isMaster = item.levelTitle === "Mestre da Crítica";
 
   const displayUsername = item.username || item.nickname || "Anônimo";
   const photoURL = item.userPhoto || item.photoURL || null;
+  
   const replies = item.replies || [];
+  const commentsCount = item.commentsCount || 0;
   
   const isOwner = currentUser?.uid === item.userId;
+  
+  const isLiked = !!item.isLikedByCurrentUser;
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString._seconds ? dateString._seconds * 1000 : dateString);
     return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(date);
+  };
+
+  const handleLikeClick = () => {
+      setIsLikeAnimating(true);
+      onLike(item.id);
+      setTimeout(() => setIsLikeAnimating(false), 300);
+  };
+
+  const handleLoadCommentsClick = async () => {
+    if (replies.length === 0 && commentsCount > 0) {
+        setLoadingComments(true);
+        await onLoadComments(item.id);
+        setLoadingComments(false);
+    }
+    setVisibleComments(prev => prev === 0 ? 3 : prev + 5);
   };
 
   const displayedReplies = replies.slice(0, visibleComments);
@@ -165,45 +186,80 @@ export default function FeedCard({ item, currentUser, onDelete }) {
              {item.text}
          </p>
 
-         <div className="flex items-center gap-6 mt-6 pt-4 border-t border-white/5">
-            <Link to={mediaLink} className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group">
-                <MessageCircle size={18} className="group-hover:text-violet-400 transition-colors" />
-                <span className="text-sm font-bold">Responder</span>
-            </Link>
+         <div className="mt-4 mb-2">
+            {(item.likesCount > 0) && (
+                <span className="text-sm font-bold text-white">
+                    {item.likesCount} {item.likesCount === 1 ? 'curtida' : 'curtidas'}
+                </span>
+            )}
+         </div>
+
+         <div className="flex items-center gap-6 pt-3 border-t border-white/5">
+            <button 
+                onClick={handleLikeClick}
+                className={`flex items-center gap-2 transition-all duration-200 group ${isLiked ? 'text-red-500' : 'text-zinc-400 hover:text-white'} ${isLikeAnimating ? 'scale-125' : 'scale-100'}`}
+            >
+                <Heart size={20} className={isLiked ? "fill-red-500" : "group-hover:scale-110 transition-transform"} />
+            </button>
+
+            <button 
+                onClick={handleLoadCommentsClick}
+                className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group"
+            >
+                <MessageCircle size={20} className="group-hover:text-violet-400 transition-colors" />
+                {commentsCount > 0 && <span className="text-sm font-bold">{commentsCount}</span>}
+            </button>
+            
             <button className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group">
-                <Share2 size={18} className="group-hover:text-violet-400 transition-colors" />
-                <span className="text-sm font-bold">Compartilhar</span>
+                <Share2 size={20} className="group-hover:text-violet-400 transition-colors" />
             </button>
          </div>
 
-         {replies.length > 0 && (
-            <div className="mt-6 space-y-4 pl-4 border-l-2 border-zinc-800">
-                {displayedReplies.map((reply) => (
-                    <div key={reply.id} className="flex gap-3 group/reply">
-                        <div className="w-8 h-8 rounded-full bg-zinc-800 overflow-hidden shrink-0 border border-white/5">
-                            {reply.userPhoto ? <img src={reply.userPhoto} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center font-bold text-xs text-zinc-500">{reply.username?.[0]}</div>}
-                        </div>
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-white hover:text-violet-400 cursor-pointer">{reply.username}</span>
-                                <span className="text-[10px] text-zinc-600">{formatDate(reply.createdAt)}</span>
+         <div className="mt-4">
+             {loadingComments && (
+                 <div className="flex items-center gap-2 text-zinc-500 text-sm py-2">
+                     <Loader2 size={14} className="animate-spin" /> Carregando comentários...
+                 </div>
+             )}
+
+             {replies.length === 0 && commentsCount > 0 && !loadingComments && (
+                 <button 
+                     onClick={handleLoadCommentsClick}
+                     className="text-xs font-bold text-zinc-500 hover:text-zinc-300 mt-2"
+                 >
+                     Ver todos os {commentsCount} comentários...
+                 </button>
+             )}
+
+             {replies.length > 0 && (
+                <div className="space-y-4 pl-4 border-l-2 border-zinc-800 mt-4">
+                    {displayedReplies.map((reply) => (
+                        <div key={reply.id} className="flex gap-3 group/reply">
+                            <div className="w-8 h-8 rounded-full bg-zinc-800 overflow-hidden shrink-0 border border-white/5">
+                                {reply.userPhoto ? <img src={reply.userPhoto} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center font-bold text-xs text-zinc-500">{reply.username?.[0]}</div>}
                             </div>
-                            <p className="text-sm text-zinc-400 mt-0.5">{reply.text}</p>
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold text-white hover:text-violet-400 cursor-pointer">{reply.username}</span>
+                                    <span className="text-[10px] text-zinc-600">{formatDate(reply.createdAt)}</span>
+                                </div>
+                                <p className="text-sm text-zinc-400 mt-0.5">{reply.text}</p>
+                            </div>
                         </div>
-                    </div>
-                ))}
-                
-                {replies.length > 3 && (
-                    <button 
-                        onClick={() => setVisibleComments(prev => prev > 3 ? 3 : prev + 5)}
-                        className="text-xs font-bold text-violet-400 hover:text-violet-300 flex items-center gap-1 mt-2"
-                    >
-                        {visibleComments > 3 ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                        {visibleComments > 3 ? 'Ocultar' : `Ver mais ${replies.length - 3} respostas`}
-                    </button>
-                )}
-            </div>
-         )}
+                    ))}
+                    
+                    {replies.length > 3 && (
+                        <button 
+                            onClick={() => setVisibleComments(prev => prev > 3 ? 3 : prev + 5)}
+                            className="text-xs font-bold text-violet-400 hover:text-violet-300 flex items-center gap-1 mt-2"
+                        >
+                            {visibleComments > 3 ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                            {visibleComments > 3 ? 'Ocultar' : `Ver mais ${replies.length - 3} respostas`}
+                        </button>
+                    )}
+                </div>
+             )}
+         </div>
       </div>
     </div>
   );

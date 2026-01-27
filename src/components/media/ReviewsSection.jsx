@@ -7,12 +7,12 @@ import {
   User,
   AlertCircle,
   TrendingUp,
-  CornerDownRight,
   ChevronDown,
   ChevronUp,
   Sparkles,
   Trophy,
   Crown,
+  Heart
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -23,6 +23,7 @@ export default function ReviewsSection({
   onReply,
   onDelete,
   onDeleteComment,
+  onLike
 }) {
   const { user } = useAuth();
 
@@ -197,6 +198,7 @@ export default function ReviewsSection({
             onReply={onReply}
             onDelete={onDelete}
             onDeleteComment={onDeleteComment}
+            onLike={onLike}
             isMaster
           />
         </div>
@@ -392,6 +394,7 @@ export default function ReviewsSection({
               onReply={onReply}
               onDelete={onDelete}
               onDeleteComment={onDeleteComment}
+              onLike={onLike}
             />
           </div>
         ))}
@@ -417,6 +420,7 @@ function ReviewItem({
   onReply,
   onDelete,
   onDeleteComment,
+  onLike,
   isMaster,
 }) {
   const [isReplying, setIsReplying] = useState(false);
@@ -424,9 +428,17 @@ function ReviewItem({
   const [errorMsg, setErrorMsg] = useState(null);
   const [visibleReplies, setVisibleReplies] = useState(3);
   const [showReplies, setShowReplies] = useState(true);
+  const [isLikeAnimating, setIsLikeAnimating] = useState(false);
 
   const replies = review.replies || [];
   const displayedReplies = replies.slice(0, visibleReplies);
+  const isLiked = !!review.isLikedByCurrentUser;
+
+  const handleLikeClick = () => {
+    setIsLikeAnimating(true);
+    onLike(review.id);
+    setTimeout(() => setIsLikeAnimating(false), 300);
+  };
 
   const handleSubmitReply = async (targetUser = null) => {
     if (!replyText.trim()) return;
@@ -531,10 +543,20 @@ function ReviewItem({
             {review.text}
           </p>
 
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-6 mb-6">
+            <button
+                onClick={handleLikeClick}
+                className={`flex items-center gap-2 transition-all duration-200 group ${isLiked ? 'text-red-500' : 'text-zinc-500 hover:text-white'} ${isLikeAnimating ? 'scale-125' : 'scale-100'}`}
+            >
+                <Heart size={18} className={isLiked ? "fill-red-500" : "group-hover:scale-110 transition-transform"} />
+                {(review.likesCount > 0) && (
+                    <span className="text-xs font-bold">{review.likesCount}</span>
+                )}
+            </button>
+
             <button
               onClick={() => setIsReplying(!isReplying)}
-              className="flex items-center gap-2 text-xs font-bold text-zinc-500 hover:text-zinc-200 transition-colors px-3 py-1.5 rounded-full hover:bg-white/5 tracking-widest uppercase"
+              className="flex items-center gap-2 text-xs font-bold text-zinc-500 hover:text-zinc-200 transition-colors tracking-widest uppercase"
             >
               <MessageCircle size={18} /> Responder
             </button>

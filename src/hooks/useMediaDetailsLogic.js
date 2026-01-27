@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import {
   getMovieDetails,
@@ -14,6 +14,7 @@ import {
   deleteComment,
   postReview,
   getAwards,
+  toggleLikeReview, 
 } from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { useAuth } from "../context/AuthContext";
@@ -40,6 +41,9 @@ export function useMediaDetailsLogic() {
     createList: false,
     awards: false,
   });
+
+  const likeTimeouts = useRef({});
+  const likeClickCounts = useRef({});
 
   const communityStats = useMemo(() => {
     if (!reviews || reviews.length === 0) return null;
@@ -80,7 +84,13 @@ export function useMediaDetailsLogic() {
 
         setMedia(mediaData);
         setProviders(results[1]);
-        setReviews(results[2]);
+        
+        const safeReviews = Array.isArray(results[2]) ? results[2].map(r => ({
+            ...r,
+            isLikedByCurrentUser: !!r.isLikedByCurrentUser,
+            likesCount: Number(r.likesCount) || 0
+        })) : [];
+        setReviews(safeReviews);
 
         const recommendations = mediaData.recommendations?.results || [];
         const similarItems = mediaData.similar?.results || [];
@@ -233,6 +243,48 @@ export function useMediaDetailsLogic() {
     }
   };
 
+  const handleLikeReview = async (reviewId) => {
+    if (!user) return toast.error("Login necessário", "Entre para curtir.");
+
+    likeClickCounts.current[reviewId] = (likeClickCounts.current[reviewId] || 0) + 1;
+
+    setReviews(prev => prev.map(r => {
+        if (r.id === reviewId) {
+            const isCurrentlyLiked = !!r.isLikedByCurrentUser;
+            const currentCount = Number(r.likesCount) || 0;
+            
+            const nextState = !isCurrentlyLiked;
+            let nextCount = nextState ? currentCount + 1 : currentCount - 1;
+            if (nextCount < 0) nextCount = 0;
+
+            return {
+                ...r,
+                isLikedByCurrentUser: nextState,
+                likesCount: nextCount
+            };
+        }
+        return r;
+    }));
+
+    if (likeTimeouts.current[reviewId]) {
+        clearTimeout(likeTimeouts.current[reviewId]);
+    }
+
+    likeTimeouts.current[reviewId] = setTimeout(async () => {
+        const clicks = likeClickCounts.current[reviewId] || 0;
+        
+        if (clicks % 2 !== 0) {
+            try {
+                await toggleLikeReview(reviewId);
+            } catch (error) {
+            }
+        }
+        
+        delete likeClickCounts.current[reviewId];
+        delete likeTimeouts.current[reviewId];
+    }, 1000); 
+  };
+
   return {
     media,
     reviews,
@@ -253,6 +305,7 @@ export function useMediaDetailsLogic() {
       handleDeleteComment,
       handleAddToList,
       handleCreateList,
+      handleLikeReview,
       handleShare: () => {
         navigator.clipboard.writeText(window.location.href);
         toast.success("Copiado", "Link copiado!");

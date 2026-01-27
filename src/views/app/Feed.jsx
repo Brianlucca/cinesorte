@@ -47,6 +47,8 @@ export default function Feed() {
                         item={review}
                         currentUser={user}
                         onDelete={actions.promptDelete}
+                        onLike={actions.handleLike}
+                        onLoadComments={actions.handleLoadComments}
                     />
                     ))
                 ) : (
