@@ -28,7 +28,10 @@ export function useProfileLogic() {
     xp: 0, 
     totalXp: 0, 
     levelTitle: 'Espectador',
-    trophies: [] 
+    trophies: [],
+    reviewsCount: 0,
+    watchedCount: 0,
+    likesCount: 0
   });
   
   const [loading, setLoading] = useState(true);
@@ -47,7 +50,7 @@ export function useProfileLogic() {
   });
 
   const loadData = useCallback(async () => {
-    if (!user?.uid) return;
+    if (!user?.uid || !user?.username) return;
     setLoading(true);
     try {
       const [interactionsData, reviewsData, statsData, listsData] = await Promise.all([
@@ -81,14 +84,16 @@ export function useProfileLogic() {
       }
       processedInteractions.sort((a, b) => b.sortDate - a.sortDate);
       
-      const sortedReviews = (reviewsData || []).sort((a, b) => 
-          new Date(b.createdAt?._seconds * 1000) - new Date(a.createdAt?._seconds * 1000)
-      );
+      const sortedReviews = (reviewsData || []).sort((a, b) => {
+          const dateA = a.createdAt?._seconds ? a.createdAt._seconds * 1000 : 0;
+          const dateB = b.createdAt?._seconds ? b.createdAt._seconds * 1000 : 0;
+          return dateB - dateA;
+      });
 
       setAllInteractions(processedInteractions);
       setAllReviews(sortedReviews);
     } catch (error) {
-      toast.error('Erro', 'Falha ao carregar dados.');
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -185,9 +190,9 @@ export function useProfileLogic() {
         lists: userLists,
         diaryItems,
         interactionsCount: allInteractions.length,
-        watchedCount: allInteractions.filter(i => i.action === 'watched').length,
-        likesCount: allInteractions.filter(i => i.action === 'like').length,
-        reviewsCount: allReviews.length,
+        watchedCount: userStats.watchedCount || allInteractions.filter(i => i.action === 'watched').length,
+        likesCount: userStats.likesCount || allInteractions.filter(i => i.action === 'like').length,
+        reviewsCount: userStats.reviewsCount || allReviews.length,
         followersList,
         followingList,
         year: new Date().getFullYear()

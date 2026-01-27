@@ -12,9 +12,7 @@ import UserSearch from '../../components/UserSearch';
 import Modal from '../../components/ui/Modal';
 import { Activity, MessageSquare, ArrowDownCircle, BookOpen, Trophy, Star, Info, CheckCircle, Heart, Sparkles, Award, Zap, Crown, ShieldCheck, Flame, Play } from 'lucide-react';
 
-const TROPHY_ICONS = {
-    Award, Zap, Crown, ShieldCheck, Flame, Play, Star
-};
+const TROPHY_ICONS = { Award, Zap, Crown, ShieldCheck, Flame, Play, Star };
 
 export default function Profile() {
   const { user, data, ui, modals, actions } = useProfileLogic();
@@ -29,6 +27,18 @@ export default function Profile() {
   const getXPNeeded = (level) => 100 + (level - 1) * 50;
   const xpRequired = getXPNeeded(user.level || 1);
   const progressPercent = Math.min(Math.round(((user.xp || 0) / xpRequired) * 100), 100);
+
+  const getLevelStyle = (title) => {
+    switch (title) {
+      case "Divindade do Cinema": return { text: "text-cyan-400", bar: "bg-cyan-500", border: "border-cyan-500/40", shadow: "shadow-[0_0_25px_rgba(6,182,212,0.2)]" };
+      case "Entidade Cinematográfica": return { text: "text-purple-400", bar: "bg-purple-500", border: "border-purple-500/40", shadow: "shadow-[0_0_25px_rgba(168,85,247,0.2)]" };
+      case "Oráculo da Sétima Arte": return { text: "text-emerald-400", bar: "bg-emerald-500", border: "border-emerald-500/40", shadow: "shadow-[0_0_25px_rgba(16,185,129,0.2)]" };
+      case "Mestre da Crítica": return { text: "text-amber-500", bar: "bg-amber-500", border: "border-amber-500/30", shadow: "shadow-[0_0_20px_rgba(245,158,11,0.15)]" };
+      default: return { text: "text-zinc-100", bar: "bg-violet-600", border: "border-white/5", shadow: "shadow-xl" };
+    }
+  };
+
+  const style = getLevelStyle(user.levelTitle);
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in pt-6 px-4 pb-20">
@@ -47,37 +57,41 @@ export default function Profile() {
             onShowFollowing={actions.openFollowingModal}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-            <div className="bg-zinc-900/50 p-6 rounded-3xl border border-white/5 flex flex-col justify-between shadow-xl relative overflow-hidden group hover:bg-zinc-900 transition-all duration-300 min-h-[180px]">
-                <div className="relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-stretch">
+            <div className={`bg-zinc-900/50 p-6 rounded-3xl border flex flex-col justify-between relative overflow-hidden group hover:bg-zinc-900 transition-all duration-500 min-h-[200px] min-w-0 ${style.border} ${style.shadow}`}>
+                <div className="relative z-10 min-w-0">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
+                        <div className={`w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center ${style.text}`}>
                             <Trophy size={20} />
                         </div>
                         <button onClick={() => setIsXpInfoOpen(true)} className="p-1.5 rounded-lg bg-white/5 text-zinc-500 hover:text-white hover:bg-white/10 transition-colors">
                             <Info size={16} />
                         </button>
                     </div>
-                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Nível {user.level || 1}</p>
-                    <h3 className="text-lg font-black text-white truncate mb-2">{user.levelTitle || 'Espectador'}</h3>
+                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Nível {user.level || 1}</p>
+                    <h3 className={`text-xl font-black leading-tight break-words pr-4 drop-shadow-sm ${style.text}`}>
+                        {user.levelTitle || 'Espectador'}
+                    </h3>
                 </div>
-                <div className="relative z-10 space-y-1.5">
+
+                <div className="relative z-10 space-y-1.5 mt-6">
                     <div className="flex justify-between text-[10px] font-bold">
                         <span className="text-zinc-500 uppercase tracking-tighter">Progresso</span>
                         <span className="text-zinc-300">{user.xp || 0} / {xpRequired} XP</span>
                     </div>
                     <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden border border-white/5">
-                        <div className="h-full bg-gradient-to-r from-violet-600 to-amber-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(139,92,246,0.3)]" style={{ width: `${progressPercent}%` }} />
+                        <div className={`h-full ${style.bar} rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(255,255,255,0.2)]`} style={{ width: `${progressPercent}%` }} />
                     </div>
                 </div>
-                <Star className="absolute -right-4 -bottom-4 text-white/5 w-24 h-24 -rotate-12 group-hover:text-white/10 transition-colors" />
+                <Star className={`absolute -right-4 -bottom-4 w-24 h-24 -rotate-12 opacity-5 transition-opacity group-hover:opacity-10 ${style.text}`} />
             </div>
+
             <div className="lg:col-span-3">
                 <StatsOverview 
                     totalXp={user.totalXp}
-                    watchedCount={data.watchedCount}
-                    likesCount={data.likesCount}
-                    reviewsCount={data.reviewsCount}
+                    watchedCount={user.watchedCount || data.watchedCount}
+                    likesCount={user.likesCount || data.likesCount}
+                    reviewsCount={user.reviewsCount || data.reviewsCount}
                 />
             </div>
         </div>
@@ -136,49 +150,6 @@ export default function Profile() {
                 </div>
             )}
         </div>
-
-        <Modal isOpen={isXpInfoOpen} onClose={() => setIsXpInfoOpen(false)} title="Gamificação CineSorte">
-            <div className="space-y-6">
-                <p className="text-zinc-400 text-sm leading-relaxed">No CineSorte, cada interação aumenta sua experiência e sua autoridade na comunidade.</p>
-                <div className="grid grid-cols-1 gap-3">
-                    <div className="flex items-center justify-between p-4 bg-zinc-950/50 rounded-2xl border border-white/5">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-400"><MessageSquare size={16} /></div>
-                            <span className="text-sm font-bold text-white">Escrever Review</span>
-                        </div>
-                        <span className="text-violet-400 font-black">+20 XP</span>
-                    </div>
-                    <div className="flex items-center justify-between p-4 bg-zinc-950/50 rounded-2xl border border-white/5">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400"><CheckCircle size={16} /></div>
-                            <span className="text-sm font-bold text-white">Marcar como Assistido</span>
-                        </div>
-                        <span className="text-green-400 font-black">+10 XP</span>
-                    </div>
-                    <div className="flex items-center justify-between p-4 bg-zinc-950/50 rounded-2xl border border-white/5">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500"><Heart size={16} /></div>
-                            <span className="text-sm font-bold text-white">Dar uma Curtida</span>
-                        </div>
-                        <span className="text-red-400 font-black">+5 XP</span>
-                    </div>
-                </div>
-                <div className="space-y-3">
-                    <div className="p-4 bg-amber-500/10 rounded-2xl border border-amber-500/20">
-                        <div className="flex items-center gap-2 text-amber-500 mb-1"><Zap size={16} /><span className="font-bold text-sm">Dificuldade Progressiva</span></div>
-                        <p className="text-xs text-amber-200/70">A cada nível, o XP necessário aumenta em 50 pontos, tornando sua jornada mais desafiadora e prestigiosa.</p>
-                    </div>
-                    <div className="p-4 bg-violet-600/10 rounded-2xl border border-violet-500/20">
-                        <div className="flex items-center gap-2 text-violet-400 mb-1"><Sparkles size={16} /><span className="font-bold text-sm">Destaque nas Reviews</span></div>
-                        <p className="text-xs text-violet-200/70">Usuários com Títulos altos (Mestre da Crítica, Cinéfilo) possuem suas reviews destacadas no topo do feed global e páginas de filmes!</p>
-                    </div>
-                    <div className="p-4 bg-blue-600/10 rounded-2xl border border-blue-500/20">
-                        <div className="flex items-center gap-2 text-blue-400 mb-1"><Trophy size={16} /><span className="font-bold text-sm">Troféus e Medalhas</span></div>
-                        <p className="text-xs text-blue-200/70">Ao atingir marcos de reviews ou XP, você desbloqueia troféus exclusivos que ficam expostos na sua vitrine.</p>
-                    </div>
-                </div>
-            </div>
-        </Modal>
 
         <AvatarSelectorModal isOpen={modals.avatar} onClose={() => actions.closeModal('avatar')} onSelect={actions.updateAvatar} />
         <BackgroundSelectorModal isOpen={modals.background} onClose={() => actions.closeModal('background')} onSelect={actions.updateBackground} />
