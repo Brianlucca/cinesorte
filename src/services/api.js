@@ -284,4 +284,19 @@ export const deleteList = async (listId) => {
   return response.data;
 };
 
+export const getNotifications = async () => {
+  const response = await api.get('/notifications');
+  return response.data;
+};
+
+export const getUnreadCount = async () => {
+  const response = await api.get('/notifications/count');
+  return response.data;
+};
+
+export const markNotificationRead = async (notificationId) => {
+  const response = await api.put(`/notifications/${notificationId}/read`);
+  return response.data;
+};
+
 export default api;
