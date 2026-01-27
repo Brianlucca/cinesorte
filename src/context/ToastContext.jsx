@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import ToastGamification from '../components/ui/ToastGamification';
 
 const ToastContext = createContext();
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
+  const [levelUpData, setLevelUpData] = useState(null);
 
   const addToast = useCallback(({ type, title, description }) => {
     const id = Math.random().toString(36).substr(2, 9);
@@ -19,10 +21,19 @@ export function ToastProvider({ children }) {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
+  const triggerLevelUp = useCallback((levelTitle) => {
+    setLevelUpData(levelTitle);
+  }, []);
+
+  const closeLevelUp = useCallback(() => {
+    setLevelUpData(null);
+  }, []);
+
   const toast = {
     success: (title, description) => addToast({ type: 'success', title, description }),
     error: (title, description) => addToast({ type: 'error', title, description }),
     info: (title, description) => addToast({ type: 'info', title, description }),
+    triggerLevelUp,
   };
 
   return (
@@ -34,6 +45,8 @@ export function ToastProvider({ children }) {
           <ToastItem key={t.id} toast={t} onRemove={removeToast} />
         ))}
       </div>
+
+      <ToastGamification activeLevel={levelUpData} onClose={closeLevelUp} />
     </ToastContext.Provider>
   );
 }
