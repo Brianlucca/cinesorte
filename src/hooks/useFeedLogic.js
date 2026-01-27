@@ -175,7 +175,7 @@ export function useFeedLogic() {
     setIsSubmitting(true);
     try {
         const payload = {
-            mediaId: selectedMedia.id.toString(), // Converter para string
+            mediaId: selectedMedia.id.toString(),
             mediaType: selectedMedia.media_type || 'movie',
             mediaTitle: selectedMedia.title || selectedMedia.name || "Sem Título",
             posterPath: selectedMedia.poster_path || selectedMedia.profile_path || "",
@@ -247,7 +247,6 @@ export function useFeedLogic() {
         if (r.id === reviewId) {
             const isCurrentlyLiked = !!r.isLikedByCurrentUser;
             const currentCount = Number(r.likesCount) || 0;
-            
             const nextState = !isCurrentlyLiked;
             let nextCount = nextState ? currentCount + 1 : currentCount - 1;
             if (nextCount < 0) nextCount = 0;
@@ -267,18 +266,13 @@ export function useFeedLogic() {
 
     likeTimeouts.current[reviewId] = setTimeout(async () => {
         const clicks = likeClickCounts.current[reviewId] || 0;
-        
         if (clicks % 2 !== 0) {
             try {
                 await toggleLikeReview(reviewId);
             } catch (error) {
-<<<<<<< HEAD
-=======
                 console.error("Erro ao sincronizar like:", error);
->>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
             }
         }
-        
         delete likeClickCounts.current[reviewId];
         delete likeTimeouts.current[reviewId];
     }, 1000); 

@@ -12,15 +12,11 @@ import {
   Sparkles,
   Trophy,
   Crown,
-<<<<<<< HEAD
   Heart,
   Loader2,
   Zap,
   Eye,
   Flame
-=======
-  Heart
->>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -32,13 +28,9 @@ export default function ReviewsSection({
   onReply,
   onDelete,
   onDeleteComment,
-<<<<<<< HEAD
   onLike,
   onLoadReplies,
   isEliteUser
-=======
-  onLike
->>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
 }) {
   const { user } = useAuth();
 
@@ -188,12 +180,8 @@ export default function ReviewsSection({
             onDelete={onDelete}
             onDeleteComment={onDeleteComment}
             onLike={onLike}
-<<<<<<< HEAD
             onLoadReplies={onLoadReplies}
             isElite
-=======
-            isMaster
->>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
           />
         </div>
       )}
@@ -280,27 +268,8 @@ export default function ReviewsSection({
 
       <div className="space-y-4">
         {regularReviews.map((review, index) => (
-<<<<<<< HEAD
           <div key={review.id} className={index !== regularReviews.length - 1 ? "border-b border-zinc-800/50 pb-10 mb-10" : ""}>
             <ReviewItem review={review} currentUser={user} onReply={onReply} onDelete={onDelete} onDeleteComment={onDeleteComment} onLike={onLike} onLoadReplies={onLoadReplies} />
-=======
-          <div
-            key={review.id}
-            className={
-              index !== regularReviews.length - 1
-                ? "border-b border-zinc-800/50 pb-10 mb-10"
-                : ""
-            }
-          >
-            <ReviewItem
-              review={review}
-              currentUser={user}
-              onReply={onReply}
-              onDelete={onDelete}
-              onDeleteComment={onDeleteComment}
-              onLike={onLike}
-            />
->>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
           </div>
         ))}
       </div>
@@ -308,7 +277,6 @@ export default function ReviewsSection({
   );
 }
 
-<<<<<<< HEAD
 function ReviewItem({ review, currentUser, onReply, onDelete, onDeleteComment, onLike, onLoadReplies, isElite }) {
   const [isReplying, setIsReplying] = useState(false);
   const [replyText, setReplyText] = useState("");
@@ -317,33 +285,6 @@ function ReviewItem({ review, currentUser, onReply, onDelete, onDeleteComment, o
   const replies = review.replies || [];
   const isLiked = !!review.isLikedByCurrentUser;
   const isOwner = currentUser?.uid === review.userId;
-=======
-function ReviewItem({
-  review,
-  currentUser,
-  onReply,
-  onDelete,
-  onDeleteComment,
-  onLike,
-  isMaster,
-}) {
-  const [isReplying, setIsReplying] = useState(false);
-  const [replyText, setReplyText] = useState("");
-  const [errorMsg, setErrorMsg] = useState(null);
-  const [visibleReplies, setVisibleReplies] = useState(3);
-  const [showReplies, setShowReplies] = useState(true);
-  const [isLikeAnimating, setIsLikeAnimating] = useState(false);
-
-  const replies = review.replies || [];
-  const displayedReplies = replies.slice(0, visibleReplies);
-  const isLiked = !!review.isLikedByCurrentUser;
-
-  const handleLikeClick = () => {
-    setIsLikeAnimating(true);
-    onLike(review.id);
-    setTimeout(() => setIsLikeAnimating(false), 300);
-  };
->>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
 
   const getEliteCardStyle = (title) => {
     switch (title) {
@@ -390,7 +331,6 @@ function ReviewItem({
             </div>
             {isOwner && <button onClick={() => onDelete(review.id)} className="text-zinc-600 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={18} /></button>}
           </div>
-<<<<<<< HEAD
           <p className={`leading-relaxed mb-4 whitespace-pre-wrap ${isElite ? "text-xl text-white font-medium" : "text-lg text-zinc-200"}`}>{review.text}</p>
           <div className="flex items-center gap-6">
             <button onClick={() => onLike(review.id)} className={`flex items-center gap-2 transition-colors ${isLiked ? 'text-red-500' : 'text-zinc-500 hover:text-white'}`}>
@@ -398,30 +338,6 @@ function ReviewItem({
               {review.likesCount > 0 && <span className="text-xs font-bold">{review.likesCount}</span>}
             </button>
             <button onClick={() => setIsReplying(!isReplying)} className="flex items-center gap-2 text-xs font-bold text-zinc-500 hover:text-zinc-200 uppercase tracking-widest">
-=======
-
-          <p
-            className={`leading-relaxed mb-4 whitespace-pre-wrap font-normal ${isMaster ? "text-lg text-white" : "text-lg text-zinc-200"}`}
-          >
-            {review.text}
-          </p>
-
-          <div className="flex items-center gap-6 mb-6">
-            <button
-                onClick={handleLikeClick}
-                className={`flex items-center gap-2 transition-all duration-200 group ${isLiked ? 'text-red-500' : 'text-zinc-500 hover:text-white'} ${isLikeAnimating ? 'scale-125' : 'scale-100'}`}
-            >
-                <Heart size={18} className={isLiked ? "fill-red-500" : "group-hover:scale-110 transition-transform"} />
-                {(review.likesCount > 0) && (
-                    <span className="text-xs font-bold">{review.likesCount}</span>
-                )}
-            </button>
-
-            <button
-              onClick={() => setIsReplying(!isReplying)}
-              className="flex items-center gap-2 text-xs font-bold text-zinc-500 hover:text-zinc-200 transition-colors tracking-widest uppercase"
-            >
->>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
               <MessageCircle size={18} /> Responder
             </button>
           </div>
@@ -466,71 +382,4 @@ function ReviewItem({
       </div>
     </div>
   );
-<<<<<<< HEAD
-=======
-}
-
-function ReplyItem({
-  reply,
-  reviewId,
-  onReply,
-  currentUser,
-  onDeleteComment,
-  onReplyClick,
-}) {
-  const isOwner = currentUser?.uid === reply.userId;
-
-  return (
-    <div className="flex gap-3 pl-6 animate-in fade-in group/reply">
-      <div className="shrink-0 pt-1">
-        <div className="w-9 h-9 rounded-full bg-zinc-800 ring-1 ring-zinc-900 overflow-hidden flex items-center justify-center text-white font-bold text-xs uppercase">
-          {reply.userPhoto ? (
-            <img
-              src={reply.userPhoto}
-              className="w-full h-full object-cover"
-              alt="U"
-            />
-          ) : (
-            reply.username?.charAt(0) || "U"
-          )}
-        </div>
-      </div>
-      <div className="flex-1">
-        <div className="flex items-center gap-2 mb-1">
-          <Link
-            to={`/app/profile/${reply.username}`}
-            className="font-bold text-zinc-200 text-sm hover:text-violet-400 transition-colors"
-          >
-            {reply.username}
-          </Link>
-          <span className="text-[10px] font-black uppercase text-zinc-500 px-1.5 py-0.5 bg-white/5 rounded border border-white/5">
-            {reply.levelTitle || "Espectador"}
-          </span>
-          <span className="text-[10px] text-zinc-600 font-medium">
-            {reply.createdAt
-              ? new Date(reply.createdAt._seconds * 1000).toLocaleDateString()
-              : "agora"}
-          </span>
-        </div>
-        <p className="text-zinc-300 text-sm leading-relaxed">{reply.text}</p>
-        <div className="flex items-center gap-4 mt-2">
-          <button
-            onClick={onReplyClick}
-            className="text-[10px] font-bold text-zinc-500 hover:text-zinc-200 uppercase tracking-widest transition-colors"
-          >
-            Responder
-          </button>
-          {isOwner && (
-            <button
-              onClick={() => onDeleteComment(reply.id)}
-              className="text-[10px] font-bold text-zinc-500 hover:text-red-500 uppercase tracking-widest flex items-center gap-1 transition-colors opacity-0 group-hover/reply:opacity-100"
-            >
-              <Trash2 size={12} /> Excluir
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
->>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
 }

@@ -403,11 +403,8 @@ export default function MediaDetails() {
             onDelete={actions.handleDeleteReview}
             onDeleteComment={actions.handleDeleteComment}
             onLike={actions.handleLikeReview}
-<<<<<<< HEAD
             onLoadReplies={actions.handleLoadReplies}
             isEliteUser={isEliteUser}
-=======
->>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
           />
         </div>
 
