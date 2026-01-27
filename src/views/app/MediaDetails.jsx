@@ -35,8 +35,10 @@ export default function MediaDetails() {
     loading,
     interactions,
     userLists,
+    addingToListId,
     modals,
     setModals,
+    isEliteUser,
     actions
   } = useMediaDetailsLogic();
 
@@ -57,6 +59,7 @@ export default function MediaDetails() {
   const banner = media.backdrop_path
     ? `https://image.tmdb.org/t/p/original${media.backdrop_path}`
     : null;
+    
   const trailerKey =
     media.trailer?.key ||
     media.videos?.results?.find(
@@ -117,6 +120,8 @@ export default function MediaDetails() {
         lists={userLists}
         onAdd={actions.handleAddToList}
         onCreate={actions.handleCreateList}
+        mediaId={media.id}
+        addingToListId={addingToListId}
       />
 
       <div className="relative w-full h-[90vh] mb-12 group">
@@ -177,7 +182,7 @@ export default function MediaDetails() {
                 <span className="flex items-center gap-2 text-zinc-300">
                     <Calendar size={20} className="text-zinc-400" />{" "}
                     {new Date(
-                        media.release_date || media.first_air_date,
+                      media.release_date || media.first_air_date,
                     ).toLocaleDateString("pt-BR", {
                         year: "numeric",
                         month: "long",
@@ -215,29 +220,30 @@ export default function MediaDetails() {
             <div className="flex gap-3">
               <button
                 onClick={() => actions.handleInteract("like")}
-                className={`p-4 rounded-xl border-2 transition-all hover:scale-105 ${
-                  interactions?.liked
-                    ? "bg-red-600 border-red-600 text-white shadow-lg shadow-red-600/30"
+                className={`p-4 rounded-xl border-2 transition-all duration-300 transform active:scale-90 ${
+                  interactions.liked
+                    ? "bg-red-600 border-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.5)]"
                     : "bg-black/40 border-white/10 text-white hover:bg-white/10 backdrop-blur-md"
                 }`}
-                title="Curtir"
+                title="Favoritar"
               >
                 <Heart
                   size={24}
-                  fill={interactions?.liked ? "currentColor" : "none"}
+                  fill={interactions.liked ? "white" : "none"}
+                  className={interactions.liked ? "animate-in zoom-in duration-300" : ""}
                 />
               </button>
 
               <button
                 onClick={() => actions.handleInteract("watched")}
-                className={`p-4 rounded-xl border-2 transition-all hover:scale-105 ${
-                  interactions?.watched
-                    ? "bg-green-600 border-green-600 text-white shadow-lg shadow-green-600/30"
+                className={`p-4 rounded-xl border-2 transition-all duration-300 transform active:scale-90 ${
+                  interactions.watched
+                    ? "bg-green-600 border-green-600 text-white shadow-[0_0_20px_rgba(22,163,74,0.5)]"
                     : "bg-black/40 border-white/10 text-white hover:bg-white/10 backdrop-blur-md"
                 }`}
                 title="Já assisti"
               >
-                <Check size={24} />
+                <Check size={24} strokeWidth={3} className={interactions.watched ? "animate-in zoom-in duration-300" : ""} />
               </button>
 
               <button
@@ -396,6 +402,9 @@ export default function MediaDetails() {
             onReply={actions.handlePostReply}
             onDelete={actions.handleDeleteReview}
             onDeleteComment={actions.handleDeleteComment}
+            onLike={actions.handleLikeReview}
+            onLoadReplies={actions.handleLoadReplies}
+            isEliteUser={isEliteUser}
           />
         </div>
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, List, X, Check } from "lucide-react";
+import { Plus, List, Check, Loader2 } from "lucide-react";
 import Modal from "../ui/Modal";
 
 export default function AddToListModal({
@@ -8,6 +8,8 @@ export default function AddToListModal({
   lists,
   onAdd,
   onCreate,
+  mediaId, // Certifique-se de passar o id da mídia atual aqui
+  addingToListId
 }) {
   const [view, setView] = useState("select");
   const [newListName, setNewListName] = useState("");
@@ -21,6 +23,10 @@ export default function AddToListModal({
       setIsCreating(false);
       setView("select");
     }
+  };
+
+  const isMediaInList = (list) => {
+    return list.items?.some(item => item.id.toString() === mediaId?.toString());
   };
 
   return (
@@ -37,21 +43,40 @@ export default function AddToListModal({
         <div className="space-y-4">
           {lists && lists.length > 0 ? (
             <div className="max-h-60 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-              {lists.map((list) => (
-                <button
-                  key={list.id}
-                  onClick={() => onAdd(list.id)}
-                  className="w-full flex items-center justify-between p-4 bg-zinc-900 border border-white/5 hover:border-violet-500/50 hover:bg-zinc-800 rounded-xl transition-all group text-left"
-                >
-                  <div className="flex flex-col">
-                      <span className="font-bold text-white text-base">{list.name}</span>
-                      <span className="text-xs text-zinc-500 group-hover:text-zinc-400">
+              {lists.map((list) => {
+                const alreadyInList = isMediaInList(list);
+                const isThisLoading = addingToListId === list.id;
+
+                return (
+                  <button
+                    key={list.id}
+                    onClick={() => !alreadyInList && !isThisLoading && onAdd(list.id)}
+                    disabled={alreadyInList || isThisLoading}
+                    className={`w-full flex items-center justify-between p-4 bg-zinc-900 border rounded-xl transition-all group text-left ${
+                      alreadyInList 
+                        ? 'border-green-500/30 cursor-default opacity-80' 
+                        : 'border-white/5 hover:border-violet-500/50 hover:bg-zinc-800'
+                    }`}
+                  >
+                    <div className="flex flex-col">
+                      <span className={`font-bold text-base ${alreadyInList ? 'text-green-400' : 'text-white'}`}>
+                        {list.name}
+                      </span>
+                      <span className="text-xs text-zinc-500">
                         {list.items?.length || 0} itens
                       </span>
-                  </div>
-                  <Plus size={20} className="text-zinc-600 group-hover:text-violet-400" />
-                </button>
-              ))}
+                    </div>
+                    
+                    {isThisLoading ? (
+                      <Loader2 size={20} className="text-violet-500 animate-spin" />
+                    ) : alreadyInList ? (
+                      <Check size={20} className="text-green-500" />
+                    ) : (
+                      <Plus size={20} className="text-zinc-600 group-hover:text-violet-400" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8 bg-zinc-900/50 rounded-xl border border-dashed border-white/10">
@@ -96,7 +121,7 @@ export default function AddToListModal({
               disabled={!newListName.trim() || isCreating}
               className="flex-1 py-3 bg-violet-600 text-white rounded-xl font-bold hover:bg-violet-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {isCreating ? 'Criando...' : 'Criar'}
+              {isCreating ? <Loader2 className="animate-spin" size={18} /> : 'Criar'}
             </button>
           </div>
         </div>
