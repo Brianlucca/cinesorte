@@ -14,8 +14,12 @@ import {
   deleteComment,
   postReview,
   getAwards,
+<<<<<<< HEAD
   toggleLikeReview,
   getComments, 
+=======
+  toggleLikeReview, 
+>>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
 } from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { useAuth } from "../context/AuthContext";
@@ -44,6 +48,7 @@ export function useMediaDetailsLogic() {
   const likeTimeouts = useRef({});
   const likeClickCounts = useRef({});
 
+<<<<<<< HEAD
   const isEliteUser = (levelTitle) => {
     const eliteTitles = [
       "Mestre da Crítica", 
@@ -54,6 +59,8 @@ export function useMediaDetailsLogic() {
     return eliteTitles.includes(levelTitle);
   };
 
+=======
+>>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
   const communityStats = useMemo(() => {
     if (!reviews || reviews.length === 0) return null;
     const validReviews = reviews.filter((r) => r.rating !== undefined && r.rating !== null);
@@ -92,8 +99,12 @@ export function useMediaDetailsLogic() {
         const safeReviews = Array.isArray(results[2]) ? results[2].map(r => ({
             ...r,
             isLikedByCurrentUser: !!r.isLikedByCurrentUser,
+<<<<<<< HEAD
             likesCount: Number(r.likesCount) || 0,
             replies: r.replies || [] 
+=======
+            likesCount: Number(r.likesCount) || 0
+>>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
         })) : [];
         setReviews(safeReviews);
 
@@ -260,11 +271,18 @@ export function useMediaDetailsLogic() {
 
   const handleLikeReview = async (reviewId) => {
     if (!user) return toast.error("Login necessário", "Entre para curtir.");
+<<<<<<< HEAD
     likeClickCounts.current[reviewId] = (likeClickCounts.current[reviewId] || 0) + 1;
+=======
+
+    likeClickCounts.current[reviewId] = (likeClickCounts.current[reviewId] || 0) + 1;
+
+>>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
     setReviews(prev => prev.map(r => {
         if (r.id === reviewId) {
             const isCurrentlyLiked = !!r.isLikedByCurrentUser;
             const currentCount = Number(r.likesCount) || 0;
+<<<<<<< HEAD
             const nextState = !isCurrentlyLiked;
             let nextCount = nextState ? currentCount + 1 : currentCount - 1;
             if (nextCount < 0) nextCount = 0;
@@ -278,11 +296,42 @@ export function useMediaDetailsLogic() {
         if (clicks % 2 !== 0) {
             try { await toggleLikeReview(reviewId); } catch (error) {}
         }
+=======
+            
+            const nextState = !isCurrentlyLiked;
+            let nextCount = nextState ? currentCount + 1 : currentCount - 1;
+            if (nextCount < 0) nextCount = 0;
+
+            return {
+                ...r,
+                isLikedByCurrentUser: nextState,
+                likesCount: nextCount
+            };
+        }
+        return r;
+    }));
+
+    if (likeTimeouts.current[reviewId]) {
+        clearTimeout(likeTimeouts.current[reviewId]);
+    }
+
+    likeTimeouts.current[reviewId] = setTimeout(async () => {
+        const clicks = likeClickCounts.current[reviewId] || 0;
+        
+        if (clicks % 2 !== 0) {
+            try {
+                await toggleLikeReview(reviewId);
+            } catch (error) {
+            }
+        }
+        
+>>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
         delete likeClickCounts.current[reviewId];
         delete likeTimeouts.current[reviewId];
     }, 1000); 
   };
 
+<<<<<<< HEAD
   const handleLoadReplies = async (reviewId) => {
       try {
           const comments = await getComments(reviewId);
@@ -295,6 +344,8 @@ export function useMediaDetailsLogic() {
       }
   };
 
+=======
+>>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
   return {
     media,
     reviews,
@@ -318,7 +369,10 @@ export function useMediaDetailsLogic() {
       handleAddToList,
       handleCreateList,
       handleLikeReview,
+<<<<<<< HEAD
       handleLoadReplies,
+=======
+>>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
       handleShare: () => {
         navigator.clipboard.writeText(window.location.href);
         toast.success("Copiado", "Link copiado!");

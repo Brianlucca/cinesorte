@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+<<<<<<< HEAD
 import { Star, MoreVertical, Trash2, MessageCircle, User, Share2, Heart, ChevronDown, ChevronUp, Crown, Layers, Film, Loader2, Zap, Eye, Sparkles } from "lucide-react";
+=======
+import { Star, MoreVertical, Trash2, MessageCircle, User, Share2, Heart, ChevronDown, ChevronUp, Crown, Layers, Film, Loader2 } from "lucide-react";
+>>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
 
 export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadComments }) {
   const [showMenu, setShowMenu] = useState(false);
@@ -15,8 +19,10 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
 
   const displayUsername = item.username || item.nickname || "Anônimo";
   const photoURL = item.userPhoto || item.photoURL || null;
+  
   const replies = item.replies || [];
   const commentsCount = item.commentsCount || 0;
+<<<<<<< HEAD
   const isOwner = currentUser?.uid === item.userId;
   const isLiked = !!item.isLikedByCurrentUser;
 
@@ -31,6 +37,12 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
   };
 
   const style = getEliteStyle(item.levelTitle);
+=======
+  
+  const isOwner = currentUser?.uid === item.userId;
+  
+  const isLiked = !!item.isLikedByCurrentUser;
+>>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -193,6 +205,7 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
          </div>
 
          <div className="flex items-center gap-6 pt-3 border-t border-white/5">
+<<<<<<< HEAD
             <button onClick={handleLikeClick} className={`flex items-center gap-2 transition-all duration-200 group ${isLiked ? 'text-red-500' : 'text-zinc-400 hover:text-white'} ${isLikeAnimating ? 'scale-125' : 'scale-100'}`}>
                 <Heart size={20} className={isLiked ? "fill-red-500" : "group-hover:scale-110 transition-transform"} />
             </button>
@@ -200,6 +213,23 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
                 <MessageCircle size={20} className="group-hover:text-violet-400 transition-colors" />
                 {commentsCount > 0 && <span className="text-sm font-bold">{commentsCount}</span>}
             </button>
+=======
+            <button 
+                onClick={handleLikeClick}
+                className={`flex items-center gap-2 transition-all duration-200 group ${isLiked ? 'text-red-500' : 'text-zinc-400 hover:text-white'} ${isLikeAnimating ? 'scale-125' : 'scale-100'}`}
+            >
+                <Heart size={20} className={isLiked ? "fill-red-500" : "group-hover:scale-110 transition-transform"} />
+            </button>
+
+            <button 
+                onClick={handleLoadCommentsClick}
+                className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group"
+            >
+                <MessageCircle size={20} className="group-hover:text-violet-400 transition-colors" />
+                {commentsCount > 0 && <span className="text-sm font-bold">{commentsCount}</span>}
+            </button>
+            
+>>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
             <button className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group">
                 <Share2 size={20} className="group-hover:text-violet-400 transition-colors" />
             </button>
@@ -211,11 +241,24 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
                      <Loader2 size={14} className="animate-spin" /> Carregando comentários...
                  </div>
              )}
+<<<<<<< HEAD
              {replies.length === 0 && commentsCount > 0 && !loadingComments && (
                  <button onClick={handleLoadCommentsClick} className="text-xs font-bold text-zinc-500 hover:text-zinc-300 mt-2">
                      Ver todos os {commentsCount} comentários...
                  </button>
              )}
+=======
+
+             {replies.length === 0 && commentsCount > 0 && !loadingComments && (
+                 <button 
+                     onClick={handleLoadCommentsClick}
+                     className="text-xs font-bold text-zinc-500 hover:text-zinc-300 mt-2"
+                 >
+                     Ver todos os {commentsCount} comentários...
+                 </button>
+             )}
+
+>>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
              {replies.length > 0 && (
                 <div className="space-y-4 pl-4 border-l-2 border-zinc-800 mt-4">
                     {displayedReplies.map((reply) => (
@@ -232,8 +275,17 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
                             </div>
                         </div>
                     ))}
+<<<<<<< HEAD
                     {replies.length > 3 && (
                         <button onClick={() => setVisibleComments(prev => prev > 3 ? 3 : prev + 5)} className="text-xs font-bold text-violet-400 hover:text-violet-300 flex items-center gap-1 mt-2">
+=======
+                    
+                    {replies.length > 3 && (
+                        <button 
+                            onClick={() => setVisibleComments(prev => prev > 3 ? 3 : prev + 5)}
+                            className="text-xs font-bold text-violet-400 hover:text-violet-300 flex items-center gap-1 mt-2"
+                        >
+>>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
                             {visibleComments > 3 ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                             {visibleComments > 3 ? 'Ocultar' : `Ver mais ${replies.length - 3} respostas`}
                         </button>

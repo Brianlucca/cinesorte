@@ -272,6 +272,10 @@ export function useFeedLogic() {
             try {
                 await toggleLikeReview(reviewId);
             } catch (error) {
+<<<<<<< HEAD
+=======
+                console.error("Erro ao sincronizar like:", error);
+>>>>>>> a2c7598e49a4b5287747dd71d82794f84aa10a7c
             }
         }
         
