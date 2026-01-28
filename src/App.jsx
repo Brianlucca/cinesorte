@@ -23,7 +23,7 @@ import PublicProfile from './views/app/PublicProfile';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-violet-500">Carregando...</div>;
+  if (loading) return <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-violet-500">Site em manutenção por tempo indeterminado...</div>;
   return user ? children : <Navigate to="/login" />;
 };
 
