@@ -54,9 +54,9 @@ export const getUserFollowing = (userId) => api.get(`/social/following/${userId}
 export const getSuggestions = () => api.get('/social/suggestions');
 export const getMatchPercentage = (targetUserId) => api.get(`/social/match/${targetUserId}`);
 
-export const getGlobalFeed = () => api.get('/social/feed/global');
-export const getFollowingFeed = () => api.get('/social/feed/following');
-export const getSharedListsFeed = () => api.get('/social/feed/collections');
+export const getGlobalFeed = (page = 1) => api.get('/social/feed/global', { params: { page } });
+export const getFollowingFeed = (page = 1) => api.get('/social/feed/following', { params: { page } });
+export const getSharedListsFeed = (page = 1) => api.get('/social/feed/collections', { params: { page } });
 export const shareList = (data) => api.post('/social/share-list', data);
 export const deleteListShare = (shareId) => api.delete(`/social/share-list/${shareId}`);
 export const getListDetails = (username, listId) => api.get(`/social/lists/${username}/${listId}`);

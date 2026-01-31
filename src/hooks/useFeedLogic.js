@@ -74,12 +74,15 @@ export function useFeedLogic() {
 
     try {
       let data = [];
+      let rawCount = 0;
       
       if (feedType === 'following') {
         const [followingData, myData] = await Promise.all([
             getFollowingFeed(currentPage),
             localUser?.username ? getUserReviews(localUser.username, currentPage) : Promise.resolve([])
         ]);
+        
+        rawCount = (Array.isArray(followingData) ? followingData.length : 0) + (Array.isArray(myData) ? myData.length : 0);
         
         const combined = [...followingData, ...myData];
         const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
@@ -94,8 +97,10 @@ export function useFeedLogic() {
 
       } else if (feedType === 'collections') {
         data = await getSharedListsFeed(currentPage);
+        rawCount = Array.isArray(data) ? data.length : 0;
       } else if (feedType === 'mine' && localUser?.username) {
         data = await getUserReviews(localUser.username, currentPage);
+        rawCount = Array.isArray(data) ? data.length : 0;
       }
       
       const safeData = Array.isArray(data) ? data.map(item => {
@@ -141,7 +146,7 @@ export function useFeedLogic() {
           return true;
       });
 
-      if (filteredData.length < 5 && currentPage > 1) {
+      if (rawCount === 0 && currentPage > 1) {
           setHasMore(false);
       } else {
           setHasMore(true);
