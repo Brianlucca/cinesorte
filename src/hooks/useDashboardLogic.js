@@ -56,6 +56,30 @@ export function useDashboardLogic() {
     });
   }, []);
 
+  const filterByPreferences = useCallback((items, userGenreCounts) => {
+    if (!items || !Array.isArray(items) || items.length === 0) return [];
+    if (!userGenreCounts || Object.keys(userGenreCounts).length === 0) return [];
+
+    const userGenreIds = Object.keys(userGenreCounts).map((id) => parseInt(id));
+
+    const strictMatches = items.filter((item) => {
+      if (!item.genre_ids) return false;
+      return item.genre_ids.some((genreId) => userGenreIds.includes(genreId));
+    });
+
+    return strictMatches.sort((a, b) => {
+      const aScore = (a.genre_ids || []).reduce(
+        (acc, id) => acc + (userGenreCounts[id] || 0),
+        0
+      );
+      const bScore = (b.genre_ids || []).reduce(
+        (acc, id) => acc + (userGenreCounts[id] || 0),
+        0
+      );
+      return bScore - aScore;
+    });
+  }, []);
+
   useEffect(() => {
     if (heroQueue.length === 0) return;
     const interval = setInterval(() => {
@@ -74,9 +98,7 @@ export function useDashboardLogic() {
         try {
           const userProfile = await getMe();
           userGenres = userProfile.genreCounts || {};
-        } catch (e) {
-          console.error("Erro ao carregar perfil (getMe):", e);
-        }
+        } catch (e) {}
 
         const cachedDay = localStorage.getItem(CACHE_DAY_KEY);
         const cachedWeek = localStorage.getItem(CACHE_WEEK_KEY);
@@ -143,15 +165,6 @@ export function useDashboardLogic() {
 
         if (!isMounted.current) return;
 
-        results.forEach((res, idx) => {
-            const labels = ['Trailers', 'Animes', 'Animations', 'RecMovies', 'RecSeries', 'Streaming', 'TV', 'Rent', 'Theaters'];
-            if (res.status === 'rejected') {
-                console.error(`❌ [${labels[idx]}] Falhou:`, res.reason);
-            } else if (Array.isArray(res.value) && res.value.length === 0) {
-                console.warn(`⚠️ [${labels[idx]}] Sucesso mas retornou VAZIO.`);
-            }
-        });
-
         const trailers = results[0].status === "fulfilled" ? results[0].value : [];
         const animes = results[1].status === "fulfilled" ? results[1].value : [];
         const animations = results[2].status === "fulfilled" ? results[2].value : [];
@@ -183,6 +196,21 @@ export function useDashboardLogic() {
           }
         }
 
+        let smartRecMovies = recMovies;
+        let smartRecSeries = recSeries;
+
+        if (recMovies.length === 0) {
+            const allMovies = [...finalWeek, ...streaming, ...forRent, ...inTheaters]
+                .filter(i => (i.media_type === 'movie' || !i.media_type));
+            smartRecMovies = filterByPreferences(allMovies, userGenres);
+        }
+
+        if (recSeries.length === 0) {
+            const allSeries = [...finalWeek, ...onTv]
+                .filter(i => i.media_type === 'tv');
+            smartRecSeries = filterByPreferences(allSeries, userGenres);
+        }
+
         setData({
           trendingDay: sortedDay,
           trendingWeek: sortedWeek,
@@ -191,15 +219,14 @@ export function useDashboardLogic() {
           trailers,
           animes,
           animations,
-          recommendedMovies: recMovies,
-          recommendedSeries: recSeries,
+          recommendedMovies: smartRecMovies,
+          recommendedSeries: smartRecSeries,
           streaming,
           onTv,
           forRent,
           inTheaters,
         });
       } catch (error) {
-        console.error("Dashboard Crash:", error);
       } finally {
         if (isMounted.current) setLoading(false);
       }
@@ -208,7 +235,7 @@ export function useDashboardLogic() {
     return () => {
       isMounted.current = false;
     };
-  }, [prioritizeContent]);
+  }, [prioritizeContent, filterByPreferences]);
 
   return { data, currentHero, loading };
 }
