@@ -10,9 +10,30 @@ import BackgroundSelectorModal from '../../components/ui/BackgroundSelectorModal
 import UserListModal from '../../components/ui/UserListModal';
 import UserSearch from '../../components/UserSearch';
 import Modal from '../../components/ui/Modal';
-import { Activity, MessageSquare, ArrowDownCircle, BookOpen, Trophy, Star, Info, CheckCircle, Heart, Sparkles, Award, Zap, Crown, ShieldCheck, Flame, Play } from 'lucide-react';
+import { 
+  Activity, 
+  MessageSquare, 
+  ArrowDownCircle, 
+  BookOpen, 
+  Trophy, 
+  Star, 
+  Info, 
+  Award, 
+  Zap, 
+  Crown, 
+  ShieldCheck, 
+  Flame, 
+  Play, 
+  PenTool, 
+  Mic2, 
+  Feather, 
+  Eye, 
+  Sparkles, 
+  CheckCircle, 
+  Heart 
+} from 'lucide-react';
 
-const TROPHY_ICONS = { Award, Zap, Crown, ShieldCheck, Flame, Play, Star };
+const TROPHY_ICONS = { Award, Zap, Crown, ShieldCheck, Flame, Play, Star, PenTool, Mic2, Feather, Eye };
 
 export default function Profile() {
   const { user, data, ui, modals, actions } = useProfileLogic();
@@ -24,7 +45,7 @@ export default function Profile() {
     </div>
   );
 
-  const getXPNeeded = (level) => 100 + (level - 1) * 50;
+  const getXPNeeded = (level) => 100 + (level - 1) * 75;
   const xpRequired = getXPNeeded(user.level || 1);
   const progressPercent = Math.min(Math.round(((user.xp || 0) / xpRequired) * 100), 100);
 
@@ -34,6 +55,9 @@ export default function Profile() {
       case "Entidade Cinematográfica": return { text: "text-purple-400", bar: "bg-purple-500", border: "border-purple-500/40", shadow: "shadow-[0_0_25px_rgba(168,85,247,0.2)]" };
       case "Oráculo da Sétima Arte": return { text: "text-emerald-400", bar: "bg-emerald-500", border: "border-emerald-500/40", shadow: "shadow-[0_0_25px_rgba(16,185,129,0.2)]" };
       case "Mestre da Crítica": return { text: "text-amber-500", bar: "bg-amber-500", border: "border-amber-500/30", shadow: "shadow-[0_0_20px_rgba(245,158,11,0.15)]" };
+      case "Cinéfilo Experiente": return { text: "text-blue-400", bar: "bg-blue-500", border: "border-blue-500/30", shadow: "shadow-lg" };
+      case "Cinéfilo": return { text: "text-indigo-400", bar: "bg-indigo-500", border: "border-indigo-500/30", shadow: "shadow-md" };
+      case "Crítico Iniciante": return { text: "text-zinc-300", bar: "bg-zinc-500", border: "border-zinc-500/30", shadow: "shadow-sm" };
       default: return { text: "text-zinc-100", bar: "bg-violet-600", border: "border-white/5", shadow: "shadow-xl" };
     }
   };
@@ -155,6 +179,140 @@ export default function Profile() {
         <BackgroundSelectorModal isOpen={modals.background} onClose={() => actions.closeModal('background')} onSelect={actions.updateBackground} />
         <UserListModal isOpen={modals.followers} onClose={() => actions.closeModal('followers')} title="Seguidores" users={data.followersList} loading={ui.loadingLists} />
         <UserListModal isOpen={modals.following} onClose={() => actions.closeModal('following')} title="Seguindo" users={data.followingList} loading={ui.loadingLists} />
+        
+        <Modal 
+            isOpen={isXpInfoOpen} 
+            onClose={() => setIsXpInfoOpen(false)} 
+            title="Sistema de Progressão" 
+            size="md"
+        >
+            <div className="space-y-8 p-1">
+                <div className="space-y-4">
+                    <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Como ganhar XP</h3>
+                    <div className="grid gap-3">
+                        <div className="flex items-center justify-between p-4 bg-zinc-900/50 rounded-2xl border border-white/5 hover:border-violet-500/20 transition-all">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-violet-500/10 rounded-lg text-violet-400">
+                                    <MessageSquare size={18} />
+                                </div>
+                                <span className="font-bold text-zinc-200">Escrever uma Avaliação</span>
+                            </div>
+                            <span className="font-black text-violet-400 text-sm bg-violet-500/10 px-3 py-1 rounded-lg border border-violet-500/20 shadow-[0_0_10px_rgba(139,92,246,0.1)]">+20 XP</span>
+                        </div>
+                        <div className="flex items-center justify-between p-4 bg-zinc-900/50 rounded-2xl border border-white/5 hover:border-violet-500/20 transition-all">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
+                                    <CheckCircle size={18} />
+                                </div>
+                                <span className="font-bold text-zinc-200">Marcar como Assistido</span>
+                            </div>
+                            <span className="font-black text-emerald-400 text-sm bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]">+10 XP</span>
+                        </div>
+                        <div className="flex items-center justify-between p-4 bg-zinc-900/50 rounded-2xl border border-white/5 hover:border-violet-500/20 transition-all">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-red-500/10 rounded-lg text-red-400">
+                                    <Heart size={18} />
+                                </div>
+                                <span className="font-bold text-zinc-200">Dar Curtida (Like)</span>
+                            </div>
+                            <span className="font-black text-red-400 text-sm bg-red-500/10 px-3 py-1 rounded-lg border border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]">+5 XP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Títulos por Avaliações</h3>
+                        <span className="text-[10px] font-bold text-zinc-600 bg-zinc-900 px-2 py-1 rounded border border-white/5">Baseado em Reviews</span>
+                    </div>
+                    
+                    <div className="space-y-3 max-h-[320px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-zinc-700">
+                        <div className="p-4 rounded-xl bg-gradient-to-r from-cyan-950/40 to-transparent border border-cyan-500/30 flex items-center gap-4 relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-cyan-500/5 group-hover:bg-cyan-500/10 transition-colors" />
+                            <div className="p-3 bg-cyan-500/20 rounded-xl text-cyan-400 ring-1 ring-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                                <Crown size={24} />
+                            </div>
+                            <div className="flex flex-col relative z-10">
+                                <span className="font-black text-cyan-400 text-lg tracking-tight">Divindade do Cinema</span>
+                                <span className="text-xs font-bold text-cyan-500/70 uppercase tracking-wider">500+ Reviews</span>
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-xl bg-gradient-to-r from-purple-950/40 to-transparent border border-purple-500/30 flex items-center gap-4 relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-purple-500/5 group-hover:bg-purple-500/10 transition-colors" />
+                            <div className="p-3 bg-purple-500/20 rounded-xl text-purple-400 ring-1 ring-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                                <Zap size={24} />
+                            </div>
+                            <div className="flex flex-col relative z-10">
+                                <span className="font-black text-purple-400 text-lg tracking-tight">Entidade Cinematográfica</span>
+                                <span className="text-xs font-bold text-purple-500/70 uppercase tracking-wider">250+ Reviews</span>
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 to-transparent border border-emerald-500/30 flex items-center gap-4 relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors" />
+                            <div className="p-3 bg-emerald-500/20 rounded-xl text-emerald-400 ring-1 ring-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                                <Sparkles size={24} />
+                            </div>
+                            <div className="flex flex-col relative z-10">
+                                <span className="font-black text-emerald-400 text-lg tracking-tight">Oráculo da Sétima Arte</span>
+                                <span className="text-xs font-bold text-emerald-500/70 uppercase tracking-wider">100+ Reviews</span>
+                            </div>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-amber-950/20 border border-amber-500/20 flex items-center gap-4">
+                            <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500">
+                                <Award size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="font-bold text-amber-500 text-base">Mestre da Crítica</span>
+                                <span className="text-xs font-medium text-amber-500/60">50+ Reviews</span>
+                            </div>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-blue-950/20 border border-blue-500/20 flex items-center gap-4">
+                            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+                                <Star size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="font-bold text-blue-500 text-base">Cinéfilo Experiente</span>
+                                <span className="text-xs font-medium text-blue-500/60">20+ Reviews</span>
+                            </div>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-indigo-950/20 border border-indigo-500/20 flex items-center gap-4">
+                            <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-500">
+                                <MessageSquare size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="font-bold text-indigo-500 text-base">Cinéfilo</span>
+                                <span className="text-xs font-medium text-indigo-500/60">10+ Reviews</span>
+                            </div>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-zinc-800/40 border border-zinc-700/50 flex items-center gap-4">
+                            <div className="p-2 bg-zinc-700/30 rounded-lg text-zinc-400">
+                                <PenTool size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="font-bold text-zinc-300 text-base">Crítico Iniciante</span>
+                                <span className="text-xs font-medium text-zinc-500">5+ Reviews</span>
+                            </div>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-zinc-900 border border-white/5 flex items-center gap-4 opacity-70">
+                            <div className="p-2 bg-zinc-800 rounded-lg text-zinc-600">
+                                <Eye size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="font-bold text-zinc-500 text-base">Espectador</span>
+                                <span className="text-xs font-medium text-zinc-600">Menos de 5 Reviews</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Modal>
     </div>
   );
 }
