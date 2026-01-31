@@ -90,7 +90,6 @@ export const getRecommendations = (mediaType) => api.get(`/tmdb/recommendations/
 export const getLatestTrailers = () => api.get('/tmdb/latest-trailers');
 export const getAnimeReleases = () => api.get('/tmdb/anime-releases');
 export const getAnimations = () => api.get('/tmdb/animations');
-export const getAwards = (id) => api.get(`/tmdb/awards/${id}`);
 
 export const getNotifications = () => api.get('/notifications');
 export const getUnreadCount = () => api.get('/notifications/count');

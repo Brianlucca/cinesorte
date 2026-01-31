@@ -82,12 +82,28 @@ export function useDashboardLogic() {
           weekData = null;
 
         if (cachedDay) {
-          const parsed = JSON.parse(cachedDay);
-          if (Date.now() - parsed.timestamp < ONE_DAY) dayData = parsed.data;
+          try {
+            const parsed = JSON.parse(cachedDay);
+            if (
+              Date.now() - parsed.timestamp < ONE_DAY &&
+              Array.isArray(parsed.data) &&
+              parsed.data.length > 0
+            ) {
+              dayData = parsed.data;
+            }
+          } catch (e) {}
         }
         if (cachedWeek) {
-          const parsed = JSON.parse(cachedWeek);
-          if (Date.now() - parsed.timestamp < ONE_WEEK) weekData = parsed.data;
+          try {
+            const parsed = JSON.parse(cachedWeek);
+            if (
+              Date.now() - parsed.timestamp < ONE_WEEK &&
+              Array.isArray(parsed.data) &&
+              parsed.data.length > 0
+            ) {
+              weekData = parsed.data;
+            }
+          } catch (e) {}
         }
 
         const [resDay, resWeek] = await Promise.all([
@@ -143,9 +159,16 @@ export function useDashboardLogic() {
           .filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i)
           .slice(0, 20);
 
-        setHeroQueue(validHeroes);
-        if (validHeroes.length > 0)
+        if (validHeroes.length > 0) {
+          setHeroQueue(validHeroes);
           setCurrentHero(validHeroes[Math.floor(Math.random() * validHeroes.length)]);
+        } else {
+          const fallback = [...sortedWeek].filter((i) => i.backdrop_path && !i.trailerKey).slice(0, 20);
+          if (fallback.length > 0) {
+            setHeroQueue(fallback);
+            setCurrentHero(fallback[Math.floor(Math.random() * fallback.length)]);
+          }
+        }
 
         setData({
           trendingDay: sortedDay,
