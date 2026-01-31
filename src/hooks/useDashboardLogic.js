@@ -56,30 +56,6 @@ export function useDashboardLogic() {
     });
   }, []);
 
-  const filterByPreferences = useCallback((items, userGenreCounts) => {
-    if (!items || !Array.isArray(items) || items.length === 0) return [];
-    if (!userGenreCounts || Object.keys(userGenreCounts).length === 0) return [];
-
-    const userGenreIds = Object.keys(userGenreCounts).map((id) => parseInt(id));
-
-    const strictMatches = items.filter((item) => {
-      if (!item.genre_ids) return false;
-      return item.genre_ids.some((genreId) => userGenreIds.includes(genreId));
-    });
-
-    return strictMatches.sort((a, b) => {
-      const aScore = (a.genre_ids || []).reduce(
-        (acc, id) => acc + (userGenreCounts[id] || 0),
-        0
-      );
-      const bScore = (b.genre_ids || []).reduce(
-        (acc, id) => acc + (userGenreCounts[id] || 0),
-        0
-      );
-      return bScore - aScore;
-    });
-  }, []);
-
   useEffect(() => {
     if (heroQueue.length === 0) return;
     const interval = setInterval(() => {
@@ -95,9 +71,17 @@ export function useDashboardLogic() {
       setLoading(true);
       try {
         let userGenres = {};
+        let topGenresIdsString = "";
+        
         try {
           const userProfile = await getMe();
           userGenres = userProfile.genreCounts || {};
+          
+          topGenresIdsString = Object.entries(userGenres)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 3) 
+            .map(([id]) => id)
+            .join('|');
         } catch (e) {}
 
         const cachedDay = localStorage.getItem(CACHE_DAY_KEY);
@@ -161,6 +145,8 @@ export function useDashboardLogic() {
           getDiscover({ media_type: "tv", sort_by: "popularity.desc" }),
           getDiscover({ monetization_types: "rent" }),
           getNowPlaying(),
+          getDiscover({ with_genres: topGenresIdsString, sort_by: 'popularity.desc', 'vote_count.gte': 50 }),
+          getDiscover({ media_type: "tv", with_genres: topGenresIdsString, sort_by: 'popularity.desc', 'vote_count.gte': 50 }),
         ]);
 
         if (!isMounted.current) return;
@@ -174,6 +160,8 @@ export function useDashboardLogic() {
         const onTv = results[6].status === "fulfilled" ? results[6].value : [];
         const forRent = results[7].status === "fulfilled" ? results[7].value : [];
         const inTheaters = results[8].status === "fulfilled" ? results[8].value : [];
+        const fallbackGenreMovies = results[9].status === "fulfilled" ? results[9].value : [];
+        const fallbackGenreSeries = results[10].status === "fulfilled" ? results[10].value : [];
 
         const sortedDay = prioritizeContent(finalDay, userGenres);
         const sortedWeek = prioritizeContent(finalWeek, userGenres);
@@ -196,20 +184,13 @@ export function useDashboardLogic() {
           }
         }
 
-        let smartRecMovies = recMovies;
-        let smartRecSeries = recSeries;
+        const smartRecMovies = recMovies.length > 0 
+            ? recMovies 
+            : fallbackGenreMovies.filter(m => m.id).slice(0, 20);
 
-        if (recMovies.length === 0) {
-            const allMovies = [...finalWeek, ...streaming, ...forRent, ...inTheaters]
-                .filter(i => (i.media_type === 'movie' || !i.media_type));
-            smartRecMovies = filterByPreferences(allMovies, userGenres);
-        }
-
-        if (recSeries.length === 0) {
-            const allSeries = [...finalWeek, ...onTv]
-                .filter(i => i.media_type === 'tv');
-            smartRecSeries = filterByPreferences(allSeries, userGenres);
-        }
+        const smartRecSeries = recSeries.length > 0 
+            ? recSeries 
+            : fallbackGenreSeries.filter(s => s.id).slice(0, 20);
 
         setData({
           trendingDay: sortedDay,
@@ -235,7 +216,7 @@ export function useDashboardLogic() {
     return () => {
       isMounted.current = false;
     };
-  }, [prioritizeContent, filterByPreferences]);
+  }, [prioritizeContent]);
 
   return { data, currentHero, loading };
 }
