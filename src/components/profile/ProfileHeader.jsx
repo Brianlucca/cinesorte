@@ -8,6 +8,7 @@ export default function ProfileHeader({ user, onEditAvatar, onEditBackground, on
         <div className="relative w-full h-[50vh] min-h-[400px] overflow-hidden rounded-3xl shadow-2xl bg-zinc-900">
             {user?.backgroundURL ? (
                 <img 
+                    key={user.backgroundURL}
                     src={user.backgroundURL} 
                     alt="Cover" 
                     className="w-full h-full object-cover transition-transform duration-700 group-hover/header:scale-105" 
@@ -103,7 +104,7 @@ export default function ProfileHeader({ user, onEditAvatar, onEditBackground, on
                             {user?.createdAt && (
                                 <div className="hidden md:flex items-center gap-2 text-sm font-medium bg-zinc-900/80 px-5 py-2.5 rounded-full border border-white/5">
                                     <Calendar size={16} className="text-zinc-500" />
-                                    <span>Desde {new Date(user.createdAt._seconds * 1000).getFullYear()}</span>
+                                    <span>Desde {user.createdAt._seconds ? new Date(user.createdAt._seconds * 1000).getFullYear() : new Date(user.createdAt).getFullYear()}</span>
                                 </div>
                             )}
                         </div>
