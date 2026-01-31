@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import api, {
+import {
   getLatestTrailers,
   getAnimeReleases,
   getAnimations,
@@ -74,7 +74,9 @@ export function useDashboardLogic() {
         try {
           const userProfile = await getMe();
           userGenres = userProfile.genreCounts || {};
-        } catch (e) {}
+        } catch (e) {
+          console.error("Erro ao carregar perfil (getMe):", e);
+        }
 
         const cachedDay = localStorage.getItem(CACHE_DAY_KEY);
         const cachedWeek = localStorage.getItem(CACHE_WEEK_KEY);
@@ -141,6 +143,15 @@ export function useDashboardLogic() {
 
         if (!isMounted.current) return;
 
+        results.forEach((res, idx) => {
+            const labels = ['Trailers', 'Animes', 'Animations', 'RecMovies', 'RecSeries', 'Streaming', 'TV', 'Rent', 'Theaters'];
+            if (res.status === 'rejected') {
+                console.error(`❌ [${labels[idx]}] Falhou:`, res.reason);
+            } else if (Array.isArray(res.value) && res.value.length === 0) {
+                console.warn(`⚠️ [${labels[idx]}] Sucesso mas retornou VAZIO.`);
+            }
+        });
+
         const trailers = results[0].status === "fulfilled" ? results[0].value : [];
         const animes = results[1].status === "fulfilled" ? results[1].value : [];
         const animations = results[2].status === "fulfilled" ? results[2].value : [];
@@ -188,6 +199,7 @@ export function useDashboardLogic() {
           inTheaters,
         });
       } catch (error) {
+        console.error("Dashboard Crash:", error);
       } finally {
         if (isMounted.current) setLoading(false);
       }
