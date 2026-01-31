@@ -1,37 +1,47 @@
-import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Bell, Heart, MessageCircle, UserPlus, TrendingUp, Layers } from "lucide-react";
-import { getNotifications, getUnreadCount, markNotificationRead } from "../../services/api";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { Bell, Heart, UserPlus, TrendingUp, Layers, Info } from "lucide-react";
+import { getNotifications, markNotificationRead } from "../../services/api";
 
 export default function NotificationBell({ isMobile }) {
   const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
+  const loadNotifications = async () => {
+    try {
+      const data = await getNotifications();
+      const list = Array.isArray(data) ? data : [];
+      setNotifications(list);
+    } catch (e) {
+    }
+  };
+
   useEffect(() => {
-    fetchCount();
-    const interval = setInterval(fetchCount, 60000);
+    loadNotifications();
+    const interval = setInterval(loadNotifications, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  const fetchCount = async () => {
-    try {
-      const data = await getUnreadCount();
-      setUnreadCount(data.count);
-    } catch (e) {}
-  };
+  const badgeCount = useMemo(() => {
+    const now = new Date();
+    return notifications.filter(n => {
+      if (n.read) return false;
+      
+      const date = n.createdAt?._seconds 
+        ? new Date(n.createdAt._seconds * 1000) 
+        : new Date(n.createdAt);
+      
+      const diffHours = (now - date) / (1000 * 60 * 60);
+      return diffHours < 1; 
+    }).length;
+  }, [notifications]);
 
-  const handleOpen = async () => {
+  const handleOpen = () => {
+    setIsOpen(!isOpen);
     if (!isOpen) {
-      setIsOpen(true);
-      try {
-        const data = await getNotifications();
-        setNotifications(data);
-      } catch (e) {}
-    } else {
-      setIsOpen(false);
+      loadNotifications();
     }
   };
 
@@ -50,15 +60,19 @@ export default function NotificationBell({ isMobile }) {
     if (!notif.read) {
         try {
             await markNotificationRead(notif.id);
-            setUnreadCount((prev) => Math.max(0, prev - 1));
-            setNotifications((prev) => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
+            setNotifications((prev) => 
+                prev.map(n => n.id === notif.id ? { ...n, read: true } : n)
+            );
         } catch (e) {}
     }
 
     setIsOpen(false);
 
-    if (notif.type === 'follow' && notif.senderUsername) {
-        navigate(`/app/profile/${notif.senderUsername}`);
+    if (notif.type === 'follow') {
+        const targetUser = notif.senderUsername || notif.senderName || notif.data?.username;
+        if (targetUser) {
+            navigate(`/app/profile/${targetUser}`);
+        }
     } else if (notif.type === 'new_content' && notif.mediaId && notif.mediaType) {
         let cleanId = notif.mediaId.replace(/^(movie-|tv-)/, '');
         navigate(`/app/${notif.mediaType}/${cleanId}`);
@@ -75,13 +89,17 @@ export default function NotificationBell({ isMobile }) {
       case "new_content": return <Heart size={16} className="text-red-500" />;
       case "level_up": return <TrendingUp size={16} className="text-yellow-500" />;
       case "list_share": return <Layers size={16} className="text-purple-500" />;
-      default: return <Bell size={16} className="text-zinc-400" />;
+      default: return <Info size={16} className="text-zinc-400" />;
     }
   };
 
   const formatDate = (dateInput) => {
     if (!dateInput) return "";
-    const date = new Date(dateInput);
+    
+    const date = dateInput._seconds 
+      ? new Date(dateInput._seconds * 1000) 
+      : new Date(dateInput);
+      
     const now = new Date();
     const diff = Math.floor((now - date) / 1000); 
 
@@ -92,22 +110,22 @@ export default function NotificationBell({ isMobile }) {
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative md:fixed md:top-6 md:right-8 md:z-50" ref={dropdownRef}>
       <button
         onClick={handleOpen}
-        className="relative p-2 text-zinc-400 hover:text-white transition-colors"
+        className="relative p-2 text-zinc-400 hover:text-white transition-colors bg-zinc-900/50 md:bg-zinc-900/80 rounded-full md:backdrop-blur-md md:border md:border-white/10 md:shadow-lg"
       >
         <Bell size={24} />
-        {unreadCount > 0 && (
+        {badgeCount > 0 && (
           <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-zinc-950 animate-pulse" />
         )}
       </button>
 
       {isOpen && (
-        <div className={`absolute z-50 w-80 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden ${isMobile ? 'right-0 top-full mt-2' : 'right-0 top-full mt-4'}`}>
+        <div className="absolute z-50 w-80 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden right-0 top-full mt-4">
           <div className="p-3 border-b border-white/5 flex justify-between items-center">
             <h3 className="font-bold text-sm text-white">Notificações</h3>
-            {unreadCount > 0 && <span className="text-xs text-violet-400 font-medium">{unreadCount} novas</span>}
+            {badgeCount > 0 && <span className="text-xs text-violet-400 font-medium">{badgeCount} novas</span>}
           </div>
           
           <div className="max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
