@@ -87,7 +87,8 @@ export function useDashboardLogic() {
             if (
               Date.now() - parsed.timestamp < ONE_DAY &&
               Array.isArray(parsed.data) &&
-              parsed.data.length > 0
+              parsed.data.length > 0 &&
+              parsed.data.some((i) => i.backdrop_path && !i.trailerKey)
             ) {
               dayData = parsed.data;
             }
@@ -99,7 +100,8 @@ export function useDashboardLogic() {
             if (
               Date.now() - parsed.timestamp < ONE_WEEK &&
               Array.isArray(parsed.data) &&
-              parsed.data.length > 0
+              parsed.data.length > 0 &&
+              parsed.data.some((i) => i.backdrop_path && !i.trailerKey)
             ) {
               weekData = parsed.data;
             }
@@ -107,8 +109,8 @@ export function useDashboardLogic() {
         }
 
         const [resDay, resWeek] = await Promise.all([
-          dayData ? Promise.resolve({ data: dayData }) : getTrending("day"),
-          weekData ? Promise.resolve({ data: weekData }) : getTrending("week"),
+          dayData ? Promise.resolve({ results: dayData }) : getTrending("day"),
+          weekData ? Promise.resolve({ results: weekData }) : getTrending("week"),
         ]);
 
         const finalDay = Array.isArray(resDay) ? resDay : resDay.results || [];
