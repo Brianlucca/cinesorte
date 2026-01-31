@@ -15,7 +15,6 @@ import {
   postReview,
   updateReview,
   updateComment,
-  getAwards,
   toggleLikeReview,
   getComments, 
 } from "../services/api";
@@ -76,7 +75,6 @@ export function useMediaDetailsLogic() {
           getMovieDetails(type, id),
           getProviders(type, id),
           getMediaReviews(id),
-          getAwards(id),
         ];
 
         if (user && user.uid) {
