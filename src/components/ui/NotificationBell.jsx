@@ -69,7 +69,7 @@ export default function NotificationBell({ isMobile }) {
     setIsOpen(false);
 
     if (notif.type === 'follow') {
-        const targetUser = notif.senderUsername || notif.senderName || notif.data?.username;
+        const targetUser = notif.senderUsername || notif.senderName;
         if (targetUser) {
             navigate(`/app/profile/${targetUser}`);
         }
