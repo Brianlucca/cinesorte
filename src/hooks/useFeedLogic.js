@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
-  getGlobalFeed, 
   getFollowingFeed, 
   getTmdbSearch, 
   postReview, 
   deleteReview, 
+  deleteListShare, 
   getUserReviews, 
   getTrending,
   followUser,
@@ -24,13 +24,16 @@ export function useFeedLogic() {
   
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [feedType, setFeedType] = useState('global');
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [feedType, setFeedType] = useState('following');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   
   const [localUser, setLocalUser] = useState(user || {});
   const [suggestions, setSuggestions] = useState({ users: [], content: [] });
 
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const [deleteModal, setDeleteModal] = useState({ isOpen: false, reviewId: null });
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, reviewId: null, type: null });
 
   const [postStep, setPostStep] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,12 +54,12 @@ export function useFeedLogic() {
           if (user?.uid) {
               try {
                   const stats = await getUserStats();
-                  setLocalUser(prev => ({ 
-                      ...prev, 
-                      ...user,
-                      followersCount: stats.followersCount,
-                      followingCount: stats.followingCount
-                  }));
+                  setLocalUser(prev => {
+                      if (prev.followingCount === stats.followingCount && prev.followersCount === stats.followersCount) {
+                          return prev;
+                      }
+                      return { ...prev, ...user, ...stats };
+                  });
               } catch(e) {
                   setLocalUser(user);
               }
@@ -65,37 +68,131 @@ export function useFeedLogic() {
       syncUserStats();
   }, [user]);
 
-  const loadFeed = useCallback(async () => {
-    setLoading(true);
-    setReviews([]); 
+  const loadFeed = useCallback(async (currentPage = 1, isRefresh = false) => {
+    if (currentPage === 1) setLoading(true);
+    else setLoadingMore(true);
+
     try {
       let data = [];
-      if (feedType === 'global') {
-        data = await getGlobalFeed();
-      } else if (feedType === 'following') {
-        data = await getFollowingFeed(); 
+      
+      if (feedType === 'following') {
+        const [followingData, myData] = await Promise.all([
+            getFollowingFeed(currentPage),
+            localUser?.username ? getUserReviews(localUser.username, currentPage) : Promise.resolve([])
+        ]);
+        
+        const combined = [...followingData, ...myData];
+        const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+        
+        unique.sort((a, b) => {
+            const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+            const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+            return dateB - dateA;
+        });
+        
+        data = unique;
+
       } else if (feedType === 'collections') {
-        data = await getSharedListsFeed();
-        if (Array.isArray(data)) {
-            data = data.filter(item => item.listCount > 0 && item.listItems && item.listItems.length > 0);
-        }
+        data = await getSharedListsFeed(currentPage);
       } else if (feedType === 'mine' && localUser?.username) {
-        data = await getUserReviews(localUser.username);
+        data = await getUserReviews(localUser.username, currentPage);
       }
       
-      const safeData = Array.isArray(data) ? data.map(item => ({
-          ...item,
-          isLikedByCurrentUser: !!item.isLikedByCurrentUser, 
-          replies: item.replies || []
-      })) : [];
+      const safeData = Array.isArray(data) ? data.map(item => {
+          let listItemsSafe = [];
+          if (item.listItems && Array.isArray(item.listItems)) {
+             listItemsSafe = item.listItems;
+          }
 
-      setReviews(safeData);
+          const isList = item.type === 'list_share' || (item.listName && listItemsSafe.length > 0);
+          const derivedType = isList ? 'list_share' : (item.type || 'review');
+
+          return {
+            ...item,
+            type: derivedType,
+            uniqueKey: `${derivedType}-${item.id}`,
+            isLikedByCurrentUser: !!item.isLikedByCurrentUser, 
+            replies: item.replies || [],
+            listItems: listItemsSafe,
+            listCount: Number(item.listCount) || listItemsSafe.length || 0,
+            listName: derivedType === 'list_share' ? (item.listName || "Coleção") : null,
+            username: item.username || item.user?.username,
+            userPhoto: item.userPhoto || item.user?.photoURL
+          };
+      }) : [];
+
+      const filteredData = safeData.filter(item => {
+          if (item.type === 'list_share' && item.listCount === 0) {
+              return false;
+          }
+
+          if (feedType === 'following') {
+              return true;
+          }
+          
+          if (feedType === 'collections') {
+              return item.type === 'list_share';
+          }
+          
+          if (feedType === 'mine') {
+             return item.username === localUser?.username;
+          }
+          
+          return true;
+      });
+
+      if (filteredData.length < 5 && currentPage > 1) {
+          setHasMore(false);
+      } else {
+          setHasMore(true);
+      }
+
+      if (isRefresh || currentPage === 1) {
+          setReviews(filteredData);
+      } else {
+          setReviews(prev => {
+              const existingKeys = new Set(prev.map(r => r.uniqueKey));
+              const uniqueNew = filteredData.filter(r => !existingKeys.has(r.uniqueKey));
+              return [...prev, ...uniqueNew];
+          });
+      }
+
     } catch (error) { 
-      setReviews([]);
+      if (currentPage === 1) setReviews([]);
     } finally { 
       setLoading(false); 
+      setLoadingMore(false);
     }
   }, [feedType, localUser?.username]);
+
+  const handleSetFeedType = (type) => {
+      if (feedType === type) return;
+      setFeedType(type);
+      setPage(1);
+      setReviews([]);
+      setHasMore(true);
+  };
+
+  const loadMore = () => {
+      if (!loading && !loadingMore && hasMore) {
+          const nextPage = page + 1;
+          setPage(nextPage);
+          loadFeed(nextPage, false);
+      }
+  };
+
+  const checkGenreMatch = (userGenres, itemGenres, minMatches = 3) => {
+      if (!userGenres || !itemGenres) return false;
+      const userGenreIds = Object.keys(userGenres);
+      let matches = 0;
+      if (Array.isArray(itemGenres)) {
+          matches = itemGenres.filter(id => userGenreIds.includes(id.toString())).length;
+      } else {
+          const targetIds = Object.keys(itemGenres);
+          matches = targetIds.filter(id => userGenreIds.includes(id)).length;
+      }
+      return matches >= minMatches;
+  };
 
   const loadSidebarData = useCallback(async () => {
       try {
@@ -104,17 +201,21 @@ export function useFeedLogic() {
               getSuggestions()
           ]);
           
-          const validUsers = Array.isArray(usersData) ? usersData.filter(u => u.username !== localUser?.username) : [];
+          const validUsers = Array.isArray(usersData) 
+            ? usersData.filter(u => u.username !== localUser?.username) 
+            : [];
+
+          const validContent = Array.isArray(contentData) ? contentData : [];
 
           setSuggestions({
               users: validUsers.slice(0, 5),
-              content: contentData.slice(0, 4)
+              content: validContent.slice(0, 4)
           });
       } catch (e) {}
   }, [localUser?.username]);
 
   useEffect(() => { 
-      loadFeed(); 
+      loadFeed(1, true); 
       loadSidebarData();
   }, [loadFeed, loadSidebarData]);
 
@@ -137,7 +238,11 @@ export function useFeedLogic() {
             try {
                 const data = await searchUsers(userSearchQuery);
                 const results = Array.isArray(data) ? data : [];
-                setUserSearchResults(results.filter(u => u.id !== user?.uid).slice(0, 5));
+                setUserSearchResults(
+                    results
+                        .filter(u => u.username !== user?.username)
+                        .slice(0, 5)
+                );
             } catch (e) { setUserSearchResults([]); }
         } else { setUserSearchResults([]); }
     }, 400);
@@ -188,7 +293,7 @@ export function useFeedLogic() {
         
         toast.success('Publicado', 'Sua avaliação foi postada!');
         handleClosePostModal();
-        loadFeed(); 
+        handleSetFeedType('mine');
     } catch (error) { 
         toast.error('Erro', 'Falha ao publicar avaliação. Verifique os dados.');
     } finally {
@@ -196,9 +301,10 @@ export function useFeedLogic() {
     }
   };
 
-  const handleFollowUser = async (userId) => {
+  const handleFollowUser = async (targetUsername) => {
+      if (!targetUsername) return;
       try {
-          await followUser(userId);
+          await followUser(targetUsername);
           toast.success('Seguindo', 'Você começou a seguir este usuário.');
           
           setLocalUser(prev => ({
@@ -208,41 +314,45 @@ export function useFeedLogic() {
           
           setSuggestions(prev => ({
               ...prev,
-              users: prev.users.filter(u => u.id !== userId)
+              users: prev.users.filter(u => u.username !== targetUsername)
           }));
           
-          setUserSearchResults(prev => prev.filter(u => u.id !== userId));
-
-          if (feedType === 'following') loadFeed();
+          setUserSearchResults(prev => prev.filter(u => u.username !== targetUsername));
           
           const stats = await getUserStats();
           setLocalUser(prev => ({ ...prev, ...stats }));
 
+          if (feedType === 'following') {
+             loadFeed(1, true);
+          }
       } catch (e) {
           toast.error('Erro', 'Não foi possível seguir.');
       }
   };
 
-  const promptDelete = (reviewId) => {
-      setDeleteModal({ isOpen: true, reviewId });
+  const promptDelete = (reviewId, type) => {
+      setDeleteModal({ isOpen: true, reviewId, type });
   };
 
   const confirmDelete = async () => {
-      const { reviewId } = deleteModal;
+      const { reviewId, type } = deleteModal;
       try {
-          await deleteReview(reviewId);
+          if (type === 'list_share') {
+              await deleteListShare(reviewId);
+          } else {
+              await deleteReview(reviewId);
+          }
           setReviews(prev => prev.filter(r => r.id !== reviewId));
           toast.success('Removido', 'Publicação apagada.');
       } catch (error) {
-          toast.error('Erro', 'Não foi possível apagar.');
+          toast.error('Erro', 'Não foi possível apagar. Tente novamente.');
       } finally {
-          setDeleteModal({ isOpen: false, reviewId: null });
+          setDeleteModal({ isOpen: false, reviewId: null, type: null });
       }
   };
 
   const handleLike = async (reviewId) => {
     likeClickCounts.current[reviewId] = (likeClickCounts.current[reviewId] || 0) + 1;
-
     setReviews(prev => prev.map(r => {
         if (r.id === reviewId) {
             const isCurrentlyLiked = !!r.isLikedByCurrentUser;
@@ -250,28 +360,15 @@ export function useFeedLogic() {
             const nextState = !isCurrentlyLiked;
             let nextCount = nextState ? currentCount + 1 : currentCount - 1;
             if (nextCount < 0) nextCount = 0;
-
-            return {
-                ...r,
-                isLikedByCurrentUser: nextState,
-                likesCount: nextCount
-            };
+            return { ...r, isLikedByCurrentUser: nextState, likesCount: nextCount };
         }
         return r;
     }));
-
-    if (likeTimeouts.current[reviewId]) {
-        clearTimeout(likeTimeouts.current[reviewId]);
-    }
-
+    if (likeTimeouts.current[reviewId]) clearTimeout(likeTimeouts.current[reviewId]);
     likeTimeouts.current[reviewId] = setTimeout(async () => {
         const clicks = likeClickCounts.current[reviewId] || 0;
         if (clicks % 2 !== 0) {
-            try {
-                await toggleLikeReview(reviewId);
-            } catch (error) {
-                console.error("Erro ao sincronizar like:", error);
-            }
+            try { await toggleLikeReview(reviewId); } catch (error) {}
         }
         delete likeClickCounts.current[reviewId];
         delete likeTimeouts.current[reviewId];
@@ -282,9 +379,7 @@ export function useFeedLogic() {
     try {
         const comments = await getComments(reviewId);
         setReviews(prev => prev.map(r => {
-            if (r.id === reviewId) {
-                return { ...r, replies: comments };
-            }
+            if (r.id === reviewId) return { ...r, replies: comments };
             return r;
         }));
     } catch (error) {
@@ -297,6 +392,8 @@ export function useFeedLogic() {
     state: {
         reviews,
         loading,
+        loadingMore,
+        hasMore,
         feedType,
         suggestions,
         isPostModalOpen,
@@ -310,13 +407,11 @@ export function useFeedLogic() {
             rating,
             isSubmitting
         },
-        userSearch: {
-            query: userSearchQuery,
-            results: userSearchResults
-        }
+        userSearch: { query: userSearchQuery, results: userSearchResults }
     },
     actions: {
-        setFeedType,
+        setFeedType: handleSetFeedType,
+        loadMore,
         setSearchQuery,
         setPostText,
         setRating,
@@ -328,7 +423,7 @@ export function useFeedLogic() {
         handleFollowUser,
         promptDelete,
         confirmDelete,
-        closeDeleteModal: () => setDeleteModal({ isOpen: false, reviewId: null }),
+        closeDeleteModal: () => setDeleteModal({ isOpen: false, reviewId: null, type: null }),
         setUserSearchQuery,
         handleLike,
         handleLoadComments

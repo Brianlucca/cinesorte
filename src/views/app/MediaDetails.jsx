@@ -404,6 +404,8 @@ export default function MediaDetails() {
             onDeleteComment={actions.handleDeleteComment}
             onLike={actions.handleLikeReview}
             onLoadReplies={actions.handleLoadReplies}
+            onEditReview={actions.handleEditReview}
+            onEditReply={actions.handleEditReply}
             isEliteUser={isEliteUser}
           />
         </div>

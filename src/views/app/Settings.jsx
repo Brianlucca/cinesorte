@@ -10,22 +10,82 @@ import {
   Info,
   Camera,
   ChevronRight,
+  ChevronDown,
   Lock,
+  Headset,
+  Send
 } from "lucide-react";
 import { useSettingsLogic } from "../../hooks/useSettingsLogic";
 import Modal from "../../components/ui/Modal";
 import AvatarSelectorModal from "../../components/ui/AvatarSelectorModal";
+import { useToast } from "../../context/ToastContext";
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("profile");
   const [deleteInput, setDeleteInput] = useState("");
+  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
+  const [contactMessage, setContactMessage] = useState("");
   const { user, form, ui, modals, actions } = useSettingsLogic();
+  const toast = useToast();
 
   const menuItems = [
     { id: "profile", label: "Meu Perfil", icon: User },
     { id: "security", label: "Segurança & Login", icon: Shield },
+    { id: "support", label: "Suporte & Contato", icon: Headset },
     { id: "about", label: "Sobre o Sistema", icon: Info },
   ];
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    
+    const lastSentDate = localStorage.getItem("support_last_sent");
+    if (lastSentDate) {
+      const now = new Date();
+      const last = new Date(lastSentDate);
+      const diffTime = Math.abs(now - last);
+      const diffHours = Math.ceil(diffTime / (1000 * 60 * 60)); 
+
+      if (diffHours < 24) {
+        toast.error("Limite atingido", "Você só pode enviar uma mensagem de suporte a cada 24 horas.");
+        return;
+      }
+    }
+
+    setIsSubmittingContact(true);
+    
+    const formData = new FormData(e.target);
+    
+    try {
+      const formSpreeUrl = import.meta.env.VITE_FORMSPREE_URL; 
+      
+      if (!formSpreeUrl) {
+          toast.error("Erro de Configuração", "URL do formulário não encontrada.");
+          setIsSubmittingContact(false);
+          return;
+      }
+
+      const response = await fetch(formSpreeUrl, {
+        method: "POST",
+        body: formData,
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        toast.success("Enviado", "Sua mensagem foi recebida! Responderemos em breve por email.");
+        e.target.reset();
+        setContactMessage("");
+        localStorage.setItem("support_last_sent", new Date().toISOString());
+      } else {
+        toast.error("Erro", "Não foi possível enviar a mensagem. Tente mais tarde.");
+      }
+    } catch (error) {
+      toast.error("Erro", "Problema de conexão ao enviar formulário.");
+    } finally {
+      setIsSubmittingContact(false);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto pt-8 pb-20 px-4 md:px-8 animate-in fade-in">
@@ -123,9 +183,6 @@ export default function Settings() {
                           className="absolute right-4 top-3.5 text-zinc-600"
                         />
                       </div>
-                      <p className="text-xs text-zinc-600">
-                        O nome de exibição é permanente.
-                      </p>
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
@@ -149,16 +206,6 @@ export default function Settings() {
                           className={`w-full bg-zinc-950 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-white outline-none transition-all ${ui.isUsernameLocked ? "opacity-50 cursor-not-allowed" : "focus:border-violet-500 focus:ring-1 focus:ring-violet-500"}`}
                         />
                       </div>
-                      {ui.isUsernameLocked ? (
-                        <p className="text-xs text-yellow-500/80 flex items-center gap-1.5 mt-2">
-                          <Lock size={12} />
-                          Disponível para alteração em {ui.daysToUnlock} dias.
-                        </p>
-                      ) : (
-                        <p className="text-xs text-zinc-500 mt-2">
-                          Você pode alterar seu username a cada 30 dias.
-                        </p>
-                      )}
                     </div>
                   </div>
 
@@ -176,16 +223,13 @@ export default function Settings() {
                       className="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none transition-all resize-none"
                       placeholder="Conte um pouco sobre você..."
                     />
-                    <div className="text-right text-xs text-zinc-600">
-                      {form.bio.length}/300
-                    </div>
                   </div>
 
                   <div className="flex justify-end pt-4">
                     <button
                       type="submit"
                       disabled={ui.isLoading}
-                      className="flex items-center gap-2 px-8 py-3 bg-white text-black hover:bg-zinc-200 rounded-xl font-bold transition-all disabled:opacity-50 shadow-lg hover:shadow-white/10 active:scale-95"
+                      className="flex items-center gap-2 px-8 py-3 bg-white text-black hover:bg-zinc-200 rounded-xl font-bold transition-all disabled:opacity-50 shadow-lg"
                     >
                       {ui.isLoading ? "Salvando..." : "Salvar Alterações"}
                       {!ui.isLoading && <Save size={18} />}
@@ -277,6 +321,79 @@ export default function Settings() {
             </div>
           )}
 
+          {activeTab === "support" && (
+            <div className="space-y-6 animate-in slide-in-from-right-4">
+              <div className="bg-zinc-900 border border-white/5 rounded-2xl p-8 shadow-sm">
+                <div className="mb-8">
+                  <h3 className="text-xl font-bold text-white mb-1">Central de Ajuda</h3>
+                  <p className="text-zinc-400 text-sm">Limite de 1 contato a cada 24 horas.</p>
+                </div>
+
+                <form onSubmit={handleContactSubmit} className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Seu Email (Para Resposta)</label>
+                    <div className="relative">
+                      <Mail size={16} className="absolute left-4 top-4 text-zinc-600" />
+                      <input 
+                        key={user?.email}
+                        type="email" 
+                        name="email" 
+                        defaultValue={user?.email || ""} 
+                        readOnly
+                        className="w-full bg-zinc-950/50 border border-white/5 rounded-xl pl-12 pr-4 py-3 text-zinc-400 font-medium cursor-not-allowed outline-none ring-0"
+                      />
+                      <Lock size={14} className="absolute right-4 top-4 text-zinc-600" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Assunto</label>
+                    <div className="relative">
+                        <select 
+                          name="subject" 
+                          required
+                          className="w-full bg-zinc-950 border border-white/10 rounded-xl pl-4 pr-10 py-3 text-white focus:border-violet-500 outline-none transition-all appearance-none cursor-pointer"
+                        >
+                          <option value="SUGESTÃO">Feedback / Sugestão</option>
+                          <option value="BUG_REPORT">Relatar um Erro (Bug)</option>
+                          <option value="PROBLEMA_CONTA">Problemas com a Conta</option>
+                          <option value="DENUNCIA">Denunciar</option>
+                          <option value="OUTRO_ASSUNTO">Outros Assuntos</option>
+                        </select>
+                        <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                        Sua Mensagem 
+                        <span className="ml-2 font-normal lowercase">({contactMessage.length}/500)</span>
+                    </label>
+                    <textarea 
+                      name="message" 
+                      required
+                      rows={5}
+                      maxLength={500}
+                      value={contactMessage}
+                      onChange={(e) => setContactMessage(e.target.value)}
+                      placeholder="Descreva detalhadamente como podemos ajudar..."
+                      className="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-violet-500 outline-none transition-all resize-none"
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    disabled={isSubmittingContact}
+                    className="w-full flex items-center justify-center gap-2 py-4 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-xl font-bold transition-all shadow-lg shadow-violet-900/20"
+                  >
+                    {isSubmittingContact ? "Enviando..." : "Enviar Mensagem"}
+                    <Send size={18} />
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
           {activeTab === "about" && (
             <div className="space-y-6 animate-in slide-in-from-right-4">
               <div className="bg-zinc-900 border border-white/5 rounded-2xl p-8 shadow-sm">
@@ -294,9 +411,7 @@ export default function Settings() {
                   </h4>
                   <ul className="list-disc pl-4 space-y-2 mb-4">
                     <li>Utilizamos a API do TMDB para metadados de filmes.</li>
-                    <li>
-                      Não hospedamos conteúdo pirata ou arquivos de vídeo.
-                    </li>
+                    <li>Não hospedamos conteúdo pirata ou arquivos de vídeo.</li>
                     <li>
                       Seus dados são protegidos por criptografia de ponta a
                       ponta via Google Firebase.
@@ -306,19 +421,12 @@ export default function Settings() {
                     <span className="text-zinc-500">Versão 3.0.0 (Stable)</span>
                     <div className="flex gap-4">
                       <a
-                        href="mailto:brianlucca.dev@gmail.com
-"
-                        className="hover:text-white transition-colors"
-                      >
-                        brianlucca.dev@gmail.com
-                      </a>
-                      <a
                         href="https://www.linkedin.com/in/brian-lucca-cardozo"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="hover:text-white transition-colors"
                       >
-                        © 2026 Brian Lucca
+                        © 2026 CineSorte
                       </a>
                     </div>
                   </div>
@@ -393,7 +501,7 @@ export default function Settings() {
               Cancelar
             </button>
             <button
-              onClick={() => actions.confirmDeleteAccount(deleteInput)}
+              onClick={actions.confirmDeleteAccount(deleteInput)}
               disabled={ui.isLoading || deleteInput !== "DELETAR"}
               className="px-6 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-bold flex items-center gap-2"
             >

@@ -28,10 +28,18 @@ export default function ReviewsList({ reviews }) {
       return `/app/${review.mediaType}/${cleanId}`;
   };
 
+  const formatDate = (dateValue) => {
+      if (!dateValue) return 'Data desconhecida';
+      const date = dateValue._seconds ? new Date(dateValue._seconds * 1000) : new Date(dateValue);
+      return date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
   return (
     <div className="grid grid-cols-1 gap-6">
         {reviews.map((review, idx) => {
             const mediaLink = getMediaLink(review);
+            const rating = Number(review.rating) || 0; 
+
             return (
                 <div key={`${review.id}-${idx}`} className="bg-zinc-900 p-6 rounded-3xl border border-white/5 flex flex-col md:flex-row gap-6 hover:border-white/10 transition-all group shadow-lg">
                     {review.posterPath && (
@@ -58,7 +66,7 @@ export default function ReviewsList({ reviews }) {
                             </div>
                             <div className="flex items-center gap-1 bg-yellow-500/10 px-3 py-1.5 rounded-lg border border-yellow-500/20">
                                 <Star size={14} className="fill-yellow-500 text-yellow-500" />
-                                <span className="font-black text-yellow-500">{review.rating.toFixed(1)}</span>
+                                <span className="font-black text-yellow-500">{rating.toFixed(1)}</span>
                             </div>
                         </div>
                         
@@ -73,7 +81,7 @@ export default function ReviewsList({ reviews }) {
                         <div className="flex items-center justify-end gap-4 mt-auto text-xs text-zinc-500 font-medium pt-2 border-t border-white/5">
                             <span className="flex items-center gap-1.5">
                                 <Calendar size={14} /> 
-                                {review.createdAt ? new Date(review.createdAt._seconds * 1000).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Data desconhecida'}
+                                {formatDate(review.createdAt)}
                             </span>
                         </div>
                     </div>

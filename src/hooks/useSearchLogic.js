@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getTmdbSearch } from '../services/api';
+import { getTmdbSearch, getDiscover } from '../services/api';
 
 export function useSearchLogic() {
   const [query, setQuery] = useState('');
@@ -43,12 +43,25 @@ export function useSearchLogic() {
         } finally { 
           setLoading(false); 
         }
-      } else { 
+      } else if (query.trim().length === 0) { 
         setResults([]); 
       }
     }, 500);
     return () => clearTimeout(delayDebounceFn);
   }, [query]);
+
+  const searchByGenre = async (genreId) => {
+      setLoading(true);
+      setQuery(''); 
+      try {
+          const data = await getDiscover({ with_genres: genreId });
+          setResults(data || []);
+      } catch (error) {
+          setResults([]);
+      } finally {
+          setLoading(false);
+      }
+  };
 
   const clearSearch = () => {
     setQuery('');
@@ -60,6 +73,7 @@ export function useSearchLogic() {
     setQuery,
     results,
     loading,
-    clearSearch
+    clearSearch,
+    searchByGenre
   };
 }

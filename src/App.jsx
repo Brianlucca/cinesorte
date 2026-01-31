@@ -8,7 +8,6 @@ import Login from './views/auth/Login';
 import Register from './views/auth/Register';
 import VerifyEmail from './views/auth/VerifyEmail';
 import Dashboard from './views/app/Dashboard';
-import Search from './views/app/Search';
 import MediaDetails from './views/app/MediaDetails';
 import SeasonDetails from './views/app/SeasonDetails';
 import EpisodeDetails from './views/app/EpisodeDetails';
@@ -50,7 +49,6 @@ function AppRoutes() {
         <Route path="feed" element={<Feed />} />
         <Route path="profile/:username" element={<PublicProfile />} /> 
 
-        <Route path="search" element={<Search />} />
         <Route path="lists" element={<MyLists />} />
         
         <Route path="lists/:username/:listId" element={<ListDetails />} />

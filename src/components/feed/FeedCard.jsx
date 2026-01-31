@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Star, MoreVertical, Trash2, MessageCircle, User, Share2, Heart, ChevronDown, ChevronUp, Crown, Layers, Film, Loader2, Zap, Eye, Sparkles } from "lucide-react";
+import { useToast } from "../../context/ToastContext";
 
 export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadComments }) {
   const [showMenu, setShowMenu] = useState(false);
   const [visibleComments, setVisibleComments] = useState(3);
   const [loadingComments, setLoadingComments] = useState(false);
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const toast = useToast();
 
   const isListShare = item.type === 'list_share';
   
@@ -17,8 +20,12 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
   const photoURL = item.userPhoto || item.photoURL || null;
   const replies = item.replies || [];
   const commentsCount = item.commentsCount || 0;
-  const isOwner = currentUser?.uid === item.userId;
+  
+  const isOwner = currentUser?.username && item.username && currentUser.username === item.username;
+  
   const isLiked = !!item.isLikedByCurrentUser;
+
+  const MAX_TEXT_LENGTH = 100;
 
   const getEliteStyle = (title) => {
     switch (title) {
@@ -36,6 +43,43 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
     if (!dateString) return "";
     const date = new Date(dateString._seconds ? dateString._seconds * 1000 : dateString);
     return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(date);
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+        toast.success('Link copiado', 'Compartilhe onde quiser!');
+    });
+  };
+
+  const handleShare = async () => {
+    let shareUrl = "";
+    let shareText = "";
+    let shareTitle = "CineSorte";
+
+    if (isListShare) {
+        shareUrl = `${window.location.origin}/app/lists/${item.username}/${item.attachmentId}`;
+        shareText = `Confira a coleção "${item.listName}" de ${displayUsername} no CineSorte!`;
+        shareTitle = item.listName;
+    } else {
+        const type = item.mediaType || 'movie';
+        const id = (item.mediaId?.toString() || "").replace(/^(person-|movie-|tv-)/, '');
+        shareUrl = `${window.location.origin}/app/${type}/${id}`;
+        shareText = `Confira a avaliação de ${displayUsername} sobre ${item.mediaTitle} no CineSorte!`;
+    }
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        if (error.name !== 'AbortError') copyToClipboard(shareUrl);
+      }
+    } else {
+      copyToClipboard(shareUrl);
+    }
   };
 
   const handleLikeClick = () => {
@@ -56,9 +100,10 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
   const displayedReplies = replies.slice(0, visibleComments);
 
   if (isListShare) {
-    if (!item.listCount || item.listCount === 0 || !item.listItems || item.listItems.length === 0) return null;
-    const listPreviewImages = item.listItems.slice(0, 4).map(i => i.poster_path);
-    
+    const listItems = Array.isArray(item.listItems) ? item.listItems : [];
+    const listPreviewImages = listItems.slice(0, 4).map(i => i.poster_path).filter(Boolean);
+    const listLink = item.username && item.attachmentId ? `/app/lists/${item.username}/${item.attachmentId}` : "#";
+
     return (
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden mb-8 shadow-xl hover:border-zinc-700 transition-all">
             <div className="p-4 flex items-center gap-3 border-b border-white/5 bg-zinc-900/50">
@@ -74,28 +119,66 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
                     </div>
                     <span className="text-xs text-zinc-600">{formatDate(item.createdAt)}</span>
                 </div>
+                {isOwner && (
+                    <div className="relative">
+                        <button onClick={() => setShowMenu(!showMenu)} className="text-zinc-400 hover:text-white p-2">
+                            <MoreVertical size={18} />
+                        </button>
+                        {showMenu && (
+                            <>
+                                <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+                                <div className="absolute right-0 top-full mt-2 w-32 bg-zinc-950 border border-zinc-800 rounded-lg shadow-xl z-20 py-1">
+                                    <button onClick={() => onDelete(item.id, 'list_share')} className="w-full text-left px-4 py-2 text-red-400 hover:bg-white/5 text-sm flex items-center gap-2">
+                                        <Trash2 size={14} /> Excluir
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
             <div className="p-5">
-                <p className="text-zinc-300 mb-4 text-sm">{item.content}</p>
-                <Link to={`/app/lists/${item.username}/${item.attachmentId}`} className="block group">
+                {item.content && <p className="text-zinc-300 mb-4 text-sm break-words">{item.content}</p>}
+                
+                <Link to={listLink} className="block group">
                     <div className="bg-black/40 rounded-xl overflow-hidden border border-white/10 group-hover:border-violet-500/50 transition-all shadow-lg group-hover:shadow-violet-900/10">
-                        <div className="grid grid-cols-4 gap-0.5 h-32 opacity-90 group-hover:opacity-100 transition-opacity bg-zinc-800">
-                            {listPreviewImages.map((img, idx) => (
-                                <div key={idx} className="relative w-full h-full">
-                                    <img src={`https://image.tmdb.org/t/p/w342${img}`} className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
-                                </div>
-                            ))}
-                        </div>
+                        {listPreviewImages.length > 0 ? (
+                            <div className="grid grid-cols-4 gap-0.5 h-32 opacity-90 group-hover:opacity-100 transition-opacity bg-zinc-800">
+                                {listPreviewImages.map((img, idx) => (
+                                    <div key={idx} className="relative w-full h-full">
+                                        <img src={`https://image.tmdb.org/t/p/w342${img}`} className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+                                    </div>
+                                ))}
+                                {[...Array(4 - listPreviewImages.length)].map((_, idx) => (
+                                    <div key={`empty-${idx}`} className="bg-zinc-800 flex items-center justify-center">
+                                        <Film className="text-zinc-700 opacity-20" size={20} />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="h-32 bg-zinc-800 flex items-center justify-center flex-col gap-2">
+                                <Layers size={32} className="text-zinc-600" />
+                                <span className="text-xs text-zinc-600">Sem prévia disponível</span>
+                            </div>
+                        )}
+                        
                         <div className="p-4 bg-zinc-900 relative">
                             <div className="flex items-center gap-2 mb-1">
                                 <Layers size={16} className="text-violet-500" />
-                                <h3 className="font-bold text-white text-lg group-hover:text-violet-400 transition-colors">{item.listName}</h3>
+                                <h3 className="font-bold text-white text-lg group-hover:text-violet-400 transition-colors">{item.listName || "Coleção sem nome"}</h3>
                             </div>
-                            <p className="text-xs text-zinc-500 font-medium">{item.listCount} itens • Curadoria por {displayUsername}</p>
+                            <p className="text-xs text-zinc-500 font-medium">
+                                {item.listCount || listItems.length || 0} itens • Curadoria por {displayUsername}
+                            </p>
                         </div>
                     </div>
                 </Link>
+            </div>
+            <div className="px-5 pb-4 flex gap-4">
+                 <button onClick={handleShare} className="text-zinc-500 hover:text-white transition-colors">
+                    <Share2 size={20} />
+                </button>
             </div>
         </div>
     );
@@ -107,7 +190,7 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
   const mediaLink = item.mediaType === 'person' ? `/app/person/${cleanId}` : `/app/${item.mediaType || 'movie'}/${cleanId}`;
 
   return (
-    <div className={`relative rounded-2xl overflow-hidden mb-8 shadow-xl transition-all duration-500 ${style.border} ${style.shadow} bg-zinc-900`}>
+    <div className={`relative rounded-2xl overflow-hidden mb-8 shadow-xl transition-all duration-500 ${style.border} ${style.shadow} bg-zinc-900 w-full`}>
       
       {isElite && (
           <div className={`bg-gradient-to-r ${style.header} border-b border-white/5 py-1.5 px-4 flex justify-end`}>
@@ -127,24 +210,24 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
             </div>
           </Link>
           <div className="flex flex-col">
-             <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
                 <Link to={`/app/profile/${item.username}`} className={`font-bold text-sm ${isElite ? 'text-zinc-100 hover:text-white' : 'text-white hover:text-violet-400'}`}>
                     {displayUsername}
                 </Link>
-             </div>
-             <div className="flex items-center gap-2">
-                 <span className="text-xs text-zinc-500">{formatDate(item.createdAt)}</span>
-                 {item.mediaType && (
+              </div>
+              <div className="flex items-center gap-2">
+                  <span className="text-xs text-zinc-500">{formatDate(item.createdAt)}</span>
+                  {item.mediaType && (
                     <span className="text-[10px] uppercase font-bold text-zinc-400 bg-zinc-950 px-2 py-0.5 rounded border border-zinc-800">
                         {item.mediaType === 'tv' ? 'Série' : item.mediaType === 'person' ? 'Artista' : 'Filme'}
                     </span>
-                 )}
-             </div>
+                  )}
+              </div>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
-             <div className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border ${isElite ? 'bg-white/5 border-white/10' : 'bg-zinc-950 border-zinc-800'}`}>
+              <div className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border ${isElite ? 'bg-white/5 border-white/10' : 'bg-zinc-950 border-zinc-800'}`}>
                 <Star size={12} className="fill-yellow-500 text-yellow-500" />
                 <span className="text-sm font-bold text-white">{item.rating?.toFixed(1)}</span>
             </div>
@@ -155,7 +238,7 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
                         <>
                             <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
                             <div className="absolute right-0 top-full mt-2 w-32 bg-zinc-950 border border-zinc-800 rounded-lg shadow-xl z-20 py-1">
-                                <button onClick={() => onDelete(item.id)} className="w-full text-left px-4 py-2 text-red-400 hover:bg-white/5 text-sm flex items-center gap-2">
+                                <button onClick={() => onDelete(item.id, 'review')} className="w-full text-left px-4 py-2 text-red-400 hover:bg-white/5 text-sm flex items-center gap-2">
                                     <Trash2 size={14} /> Excluir
                                 </button>
                             </div>
@@ -178,10 +261,24 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
          </div>
       </Link>
 
-      <div className="p-6">
-         <p className={`text-base leading-relaxed whitespace-pre-wrap ${isElite ? 'text-zinc-100 font-normal' : 'text-zinc-300 font-light'}`}>
-             {item.text}
-         </p>
+      <div className="p-6 w-full">
+         <div className={`text-base leading-relaxed whitespace-pre-wrap break-words w-full ${isElite ? 'text-zinc-100 font-normal' : 'text-zinc-300 font-light'}`}>
+             {isExpanded || !item.text || item.text.length <= MAX_TEXT_LENGTH ? (
+                 item.text
+             ) : (
+                 <>
+                     {item.text.slice(0, MAX_TEXT_LENGTH)}...
+                 </>
+             )}
+             {item.text && item.text.length > MAX_TEXT_LENGTH && (
+                 <button 
+                    onClick={() => setIsExpanded(!isExpanded)} 
+                    className="text-violet-400 hover:text-violet-300 font-bold ml-1 text-sm inline-block"
+                 >
+                    {isExpanded ? "Ler menos" : "Ler mais"}
+                 </button>
+             )}
+         </div>
 
          <div className="mt-4 mb-2">
             {(item.likesCount > 0) && (
@@ -199,7 +296,7 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
                 <MessageCircle size={20} className="group-hover:text-violet-400 transition-colors" />
                 {commentsCount > 0 && <span className="text-sm font-bold">{commentsCount}</span>}
             </button>
-            <button className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group">
+            <button onClick={handleShare} className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group">
                 <Share2 size={20} className="group-hover:text-violet-400 transition-colors" />
             </button>
          </div>
@@ -222,12 +319,12 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
                             <div className="w-8 h-8 rounded-full bg-zinc-800 overflow-hidden shrink-0 border border-white/5">
                                 {reply.userPhoto ? <img src={reply.userPhoto} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center font-bold text-xs text-zinc-500">{reply.username?.[0]}</div>}
                             </div>
-                            <div className="flex-1">
+                            <div className="flex-1 w-full min-w-0">
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs font-bold text-white hover:text-violet-400 cursor-pointer">{reply.username}</span>
                                     <span className="text-[10px] text-zinc-600">{formatDate(reply.createdAt)}</span>
                                 </div>
-                                <p className="text-sm text-zinc-400 mt-0.5">{reply.text}</p>
+                                <p className="text-sm text-zinc-400 mt-0.5 break-words">{reply.text}</p>
                             </div>
                         </div>
                     ))}
