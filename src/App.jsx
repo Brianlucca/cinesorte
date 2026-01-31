@@ -8,7 +8,6 @@ import Login from './views/auth/Login';
 import Register from './views/auth/Register';
 import VerifyEmail from './views/auth/VerifyEmail';
 import Dashboard from './views/app/Dashboard';
-import Search from './views/app/Search';
 import MediaDetails from './views/app/MediaDetails';
 import SeasonDetails from './views/app/SeasonDetails';
 import EpisodeDetails from './views/app/EpisodeDetails';
@@ -23,7 +22,7 @@ import PublicProfile from './views/app/PublicProfile';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-violet-500">Site em manutenção por tempo indeterminado...</div>;
+  if (loading) return <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-violet-500">Carregando...</div>;
   return user ? children : <Navigate to="/login" />;
 };
 
@@ -50,7 +49,6 @@ function AppRoutes() {
         <Route path="feed" element={<Feed />} />
         <Route path="profile/:username" element={<PublicProfile />} /> 
 
-        <Route path="search" element={<Search />} />
         <Route path="lists" element={<MyLists />} />
         
         <Route path="lists/:username/:listId" element={<ListDetails />} />
