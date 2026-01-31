@@ -13,6 +13,8 @@ import {
   deleteReview,
   deleteComment,
   postReview,
+  updateReview,
+  updateComment,
   getAwards,
   toggleLikeReview,
   getComments, 
@@ -93,7 +95,8 @@ export function useMediaDetailsLogic() {
             ...r,
             isLikedByCurrentUser: !!r.isLikedByCurrentUser,
             likesCount: Number(r.likesCount) || 0,
-            replies: r.replies || [] 
+            replies: r.replies || [],
+            isEliteReview: r.isEliteReview === true 
         })) : [];
         setReviews(safeReviews);
 
@@ -152,7 +155,7 @@ export function useMediaDetailsLogic() {
     }
   };
 
-  const handlePostReview = async (rating, text) => {
+  const handlePostReview = async (rating, text, isElite = false) => {
     if (!user) return toast.error("Login necessário", "Entre para avaliar.");
     try {
       await postReview({
@@ -163,6 +166,7 @@ export function useMediaDetailsLogic() {
         backdropPath: media.backdrop_path || "",
         rating: Number(rating),
         text: text,
+        isEliteReview: isElite 
       });
       toast.success("Sucesso", "Avaliação publicada!");
       const updated = await getMediaReviews(id);
@@ -171,6 +175,18 @@ export function useMediaDetailsLogic() {
       const msg = error.response?.data?.message || "Erro ao publicar.";
       toast.error("Aviso", msg);
       throw error;
+    }
+  };
+
+  const handleEditReview = async (reviewId, newText, newRating) => {
+    try {
+      await updateReview(reviewId, { text: newText, rating: newRating });
+      setReviews(prev => prev.map(r => 
+        r.id === reviewId ? { ...r, text: newText, rating: newRating, isEdited: true } : r
+      ));
+      toast.success("Editado", "Sua avaliação foi atualizada.");
+    } catch (error) {
+      toast.error("Erro", "Não foi possível editar.");
     }
   };
 
@@ -190,6 +206,22 @@ export function useMediaDetailsLogic() {
       const msg = error.response?.data?.message || "Erro ao responder.";
       toast.error("Aviso", msg);
       throw error;
+    }
+  };
+
+  const handleEditReply = async (commentId, newText, reviewId) => {
+    try {
+        await updateComment(commentId, { text: newText });
+        const comments = await getComments(reviewId);
+        setReviews(prev => prev.map(r => {
+            if (r.id === reviewId) {
+                return { ...r, replies: comments };
+            }
+            return r;
+        }));
+        toast.success("Editado", "Resposta atualizada.");
+    } catch (error) {
+        toast.error("Erro", "Não foi possível editar resposta.");
     }
   };
 
@@ -312,7 +344,9 @@ export function useMediaDetailsLogic() {
     actions: {
       handleInteract,
       handlePostReview,
+      handleEditReview,
       handlePostReply,
+      handleEditReply,
       handleDeleteReview,
       handleDeleteComment,
       handleAddToList,

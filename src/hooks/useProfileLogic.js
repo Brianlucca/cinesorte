@@ -6,20 +6,23 @@ import {
     getUserReviews, 
     getUserStats, 
     getUserFollowers, 
-    getUserFollowing,
-    getUserLists,
-    updateProfile 
+    getUserFollowing, 
+    getUserLists, 
+    updateProfile,
+    getMe 
 } from '../services/api';
 
 const ITEMS_PER_PAGE = 10;
 
 export function useProfileLogic() {
-  const { user, updateProfile: updateAuthProfile } = useAuth();
+  const { user: authUser, updateProfile: updateAuthProfile } = useAuth();
   const toast = useToast();
 
   const [allInteractions, setAllInteractions] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
   const [userLists, setUserLists] = useState([]);
+  
+  const [dbProfile, setDbProfile] = useState({});
   
   const [userStats, setUserStats] = useState({ 
     followersCount: 0, 
@@ -33,6 +36,8 @@ export function useProfileLogic() {
     watchedCount: 0,
     likesCount: 0
   });
+
+  const [localUpdates, setLocalUpdates] = useState({});
   
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('activity'); 
@@ -50,17 +55,19 @@ export function useProfileLogic() {
   });
 
   const loadData = useCallback(async () => {
-    if (!user?.uid || !user?.username) return;
+    if (!authUser?.uid || !authUser?.username) return;
     setLoading(true);
     try {
-      const [interactionsData, reviewsData, statsData, listsData] = await Promise.all([
+      const [interactionsData, reviewsData, statsData, listsData, meData] = await Promise.all([
           getUserInteractions(), 
-          getUserReviews(user.username),
+          getUserReviews(authUser.username),
           getUserStats(),
-          getUserLists('me')
+          getUserLists('me'),
+          getMe()
       ]);
 
       setUserStats(statsData);
+      setDbProfile(meData || {}); 
       setUserLists(listsData);
 
       const processedInteractions = [];
@@ -93,11 +100,10 @@ export function useProfileLogic() {
       setAllInteractions(processedInteractions);
       setAllReviews(sortedReviews);
     } catch (error) {
-      console.error(error);
     } finally {
       setLoading(false);
     }
-  }, [user?.uid, user?.username]);
+  }, [authUser?.uid, authUser?.username]);
 
   useEffect(() => {
     loadData();
@@ -107,6 +113,8 @@ export function useProfileLogic() {
     try {
         await updateProfile({ photoURL: url });
         await updateAuthProfile({ photoURL: url }); 
+        setLocalUpdates(prev => ({ ...prev, photoURL: url }));
+        setModals(prev => ({ ...prev, avatar: false }));
         toast.success('Sucesso', 'Foto atualizada!');
     } catch (error) {
         toast.error('Erro', 'Falha ao atualizar foto.');
@@ -116,7 +124,8 @@ export function useProfileLogic() {
   const updateBackground = async (url) => {
     try {
         await updateProfile({ backgroundURL: url });
-        await updateAuthProfile({ backgroundURL: url });
+        setLocalUpdates(prev => ({ ...prev, backgroundURL: url }));
+        setModals(prev => ({ ...prev, background: false }));
         toast.success('Sucesso', 'Capa atualizada!');
     } catch (error) {
         toast.error('Erro', 'Falha ao atualizar capa.');
@@ -127,7 +136,7 @@ export function useProfileLogic() {
       setModals(prev => ({ ...prev, followers: true }));
       setLoadingLists(true);
       try {
-          const list = await getUserFollowers(user.uid);
+          const list = await getUserFollowers(authUser.uid);
           setFollowersList(list);
       } catch (error) {
           toast.error('Erro', 'Não foi possível carregar seguidores.');
@@ -140,7 +149,7 @@ export function useProfileLogic() {
       setModals(prev => ({ ...prev, following: true }));
       setLoadingLists(true);
       try {
-          const list = await getUserFollowing(user.uid);
+          const list = await getUserFollowing(authUser.uid);
           setFollowingList(list);
       } catch (error) {
           toast.error('Erro', 'Não foi possível carregar quem você segue.');
@@ -183,8 +192,16 @@ export function useProfileLogic() {
   const openModal = (name) => setModals(prev => ({ ...prev, [name]: true }));
   const closeModal = (name) => setModals(prev => ({ ...prev, [name]: false }));
 
+  const finalUser = { 
+      ...authUser, 
+      ...userStats,
+      ...dbProfile, 
+      ...localUpdates,
+      bio: dbProfile.bio || authUser.bio || ''
+  };
+
   return {
-    user: { ...user, ...userStats }, 
+    user: finalUser,
     data: { 
         displayItems: displayData,
         lists: userLists,

@@ -1,12 +1,22 @@
 import { useState, useEffect } from 'react';
-import { getPublicProfile, getUserReviews, followUser, unfollowUser, checkFollowStatus, getProfileStats, getMatchPercentage } from '../services/api';
+import { 
+    getPublicProfile, 
+    getUserReviews, 
+    followUser, 
+    unfollowUser, 
+    checkFollowStatus,
+    getMatchPercentage 
+} from '../services/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 
 export function usePublicProfileLogic(username) {
   const [profile, setProfile] = useState(null);
   const [reviews, setReviews] = useState([]);
-  const [isFollowing, setIsFollowing] = useState(false); 
+  
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followsYou, setFollowsYou] = useState(false);
+  
   const [loading, setLoading] = useState(true);
   const [compatibility, setCompatibility] = useState(0);
   
@@ -14,6 +24,8 @@ export function usePublicProfileLogic(username) {
   const toast = useToast();
 
   useEffect(() => {
+    let isMounted = true;
+
     const loadData = async () => {
       setLoading(true);
       try {
@@ -22,46 +34,53 @@ export function usePublicProfileLogic(username) {
             getUserReviews(username)
         ]);
         
-        if (profileData && profileData.uid) {
-            const stats = await getProfileStats(profileData.uid);
-            
-            profileData.followersCount = stats.followersCount;
-            profileData.followingCount = stats.followingCount;
-            
-            profileData.xp = stats.totalXp || stats.xp || 0;
-            profileData.levelProgress = stats.xp || 0; 
-            
-            profileData.totalXp = stats.totalXp || 0;
-            profileData.level = stats.level || 1;
-            profileData.levelTitle = stats.levelTitle;
-            profileData.trophies = stats.trophies || [];
+        if (!isMounted) return;
 
-            if (user) {
-                const [followStatus, matchData] = await Promise.all([
-                    checkFollowStatus(profileData.uid),
-                    getMatchPercentage(profileData.uid)
-                ]);
-                
-                setIsFollowing(followStatus.isFollowing);
-                setCompatibility(matchData.percentage || 0);
+        if (profileData) {
+            const formattedProfile = {
+                ...profileData,
+                createdAt: profileData.createdAt && profileData.createdAt._seconds 
+                    ? new Date(profileData.createdAt._seconds * 1000) 
+                    : new Date(profileData.createdAt || Date.now()),
+                trophies: profileData.trophies || []
+            };
+
+            if (user && user.username !== username) {
+                try {
+                    const [followStatus, matchData] = await Promise.all([
+                        checkFollowStatus(username),
+                        getMatchPercentage(username)
+                    ]);
+                    
+                    if (isMounted) {
+                        setIsFollowing(followStatus.isFollowing);
+                        setFollowsYou(followStatus.followsYou);
+                        setCompatibility(matchData.percentage || 0);
+                    }
+                } catch (err) {
+                }
             }
+
+            setProfile(formattedProfile);
+            setReviews(reviewsData);
         }
 
-        setProfile(profileData);
-        setReviews(reviewsData);
-
       } catch (error) {
-        toast.error('Erro', 'Não foi possível carregar o perfil.');
+        if (isMounted) {
+            toast.error('Erro', 'Perfil não encontrado ou erro de conexão.');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     if (username) loadData();
-  }, [username, user]);
+
+    return () => { isMounted = false; };
+  }, [username, user?.username]); 
 
   const handleFollow = async () => {
-    if (!profile?.uid) return;
+    if (!username || !user) return;
 
     const previousState = isFollowing;
     setIsFollowing(!previousState); 
@@ -73,10 +92,10 @@ export function usePublicProfileLogic(username) {
 
     try {
       if (previousState) {
-        await unfollowUser(profile.uid);
+        await unfollowUser(username);
         toast.info('Deixou de seguir', `Você não está mais seguindo ${profile.name}.`);
       } else {
-        await followUser(profile.uid);
+        await followUser(username);
         toast.success('Seguindo', `Você agora segue ${profile.name}!`);
       }
     } catch (error) {
@@ -93,10 +112,9 @@ export function usePublicProfileLogic(username) {
     profile,
     reviews,
     isFollowing,
+    followsYou,
     loading,
     compatibility,
-    actions: {
-        handleFollow
-    }
+    actions: { handleFollow }
   };
 }

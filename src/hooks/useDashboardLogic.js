@@ -1,15 +1,24 @@
-import { useState, useEffect } from 'react';
-import { useToast } from '../context/ToastContext';
-import api, { getLatestTrailers, getAnimeReleases, getAnimations } from '../services/api';
+import { useState, useEffect, useCallback, useRef } from "react";
+import api, {
+  getLatestTrailers,
+  getAnimeReleases,
+  getAnimations,
+  getRecommendations,
+  getMe,
+  getTrending,
+  getDiscover,
+  getNowPlaying,
+} from "../services/api";
 
-const CACHE_DAY_KEY = 'cinesorte_trending_day';
-const CACHE_WEEK_KEY = 'cinesorte_trending_week';
+const CACHE_DAY_KEY = "cinesorte_trending_day";
+const CACHE_WEEK_KEY = "cinesorte_trending_week";
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
 
 export function useDashboardLogic() {
+  const [heroQueue, setHeroQueue] = useState([]);
+  const [currentHero, setCurrentHero] = useState(null);
   const [data, setData] = useState({
-    featured: null,
     trendingDay: [],
     trendingWeek: [],
     movies: [],
@@ -17,82 +26,152 @@ export function useDashboardLogic() {
     trailers: [],
     animes: [],
     animations: [],
+    recommendedMovies: [],
+    recommendedSeries: [],
+    streaming: [],
+    onTv: [],
+    forRent: [],
+    inTheaters: [],
   });
   const [loading, setLoading] = useState(true);
-  const toast = useToast();
+  const isMounted = useRef(true);
+
+  const prioritizeContent = useCallback((items, userGenreCounts) => {
+    if (!items || !Array.isArray(items) || items.length === 0) return [];
+    if (!userGenreCounts) return items;
+    const topGenres = Object.entries(userGenreCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([id]) => parseInt(id));
+    return [...items].sort((a, b) => {
+      const aScore = (a.genre_ids || []).reduce(
+        (acc, id) => acc + (topGenres.includes(id) ? 1 : 0),
+        0,
+      );
+      const bScore = (b.genre_ids || []).reduce(
+        (acc, id) => acc + (topGenres.includes(id) ? 1 : 0),
+        0,
+      );
+      return bScore - aScore;
+    });
+  }, []);
 
   useEffect(() => {
+    if (heroQueue.length === 0) return;
+    const interval = setInterval(() => {
+      const randomIndex = Math.floor(Math.random() * heroQueue.length);
+      setCurrentHero(heroQueue[randomIndex]);
+    }, 300000);
+    return () => clearInterval(interval);
+  }, [heroQueue]);
+
+  useEffect(() => {
+    isMounted.current = true;
     async function loadContent() {
+      setLoading(true);
       try {
+        let userGenres = {};
+        try {
+          const userProfile = await getMe();
+          userGenres = userProfile.genreCounts || {};
+        } catch (e) {}
+
         const cachedDay = localStorage.getItem(CACHE_DAY_KEY);
         const cachedWeek = localStorage.getItem(CACHE_WEEK_KEY);
-        
-        let dayData = null;
-        let weekData = null;
+        let dayData = null,
+          weekData = null;
 
         if (cachedDay) {
           const parsed = JSON.parse(cachedDay);
-          if (Date.now() - parsed.timestamp < ONE_DAY) {
-            dayData = parsed.data;
-          }
+          if (Date.now() - parsed.timestamp < ONE_DAY) dayData = parsed.data;
         }
-
         if (cachedWeek) {
           const parsed = JSON.parse(cachedWeek);
-          if (Date.now() - parsed.timestamp < ONE_WEEK) {
-            weekData = parsed.data;
-          }
+          if (Date.now() - parsed.timestamp < ONE_WEEK) weekData = parsed.data;
         }
 
-        const [trailers, animes, animations] = await Promise.all([
-            getLatestTrailers(),
-            getAnimeReleases(),
-            getAnimations()
+        const [resDay, resWeek] = await Promise.all([
+          dayData ? Promise.resolve({ data: dayData }) : getTrending("day"),
+          weekData ? Promise.resolve({ data: weekData }) : getTrending("week"),
         ]);
 
-        if (!dayData) {
-          const res = await api.get('/tmdb/trending/day');
-          dayData = res.data || [];
-          localStorage.setItem(CACHE_DAY_KEY, JSON.stringify({
-            timestamp: Date.now(),
-            data: dayData
-          }));
-        }
+        const finalDay = Array.isArray(resDay) ? resDay : resDay.results || [];
+        const finalWeek = Array.isArray(resWeek) ? resWeek : resWeek.results || [];
 
-        if (!weekData) {
-          const res = await api.get('/tmdb/trending/week');
-          weekData = res.data || [];
-          localStorage.setItem(CACHE_WEEK_KEY, JSON.stringify({
-            timestamp: Date.now(),
-            data: weekData
-          }));
-        }
+        if (!dayData && finalDay.length > 0)
+          localStorage.setItem(
+            CACHE_DAY_KEY,
+            JSON.stringify({ timestamp: Date.now(), data: finalDay }),
+          );
+        if (!weekData && finalWeek.length > 0)
+          localStorage.setItem(
+            CACHE_WEEK_KEY,
+            JSON.stringify({ timestamp: Date.now(), data: finalWeek }),
+          );
 
-        const featured = dayData.length > 0 
-          ? dayData[Math.floor(Math.random() * Math.min(5, dayData.length))] 
-          : null;
+        const results = await Promise.allSettled([
+          getLatestTrailers(),
+          getAnimeReleases(),
+          getAnimations(),
+          getRecommendations("movie"),
+          getRecommendations("tv"),
+          getDiscover({ provider_id: "8|119|337", monetization_types: "flatrate" }),
+          getDiscover({ media_type: "tv", sort_by: "popularity.desc" }),
+          getDiscover({ monetization_types: "rent" }),
+          getNowPlaying(),
+        ]);
+
+        if (!isMounted.current) return;
+
+        const trailers = results[0].status === "fulfilled" ? results[0].value : [];
+        const animes = results[1].status === "fulfilled" ? results[1].value : [];
+        const animations = results[2].status === "fulfilled" ? results[2].value : [];
+        const recMovies = results[3].status === "fulfilled" ? results[3].value : [];
+        const recSeries = results[4].status === "fulfilled" ? results[4].value : [];
+        const streaming = results[5].status === "fulfilled" ? results[5].value : [];
+        const onTv = results[6].status === "fulfilled" ? results[6].value : [];
+        const forRent = results[7].status === "fulfilled" ? results[7].value : [];
+        const inTheaters = results[8].status === "fulfilled" ? results[8].value : [];
+
+        const sortedDay = prioritizeContent(finalDay, userGenres);
+        const sortedWeek = prioritizeContent(finalWeek, userGenres);
+
+        const potentialHeroes = [...recMovies, ...sortedDay].filter(
+          (i) => i.backdrop_path && !i.trailerKey,
+        );
+        const validHeroes = potentialHeroes
+          .filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i)
+          .slice(0, 20);
+
+        setHeroQueue(validHeroes);
+        if (validHeroes.length > 0)
+          setCurrentHero(validHeroes[Math.floor(Math.random() * validHeroes.length)]);
 
         setData({
-          featured,
-          trendingDay: dayData,
-          trendingWeek: weekData,
-          movies: weekData ? weekData.filter(i => i.media_type === 'movie') : [],
-          series: weekData ? weekData.filter(i => i.media_type === 'tv') : [],
-          trailers: trailers || [],
-          animes: animes || [],
-          animations: animations || []
+          trendingDay: sortedDay,
+          trendingWeek: sortedWeek,
+          movies: sortedWeek.filter((i) => i.media_type === "movie" || !i.media_type),
+          series: sortedWeek.filter((i) => i.media_type === "tv"),
+          trailers,
+          animes,
+          animations,
+          recommendedMovies: recMovies,
+          recommendedSeries: recSeries,
+          streaming,
+          onTv,
+          forRent,
+          inTheaters,
         });
-
       } catch (error) {
-        if (toast) {
-            toast.error('Erro de Conexão', 'Não foi possível carregar o catálogo.');
-        }
       } finally {
-        setLoading(false);
+        if (isMounted.current) setLoading(false);
       }
     }
     loadContent();
-  }, []);
+    return () => {
+      isMounted.current = false;
+    };
+  }, [prioritizeContent]);
 
-  return { data, loading };
+  return { data, currentHero, loading };
 }
