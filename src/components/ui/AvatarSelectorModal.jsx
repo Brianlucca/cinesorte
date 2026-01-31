@@ -32,6 +32,7 @@ export default function AvatarSelectorModal({ isOpen, onClose, onSelect }) {
     const path = item.profile_path || item.poster_path;
     const fullUrl = `https://image.tmdb.org/t/p/w185${path}`;
     onSelect(fullUrl);
+    onClose(); 
   };
 
   return (
