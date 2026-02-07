@@ -28,6 +28,8 @@ export function useFeedLogic() {
   const [feedType, setFeedType] = useState('following');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [hasNewPosts, setHasNewPosts] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState(Date.now());
   
   const [localUser, setLocalUser] = useState(user || {});
   const [suggestions, setSuggestions] = useState({ users: [], content: [] });
@@ -75,16 +77,15 @@ export function useFeedLogic() {
     try {
       let data = [];
       let rawCount = 0;
+      const PAGE_SIZE = 20;
       
       if (feedType === 'following') {
-        const [followingData, myData] = await Promise.all([
-            getFollowingFeed(currentPage),
-            localUser?.username ? getUserReviews(localUser.username, currentPage) : Promise.resolve([])
-        ]);
+        const followingData = await getFollowingFeed(currentPage);
+        const myData = currentPage === 1 && localUser?.username ? await getUserReviews(localUser.username, 1) : [];
         
-        rawCount = (Array.isArray(followingData) ? followingData.length : 0) + (Array.isArray(myData) ? myData.length : 0);
+        rawCount = Array.isArray(followingData) ? followingData.length : 0;
         
-        const combined = [...followingData, ...myData];
+        const combined = [...(Array.isArray(followingData) ? followingData : []), ...(Array.isArray(myData) ? myData : [])];
         const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
         
         unique.sort((a, b) => {
@@ -146,7 +147,7 @@ export function useFeedLogic() {
           return true;
       });
 
-      if (rawCount === 0 && currentPage > 1) {
+      if (rawCount < PAGE_SIZE) {
           setHasMore(false);
       } else {
           setHasMore(true);
@@ -164,11 +165,58 @@ export function useFeedLogic() {
 
     } catch (error) { 
       if (currentPage === 1) setReviews([]);
+      setHasMore(false);
     } finally { 
       setLoading(false); 
       setLoadingMore(false);
     }
   }, [feedType, localUser?.username]);
+
+  const checkForNewPosts = useCallback(async () => {
+    try {
+      let newData = [];
+      
+      if (feedType === 'following') {
+        const followingData = await getFollowingFeed(1);
+        const myData = localUser?.username ? await getUserReviews(localUser.username, 1) : [];
+        const combined = [...(Array.isArray(followingData) ? followingData : []), ...(Array.isArray(myData) ? myData : [])];
+        newData = combined;
+      } else if (feedType === 'collections') {
+        newData = await getSharedListsFeed(1);
+      }
+
+      const processedNew = (Array.isArray(newData) ? newData : []).map(item => {
+        const isList = item.type === 'list_share' || (item.listName && item.listItems?.length > 0);
+        return {
+          ...item,
+          type: isList ? 'list_share' : (item.type || 'review'),
+          uniqueKey: `${isList ? 'list_share' : (item.type || 'review')}-${item.id}`
+        };
+      });
+
+      if (reviews.length === 0) {
+        setHasNewPosts(false);
+        return;
+      }
+
+      const existingIds = new Set(reviews.map(r => r.id));
+      const newPostsFound = processedNew.filter(p => !existingIds.has(p.id));
+      
+      setHasNewPosts(newPostsFound.length > 0);
+    } catch (error) {}
+  }, [feedType, reviews]);
+
+  const loadNewPosts = async () => {
+    try {
+      setHasNewPosts(false);
+      setPage(1);
+      setReviews([]);
+      await loadFeed(1, true);
+      setLastRefreshTime(Date.now());
+    } catch (error) {
+      toast.error('Erro', 'Falha ao carregar novas postagens.');
+    }
+  };
 
   const handleSetFeedType = (type) => {
       if (feedType === type) return;
@@ -184,19 +232,6 @@ export function useFeedLogic() {
           setPage(nextPage);
           loadFeed(nextPage, false);
       }
-  };
-
-  const checkGenreMatch = (userGenres, itemGenres, minMatches = 3) => {
-      if (!userGenres || !itemGenres) return false;
-      const userGenreIds = Object.keys(userGenres);
-      let matches = 0;
-      if (Array.isArray(itemGenres)) {
-          matches = itemGenres.filter(id => userGenreIds.includes(id.toString())).length;
-      } else {
-          const targetIds = Object.keys(itemGenres);
-          matches = targetIds.filter(id => userGenreIds.includes(id)).length;
-      }
-      return matches >= minMatches;
   };
 
   const loadSidebarData = useCallback(async () => {
@@ -223,6 +258,16 @@ export function useFeedLogic() {
       loadFeed(1, true); 
       loadSidebarData();
   }, [loadFeed, loadSidebarData]);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (reviews.length > 0 && feedType !== 'mine') {
+        await checkForNewPosts();
+      }
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [checkForNewPosts, reviews.length, feedType]);
 
   useEffect(() => {
     const delay = setTimeout(async () => {
@@ -399,6 +444,7 @@ export function useFeedLogic() {
         loading,
         loadingMore,
         hasMore,
+        hasNewPosts,
         feedType,
         suggestions,
         isPostModalOpen,
@@ -417,6 +463,7 @@ export function useFeedLogic() {
     actions: {
         setFeedType: handleSetFeedType,
         loadMore,
+        loadNewPosts,
         setSearchQuery,
         setPostText,
         setRating,
