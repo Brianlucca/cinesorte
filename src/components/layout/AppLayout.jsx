@@ -35,15 +35,7 @@ export default function AppLayout() {
           <Icon size={20} className={active ? 'text-white' : 'text-zinc-500 group-hover:text-white'} />
           <span className="font-medium">{label}</span>
         </div>
-        {withRefresh && active && (
-          <div 
-            onClick={handleRefresh}
-            className="p-1.5 -mr-1 rounded-full hover:bg-white/20 text-white/70 hover:text-white transition-colors cursor-pointer"
-            title="Atualizar Feed"
-          >
-            <RefreshCw size={14} />
-          </div>
-        )}
+
       </>
     );
 

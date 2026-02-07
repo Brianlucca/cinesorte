@@ -19,7 +19,7 @@ export default function Feed() {
           actions.loadMore();
         }
       },
-      { threshold: 1.0 }
+      { threshold: 0.1, rootMargin: '100px' }
     );
 
     if (observerTarget.current) {
@@ -31,7 +31,7 @@ export default function Feed() {
         observer.unobserve(observerTarget.current);
       }
     };
-  }, [state.hasMore, state.loading, state.loadingMore, actions]);
+  }, [state.hasMore, state.loading, state.loadingMore]);
 
   return (
     <div className="max-w-7xl mx-auto pb-24 px-4 min-h-screen">
@@ -45,6 +45,16 @@ export default function Feed() {
                     <FeedTabs activeTab={state.feedType} onChange={actions.setFeedType} />
                  </div>
             </div>
+
+            {state.hasNewPosts && (
+              <button
+                onClick={actions.loadNewPosts}
+                className="w-full mb-6 bg-violet-600/20 border border-violet-500/50 text-violet-300 py-2 px-4 rounded-full font-bold hover:bg-violet-600/30 transition-all text-sm flex items-center justify-center gap-2"
+              >
+                <Sparkles size={14} />
+                Novas postagens
+              </button>
+            )}
 
             <button
                 onClick={actions.handleOpenPostModal}
@@ -75,7 +85,7 @@ export default function Feed() {
                             />
                         ))}
                         
-                        <div ref={observerTarget} className="flex justify-center py-8">
+                        <div ref={observerTarget} className="h-20 flex justify-center items-center">
                             {state.loadingMore && <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />}
                             {!state.hasMore && state.reviews.length > 5 && (
                                 <p className="text-zinc-500 text-sm">Isso é tudo por enquanto.</p>

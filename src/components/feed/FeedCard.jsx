@@ -262,31 +262,58 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
       </Link>
 
       <div className="p-6 w-full">
-         <div className={`text-base leading-relaxed whitespace-pre-wrap break-words w-full ${isElite ? 'text-zinc-100 font-normal' : 'text-zinc-300 font-light'}`}>
-             {isExpanded || !item.text || item.text.length <= MAX_TEXT_LENGTH ? (
-                 item.text
-             ) : (
-                 <>
-                     {item.text.slice(0, MAX_TEXT_LENGTH)}...
-                 </>
-             )}
-             {item.text && item.text.length > MAX_TEXT_LENGTH && (
-                 <button 
-                    onClick={() => setIsExpanded(!isExpanded)} 
-                    className="text-violet-400 hover:text-violet-300 font-bold ml-1 text-sm inline-block"
-                 >
-                    {isExpanded ? "Ler menos" : "Ler mais"}
-                 </button>
-             )}
-         </div>
+         {item.text ? (
+            <>
+              <div className={`text-base leading-relaxed whitespace-pre-wrap break-words w-full ${isElite ? 'text-zinc-100 font-normal' : 'text-zinc-300 font-light'}`}>
+                 {isExpanded || !item.text || item.text.length <= MAX_TEXT_LENGTH ? (
+                     item.text
+                 ) : (
+                     <>
+                         {item.text.slice(0, MAX_TEXT_LENGTH)}...
+                     </>
+                 )}
+                 {item.text && item.text.length > MAX_TEXT_LENGTH && (
+                     <button 
+                        onClick={() => setIsExpanded(!isExpanded)} 
+                        className="text-violet-400 hover:text-violet-300 font-bold ml-1 text-sm inline-block"
+                     >
+                        {isExpanded ? "Ler menos" : "Ler mais"}
+                     </button>
+                 )}
+              </div>
 
-         <div className="mt-4 mb-2">
-            {(item.likesCount > 0) && (
-                <span className="text-sm font-bold text-white">
-                    {item.likesCount} {item.likesCount === 1 ? 'curtida' : 'curtidas'}
-                </span>
-            )}
-         </div>
+              <div className="mt-4 mb-2">
+                 {(item.likesCount > 0) && (
+                     <span className="text-sm font-bold text-white">
+                         {item.likesCount} {item.likesCount === 1 ? 'curtida' : 'curtidas'}
+                     </span>
+                 )}
+              </div>
+            </>
+         ) : (
+            <div className="flex flex-col gap-3 items-center justify-center py-6">
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    size={40}
+                    className={`${star <= item.rating ? "fill-yellow-400 text-yellow-400" : "fill-zinc-800 text-zinc-700"} drop-shadow-lg`}
+                  />
+                ))}
+              </div>
+              <div className="text-center">
+                <p className="text-4xl font-black text-white drop-shadow-lg">{item.rating?.toFixed(1)}</p>
+                <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mt-1">Avaliação</p>
+              </div>
+              <div className="mt-1">
+                 {(item.likesCount > 0) && (
+                     <span className="text-xs font-bold text-white">
+                         {item.likesCount} {item.likesCount === 1 ? 'curtida' : 'curtidas'}
+                     </span>
+                 )}
+              </div>
+            </div>
+         )}
 
          <div className="flex items-center gap-6 pt-3 border-t border-white/5">
             <button onClick={handleLikeClick} className={`flex items-center gap-2 transition-all duration-200 group ${isLiked ? 'text-red-500' : 'text-zinc-400 hover:text-white'} ${isLikeAnimating ? 'scale-125' : 'scale-100'}`}>
