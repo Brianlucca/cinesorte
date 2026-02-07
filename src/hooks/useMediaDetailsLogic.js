@@ -83,9 +83,8 @@ export function useMediaDetailsLogic() {
         }
 
         const results = await Promise.all(promises);
+        
         const mediaData = results[0];
-        mediaData.awards = results[3];
-
         setMedia(mediaData);
         setProviders(results[1]);
         
@@ -105,9 +104,16 @@ export function useMediaDetailsLogic() {
         setSimilar(relatedContent);
 
         if (user && user.uid) {
-          const inter = results[4] || [];
-          setUserLists(results[5] || []);
-          const myInter = inter.find((i) => i.mediaId === id.toString());
+          const interactionsRaw = results[3];
+          const listsRaw = results[4];
+
+          const interactionList = Array.isArray(interactionsRaw) ? interactionsRaw : [];
+          const myLists = Array.isArray(listsRaw) ? listsRaw : [];
+
+          setUserLists(myLists);
+
+          const myInter = interactionList.find((i) => String(i.mediaId) === String(id));
+          
           if (myInter) {
             setInteractions({
               liked: !!myInter.liked,
@@ -262,7 +268,7 @@ export function useMediaDetailsLogic() {
         poster_path: media.poster_path,
         backdrop_path: media.backdrop_path,
         media_type: type,
-        vote_average: media.vote_average,
+        vote_average: media.vote_average || 0,
       });
       toast.success("Salvo", "Adicionado à sua lista.");
       const updatedLists = await getUserLists("me");
