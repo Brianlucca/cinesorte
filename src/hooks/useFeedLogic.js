@@ -29,7 +29,6 @@ export function useFeedLogic() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [hasNewPosts, setHasNewPosts] = useState(false);
-  const [lastRefreshTime, setLastRefreshTime] = useState(Date.now());
   
   const [localUser, setLocalUser] = useState(user || {});
   const [suggestions, setSuggestions] = useState({ users: [], content: [] });
@@ -81,7 +80,7 @@ export function useFeedLogic() {
       
       if (feedType === 'following') {
         const followingData = await getFollowingFeed(currentPage);
-        const myData = currentPage === 1 && localUser?.username ? await getUserReviews(localUser.username, 1) : [];
+        const myData = localUser?.username ? await getUserReviews(localUser.username, currentPage) : [];
         
         rawCount = Array.isArray(followingData) ? followingData.length : 0;
         
@@ -89,8 +88,8 @@ export function useFeedLogic() {
         const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
         
         unique.sort((a, b) => {
-            const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
-            const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+            const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt?._seconds ? a.createdAt._seconds * 1000 : a.createdAt);
+            const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt?._seconds ? b.createdAt._seconds * 1000 : b.createdAt);
             return dateB - dateA;
         });
         
@@ -147,7 +146,7 @@ export function useFeedLogic() {
           return true;
       });
 
-      if (rawCount < PAGE_SIZE) {
+      if (rawCount < PAGE_SIZE && filteredData.length < PAGE_SIZE) {
           setHasMore(false);
       } else {
           setHasMore(true);
@@ -172,7 +171,26 @@ export function useFeedLogic() {
     }
   }, [feedType, localUser?.username]);
 
+  const getDateValue = (dateInput) => {
+    if (!dateInput) return 0;
+    
+    if (dateInput._seconds) {
+        return dateInput._seconds * 1000;
+    }
+    
+    if (typeof dateInput.toDate === 'function') {
+        return dateInput.toDate().getTime();
+    }
+    
+    if (dateInput instanceof Date) {
+        return dateInput.getTime();
+    }
+    
+    return new Date(dateInput).getTime();
+  };
+
   const checkForNewPosts = useCallback(async () => {
+    if (loading || loadingMore) return;
     try {
       let newData = [];
       
@@ -186,25 +204,27 @@ export function useFeedLogic() {
       }
 
       const processedNew = (Array.isArray(newData) ? newData : []).map(item => {
-        const isList = item.type === 'list_share' || (item.listName && item.listItems?.length > 0);
         return {
-          ...item,
-          type: isList ? 'list_share' : (item.type || 'review'),
-          uniqueKey: `${isList ? 'list_share' : (item.type || 'review')}-${item.id}`
+          id: item.id,
+          createdAt: item.createdAt
         };
       });
 
       if (reviews.length === 0) {
-        setHasNewPosts(false);
+        setHasNewPosts(processedNew.length > 0);
         return;
       }
 
-      const existingIds = new Set(reviews.map(r => r.id));
-      const newPostsFound = processedNew.filter(p => !existingIds.has(p.id));
+      const latestReviewTime = getDateValue(reviews[0]?.createdAt);
       
-      setHasNewPosts(newPostsFound.length > 0);
+      const hasNewer = processedNew.some(p => {
+         const postTime = getDateValue(p.createdAt);
+         return postTime > latestReviewTime && !reviews.some(r => r.id === p.id);
+      });
+      
+      setHasNewPosts(hasNewer);
     } catch (error) {}
-  }, [feedType, reviews]);
+  }, [feedType, reviews, loading, loadingMore, localUser?.username]);
 
   const loadNewPosts = async () => {
     try {
@@ -212,7 +232,6 @@ export function useFeedLogic() {
       setPage(1);
       setReviews([]);
       await loadFeed(1, true);
-      setLastRefreshTime(Date.now());
     } catch (error) {
       toast.error('Erro', 'Falha ao carregar novas postagens.');
     }
