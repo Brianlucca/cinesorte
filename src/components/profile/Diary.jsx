@@ -1,13 +1,24 @@
-import { Link } from 'react-router-dom';
-import { Calendar, Film } from 'lucide-react';
+import { Link } from "react-router-dom";
+import { Calendar, Film } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { getMovieDetails } from "../../services/api";
 
 export default function Diary({ items }) {
+  const [mode, setMode] = useState("genre");
+  const cacheRef = useRef({});
+  const [cacheVersion, setCacheVersion] = useState(0);
+  const [loadingGenres, setLoadingGenres] = useState(false);
+
   if (!items || items.length === 0) {
     return (
       <div className="text-center py-20 bg-zinc-900/30 rounded-3xl border border-white/5 border-dashed">
         <Calendar className="mx-auto text-zinc-700 mb-4" size={48} />
-        <p className="text-zinc-500 italic text-lg">Seu diário de bordo está vazio.</p>
-        <p className="text-zinc-600 text-sm mt-2">Marque filmes como assistidos para preencher sua linha do tempo.</p>
+        <p className="text-zinc-500 italic text-lg">
+          Seu diário de bordo está vazio.
+        </p>
+        <p className="text-zinc-600 text-sm mt-2">
+          Marque filmes como assistidos para preencher sua linha do tempo.
+        </p>
       </div>
     );
   }
@@ -16,97 +27,193 @@ export default function Diary({ items }) {
     if (timestamp && timestamp._seconds) {
       return new Date(timestamp._seconds * 1000);
     }
-    return new Date(); 
+    return new Date();
   };
 
-  const groupItemsByDate = () => {
-    const groups = {};
-    
-    items.forEach(item => {
-      const date = getSafeDate(item.timestamp);
-      const year = date.getFullYear();
-      const month = date.toLocaleString('pt-BR', { month: 'long' });
-      const monthKey = `${year}-${date.getMonth()}`; 
-
-      if (!groups[year]) groups[year] = {};
-      if (!groups[year][monthKey]) {
-        groups[year][monthKey] = {
-          name: month,
-          items: []
-        };
-      }
-      
-      groups[year][monthKey].items.push(item);
+  useEffect(() => {
+    const unique = [];
+    items.forEach((item) => {
+      const key = `${item.mediaType || "movie"}:${item.mediaId}`;
+      if (!unique.some((u) => `${u.mediaType}:${u.mediaId}` === key))
+        unique.push({
+          mediaType: item.mediaType || "movie",
+          mediaId: item.mediaId,
+        });
     });
 
-    return groups;
-  };
+    const toFetch = unique.filter(
+      (i) => !cacheRef.current[`${i.mediaType}:${i.mediaId}`],
+    );
+    if (toFetch.length === 0) return;
+    setLoadingGenres(true);
+    Promise.all(
+      toFetch.map((i) =>
+        getMovieDetails(i.mediaType, i.mediaId).catch(() => null),
+      ),
+    )
+      .then((results) => {
+        results.forEach((res, idx) => {
+          const key = `${toFetch[idx].mediaType}:${toFetch[idx].mediaId}`;
+          cacheRef.current[key] = res || null;
+        });
+        setCacheVersion((v) => v + 1);
+      })
+      .finally(() => setLoadingGenres(false));
+  }, [items]);
 
-  const groupedData = groupItemsByDate();
-  const sortedYears = Object.keys(groupedData).sort((a, b) => b - a);
+  const groupedByGenre = useMemo(() => {
+    const map = {};
+    items.forEach((item) => {
+      const key = `${item.mediaType || "movie"}:${item.mediaId}`;
+      const details = cacheRef.current[key];
+      const genres =
+        details && details.genres ? details.genres : item.genres || [];
+      if (genres && genres.length > 0) {
+        const primary = genres[0].name || genres[0];
+        if (!map[primary]) map[primary] = [];
+        map[primary].push({
+          ...item,
+          posterPath: item.posterPath || item.poster_path,
+        });
+      } else {
+        if (!map["Sem gênero"]) map["Sem gênero"] = [];
+        map["Sem gênero"].push({
+          ...item,
+          posterPath: item.posterPath || item.poster_path,
+        });
+      }
+    });
+    return map;
+  }, [items, cacheVersion]);
 
   return (
-    <div className="space-y-12">
-      {sortedYears.map(year => (
-        <div key={year} className="relative">
-          <div className="flex items-center gap-4 mb-8">
-            <h2 className="text-4xl font-black text-white/10">{year}</h2>
-            <div className="h-px bg-white/10 flex-1" />
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 justify-between">
+        <div className="text-sm text-zinc-400">
+          Total: <span className="font-bold text-white">{items.length}</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setMode("genre")}
+            className={`px-3 py-2 rounded-lg text-sm font-bold ${mode === "genre" ? "bg-violet-600 text-white" : "bg-zinc-800 text-zinc-300"}`}
+          >
+            Por gênero
+          </button>
+          <button
+            onClick={() => setMode("all")}
+            className={`px-3 py-2 rounded-lg text-sm font-bold ${mode === "all" ? "bg-violet-600 text-white" : "bg-zinc-800 text-zinc-300"}`}
+          >
+            Todos
+          </button>
+        </div>
+      </div>
+
+      {mode === "genre" &&
+        (loadingGenres ? (
+          <div className="text-center py-12 bg-zinc-900/50 rounded-xl">
+            Carregando gêneros...
           </div>
-
-          <div className="space-y-8 pl-4 md:pl-8 border-l-2 border-white/5 ml-4 md:ml-6">
-            {Object.keys(groupedData[year])
-              .sort((a, b) => b.split('-')[1] - a.split('-')[1]) 
-              .map(monthKey => {
-                const { name, items } = groupedData[year][monthKey];
-                
+        ) : (
+          <div className="space-y-8">
+            {Object.keys(groupedByGenre)
+              .sort()
+              .map((genre) => {
+                const list = groupedByGenre[genre] || [];
                 return (
-                  <div key={monthKey} className="relative">
-                    <div className="absolute -left-[25px] md:-left-[41px] top-0 w-4 h-4 rounded-full bg-zinc-800 border-2 border-violet-500" />
-                    
-                    <h3 className="text-xl font-bold text-white capitalize mb-4 flex items-center gap-2">
-                      {name} <span className="text-zinc-600 text-sm font-normal">({items.length})</span>
+                  <div key={genre}>
+                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                      {genre}{" "}
+                      <span className="text-zinc-600 text-sm font-normal">
+                        ({list.length})
+                      </span>
                     </h3>
-
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                      {items.map((item, idx) => (
-                        <div key={`${item.mediaId}-${idx}`} className="group relative">
-                          <Link to={`/app/${item.mediaType || 'movie'}/${item.mediaId}`}>
-                            <div className="aspect-[2/3] rounded-xl overflow-hidden shadow-lg bg-zinc-800 relative">
-                              {item.posterPath ? (
-                                <img 
-                                  src={`https://image.tmdb.org/t/p/w342${item.posterPath}`} 
-                                  alt={item.mediaTitle} 
-                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-zinc-600">
-                                  <Film size={24} />
+                      {list.map((item, idx) => {
+                        return (
+                          <div
+                            key={`${item.mediaId}-${idx}`}
+                            className="group relative"
+                          >
+                            <Link
+                              to={`/app/${item.mediaType || "movie"}/${item.mediaId}`}
+                            >
+                              <div className="aspect-[2/3] rounded-xl overflow-hidden shadow-lg bg-zinc-800 relative">
+                                {item.posterPath ? (
+                                  <img
+                                    src={`https://image.tmdb.org/t/p/w342${item.posterPath}`}
+                                    alt={item.mediaTitle}
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-zinc-600">
+                                    <Film size={24} />
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+                                  <span className="text-white font-bold text-sm line-clamp-2 leading-tight">
+                                    {item.mediaTitle}
+                                  </span>
+                                  <span className="text-zinc-400 text-xs mt-1">
+                                    {item.timestamp && item.timestamp._seconds
+                                      ? new Date(
+                                          item.timestamp._seconds * 1000,
+                                        ).toLocaleDateString("pt-BR", {
+                                          day: "2-digit",
+                                          month: "2-digit",
+                                        })
+                                      : "Recente"}
+                                  </span>
                                 </div>
-                              )}
-                              
-                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-                                <span className="text-white font-bold text-sm line-clamp-2 leading-tight">
-                                  {item.mediaTitle}
-                                </span>
-                                <span className="text-zinc-400 text-xs mt-1">
-                                  {item.timestamp && item.timestamp._seconds 
-                                    ? new Date(item.timestamp._seconds * 1000).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
-                                    : 'Recente'
-                                  }
-                                </span>
                               </div>
-                            </div>
-                          </Link>
-                        </div>
-                      ))}
+                            </Link>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
               })}
           </div>
+        ))}
+
+      {mode === "all" && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {items.map((item, idx) => (
+            <div key={`${item.mediaId}-${idx}`} className="group relative">
+              <Link to={`/app/${item.mediaType || "movie"}/${item.mediaId}`}>
+                <div className="aspect-[2/3] rounded-xl overflow-hidden shadow-lg bg-zinc-800 relative">
+                  {item.posterPath ? (
+                    <img
+                      src={`https://image.tmdb.org/t/p/w342${item.posterPath}`}
+                      alt={item.mediaTitle}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-zinc-600">
+                      <Film size={24} />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+                    <span className="text-white font-bold text-sm line-clamp-2 leading-tight">
+                      {item.mediaTitle}
+                    </span>
+                    <span className="text-zinc-400 text-xs mt-1">
+                      {item.timestamp && item.timestamp._seconds
+                        ? new Date(
+                            item.timestamp._seconds * 1000,
+                          ).toLocaleDateString("pt-BR", {
+                            day: "2-digit",
+                            month: "2-digit",
+                          })
+                        : "Recente"}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 }
