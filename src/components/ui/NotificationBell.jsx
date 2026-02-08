@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Heart, UserPlus, TrendingUp, Layers, Info } from "lucide-react";
+import { Bell, Heart, UserPlus, TrendingUp, Layers, Info, CheckCheck } from "lucide-react";
 import { getNotifications, markNotificationRead } from "../../services/api";
 
 export default function NotificationBell({ isMobile }) {
@@ -83,6 +83,17 @@ export default function NotificationBell({ isMobile }) {
     }
   };
 
+  const handleMarkAllAsRead = async () => {
+    const unread = notifications.filter(n => !n.read);
+    if (unread.length === 0) return;
+
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+
+    try {
+        await Promise.all(unread.map(n => markNotificationRead(n.id)));
+    } catch (e) {}
+  };
+
   const getIcon = (type) => {
     switch (type) {
       case "follow": return <UserPlus size={16} className="text-blue-500" />;
@@ -109,6 +120,8 @@ export default function NotificationBell({ isMobile }) {
     return `${Math.floor(diff / 86400)} d`;
   };
 
+  const hasUnread = notifications.some(n => !n.read);
+
   return (
     <div className="relative md:fixed md:top-6 md:right-8 md:z-50" ref={dropdownRef}>
       <button
@@ -123,9 +136,22 @@ export default function NotificationBell({ isMobile }) {
 
       {isOpen && (
         <div className="absolute z-50 w-80 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden right-0 top-full mt-4">
-          <div className="p-3 border-b border-white/5 flex justify-between items-center">
-            <h3 className="font-bold text-sm text-white">Notificações</h3>
-            {badgeCount > 0 && <span className="text-xs text-violet-400 font-medium">{badgeCount} novas</span>}
+          <div className="p-3 border-b border-white/5 flex justify-between items-center bg-zinc-900/95 backdrop-blur-sm sticky top-0 z-10">
+            <div className="flex items-center gap-2">
+                <h3 className="font-bold text-sm text-white">Notificações</h3>
+                {badgeCount > 0 && <span className="text-xs text-zinc-500 font-medium">({badgeCount})</span>}
+            </div>
+            
+            {hasUnread && (
+                <button 
+                    onClick={handleMarkAllAsRead}
+                    className="text-[10px] font-bold text-violet-400 hover:text-violet-300 flex items-center gap-1 transition-colors bg-violet-500/10 px-2 py-1 rounded hover:bg-violet-500/20"
+                    title="Marcar todas como lidas"
+                >
+                    <CheckCheck size={12} />
+                    Ler todas
+                </button>
+            )}
           </div>
           
           <div className="max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
