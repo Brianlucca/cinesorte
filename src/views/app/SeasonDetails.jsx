@@ -31,7 +31,7 @@ export default function SeasonDetails() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1">
-                <div className="sticky top-24">
+                <div>
                     <div className="aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl border border-white/5 bg-zinc-900 mb-6">
                         {seasonData.poster_path ? (
                             <img 
