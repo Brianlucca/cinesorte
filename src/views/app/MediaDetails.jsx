@@ -39,6 +39,7 @@ export default function MediaDetails() {
     modals,
     setModals,
     isEliteUser,
+    communityStats,
     actions
   } = useMediaDetailsLogic();
 
@@ -166,12 +167,16 @@ export default function MediaDetails() {
             
             <div className="flex items-center gap-3 bg-transparent border border-white/30 backdrop-blur-md px-5 py-3 rounded-2xl">
                 <div className="flex items-center gap-2">
-                  {renderStars(media.vote_average)}
+                  {renderStars(communityStats ? parseFloat(communityStats.average) * 2 : media.vote_average)}
                 </div>
-                <span className="text-2xl font-bold text-white tracking-tighter">{media.vote_average.toFixed(1)}</span>
+                <span className="text-2xl font-bold text-white tracking-tighter">
+                  {communityStats ? parseFloat(communityStats.average).toFixed(1) : media.vote_average.toFixed(1)}
+                </span>
                 <div className="h-6 w-px bg-white/30 mx-1"></div>
                 <div className="flex flex-col leading-tight">
-                    <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">TMDB</span>
+                    <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
+                      {communityStats ? "CINESORTE" : "TMDB"}
+                    </span>
                     <span className="text-[10px] text-zinc-400 uppercase tracking-wider">Score</span>
                 </div>
             </div>
