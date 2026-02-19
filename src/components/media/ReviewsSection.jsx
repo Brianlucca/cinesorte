@@ -7,13 +7,9 @@ import {
   User,
   AlertCircle,
   TrendingUp,
-  Sparkles,
   Trophy,
-  Crown,
   Heart,
   Loader2,
-  Zap,
-  Eye,
   Edit2,
   X,
   Check,
@@ -43,11 +39,6 @@ export default function ReviewsSection({
   const [isPostingGeneral, setIsPostingGeneral] = useState(false);
   const [isFocusedGeneral, setIsFocusedGeneral] = useState(false);
   const [errorMsgGeneral, setErrorMsgGeneral] = useState(null);
-
-  const [eliteRating, setEliteRating] = useState(5);
-  const [eliteText, setEliteText] = useState("");
-  const [isPostingElite, setIsPostingElite] = useState(false);
-  const [errorMsgElite, setErrorMsgElite] = useState(null);
 
   const stats = useMemo(() => {
     if (!reviews || reviews.length === 0) return null;
@@ -86,53 +77,6 @@ export default function ReviewsSection({
     return { topEliteReview: fixed, regularReviews: others };
   }, [reviews, isEliteUser]);
 
-  const userIsElite =
-    typeof isEliteUser === "function" && isEliteUser(user?.levelTitle);
-  const showEliteInput = userIsElite && !topEliteReview;
-
-  const getEliteHeaderInfo = (title) => {
-    switch (title) {
-      case "Divindade do Cinema":
-        return {
-          label: "Veredito da Divindade",
-          color: "text-cyan-400",
-          icon: <Eye size={20} className="animate-pulse" />,
-          greeting:
-            "Como Divindade, sua opinião define o que é sucesso ou fracasso por aqui.",
-        };
-      case "Entidade Cinematográfica":
-        return {
-          label: "Veredito da Entidade",
-          color: "text-purple-400",
-          icon: <Sparkles size={20} className="animate-pulse" />,
-          greeting: "Sua presença é lendária. Diga-nos o que achou desta obra.",
-        };
-      case "Oráculo da Sétima Arte":
-        return {
-          label: "Veredito do Oráculo",
-          color: "text-emerald-400",
-          icon: <Zap size={20} className="animate-pulse" />,
-          greeting:
-            "Compartilhe sua visão única e ajude a comunidade a decidir.",
-        };
-      case "Mestre da Crítica":
-        return {
-          label: "Veredito do Mestre",
-          color: "text-amber-500",
-          icon: <Crown size={20} className="animate-pulse" />,
-          greeting:
-            "Mestre, sua crítica guia os outros fãs. Qual é a sua análise?",
-        };
-      default:
-        return {
-          label: "Veredito de Elite",
-          color: "text-zinc-400",
-          icon: <Trophy size={20} />,
-          greeting: "Sua opinião tem destaque especial na discussão.",
-        };
-    }
-  };
-
   const handleSubmitGeneral = async () => {
     if (generalText.trim().length > 0 && generalText.trim().length < 3) {
       setErrorMsgGeneral("Mínimo de 3 caracteres.");
@@ -148,24 +92,6 @@ export default function ReviewsSection({
       setErrorMsgGeneral("Erro ao publicar.");
     } finally {
       setIsPostingGeneral(false);
-    }
-  };
-
-  const handleSubmitElite = async () => {
-    if (!eliteText.trim()) return;
-    if (eliteText.length < 10) {
-      setErrorMsgElite("A análise deve ser mais detalhada.");
-      return;
-    }
-    setIsPostingElite(true);
-    try {
-      await onPostReview(eliteRating, eliteText);
-      setEliteText("");
-      setEliteRating(5);
-    } catch (error) {
-      setErrorMsgElite("Erro ao publicar.");
-    } finally {
-      setIsPostingElite(false);
     }
   };
 
@@ -222,12 +148,10 @@ export default function ReviewsSection({
 
       {topEliteReview && (
         <div className="mb-16">
-          <div
-            className={`flex items-center gap-2 mb-4 px-2 ${getEliteHeaderInfo(topEliteReview.levelTitle).color}`}
-          >
-            {getEliteHeaderInfo(topEliteReview.levelTitle).icon}
+          <div className="flex items-center gap-2 mb-4 px-2 text-violet-400">
+            <Trophy size={20} />
             <h2 className="text-sm font-black uppercase tracking-[0.2em]">
-              {getEliteHeaderInfo(topEliteReview.levelTitle).label}
+              Veredito em Destaque
             </h2>
           </div>
           <ReviewItem
@@ -242,66 +166,6 @@ export default function ReviewsSection({
             onEditReply={onEditReply}
             isElite
           />
-        </div>
-      )}
-
-      {showEliteInput && (
-        <div className="mb-16 bg-gradient-to-r from-violet-900/20 to-transparent p-[1px] rounded-[32px]">
-          <div className="bg-zinc-950/80 backdrop-blur-md rounded-[32px] p-8 border border-white/10 shadow-2xl">
-            <div className="flex items-center gap-3 mb-6">
-              <LevelBadge title={user.levelTitle} size="md" />
-              <span className="font-black italic text-xs text-zinc-400 tracking-wide">
-                {getEliteHeaderInfo(user.levelTitle).greeting}
-              </span>
-            </div>
-            <div className="flex flex-col gap-4">
-              <textarea
-                value={eliteText}
-                onChange={(e) => {
-                  setEliteText(e.target.value);
-                  setErrorMsgElite(null);
-                }}
-                placeholder="Escreva sua análise detalhada..."
-                maxLength={500}
-                className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl px-6 py-4 text-white focus:border-violet-500/50 focus:outline-none resize-none text-lg min-h-[120px]"
-              />
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2 bg-zinc-900/50 px-4 py-2 rounded-xl border border-white/5">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => setEliteRating(star)}
-                      className="hover:scale-125 transition-transform"
-                    >
-                      <Star
-                        size={20}
-                        className={
-                          star <= eliteRating
-                            ? "fill-violet-500 text-violet-500"
-                            : "fill-zinc-800 text-zinc-800"
-                        }
-                      />
-                    </button>
-                  ))}
-                </div>
-                <div className="flex items-center gap-4">
-                  {errorMsgElite && (
-                    <span className="text-xs text-red-500 font-bold flex items-center gap-1">
-                      <AlertCircle size={12} /> {errorMsgElite}
-                    </span>
-                  )}
-                  <button
-                    onClick={handleSubmitElite}
-                    disabled={!eliteText.trim() || isPostingElite}
-                    className="bg-violet-600 text-white px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg hover:bg-violet-500 flex items-center gap-2"
-                  >
-                    {isPostingElite ? "..." : "Publicar Veredito"}{" "}
-                    <Send size={14} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
