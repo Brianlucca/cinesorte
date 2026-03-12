@@ -95,4 +95,8 @@ export const getNotifications = () => api.get('/notifications');
 export const getUnreadCount = () => api.get('/notifications/count');
 export const markNotificationRead = (notificationId) => api.put(`/notifications/${notificationId}/read`);
 
+export const submitOscarVote = (data) => api.post('/oscars/vote', data);
+export const getMyOscarVotes = () => api.get('/oscars/my-votes');
+export const getOscarResults = () => api.get('/oscars/results');
+
 export default api;

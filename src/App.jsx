@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AuthLayout from './components/layout/AuthLayout';
 import AppLayout from './components/layout/AppLayout';
-
 import Landing from './views/Landing';
 import Login from './views/auth/Login';
 import Register from './views/auth/Register';
@@ -19,6 +18,7 @@ import Settings from './views/app/Settings';
 import MovieRoulette from './views/app/MovieRoulette';
 import Feed from './views/app/Feed';
 import PublicProfile from './views/app/PublicProfile';
+import Oscars from './views/app/Oscars';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -50,7 +50,7 @@ function AppRoutes() {
         <Route path="profile/:username" element={<PublicProfile />} /> 
 
         <Route path="lists" element={<MyLists />} />
-        
+        <Route path="oscars" element={<Oscars />} />
         <Route path="lists/:username/:listId" element={<ListDetails />} />
         
         <Route path="profile" element={<Profile />} />
