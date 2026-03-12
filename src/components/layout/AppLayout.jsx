@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import TermsModal from '../ui/TermsModal';
 import NotificationBell from '../ui/NotificationBell';
 import SearchModal from '../ui/SearchModal';
-import { Home, Globe, Dices, List, User, Settings, LogOut, Film, Menu, X, Search, ChevronLeft } from 'lucide-react';
+import { Home, Globe, Dices, List, User, Settings, LogOut, Film, Menu, X, Search, ChevronLeft, Award } from 'lucide-react';
 
 export default function AppLayout() {
   const { logout, user, showTermsModal } = useAuth();
@@ -21,22 +21,38 @@ export default function AppLayout() {
 
   const isActive = (path) => location.pathname === path;
 
-  const NavItem = ({ to, icon: Icon, label, onClick, isMobileItem }) => {
+  const NavItem = ({ to, icon: Icon, label, onClick, isMobileItem, variant = 'default' }) => {
     const active = to ? isActive(to) : false;
     const collapsed = isSidebarCollapsed && !isMobileItem;
+    const isGold = variant === 'gold';
+
+    let className = `flex items-center ${collapsed ? 'justify-center px-0' : 'justify-between px-4'} py-3 rounded-xl transition-all duration-300 group w-full relative overflow-hidden `;
+
+    if (isGold) {
+      className += active
+        ? 'bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-black shadow-[0_0_20px_rgba(250,204,21,0.5)] font-black scale-[1.02]'
+        : 'text-yellow-500 hover:bg-yellow-500/10 hover:text-yellow-400 border border-yellow-500/30 hover:border-yellow-500/60 shadow-[inset_0_0_15px_rgba(250,204,21,0.1)]';
+    } else {
+      className += active
+        ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/20'
+        : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white';
+    }
+
+    const iconColor = isGold 
+      ? (active ? 'text-black' : 'text-yellow-500 group-hover:text-yellow-400') 
+      : (active ? 'text-white' : 'text-zinc-500 group-hover:text-white');
 
     const content = (
-      <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
-        <Icon size={20} className={`shrink-0 ${active ? 'text-white' : 'text-zinc-500 group-hover:text-white'}`} />
-        {!collapsed && <span className="font-medium whitespace-nowrap">{label}</span>}
-      </div>
+      <>
+        {isGold && !active && (
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+        )}
+        <div className={`flex items-center relative z-10 ${collapsed ? 'justify-center' : 'gap-3'}`}>
+          <Icon size={20} className={`shrink-0 transition-colors ${iconColor} ${isGold && !active ? 'animate-pulse' : ''}`} />
+          {!collapsed && <span className={`${isGold ? 'font-bold uppercase tracking-wider text-sm' : 'font-medium'} whitespace-nowrap`}>{label}</span>}
+        </div>
+      </>
     );
-
-    const className = `flex items-center ${collapsed ? 'justify-center px-0' : 'justify-between px-4'} py-3 rounded-xl transition-all duration-200 group w-full ${
-      active
-        ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/20'
-        : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
-    }`;
 
     return onClick ? (
       <button onClick={onClick} title={collapsed ? label : ''} className={className}>{content}</button>
@@ -69,11 +85,12 @@ export default function AppLayout() {
           )}
         </div>
 
-        <nav className="flex-1 px-4 space-y-1 mt-2 overflow-y-auto scrollbar-hide overflow-x-hidden">
+        <nav className="flex-1 px-4 space-y-2 mt-2 overflow-y-auto scrollbar-hide overflow-x-hidden">
           <NavItem to="/app" icon={Home} label="Início" />
           <NavItem to="/app/feed" icon={Globe} label="Feed Social" />
           <NavItem icon={Search} label="Buscar" onClick={() => setIsSearchOpen(true)} />
           <NavItem to="/app/roulette" icon={Dices} label="Roleta" />
+          <NavItem to="/app/oscars" icon={Award} label="Oscar 2026" variant="gold" />
           <NavItem to="/app/lists" icon={List} label="Minhas Listas" />
           <NavItem to="/app/profile" icon={User} label="Perfil" />
           <NavItem to="/app/settings" icon={Settings} label="Configurações" />
@@ -118,6 +135,7 @@ export default function AppLayout() {
             <NavItem to="/app/feed" icon={Globe} label="Feed Social" isMobileItem={true} />
             <NavItem icon={Search} label="Buscar" onClick={() => { setIsSearchOpen(true); setIsMobileMenuOpen(false); }} isMobileItem={true} />
             <NavItem to="/app/roulette" icon={Dices} label="Roleta" isMobileItem={true} />
+            <NavItem to="/app/oscars" icon={Award} label="Oscar 2026" variant="gold" isMobileItem={true} />
             <NavItem to="/app/lists" icon={List} label="Minhas Listas" isMobileItem={true} />
             <NavItem to="/app/profile" icon={User} label="Perfil" isMobileItem={true} />
             <NavItem to="/app/settings" icon={Settings} label="Configurações" isMobileItem={true} />
