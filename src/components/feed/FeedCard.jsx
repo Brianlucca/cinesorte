@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Star, MoreVertical, Trash2, MessageCircle, User, Share2, Heart, ChevronDown, ChevronUp, Crown, Layers, Film, Loader2, Zap, Eye, Sparkles } from "lucide-react";
+import { Star, MoreVertical, Trash2, MessageCircle, Share2, Heart, ChevronDown, ChevronUp, Crown, Layers, Film, Loader2, Zap, Eye, Sparkles } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 
 export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadComments }) {
@@ -12,7 +12,6 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
   const toast = useToast();
 
   const isListShare = item.type === 'list_share';
-  
   const eliteTitles = ["Mestre da Crítica", "Oráculo da Sétima Arte", "Entidade Cinematográfica", "Divindade do Cinema"];
   const isElite = eliteTitles.includes(item.levelTitle);
 
@@ -20,20 +19,17 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
   const photoURL = item.userPhoto || item.photoURL || null;
   const replies = item.replies || [];
   const commentsCount = item.commentsCount || 0;
-  
   const isOwner = currentUser?.username && item.username && currentUser.username === item.username;
-  
   const isLiked = !!item.isLikedByCurrentUser;
-
-  const MAX_TEXT_LENGTH = 100;
+  const MAX_TEXT_LENGTH = 160;
 
   const getEliteStyle = (title) => {
     switch (title) {
-      case "Divindade do Cinema": return { border: "border-cyan-500/40", shadow: "shadow-[0_0_30px_rgba(6,182,212,0.15)]", header: "from-cyan-900/20 to-cyan-900/10", text: "text-cyan-400", label: "Veredito da Divindade", icon: <Eye size={12} className="animate-pulse" /> };
-      case "Entidade Cinematográfica": return { border: "border-purple-500/40", shadow: "shadow-[0_0_30px_rgba(168,85,247,0.15)]", header: "from-purple-900/20 to-purple-900/10", text: "text-purple-400", label: "Veredito da Entidade", icon: <Sparkles size={12} className="animate-pulse" /> };
-      case "Oráculo da Sétima Arte": return { border: "border-emerald-500/40", shadow: "shadow-[0_0_25px_rgba(16,185,129,0.15)]", header: "from-emerald-900/20 to-emerald-900/10", text: "text-emerald-400", label: "Veredito do Oráculo", icon: <Zap size={12} className="animate-pulse" /> };
-      case "Mestre da Crítica": return { border: "border-amber-500/30", shadow: "shadow-[0_0_20px_rgba(245,158,11,0.1)]", header: "from-amber-900/20 to-amber-900/10", text: "text-amber-500", label: "Veredito do Mestre", icon: <Crown size={12} /> };
-      default: return { border: "border-zinc-800", shadow: "", header: "from-zinc-800/20 to-zinc-800/10", text: "text-zinc-400", label: "Veredito", icon: null };
+      case "Divindade do Cinema": return { accent: "border-l-cyan-500", badge: "text-cyan-400 bg-cyan-400/10", label: "Divindade", icon: <Eye size={10} /> };
+      case "Entidade Cinematográfica": return { accent: "border-l-purple-500", badge: "text-purple-400 bg-purple-400/10", label: "Entidade", icon: <Sparkles size={10} /> };
+      case "Oráculo da Sétima Arte": return { accent: "border-l-emerald-500", badge: "text-emerald-400 bg-emerald-400/10", label: "Oráculo", icon: <Zap size={10} /> };
+      case "Mestre da Crítica": return { accent: "border-l-amber-500", badge: "text-amber-400 bg-amber-400/10", label: "Mestre", icon: <Crown size={10} /> };
+      default: return { accent: "border-l-zinc-700", badge: "text-zinc-500 bg-zinc-800", label: "", icon: null };
     }
   };
 
@@ -46,34 +42,26 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
   };
 
   const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text).then(() => {
-        toast.success('Link copiado', 'Compartilhe onde quiser!');
-    });
+    navigator.clipboard.writeText(text).then(() => toast.success('Link copiado', 'Compartilhe onde quiser!'));
   };
 
   const handleShare = async () => {
     let shareUrl = "";
     let shareText = "";
-    let shareTitle = "CineSorte";
 
     if (isListShare) {
-        shareUrl = `${window.location.origin}/app/lists/${item.username}/${item.attachmentId}`;
-        shareText = `Confira a coleção "${item.listName}" de ${displayUsername} no CineSorte!`;
-        shareTitle = item.listName;
+      shareUrl = `${window.location.origin}/app/lists/${item.username}/${item.attachmentId}`;
+      shareText = `Confira a coleção "${item.listName}" de ${displayUsername} no CineSorte!`;
     } else {
-        const type = item.mediaType || 'movie';
-        const id = (item.mediaId?.toString() || "").replace(/^(person-|movie-|tv-)/, '');
-        shareUrl = `${window.location.origin}/app/${type}/${id}`;
-        shareText = `Confira a avaliação de ${displayUsername} sobre ${item.mediaTitle} no CineSorte!`;
+      const type = item.mediaType || 'movie';
+      const id = (item.mediaId?.toString() || "").replace(/^(person-|movie-|tv-)/, '');
+      shareUrl = `${window.location.origin}/app/${type}/${id}`;
+      shareText = `Confira a avaliação de ${displayUsername} sobre ${item.mediaTitle} no CineSorte!`;
     }
 
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: shareTitle,
-          text: shareText,
-          url: shareUrl,
-        });
+        await navigator.share({ title: "CineSorte", text: shareText, url: shareUrl });
       } catch (error) {
         if (error.name !== 'AbortError') copyToClipboard(shareUrl);
       }
@@ -83,16 +71,16 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
   };
 
   const handleLikeClick = () => {
-      setIsLikeAnimating(true);
-      onLike(item.id);
-      setTimeout(() => setIsLikeAnimating(false), 300);
+    setIsLikeAnimating(true);
+    onLike(item.id);
+    setTimeout(() => setIsLikeAnimating(false), 300);
   };
 
   const handleLoadCommentsClick = async () => {
     if (replies.length === 0 && commentsCount > 0) {
-        setLoadingComments(true);
-        await onLoadComments(item.id);
-        setLoadingComments(false);
+      setLoadingComments(true);
+      await onLoadComments(item.id);
+      setLoadingComments(false);
     }
     setVisibleComments(prev => prev === 0 ? 3 : prev + 5);
   };
@@ -105,82 +93,80 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
     const listLink = item.username && item.attachmentId ? `/app/lists/${item.username}/${item.attachmentId}` : "#";
 
     return (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden mb-8 shadow-xl hover:border-zinc-700 transition-all">
-            <div className="p-4 flex items-center gap-3 border-b border-white/5 bg-zinc-900/50">
-                <Link to={`/app/profile/${item.username}`} className="shrink-0">
-                    <div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden border border-white/10">
-                        {photoURL ? <img src={photoURL} className="w-full h-full object-cover" /> : <User className="p-2 text-zinc-500" />}
-                    </div>
-                </Link>
-                <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                        <Link to={`/app/profile/${item.username}`} className="font-bold text-white text-sm hover:text-violet-400">{displayUsername}</Link>
-                        <span className="text-zinc-500 text-xs">• compartilhou uma coleção</span>
-                    </div>
-                    <span className="text-xs text-zinc-600">{formatDate(item.createdAt)}</span>
-                </div>
-                {isOwner && (
-                    <div className="relative">
-                        <button onClick={() => setShowMenu(!showMenu)} className="text-zinc-400 hover:text-white p-2">
-                            <MoreVertical size={18} />
-                        </button>
-                        {showMenu && (
-                            <>
-                                <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-                                <div className="absolute right-0 top-full mt-2 w-32 bg-zinc-950 border border-zinc-800 rounded-lg shadow-xl z-20 py-1">
-                                    <button onClick={() => onDelete(item.id, 'list_share')} className="w-full text-left px-4 py-2 text-red-400 hover:bg-white/5 text-sm flex items-center gap-2">
-                                        <Trash2 size={14} /> Excluir
-                                    </button>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                )}
+      <article className="group bg-zinc-900/60 border border-zinc-800/80 hover:border-zinc-700 rounded-2xl overflow-hidden transition-all duration-300">
+        <div className="p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link to={`/app/profile/${item.username}`}>
+              <div className="w-9 h-9 rounded-full bg-zinc-800 overflow-hidden ring-1 ring-white/10">
+                {photoURL ? <img src={photoURL} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center font-bold text-xs text-zinc-400">{displayUsername[0]?.toUpperCase()}</div>}
+              </div>
+            </Link>
+            <div>
+              <div className="flex items-center gap-2">
+                <Link to={`/app/profile/${item.username}`} className="text-sm font-bold text-white hover:text-violet-400 transition-colors">{displayUsername}</Link>
+                <span className="text-[10px] text-zinc-600 uppercase tracking-wider font-medium">compartilhou</span>
+              </div>
+              <span className="text-[11px] text-zinc-600">{formatDate(item.createdAt)}</span>
             </div>
-            <div className="p-5">
-                {item.content && <p className="text-zinc-300 mb-4 text-sm break-words">{item.content}</p>}
-                
-                <Link to={listLink} className="block group">
-                    <div className="bg-black/40 rounded-xl overflow-hidden border border-white/10 group-hover:border-violet-500/50 transition-all shadow-lg group-hover:shadow-violet-900/10">
-                        {listPreviewImages.length > 0 ? (
-                            <div className="grid grid-cols-4 gap-0.5 h-32 opacity-90 group-hover:opacity-100 transition-opacity bg-zinc-800">
-                                {listPreviewImages.map((img, idx) => (
-                                    <div key={idx} className="relative w-full h-full">
-                                        <img src={`https://image.tmdb.org/t/p/w342${img}`} className="w-full h-full object-cover" />
-                                        <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
-                                    </div>
-                                ))}
-                                {[...Array(4 - listPreviewImages.length)].map((_, idx) => (
-                                    <div key={`empty-${idx}`} className="bg-zinc-800 flex items-center justify-center">
-                                        <Film className="text-zinc-700 opacity-20" size={20} />
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="h-32 bg-zinc-800 flex items-center justify-center flex-col gap-2">
-                                <Layers size={32} className="text-zinc-600" />
-                                <span className="text-xs text-zinc-600">Sem prévia disponível</span>
-                            </div>
-                        )}
-                        
-                        <div className="p-4 bg-zinc-900 relative">
-                            <div className="flex items-center gap-2 mb-1">
-                                <Layers size={16} className="text-violet-500" />
-                                <h3 className="font-bold text-white text-lg group-hover:text-violet-400 transition-colors">{item.listName || "Coleção sem nome"}</h3>
-                            </div>
-                            <p className="text-xs text-zinc-500 font-medium">
-                                {item.listCount || listItems.length || 0} itens • Curadoria por {displayUsername}
-                            </p>
-                        </div>
-                    </div>
-                </Link>
+          </div>
+          {isOwner && (
+            <div className="relative">
+              <button onClick={() => setShowMenu(!showMenu)} className="p-1.5 text-zinc-600 hover:text-white transition-colors rounded-lg hover:bg-zinc-800">
+                <MoreVertical size={16} />
+              </button>
+              {showMenu && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+                  <div className="absolute right-0 top-full mt-1 w-28 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl z-20 overflow-hidden">
+                    <button onClick={() => onDelete(item.id, 'list_share')} className="w-full text-left px-3 py-2.5 text-red-400 hover:bg-zinc-800 text-xs font-bold flex items-center gap-2">
+                      <Trash2 size={12} /> Excluir
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
-            <div className="px-5 pb-4 flex gap-4">
-                 <button onClick={handleShare} className="text-zinc-500 hover:text-white transition-colors">
-                    <Share2 size={20} />
-                </button>
-            </div>
+          )}
         </div>
+
+        {item.content && <p className="px-4 pb-3 text-sm text-zinc-400">{item.content}</p>}
+
+        <Link to={listLink} className="block mx-4 mb-4 group/list">
+          <div className="rounded-xl overflow-hidden border border-zinc-800 group-hover/list:border-violet-500/40 transition-all">
+            <div className="grid grid-cols-4 h-28">
+              {listPreviewImages.length > 0 ? listPreviewImages.map((img, idx) => (
+                <div key={idx} className="relative overflow-hidden">
+                  <img src={`https://image.tmdb.org/t/p/w342${img}`} className="w-full h-full object-cover group-hover/list:scale-105 transition-transform duration-500" alt="" />
+                </div>
+              )) : [...Array(4)].map((_, idx) => (
+                <div key={idx} className="bg-zinc-800 flex items-center justify-center">
+                  <Film size={16} className="text-zinc-700" />
+                </div>
+              ))}
+              {listPreviewImages.length > 0 && listPreviewImages.length < 4 && [...Array(4 - listPreviewImages.length)].map((_, idx) => (
+                <div key={`e-${idx}`} className="bg-zinc-800 flex items-center justify-center">
+                  <Film size={16} className="text-zinc-700" />
+                </div>
+              ))}
+            </div>
+            <div className="px-4 py-3 bg-zinc-800/50 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Layers size={13} className="text-violet-500 shrink-0" />
+                  <span className="font-bold text-white text-sm group-hover/list:text-violet-400 transition-colors">{item.listName || "Coleção"}</span>
+                </div>
+                <span className="text-[11px] text-zinc-500 mt-0.5 block">{item.listCount || listItems.length || 0} filmes e séries</span>
+              </div>
+              <div className="text-[10px] font-bold text-violet-500 uppercase tracking-wider opacity-0 group-hover/list:opacity-100 transition-opacity">Ver →</div>
+            </div>
+          </div>
+        </Link>
+
+        <div className="px-4 pb-4 flex items-center gap-4 border-t border-zinc-800/50 pt-3">
+          <button onClick={handleShare} className="text-zinc-600 hover:text-zinc-300 transition-colors">
+            <Share2 size={16} />
+          </button>
+        </div>
+      </article>
     );
   }
 
@@ -190,181 +176,174 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
   const mediaLink = item.mediaType === 'person' ? `/app/person/${cleanId}` : `/app/${item.mediaType || 'movie'}/${cleanId}`;
 
   return (
-    <div className={`relative rounded-2xl overflow-hidden mb-8 shadow-xl transition-all duration-500 ${style.border} ${style.shadow} bg-zinc-900 w-full`}>
+    <article className={`group bg-zinc-900/60 border border-zinc-800/80 hover:border-zinc-700 rounded-2xl overflow-hidden transition-all duration-300 border-l-2 ${style.accent}`}>
       
-      {isElite && (
-          <div className={`bg-gradient-to-r ${style.header} border-b border-white/5 py-1.5 px-4 flex justify-end`}>
-              <div className={`${style.text} text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5`}>
-                  {style.icon} {style.label}
-              </div>
-          </div>
-      )}
-
-      <div className="flex justify-between items-center p-4 border-b border-white/5 relative z-10">
+      <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link to={`/app/profile/${item.username}`} className="block relative group/avatar">
-            <div className={`w-11 h-11 rounded-full overflow-hidden p-0.5 ${isElite ? 'bg-gradient-to-br from-white/20 to-white/5' : 'bg-zinc-800 border border-white/10'}`}>
-                <div className="w-full h-full rounded-full overflow-hidden bg-zinc-900">
-                    {photoURL ? <img src={photoURL} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white font-bold">{displayUsername.charAt(0)}</div>}
-                </div>
+          <Link to={`/app/profile/${item.username}`}>
+            <div className="w-9 h-9 rounded-full bg-zinc-800 overflow-hidden ring-1 ring-white/10">
+              {photoURL ? <img src={photoURL} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center font-bold text-xs text-zinc-400">{displayUsername[0]?.toUpperCase()}</div>}
             </div>
           </Link>
-          <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <Link to={`/app/profile/${item.username}`} className={`font-bold text-sm ${isElite ? 'text-zinc-100 hover:text-white' : 'text-white hover:text-violet-400'}`}>
-                    {displayUsername}
-                </Link>
-              </div>
-              <div className="flex items-center gap-2">
-                  <span className="text-xs text-zinc-500">{formatDate(item.createdAt)}</span>
-                  {item.mediaType && (
-                    <span className="text-[10px] uppercase font-bold text-zinc-400 bg-zinc-950 px-2 py-0.5 rounded border border-zinc-800">
-                        {item.mediaType === 'tv' ? 'Série' : item.mediaType === 'person' ? 'Artista' : 'Filme'}
-                    </span>
-                  )}
-              </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Link to={`/app/profile/${item.username}`} className="text-sm font-bold text-white hover:text-violet-400 transition-colors">{displayUsername}</Link>
+              {isElite && (
+                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md ${style.badge}`}>
+                  {style.icon} {style.label}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-[11px] text-zinc-600">
+              <span>{formatDate(item.createdAt)}</span>
+              {item.mediaType && (
+                <span className="uppercase tracking-wider font-medium">
+                  · {item.mediaType === 'tv' ? 'Série' : item.mediaType === 'person' ? 'Artista' : 'Filme'}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-              <div className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border ${isElite ? 'bg-white/5 border-white/10' : 'bg-zinc-950 border-zinc-800'}`}>
-                <Star size={12} className="fill-yellow-500 text-yellow-500" />
-                <span className="text-sm font-bold text-white">{item.rating?.toFixed(1)}</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <Star size={12} className="fill-yellow-500 text-yellow-500" />
+            <span className="text-sm font-black text-white">{item.rating?.toFixed(1)}</span>
+          </div>
+          {isOwner && (
+            <div className="relative">
+              <button onClick={() => setShowMenu(!showMenu)} className="p-1.5 text-zinc-600 hover:text-white transition-colors rounded-lg hover:bg-zinc-800">
+                <MoreVertical size={16} />
+              </button>
+              {showMenu && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+                  <div className="absolute right-0 top-full mt-1 w-28 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl z-20 overflow-hidden">
+                    <button onClick={() => onDelete(item.id, 'review')} className="w-full text-left px-3 py-2.5 text-red-400 hover:bg-zinc-800 text-xs font-bold flex items-center gap-2">
+                      <Trash2 size={12} /> Excluir
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
-            {isOwner && (
-                <div className="relative">
-                    <button onClick={() => setShowMenu(!showMenu)} className="text-zinc-400 hover:text-white"><MoreVertical size={20} /></button>
-                    {showMenu && (
-                        <>
-                            <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-                            <div className="absolute right-0 top-full mt-2 w-32 bg-zinc-950 border border-zinc-800 rounded-lg shadow-xl z-20 py-1">
-                                <button onClick={() => onDelete(item.id, 'review')} className="w-full text-left px-4 py-2 text-red-400 hover:bg-white/5 text-sm flex items-center gap-2">
-                                    <Trash2 size={14} /> Excluir
-                                </button>
-                            </div>
-                        </>
-                    )}
-                </div>
-            )}
+          )}
         </div>
       </div>
 
-      <Link to={mediaLink} className="block w-full bg-black aspect-[2.35/1] relative group overflow-hidden">
-         {imageUrl ? (
-            <img src={imageUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-80 group-hover:opacity-100" />
-         ) : (
-            <div className="w-full h-full flex items-center justify-center bg-zinc-800"><Film className="text-zinc-700" size={40} /></div>
-         )}
-         <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/20 to-transparent" />
-         <div className="absolute bottom-0 left-0 w-full p-6">
-             <h3 className={`text-3xl font-black text-white drop-shadow-xl truncate tracking-tight`}>{item.mediaTitle}</h3>
-         </div>
+      <Link to={mediaLink} className="block relative overflow-hidden">
+        {item.backdropPath ? (
+          <div className="aspect-[2.5/1] relative">
+            <img
+              src={`https://image.tmdb.org/t/p/original${item.backdropPath.startsWith('/') ? item.backdropPath : '/' + item.backdropPath}`}
+              className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
+              alt=""
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-4">
+              <h3 className="text-2xl font-black text-white tracking-tight leading-tight drop-shadow-lg line-clamp-1">{item.mediaTitle}</h3>
+            </div>
+          </div>
+        ) : item.posterPath ? (
+          <div className="flex items-center gap-4 px-4 py-4 bg-zinc-800/40">
+            <img
+              src={`https://image.tmdb.org/t/p/w342${item.posterPath.startsWith('/') ? item.posterPath : '/' + item.posterPath}`}
+              className="w-16 h-24 object-cover rounded-lg shrink-0 shadow-lg"
+              alt=""
+            />
+            <div>
+              <h3 className="text-xl font-black text-white tracking-tight leading-tight line-clamp-2">{item.mediaTitle}</h3>
+              {item.mediaType && (
+                <span className="text-[11px] text-zinc-500 uppercase tracking-wider font-medium mt-1 block">
+                  {item.mediaType === 'tv' ? 'Série' : item.mediaType === 'person' ? 'Artista' : 'Filme'}
+                </span>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-4 px-4 py-4 bg-zinc-800/40">
+            <div className="w-16 h-24 bg-zinc-800 rounded-lg flex items-center justify-center shrink-0">
+              <Film size={24} className="text-zinc-600" />
+            </div>
+            <h3 className="text-xl font-black text-white tracking-tight leading-tight line-clamp-2">{item.mediaTitle}</h3>
+          </div>
+        )}
       </Link>
 
-      <div className="p-6 w-full">
-         {item.text ? (
-            <>
-              <div className={`text-base leading-relaxed whitespace-pre-wrap break-words w-full ${isElite ? 'text-zinc-100 font-normal' : 'text-zinc-300 font-light'}`}>
-                 {isExpanded || !item.text || item.text.length <= MAX_TEXT_LENGTH ? (
-                     item.text
-                 ) : (
-                     <>
-                         {item.text.slice(0, MAX_TEXT_LENGTH)}...
-                     </>
-                 )}
-                 {item.text && item.text.length > MAX_TEXT_LENGTH && (
-                     <button 
-                        onClick={() => setIsExpanded(!isExpanded)} 
-                        className="text-violet-400 hover:text-violet-300 font-bold ml-1 text-sm inline-block"
-                     >
-                        {isExpanded ? "Ler menos" : "Ler mais"}
-                     </button>
-                 )}
-              </div>
+      <div className="p-4">
+        {item.text ? (
+          <div className="mb-4">
+            <p className="text-sm text-zinc-300 leading-relaxed">
+              {isExpanded || item.text.length <= MAX_TEXT_LENGTH ? item.text : `${item.text.slice(0, MAX_TEXT_LENGTH)}...`}
+              {item.text.length > MAX_TEXT_LENGTH && (
+                <button onClick={() => setIsExpanded(!isExpanded)} className="text-violet-400 hover:text-violet-300 font-bold ml-1 text-xs">
+                  {isExpanded ? "menos" : "mais"}
+                </button>
+              )}
+            </p>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 mb-4">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Star key={star} size={22} className={star <= item.rating ? "fill-yellow-400 text-yellow-400" : "fill-zinc-800 text-zinc-700"} />
+            ))}
+          </div>
+        )}
 
-              <div className="mt-4 mb-2">
-                 {(item.likesCount > 0) && (
-                     <span className="text-sm font-bold text-white">
-                         {item.likesCount} {item.likesCount === 1 ? 'curtida' : 'curtidas'}
-                     </span>
-                 )}
+        <div className="flex items-center justify-between pt-3 border-t border-zinc-800/60">
+          <div className="flex items-center gap-5">
+            <button onClick={handleLikeClick} className={`flex items-center gap-1.5 transition-all duration-200 ${isLiked ? 'text-red-500' : 'text-zinc-500 hover:text-zinc-300'} ${isLikeAnimating ? 'scale-125' : 'scale-100'}`}>
+              <Heart size={17} className={isLiked ? "fill-red-500" : ""} />
+              {item.likesCount > 0 && <span className="text-xs font-bold">{item.likesCount}</span>}
+            </button>
+            <button onClick={handleLoadCommentsClick} className="flex items-center gap-1.5 text-zinc-500 hover:text-zinc-300 transition-colors">
+              <MessageCircle size={17} />
+              {commentsCount > 0 && <span className="text-xs font-bold">{commentsCount}</span>}
+            </button>
+            <button onClick={handleShare} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+              <Share2 size={17} />
+            </button>
+          </div>
+        </div>
+
+        {(loadingComments || replies.length > 0 || (commentsCount > 0 && replies.length === 0)) && (
+          <div className="mt-4">
+            {loadingComments && (
+              <div className="flex items-center gap-2 text-zinc-600 text-xs py-2">
+                <Loader2 size={12} className="animate-spin" /> Carregando...
               </div>
-            </>
-         ) : (
-            <div className="flex flex-col gap-3 items-center justify-center py-6">
-              <div className="flex items-center gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    size={40}
-                    className={`${star <= item.rating ? "fill-yellow-400 text-yellow-400" : "fill-zinc-800 text-zinc-700"} drop-shadow-lg`}
-                  />
+            )}
+            {replies.length === 0 && commentsCount > 0 && !loadingComments && (
+              <button onClick={handleLoadCommentsClick} className="text-xs text-zinc-600 hover:text-zinc-400 font-medium transition-colors">
+                Ver {commentsCount} {commentsCount === 1 ? 'comentário' : 'comentários'}
+              </button>
+            )}
+            {replies.length > 0 && (
+              <div className="space-y-3 mt-2 pl-3 border-l border-zinc-800">
+                {displayedReplies.map((reply) => (
+                  <div key={reply.id} className="flex gap-2.5">
+                    <div className="w-7 h-7 rounded-full bg-zinc-800 overflow-hidden shrink-0 mt-0.5">
+                      {reply.userPhoto ? <img src={reply.userPhoto} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-zinc-500">{reply.username?.[0]}</div>}
+                    </div>
+                    <div className="flex-1 min-w-0 bg-zinc-800/50 rounded-xl px-3 py-2">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-xs font-bold text-white">{reply.username}</span>
+                        <span className="text-[10px] text-zinc-600">{formatDate(reply.createdAt)}</span>
+                      </div>
+                      <p className="text-xs text-zinc-400 leading-relaxed break-words">{reply.text}</p>
+                    </div>
+                  </div>
                 ))}
+                {replies.length > 3 && (
+                  <button onClick={() => setVisibleComments(prev => prev > 3 ? 3 : prev + 5)} className="text-xs font-bold text-violet-400 hover:text-violet-300 flex items-center gap-1 pl-9">
+                    {visibleComments > 3 ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                    {visibleComments > 3 ? 'Ocultar' : `${replies.length - 3} mais`}
+                  </button>
+                )}
               </div>
-              <div className="text-center">
-                <p className="text-4xl font-black text-white drop-shadow-lg">{item.rating?.toFixed(1)}</p>
-                <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mt-1">Avaliação</p>
-              </div>
-              <div className="mt-1">
-                 {(item.likesCount > 0) && (
-                     <span className="text-xs font-bold text-white">
-                         {item.likesCount} {item.likesCount === 1 ? 'curtida' : 'curtidas'}
-                     </span>
-                 )}
-              </div>
-            </div>
-         )}
-
-         <div className="flex items-center gap-6 pt-3 border-t border-white/5">
-            <button onClick={handleLikeClick} className={`flex items-center gap-2 transition-all duration-200 group ${isLiked ? 'text-red-500' : 'text-zinc-400 hover:text-white'} ${isLikeAnimating ? 'scale-125' : 'scale-100'}`}>
-                <Heart size={20} className={isLiked ? "fill-red-500" : "group-hover:scale-110 transition-transform"} />
-            </button>
-            <button onClick={handleLoadCommentsClick} className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group">
-                <MessageCircle size={20} className="group-hover:text-violet-400 transition-colors" />
-                {commentsCount > 0 && <span className="text-sm font-bold">{commentsCount}</span>}
-            </button>
-            <button onClick={handleShare} className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group">
-                <Share2 size={20} className="group-hover:text-violet-400 transition-colors" />
-            </button>
-         </div>
-
-         <div className="mt-4">
-             {loadingComments && (
-                 <div className="flex items-center gap-2 text-zinc-500 text-sm py-2">
-                     <Loader2 size={14} className="animate-spin" /> Carregando comentários...
-                 </div>
-             )}
-             {replies.length === 0 && commentsCount > 0 && !loadingComments && (
-                 <button onClick={handleLoadCommentsClick} className="text-xs font-bold text-zinc-500 hover:text-zinc-300 mt-2">
-                     Ver todos os {commentsCount} comentários...
-                 </button>
-             )}
-             {replies.length > 0 && (
-                <div className="space-y-4 pl-4 border-l-2 border-zinc-800 mt-4">
-                    {displayedReplies.map((reply) => (
-                        <div key={reply.id} className="flex gap-3 group/reply">
-                            <div className="w-8 h-8 rounded-full bg-zinc-800 overflow-hidden shrink-0 border border-white/5">
-                                {reply.userPhoto ? <img src={reply.userPhoto} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center font-bold text-xs text-zinc-500">{reply.username?.[0]}</div>}
-                            </div>
-                            <div className="flex-1 w-full min-w-0">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs font-bold text-white hover:text-violet-400 cursor-pointer">{reply.username}</span>
-                                    <span className="text-[10px] text-zinc-600">{formatDate(reply.createdAt)}</span>
-                                </div>
-                                <p className="text-sm text-zinc-400 mt-0.5 break-words">{reply.text}</p>
-                            </div>
-                        </div>
-                    ))}
-                    {replies.length > 3 && (
-                        <button onClick={() => setVisibleComments(prev => prev > 3 ? 3 : prev + 5)} className="text-xs font-bold text-violet-400 hover:text-violet-300 flex items-center gap-1 mt-2">
-                            {visibleComments > 3 ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                            {visibleComments > 3 ? 'Ocultar' : `Ver mais ${replies.length - 3} respostas`}
-                        </button>
-                    )}
-                </div>
-             )}
-         </div>
+            )}
+          </div>
+        )}
       </div>
-    </div>
+    </article>
   );
 }
