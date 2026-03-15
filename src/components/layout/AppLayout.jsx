@@ -38,8 +38,8 @@ export default function AppLayout() {
         : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white';
     }
 
-    const iconColor = isGold 
-      ? (active ? 'text-black' : 'text-yellow-500 group-hover:text-yellow-400') 
+    const iconColor = isGold
+      ? (active ? 'text-black' : 'text-yellow-500 group-hover:text-yellow-400')
       : (active ? 'text-white' : 'text-zinc-500 group-hover:text-white');
 
     const content = (
@@ -63,7 +63,7 @@ export default function AppLayout() {
 
   return (
     <div className="fixed inset-0 bg-zinc-950 text-white flex overflow-hidden">
-      
+
       <aside className={`hidden md:flex flex-col border-r border-white/5 bg-zinc-950 h-full shrink-0 transition-all duration-300 ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
         <div className={`p-6 flex items-center h-24 ${isSidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
           {isSidebarCollapsed ? (
@@ -86,11 +86,12 @@ export default function AppLayout() {
         </div>
 
         <nav className="flex-1 px-4 space-y-2 mt-2 overflow-y-auto scrollbar-hide overflow-x-hidden">
+          <NavItem to="/app/oscars" icon={Award} label="Oscar 2026" variant="gold" />
+          {!isSidebarCollapsed && <div className="border-t border-white/5 my-2" />}
           <NavItem to="/app" icon={Home} label="Início" />
           <NavItem to="/app/feed" icon={Globe} label="Feed Social" />
           <NavItem icon={Search} label="Buscar" onClick={() => setIsSearchOpen(true)} />
           <NavItem to="/app/roulette" icon={Dices} label="Roleta" />
-          <NavItem to="/app/oscars" icon={Award} label="Oscar 2026" variant="gold" />
           <NavItem to="/app/lists" icon={List} label="Minhas Listas" />
           <NavItem to="/app/profile" icon={User} label="Perfil" />
           <NavItem to="/app/settings" icon={Settings} label="Configurações" />
@@ -131,16 +132,17 @@ export default function AppLayout() {
             <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-zinc-400"><X size={32} /></button>
           </div>
           <nav className="space-y-2 flex-1">
+            <NavItem to="/app/oscars" icon={Award} label="Oscar 2026" variant="gold" isMobileItem={true} />
+            <div className="border-t border-white/5 my-2" />
             <NavItem to="/app" icon={Home} label="Início" isMobileItem={true} />
             <NavItem to="/app/feed" icon={Globe} label="Feed Social" isMobileItem={true} />
             <NavItem icon={Search} label="Buscar" onClick={() => { setIsSearchOpen(true); setIsMobileMenuOpen(false); }} isMobileItem={true} />
             <NavItem to="/app/roulette" icon={Dices} label="Roleta" isMobileItem={true} />
-            <NavItem to="/app/oscars" icon={Award} label="Oscar 2026" variant="gold" isMobileItem={true} />
             <NavItem to="/app/lists" icon={List} label="Minhas Listas" isMobileItem={true} />
             <NavItem to="/app/profile" icon={User} label="Perfil" isMobileItem={true} />
             <NavItem to="/app/settings" icon={Settings} label="Configurações" isMobileItem={true} />
           </nav>
-          
+
           <div className="mt-auto pt-6 border-t border-white/5">
             <button onClick={handleLogout} className="flex items-center gap-2 w-full px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded-xl transition-colors">
               <LogOut size={20} /> Sair da conta
@@ -151,9 +153,8 @@ export default function AppLayout() {
 
       <main className="flex-1 min-w-0 h-full relative overflow-y-auto overflow-x-hidden bg-zinc-950">
         <div className="hidden md:flex absolute top-5 right-8 z-40">
-           <NotificationBell isMobile={true} />
+          <NotificationBell isMobile={true} />
         </div>
-
         <div className="w-full h-full pt-16 md:pt-0">
           <Outlet />
         </div>
