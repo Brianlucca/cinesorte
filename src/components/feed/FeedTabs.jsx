@@ -8,21 +8,27 @@ export default function FeedTabs({ activeTab, onChange }) {
   ];
 
   return (
-    <div className="bg-zinc-900 p-1 rounded-xl border border-white/10 inline-flex w-full sm:w-auto shadow-inner overflow-x-auto no-scrollbar">
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          onClick={() => onChange(tab.id)}
-          className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-bold rounded-lg transition-all duration-200 whitespace-nowrap ${
-            activeTab === tab.id
-              ? 'bg-zinc-800 text-white shadow-sm ring-1 ring-white/10'
-              : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
-          }`}
-        >
-          <tab.icon size={16} className={activeTab === tab.id ? "text-violet-400" : "text-zinc-600"} />
-          {tab.label}
-        </button>
-      ))}
+    <div className="flex gap-1">
+      {tabs.map((tab) => {
+        const isActive = activeTab === tab.id;
+        return (
+          <button
+            key={tab.id}
+            onClick={() => onChange(tab.id)}
+            className={`relative flex items-center gap-2 px-5 py-2 text-sm font-bold rounded-full transition-all duration-200 whitespace-nowrap ${
+              isActive
+                ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30'
+                : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
+            }`}
+          >
+            <tab.icon size={14} />
+            {tab.label}
+            {isActive && (
+              <span className="absolute inset-0 rounded-full ring-1 ring-violet-400/30 pointer-events-none" />
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
