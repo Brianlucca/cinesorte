@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import api from '../services/api'
+import { toggleLikeReview } from '../services/api'
 
 export function useReviewLike(review) {
   const { user } = useAuth()
@@ -24,7 +24,6 @@ export function useReviewLike(review) {
 
     const prevLiked = isLiked
     const prevCount = likesCount
-
     const nextLiked = !prevLiked
     const nextCount = nextLiked ? prevCount + 1 : Math.max(0, prevCount - 1)
 
@@ -33,11 +32,7 @@ export function useReviewLike(review) {
     setIsProcessing(true)
 
     try {
-      if (nextLiked) {
-        await api.post(`/social/reviews/${review.id}/like`)
-      } else {
-        await api.delete(`/social/reviews/${review.id}/like`)
-      }
+      await toggleLikeReview(review.id)
     } catch {
       setIsLiked(prevLiked)
       setLikesCount(prevCount)
