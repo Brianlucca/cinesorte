@@ -4,7 +4,7 @@ export const oscarCategories = [
     title: "Melhor Filme",
     type: "movie",
     nominees: [
-      { name: "Uma Batalha Após a Outra", winnerOfficial: false },
+      { name: "Uma Batalha Após a Outra", winnerOfficial: true },
       { name: "Hamnet", winnerOfficial: false },
       { name: "Pecadores", winnerOfficial: false },
       { name: "Valor Sentimental", winnerOfficial: false },
@@ -22,7 +22,7 @@ export const oscarCategories = [
     type: "person",
     nominees: [
       { name: "Chloé Zhao", context: "por Hamnet", winnerOfficial: false },
-      { name: "Paul Thomas Anderson", context: "por Uma Batalha Após a Outra", winnerOfficial: false },
+      { name: "Paul Thomas Anderson", context: "por Uma Batalha Após a Outra", winnerOfficial: true },
       { name: "Ryan Coogler", context: "por Pecadores", winnerOfficial: false },
       { name: "Joachim Trier", context: "por Valor Sentimental", winnerOfficial: false },
       { name: "Josh Safdie", context: "por Marty Supreme", winnerOfficial: false }
@@ -36,7 +36,7 @@ export const oscarCategories = [
       { name: "Leonardo DiCaprio", context: "por Uma Batalha Após a Outra", winnerOfficial: false },
       { name: "Timothée Chalamet", context: "por Marty Supreme", winnerOfficial: false },
       { name: "Wagner Moura", context: "por O Agente Secreto", winnerOfficial: false },
-      { name: "Michael B. Jordan", context: "por Pecadores", winnerOfficial: false },
+      { name: "Michael B. Jordan", context: "por Pecadores", winnerOfficial: true },
       { name: "Ethan Hawke", context: "por Blue Moon", winnerOfficial: false }
     ]
   },
@@ -45,7 +45,7 @@ export const oscarCategories = [
     title: "Melhor Atriz",
     type: "person",
     nominees: [
-      { name: "Jessie Buckley", context: "por Hamnet", winnerOfficial: false },
+      { name: "Jessie Buckley", context: "por Hamnet", winnerOfficial: true },
       { name: "Renate Reinsve", context: "por Valor Sentimental", winnerOfficial: false },
       { name: "Rose Byrne", context: "por Se Eu Tivesse Pernas, Eu Te Chutaria", winnerOfficial: false },
       { name: "Emma Stone", context: "por Bugonia", winnerOfficial: false },
@@ -57,7 +57,7 @@ export const oscarCategories = [
     title: "Melhor Ator Coadjuvante",
     type: "person",
     nominees: [
-      { name: "Sean Penn", context: "por Uma Batalha Após a Outra", winnerOfficial: false },
+      { name: "Sean Penn", context: "por Uma Batalha Após a Outra", winnerOfficial: true },
       { name: "Stellan Skarsgård", context: "por Valor Sentimental", winnerOfficial: false },
       { name: "Benicio del Toro", context: "por Uma Batalha Após a Outra", winnerOfficial: false },
       { name: "Delroy Lindo", context: "por Pecadores", winnerOfficial: false },
@@ -72,7 +72,7 @@ export const oscarCategories = [
       { name: "Elle Fanning", context: "por Valor Sentimental", winnerOfficial: false },
       { name: "Inga Ibsdotter Lilleaas", context: "por Valor Sentimental", winnerOfficial: false },
       { name: "Teyana Taylor", context: "por Uma Batalha Após a Outra", winnerOfficial: false },
-      { name: "Amy Madigan", context: "por A Hora do Mal", winnerOfficial: false },
+      { name: "Amy Madigan", context: "por A Hora do Mal", winnerOfficial: true },
       { name: "Wunmi Mosaku", context: "por Pecadores", winnerOfficial: false }
     ]
   },
@@ -81,7 +81,7 @@ export const oscarCategories = [
     title: "Melhor Direção de Elenco",
     type: "person",
     nominees: [
-      { name: "Cassandra Kulukundis", context: "por Uma Batalha Após a Outra", winnerOfficial: false },
+      { name: "Cassandra Kulukundis", context: "por Uma Batalha Após a Outra", winnerOfficial: true },
       { name: "Nina Gold", context: "por Hamnet", winnerOfficial: false },
       { name: "Francine Maisler", context: "por Pecadores", winnerOfficial: false },
       { name: "Jennifer Venditti", context: "por Marty Supreme", winnerOfficial: false },
@@ -93,7 +93,7 @@ export const oscarCategories = [
     title: "Melhor Roteiro Original",
     type: "movie",
     nominees: [
-      { name: "Pecadores", winnerOfficial: false },
+      { name: "Pecadores", winnerOfficial: true },
       { name: "Valor Sentimental", winnerOfficial: false },
       { name: "Marty Supreme", winnerOfficial: false },
       { name: "Blue Moon", winnerOfficial: false },
@@ -105,7 +105,7 @@ export const oscarCategories = [
     title: "Melhor Roteiro Adaptado",
     type: "movie",
     nominees: [
-      { name: "Uma Batalha Após a Outra", winnerOfficial: false },
+      { name: "Uma Batalha Após a Outra", winnerOfficial: true },
       { name: "Hamnet", winnerOfficial: false },
       { name: "Bugonia", winnerOfficial: false },
       { name: "Sonhos de Trem", winnerOfficial: false },
@@ -117,7 +117,7 @@ export const oscarCategories = [
     title: "Melhor Filme de Animação",
     type: "movie",
     nominees: [
-      { name: "Guerreiras do K-pop", winnerOfficial: false },
+      { name: "Guerreiras do K-pop", winnerOfficial: true },
       { name: "Elio", winnerOfficial: false },
       { name: "Zootopia 2", winnerOfficial: false },
       { name: "Arco", winnerOfficial: false },
@@ -130,7 +130,7 @@ export const oscarCategories = [
     type: "movie",
     nominees: [
       { name: "O Agente Secreto", context: "Brasil", winnerOfficial: false },
-      { name: "Valor Sentimental", context: "Noruega", winnerOfficial: false },
+      { name: "Valor Sentimental", context: "Noruega", winnerOfficial: true },
       { name: "Foi Apenas um Acidente", context: "França", winnerOfficial: false },
       { name: "A Voz de Hind Rajab", context: "Tunísia", winnerOfficial: false },
       { name: "Sirāt", context: "Espanha", winnerOfficial: false }
@@ -144,7 +144,7 @@ export const oscarCategories = [
       { name: "A Vizinha Perfeita", winnerOfficial: false },
       { name: "Cutting Through Rocks", winnerOfficial: false },
       { name: "Alabama: Presos no Sistema", winnerOfficial: false },
-      { name: "Mr. Nobody Against Putin", winnerOfficial: false },
+      { name: "Mr. Nobody Against Putin", winnerOfficial: true },
       { name: "Come See Me in the Good Light", winnerOfficial: false }
     ]
   },
@@ -153,7 +153,7 @@ export const oscarCategories = [
     title: "Melhor Fotografia",
     type: "movie",
     nominees: [
-      { name: "Pecadores", winnerOfficial: false },
+      { name: "Pecadores", winnerOfficial: true },
       { name: "Uma Batalha Após a Outra", winnerOfficial: false },
       { name: "Sonhos de Trem", winnerOfficial: false },
       { name: "Marty Supreme", winnerOfficial: false },
@@ -165,7 +165,7 @@ export const oscarCategories = [
     title: "Melhor Figurino",
     type: "movie",
     nominees: [
-      { name: "Frankenstein", winnerOfficial: false },
+      { name: "Frankenstein", winnerOfficial: true },
       { name: "Pecadores", winnerOfficial: false },
       { name: "Avatar: Fogo e Cinzas", winnerOfficial: false },
       { name: "Hamnet", winnerOfficial: false },
@@ -174,10 +174,10 @@ export const oscarCategories = [
   },
   {
     id: "montagem",
-    title: "Melhor Edição",
+    title: "Melhor Montagem",
     type: "movie",
     nominees: [
-      { name: "Uma Batalha Após a Outra", winnerOfficial: false },
+      { name: "Uma Batalha Após a Outra", winnerOfficial: true },
       { name: "Pecadores", winnerOfficial: false },
       { name: "Marty Supreme", winnerOfficial: false },
       { name: "F1: O Filme", winnerOfficial: false },
@@ -189,7 +189,7 @@ export const oscarCategories = [
     title: "Melhor Design de Produção",
     type: "movie",
     nominees: [
-      { name: "Frankenstein", winnerOfficial: false },
+      { name: "Frankenstein", winnerOfficial: true },
       { name: "Hamnet", winnerOfficial: false },
       { name: "Marty Supreme", winnerOfficial: false },
       { name: "Uma Batalha Após a Outra", winnerOfficial: false },
@@ -205,7 +205,7 @@ export const oscarCategories = [
       { name: "Foi Apenas um Acidente", winnerOfficial: false },
       { name: "Marty Supreme", winnerOfficial: false },
       { name: "Valor Sentimental", winnerOfficial: false },
-      { name: "Pecadores", winnerOfficial: false }
+      { name: "Pecadores", winnerOfficial: true }
     ]
   },
   {
@@ -213,7 +213,7 @@ export const oscarCategories = [
     title: "Melhor Canção Original",
     type: "movie",
     nominees: [
-      { name: "Guerreiras do K-pop", context: "Canção: Golden", winnerOfficial: false },
+      { name: "Guerreiras do K-pop", context: "Canção: Golden", winnerOfficial: true },
       { name: "Pecadores", context: "Canção: I Lied To You", winnerOfficial: false },
       { name: "Sonhos de Trem", context: "Canção: Train Dreams", winnerOfficial: false },
       { name: "Viva Verdi!", context: "Canção: Sweet Dreams Of Joy", winnerOfficial: false },
@@ -225,7 +225,7 @@ export const oscarCategories = [
     title: "Melhor Cabelo e Maquiagem",
     type: "movie",
     nominees: [
-      { name: "Frankenstein", winnerOfficial: false },
+      { name: "Frankenstein", winnerOfficial: true },
       { name: "Kokuho", winnerOfficial: false },
       { name: "Pecadores", winnerOfficial: false },
       { name: "The Smashing Machine", winnerOfficial: false },
@@ -237,7 +237,7 @@ export const oscarCategories = [
     title: "Melhor Som",
     type: "movie",
     nominees: [
-      { name: "F1: O Filme", winnerOfficial: false },
+      { name: "F1: O Filme", winnerOfficial: true },
       { name: "Pecadores", winnerOfficial: false },
       { name: "Sirāt", winnerOfficial: false },
       { name: "Frankenstein", winnerOfficial: false },
@@ -249,7 +249,7 @@ export const oscarCategories = [
     title: "Melhores Efeitos Visuais",
     type: "movie",
     nominees: [
-      { name: "Avatar: Fogo e Cinzas", winnerOfficial: false },
+      { name: "Avatar: Fogo e Cinzas", winnerOfficial: true },
       { name: "F1: O Filme", winnerOfficial: false },
       { name: "Jurassic World: Recomeço", winnerOfficial: false },
       { name: "The Lost Bus", winnerOfficial: false },
@@ -261,7 +261,7 @@ export const oscarCategories = [
     title: "Melhor Documentário em Curta-Metragem",
     type: "movie",
     nominees: [
-      { name: "Quartos Vazios", winnerOfficial: false },
+      { name: "Quartos Vazios", winnerOfficial: true },
       { name: "Armed Only with a Camera: The Life and Death of Brent Renaud", winnerOfficial: false },
       { name: "Children No More: Were and are Gone", winnerOfficial: false },
       { name: "O Diabo Não Tem Descanso", winnerOfficial: false },
@@ -276,8 +276,8 @@ export const oscarCategories = [
       { name: "Butcher's Stain", winnerOfficial: false },
       { name: "A Friend Of Dorothy", winnerOfficial: false },
       { name: "Jane Austen's Period Drama", winnerOfficial: false },
-      { name: "The Singers", winnerOfficial: false },
-      { name: "Two People Exchanging Saliva", winnerOfficial: false }
+      { name: "The Singers", winnerOfficial: true },
+      { name: "Two People Exchanging Saliva", winnerOfficial: true }
     ]
   },
   {
@@ -287,7 +287,7 @@ export const oscarCategories = [
     nominees: [
       { name: "Butterfly", winnerOfficial: false },
       { name: "Forevergreen", winnerOfficial: false },
-      { name: "The Girl Who Cried Pearls", winnerOfficial: false },
+      { name: "The Girl Who Cried Pearls", winnerOfficial: true },
       { name: "Retirement Plan", winnerOfficial: false },
       { name: "The Three Sisters", winnerOfficial: false }
     ]

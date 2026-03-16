@@ -58,7 +58,7 @@ const Oscars = () => {
     return a.type === 'person' ? -1 : 1;
   });
 
-  const totalVoted = Object.keys(myVotes).length;
+  const totalVoted = Object.keys(myVotes).filter(k => k !== 'updatedAt').length;
   const totalCategories = categories.length;
 
   return (
