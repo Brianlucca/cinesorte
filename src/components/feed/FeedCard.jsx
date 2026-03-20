@@ -3,6 +3,35 @@ import { Link } from "react-router-dom";
 import { Star, MoreVertical, Trash2, MessageCircle, Share2, Heart, ChevronDown, ChevronUp, Crown, Layers, Film, Loader2, Zap, Eye, Sparkles } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 
+function buildMediaLink(item) {
+  const rawId = item.mediaId?.toString() || "";
+
+  if (item.mediaType === 'person') {
+    const cleanId = rawId.replace(/^person-/, '');
+    return `/app/person/${cleanId}`;
+  }
+
+  // tv-95557-s4-e3 ou 95557-s4-e3
+  const episodeMatch = rawId.match(/^(?:tv-)?(\d+)-s(\d+)-e(\d+)$/);
+  if (episodeMatch || item.mediaType === 'episode') {
+    const match = episodeMatch || rawId.match(/^(?:tv-)?(\d+)-s(\d+)-e(\d+)$/);
+    if (match) {
+      const [, tvId, season, episode] = match;
+      return `/app/tv/${tvId}/season/${parseInt(season)}/episode/${parseInt(episode)}`;
+    }
+  }
+
+  // tv-95557-s4 ou 95557-s4
+  const seasonMatch = rawId.match(/^(?:tv-)?(\d+)-s(\d+)$/);
+  if (seasonMatch) {
+    const [, tvId, season] = seasonMatch;
+    return `/app/tv/${tvId}/season/${parseInt(season)}`;
+  }
+
+  const cleanId = rawId.replace(/^(movie-|tv-)/, '');
+  return `/app/${item.mediaType || 'movie'}/${cleanId}`;
+}
+
 export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadComments }) {
   const [showMenu, setShowMenu] = useState(false);
   const [visibleComments, setVisibleComments] = useState(3);
@@ -19,9 +48,11 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
   const photoURL = item.userPhoto || item.photoURL || null;
   const replies = item.replies || [];
   const commentsCount = item.commentsCount || 0;
-  const isOwner = currentUser?.username && item.username && currentUser.username === item.username;
+  const isOwner = !!item.isOwner;
   const isLiked = !!item.isLikedByCurrentUser;
   const MAX_TEXT_LENGTH = 160;
+
+  const mediaLink = buildMediaLink(item);
 
   const getEliteStyle = (title) => {
     switch (title) {
@@ -53,9 +84,7 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
       shareUrl = `${window.location.origin}/app/lists/${item.username}/${item.attachmentId}`;
       shareText = `Confira a coleção "${item.listName}" de ${displayUsername} no CineSorte!`;
     } else {
-      const type = item.mediaType || 'movie';
-      const id = (item.mediaId?.toString() || "").replace(/^(person-|movie-|tv-)/, '');
-      shareUrl = `${window.location.origin}/app/${type}/${id}`;
+      shareUrl = `${window.location.origin}${mediaLink}`;
       shareText = `Confira a avaliação de ${displayUsername} sobre ${item.mediaTitle} no CineSorte!`;
     }
 
@@ -86,6 +115,16 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
   };
 
   const displayedReplies = replies.slice(0, visibleComments);
+
+  const getMediaTypeLabel = () => {
+    if (item.mediaType === 'episode') return 'Episódio';
+    const rawId = item.mediaId?.toString() || "";
+    if (rawId.match(/^(?:tv-)?(\d+)-s(\d+)-e(\d+)$/)) return 'Episódio';
+    if (rawId.match(/^(?:tv-)?(\d+)-s(\d+)$/)) return 'Temporada';
+    if (item.mediaType === 'tv') return 'Série';
+    if (item.mediaType === 'person') return 'Artista';
+    return 'Filme';
+  };
 
   if (isListShare) {
     const listItems = Array.isArray(item.listItems) ? item.listItems : [];
@@ -170,14 +209,9 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
     );
   }
 
-  const imagePath = item.backdropPath || item.posterPath;
-  const imageUrl = imagePath ? `https://image.tmdb.org/t/p/original${imagePath.startsWith('/') ? imagePath : '/' + imagePath}` : null;
-  const cleanId = (item.mediaId?.toString() || "").replace(/^(person-|movie-|tv-)/, '');
-  const mediaLink = item.mediaType === 'person' ? `/app/person/${cleanId}` : `/app/${item.mediaType || 'movie'}/${cleanId}`;
-
   return (
     <article className={`group bg-zinc-900/60 border border-zinc-800/80 hover:border-zinc-700 rounded-2xl overflow-hidden transition-all duration-300 border-l-2 ${style.accent}`}>
-      
+
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link to={`/app/profile/${item.username}`}>
@@ -196,11 +230,7 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
             </div>
             <div className="flex items-center gap-2 text-[11px] text-zinc-600">
               <span>{formatDate(item.createdAt)}</span>
-              {item.mediaType && (
-                <span className="uppercase tracking-wider font-medium">
-                  · {item.mediaType === 'tv' ? 'Série' : item.mediaType === 'person' ? 'Artista' : 'Filme'}
-                </span>
-              )}
+              <span className="uppercase tracking-wider font-medium">· {getMediaTypeLabel()}</span>
             </div>
           </div>
         </div>
@@ -252,11 +282,7 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
             />
             <div>
               <h3 className="text-xl font-black text-white tracking-tight leading-tight line-clamp-2">{item.mediaTitle}</h3>
-              {item.mediaType && (
-                <span className="text-[11px] text-zinc-500 uppercase tracking-wider font-medium mt-1 block">
-                  {item.mediaType === 'tv' ? 'Série' : item.mediaType === 'person' ? 'Artista' : 'Filme'}
-                </span>
-              )}
+              <span className="text-[11px] text-zinc-500 uppercase tracking-wider font-medium mt-1 block">{getMediaTypeLabel()}</span>
             </div>
           </div>
         ) : (
