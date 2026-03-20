@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { 
     getUserInteractions, 
-    getUserReviews, 
+    getUserReviews,
+    getUserReviewsOnly,
     getUserStats, 
     getUserFollowers, 
     getUserFollowing, 
@@ -21,9 +22,7 @@ export function useProfileLogic() {
   const [allInteractions, setAllInteractions] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
   const [userLists, setUserLists] = useState([]);
-  
   const [dbProfile, setDbProfile] = useState({});
-  
   const [userStats, setUserStats] = useState({ 
     followersCount: 0, 
     followingCount: 0, 
@@ -36,17 +35,19 @@ export function useProfileLogic() {
     watchedCount: 0,
     likesCount: 0
   });
-
   const [localUpdates, setLocalUpdates] = useState({});
-  
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('activity'); 
   const [activityFilter, setActivityFilter] = useState('all'); 
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+
+  const [reviewsCursor, setReviewsCursor] = useState(null);
+  const [hasMoreReviews, setHasMoreReviews] = useState(false);
+  const [loadingMoreReviews, setLoadingMoreReviews] = useState(false);
+
   const [followersList, setFollowersList] = useState([]);
   const [followingList, setFollowingList] = useState([]);
   const [loadingLists, setLoadingLists] = useState(false);
-
   const [modals, setModals] = useState({
     avatar: false,
     background: false,
@@ -58,8 +59,9 @@ export function useProfileLogic() {
     if (!authUser?.uid || !authUser?.username) return;
     setLoading(true);
     try {
-      const [interactionsData, reviewsData, statsData, listsData, meData] = await Promise.all([
-          getUserInteractions(), 
+      const [interactionsData, reviewsResponse, activityResponse, statsData, listsData, meData] = await Promise.all([
+          getUserInteractions(),
+          getUserReviewsOnly(authUser.username),
           getUserReviews(authUser.username),
           getUserStats(),
           getUserLists('me'),
@@ -67,38 +69,40 @@ export function useProfileLogic() {
       ]);
 
       setUserStats(statsData);
-      setDbProfile(meData || {}); 
+      setDbProfile(meData || {});
       setUserLists(listsData);
+
+      const rawReviews = reviewsResponse?.items || [];
+      setAllReviews(rawReviews);
+      setHasMoreReviews(reviewsResponse?.hasMore || false);
+      setReviewsCursor(reviewsResponse?.nextCursor || null);
+
+      const rawActivity = Array.isArray(activityResponse)
+        ? activityResponse
+        : (activityResponse?.items || []);
 
       const processedInteractions = [];
       if (interactionsData && Array.isArray(interactionsData)) {
-          interactionsData.forEach(item => {
-              if (item.liked) {
-                  processedInteractions.push({
-                      ...item,
-                      action: 'like',
-                      sortDate: item.timestamp && item.timestamp._seconds ? new Date(item.timestamp._seconds * 1000) : new Date()
-                  });
-              }
-              if (item.watched) {
-                  processedInteractions.push({
-                      ...item,
-                      action: 'watched',
-                      sortDate: item.timestamp && item.timestamp._seconds ? new Date(item.timestamp._seconds * 1000) : new Date()
-                  });
-              }
-          });
+        interactionsData.forEach(item => {
+          if (item.liked) {
+            processedInteractions.push({
+              ...item,
+              action: 'like',
+              sortDate: item.timestamp?._seconds ? new Date(item.timestamp._seconds * 1000) : new Date()
+            });
+          }
+          if (item.watched) {
+            processedInteractions.push({
+              ...item,
+              action: 'watched',
+              sortDate: item.timestamp?._seconds ? new Date(item.timestamp._seconds * 1000) : new Date()
+            });
+          }
+        });
       }
       processedInteractions.sort((a, b) => b.sortDate - a.sortDate);
-      
-      const sortedReviews = (reviewsData || []).sort((a, b) => {
-          const dateA = a.createdAt?._seconds ? a.createdAt._seconds * 1000 : 0;
-          const dateB = b.createdAt?._seconds ? b.createdAt._seconds * 1000 : 0;
-          return dateB - dateA;
-      });
-
       setAllInteractions(processedInteractions);
-      setAllReviews(sortedReviews);
+
     } catch (error) {
     } finally {
       setLoading(false);
@@ -109,53 +113,73 @@ export function useProfileLogic() {
     loadData();
   }, [loadData]);
 
+  const loadMoreReviews = useCallback(async () => {
+    if (!authUser?.username || !reviewsCursor || loadingMoreReviews) return;
+    setLoadingMoreReviews(true);
+    try {
+      const response = await getUserReviewsOnly(authUser.username, reviewsCursor);
+      const newReviews = response?.items || [];
+
+      setAllReviews(prev => {
+        const existingIds = new Set(prev.map(r => r.id));
+        return [...prev, ...newReviews.filter(r => !existingIds.has(r.id))];
+      });
+      setHasMoreReviews(response?.hasMore || false);
+      setReviewsCursor(response?.nextCursor || null);
+    } catch {
+      toast.error('Erro', 'Não foi possível carregar mais reviews.');
+    } finally {
+      setLoadingMoreReviews(false);
+    }
+  }, [authUser?.username, reviewsCursor, loadingMoreReviews]);
+
   const updateAvatar = async (url) => {
     try {
-        await updateProfile({ photoURL: url });
-        await updateAuthProfile({ photoURL: url }); 
-        setLocalUpdates(prev => ({ ...prev, photoURL: url }));
-        setModals(prev => ({ ...prev, avatar: false }));
-        toast.success('Sucesso', 'Foto atualizada!');
-    } catch (error) {
-        toast.error('Erro', 'Falha ao atualizar foto.');
+      await updateProfile({ photoURL: url });
+      await updateAuthProfile({ photoURL: url }); 
+      setLocalUpdates(prev => ({ ...prev, photoURL: url }));
+      setModals(prev => ({ ...prev, avatar: false }));
+      toast.success('Sucesso', 'Foto atualizada!');
+    } catch {
+      toast.error('Erro', 'Falha ao atualizar foto.');
     }
   };
 
   const updateBackground = async (url) => {
     try {
-        await updateProfile({ backgroundURL: url });
-        setLocalUpdates(prev => ({ ...prev, backgroundURL: url }));
-        setModals(prev => ({ ...prev, background: false }));
-        toast.success('Sucesso', 'Capa atualizada!');
-    } catch (error) {
-        toast.error('Erro', 'Falha ao atualizar capa.');
+      await updateProfile({ backgroundURL: url });
+      setLocalUpdates(prev => ({ ...prev, backgroundURL: url }));
+      setModals(prev => ({ ...prev, background: false }));
+      toast.success('Sucesso', 'Capa atualizada!');
+    } catch {
+      toast.error('Erro', 'Falha ao atualizar capa.');
     }
   };
 
   const openFollowersModal = async () => {
-      setModals(prev => ({ ...prev, followers: true }));
-      setLoadingLists(true);
-      try {
-          const list = await getUserFollowers(authUser.uid);
-          setFollowersList(list);
-      } catch (error) {
-          toast.error('Erro', 'Não foi possível carregar seguidores.');
-      } finally {
-          setLoadingLists(false);
-      }
+    setModals(prev => ({ ...prev, followers: true }));
+    setLoadingLists(true);
+    try {
+      const list = await getUserFollowers(authUser.uid);
+      setFollowersList(list);
+    } catch {
+      toast.error('Erro', 'Não foi possível carregar seguidores.');
+    } finally {
+      setLoadingLists(false);
+    }
   };
 
   const openFollowingModal = async () => {
-      setModals(prev => ({ ...prev, following: true }));
-      setLoadingLists(true);
-      try {
-          const list = await getUserFollowing(authUser.uid);
-          setFollowingList(list);
-      } catch (error) {
-          toast.error('Erro', 'Não foi possível carregar quem você segue.');
-      } finally {
-          setLoadingLists(false);
-      }
+    setModals(prev => ({ ...prev, following: true }));
+    setLoadingLists(true);
+    try {
+      const list = await getUserFollowing(authUser.uid);
+      setFollowingList(list);
+    } catch {
+      toast.error('Erro', 'Não foi possível carregar quem você segue.');
+    } finally {
+      setLoadingLists(false);
+    }
   };
 
   const filteredInteractions = useMemo(() => {
@@ -164,69 +188,75 @@ export function useProfileLogic() {
   }, [allInteractions, activityFilter]);
 
   const displayData = useMemo(() => {
-    if (activeTab === 'activity') {
-        return filteredInteractions.slice(0, visibleCount);
-    } else if (activeTab === 'reviews') {
-        return allReviews.slice(0, visibleCount);
-    } else {
-        return []; 
-    }
+    if (activeTab === 'activity') return filteredInteractions.slice(0, visibleCount);
+    if (activeTab === 'reviews') return allReviews.slice(0, visibleCount);
+    return [];
   }, [activeTab, filteredInteractions, allReviews, visibleCount]);
 
   const diaryItems = useMemo(() => {
-      return allInteractions.filter(item => item.action === 'watched');
+    return allInteractions.filter(item => item.action === 'watched');
   }, [allInteractions]);
 
   const hasMore = useMemo(() => {
-    if (activeTab === 'activity') {
-        return visibleCount < filteredInteractions.length;
-    } else if (activeTab === 'reviews') {
-        return visibleCount < allReviews.length;
-    }
+    if (activeTab === 'activity') return visibleCount < filteredInteractions.length;
+    if (activeTab === 'reviews') return visibleCount < allReviews.length || hasMoreReviews;
     return false;
-  }, [activeTab, filteredInteractions.length, allReviews.length, visibleCount]);
+  }, [activeTab, filteredInteractions.length, allReviews.length, visibleCount, hasMoreReviews]);
 
-  const handleLoadMore = () => setVisibleCount(prev => prev + ITEMS_PER_PAGE);
+  const handleLoadMore = () => {
+    if (activeTab === 'reviews') {
+      if (visibleCount < allReviews.length) {
+        setVisibleCount(prev => prev + ITEMS_PER_PAGE);
+      } else if (hasMoreReviews) {
+        loadMoreReviews().then(() => {
+          setVisibleCount(prev => prev + ITEMS_PER_PAGE);
+        });
+      }
+    } else {
+      setVisibleCount(prev => prev + ITEMS_PER_PAGE);
+    }
+  };
+
   const handleTabChange = (tab) => { setActiveTab(tab); setVisibleCount(ITEMS_PER_PAGE); };
   const handleFilterChange = (filter) => { setActivityFilter(filter); setVisibleCount(ITEMS_PER_PAGE); };
   const openModal = (name) => setModals(prev => ({ ...prev, [name]: true }));
   const closeModal = (name) => setModals(prev => ({ ...prev, [name]: false }));
 
   const finalUser = { 
-      ...authUser, 
-      ...userStats,
-      ...dbProfile, 
-      ...localUpdates,
-      bio: dbProfile.bio || authUser.bio || ''
+    ...authUser, 
+    ...userStats,
+    ...dbProfile, 
+    ...localUpdates,
+    bio: dbProfile.bio || authUser.bio || ''
   };
 
   return {
     user: finalUser,
     data: { 
-        displayItems: displayData,
-        lists: userLists,
-        diaryItems,
-        interactionsCount: allInteractions.length,
-        watchedCount: userStats.watchedCount || allInteractions.filter(i => i.action === 'watched').length,
-        likesCount: userStats.likesCount || allInteractions.filter(i => i.action === 'like').length,
-        reviewsCount: userStats.reviewsCount || allReviews.length,
-        followersList,
-        followingList,
-        year: new Date().getFullYear()
+      displayItems: displayData,
+      lists: userLists,
+      diaryItems,
+      interactionsCount: allInteractions.length,
+      watchedCount: userStats.watchedCount || allInteractions.filter(i => i.action === 'watched').length,
+      likesCount: userStats.likesCount || allInteractions.filter(i => i.action === 'like').length,
+      reviewsCount: userStats.reviewsCount || allReviews.length,
+      followersList,
+      followingList,
+      year: new Date().getFullYear()
     },
-    ui: { loading, activeTab, activityFilter, hasMore, loadingLists },
+    ui: { loading, activeTab, activityFilter, hasMore, loadingLists, loadingMoreReviews },
     modals,
     actions: {
-        setActiveTab: handleTabChange,
-        setActivityFilter: handleFilterChange,
-        loadMore: handleLoadMore,
-        openModal,
-        closeModal,
-        updateAvatar,
-        updateBackground,
-        openFollowersModal,
-        openFollowingModal,
-        refresh: loadData
+      setActiveTab: handleTabChange,
+      setActivityFilter: handleFilterChange,
+      loadMore: handleLoadMore,
+      openModal,
+      closeModal,
+      updateAvatar,
+      updateBackground,
+      openFollowersModal,
+      openFollowingModal,
+      refresh: loadData
     }
   };
 }

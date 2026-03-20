@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
     getPublicProfile, 
-    getUserReviews, 
+    getUserReviews,
+    getUserReviewsOnly,
     followUser, 
     unfollowUser, 
     checkFollowStatus,
@@ -13,13 +14,15 @@ import { useAuth } from '../context/AuthContext';
 export function usePublicProfileLogic(username) {
   const [profile, setProfile] = useState(null);
   const [reviews, setReviews] = useState([]);
-  
+  const [reviewsCursor, setReviewsCursor] = useState(null);
+  const [hasMoreReviews, setHasMoreReviews] = useState(false);
+  const [loadingMoreReviews, setLoadingMoreReviews] = useState(false);
+
   const [isFollowing, setIsFollowing] = useState(false);
   const [followsYou, setFollowsYou] = useState(false);
-  
   const [loading, setLoading] = useState(true);
   const [compatibility, setCompatibility] = useState(0);
-  
+
   const { user } = useAuth();
   const toast = useToast();
 
@@ -29,45 +32,46 @@ export function usePublicProfileLogic(username) {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [profileData, reviewsData] = await Promise.all([
-            getPublicProfile(username),
-            getUserReviews(username)
+        const [profileData, reviewsResponse] = await Promise.all([
+          getPublicProfile(username),
+          getUserReviewsOnly(username)
         ]);
-        
+
         if (!isMounted) return;
 
         if (profileData) {
-            const formattedProfile = {
-                ...profileData,
-                createdAt: profileData.createdAt && profileData.createdAt._seconds 
-                    ? new Date(profileData.createdAt._seconds * 1000) 
-                    : new Date(profileData.createdAt || Date.now()),
-                trophies: profileData.trophies || []
-            };
+          const formattedProfile = {
+            ...profileData,
+            createdAt: profileData.createdAt?._seconds
+              ? new Date(profileData.createdAt._seconds * 1000)
+              : new Date(profileData.createdAt || Date.now()),
+            trophies: profileData.trophies || []
+          };
 
-            if (user && user.username !== username) {
-                try {
-                    const [followStatus, matchData] = await Promise.all([
-                        checkFollowStatus(username),
-                        getMatchPercentage(username)
-                    ]);
-                    
-                    if (isMounted) {
-                        setIsFollowing(followStatus.isFollowing);
-                        setFollowsYou(followStatus.followsYou);
-                        setCompatibility(matchData.percentage || 0);
-                    }
-                } catch (err) {
-                }
-            }
+          if (user && user.username !== username) {
+            try {
+              const [followStatus, matchData] = await Promise.all([
+                checkFollowStatus(username),
+                getMatchPercentage(username)
+              ]);
+              if (isMounted) {
+                setIsFollowing(followStatus.isFollowing);
+                setFollowsYou(followStatus.followsYou);
+                setCompatibility(matchData.percentage || 0);
+              }
+            } catch {}
+          }
 
-            setProfile(formattedProfile);
-            setReviews(reviewsData);
+          setProfile(formattedProfile);
+
+          const items = reviewsResponse?.items || [];
+          setReviews(items);
+          setHasMoreReviews(reviewsResponse?.hasMore || false);
+          setReviewsCursor(reviewsResponse?.nextCursor || null);
         }
-
       } catch (error) {
         if (isMounted) {
-            toast.error('Erro', 'Perfil não encontrado ou erro de conexão.');
+          toast.error('Erro', 'Perfil não encontrado ou erro de conexão.');
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -77,17 +81,35 @@ export function usePublicProfileLogic(username) {
     if (username) loadData();
 
     return () => { isMounted = false; };
-  }, [username, user?.username]); 
+  }, [username, user?.username]);
+
+  const loadMoreReviews = useCallback(async () => {
+    if (!username || !reviewsCursor || loadingMoreReviews) return;
+    setLoadingMoreReviews(true);
+    try {
+      const response = await getUserReviewsOnly(username, reviewsCursor);
+      const newItems = response?.items || [];
+      setReviews(prev => {
+        const existingIds = new Set(prev.map(r => r.id));
+        return [...prev, ...newItems.filter(r => !existingIds.has(r.id))];
+      });
+      setHasMoreReviews(response?.hasMore || false);
+      setReviewsCursor(response?.nextCursor || null);
+    } catch {
+      toast.error('Erro', 'Não foi possível carregar mais reviews.');
+    } finally {
+      setLoadingMoreReviews(false);
+    }
+  }, [username, reviewsCursor, loadingMoreReviews]);
 
   const handleFollow = async () => {
     if (!username || !user) return;
 
     const previousState = isFollowing;
-    setIsFollowing(!previousState); 
-
+    setIsFollowing(!previousState);
     setProfile(prev => ({
-        ...prev,
-        followersCount: previousState ? (prev.followersCount - 1) : (prev.followersCount + 1)
+      ...prev,
+      followersCount: previousState ? prev.followersCount - 1 : prev.followersCount + 1
     }));
 
     try {
@@ -98,11 +120,11 @@ export function usePublicProfileLogic(username) {
         await followUser(username);
         toast.success('Seguindo', `Você agora segue ${profile.name}!`);
       }
-    } catch (error) {
+    } catch {
       setIsFollowing(previousState);
       setProfile(prev => ({
         ...prev,
-        followersCount: previousState ? (prev.followersCount + 1) : (prev.followersCount - 1)
+        followersCount: previousState ? prev.followersCount + 1 : prev.followersCount - 1
       }));
       toast.error('Erro', 'Não foi possível realizar a ação.');
     }
@@ -115,6 +137,8 @@ export function usePublicProfileLogic(username) {
     followsYou,
     loading,
     compatibility,
-    actions: { handleFollow }
+    hasMoreReviews,
+    loadingMoreReviews,
+    actions: { handleFollow, loadMoreReviews }
   };
 }
