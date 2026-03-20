@@ -11,7 +11,6 @@ function buildMediaLink(item) {
     return `/app/person/${cleanId}`;
   }
 
-  // tv-95557-s4-e3 ou 95557-s4-e3
   const episodeMatch = rawId.match(/^(?:tv-)?(\d+)-s(\d+)-e(\d+)$/);
   if (episodeMatch || item.mediaType === 'episode') {
     const match = episodeMatch || rawId.match(/^(?:tv-)?(\d+)-s(\d+)-e(\d+)$/);
@@ -21,7 +20,6 @@ function buildMediaLink(item) {
     }
   }
 
-  // tv-95557-s4 ou 95557-s4
   const seasonMatch = rawId.match(/^(?:tv-)?(\d+)-s(\d+)$/);
   if (seasonMatch) {
     const [, tvId, season] = seasonMatch;
