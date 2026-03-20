@@ -6,7 +6,8 @@ import {
     getMe, 
     updateProfile as apiUpdate, 
     acceptTerms as apiAcceptTerms,
-    deleteAccount as apiDeleteAccount 
+    deleteAccount as apiDeleteAccount,
+    requestPasswordReset as apiResetPassword
 } from '../services/api';
 
 const AuthContext = createContext();
@@ -93,6 +94,10 @@ export function AuthProvider({ children }) {
       }
   }
 
+  async function resetPassword(email) {
+      return await apiResetPassword(email);
+  }
+
   return (
     <AuthContext.Provider value={{ 
       authenticated: !!user, 
@@ -104,7 +109,8 @@ export function AuthProvider({ children }) {
       logout, 
       updateProfile,
       acceptTerms,
-      deleteAccount 
+      deleteAccount,
+      resetPassword
     }}>
       {children}
     </AuthContext.Provider>

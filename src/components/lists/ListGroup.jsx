@@ -119,7 +119,7 @@ export default function ListGroup({
                     }}
                     className="w-full text-left px-4 py-3.5 hover:bg-white/5 text-sm font-medium text-zinc-200 flex items-center gap-3 transition-colors border-b border-white/5"
                   >
-                    <CheckSquare size={18} /> Gerenciar Itens
+                    <CheckSquare size={18} /> Excluir Itens
                   </button>
                   <button
                     onClick={() => {
@@ -128,7 +128,7 @@ export default function ListGroup({
                     }}
                     className="w-full text-left px-4 py-3.5 hover:bg-red-500/10 text-sm font-medium text-red-400 hover:text-red-300 flex items-center gap-3 transition-colors"
                   >
-                    <Trash2 size={18} /> Excluir Lista
+                    <Trash2 size={18} /> Excluir Coleção
                   </button>
                 </div>
               )}

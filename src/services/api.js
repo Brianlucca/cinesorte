@@ -62,7 +62,13 @@ export const deleteListShare = (shareId) => api.delete(`/social/share-list/${sha
 export const getListDetails = (username, listId) => api.get(`/social/lists/${username}/${listId}`);
 
 export const getMediaReviews = (mediaId) => api.get(`/social/reviews/${mediaId}`);
-export const getUserReviews = (username) => api.get(`/social/user-reviews/${username}`);
+
+export const getUserReviews = (username, lastCreatedAt) =>
+  api.get(`/social/user-reviews/${username}${lastCreatedAt ? `?lastCreatedAt=${lastCreatedAt}` : ''}`);
+
+export const getUserReviewsOnly = (username, lastCreatedAt) =>
+  api.get(`/social/reviews-only/${username}${lastCreatedAt ? `?lastCreatedAt=${lastCreatedAt}` : ''}`);
+
 export const postReview = (reviewData) => api.post('/social/reviews', reviewData);
 export const updateReview = (reviewId, data) => api.put(`/social/reviews/${reviewId}`, data);
 export const deleteReview = (reviewId) => api.delete(`/social/reviews/${reviewId}`);

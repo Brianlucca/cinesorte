@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import TermsModal from '../ui/TermsModal';
 import NotificationBell from '../ui/NotificationBell';
 import SearchModal from '../ui/SearchModal';
-import { Home, Globe, Dices, List, User, Settings, LogOut, Film, Menu, X, Search, ChevronLeft, Award } from 'lucide-react';
+import { Home, Globe, Dices, List, User, Settings, LogOut, Film, Menu, X, Search, ChevronLeft, PanelLeftOpen } from 'lucide-react';
 
 export default function AppLayout() {
   const { logout, user, showTermsModal } = useAuth();
@@ -12,7 +12,7 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
   const handleLogout = async () => {
     await logout();
@@ -21,37 +21,23 @@ export default function AppLayout() {
 
   const isActive = (path) => location.pathname === path;
 
-  const NavItem = ({ to, icon: Icon, label, onClick, isMobileItem, variant = 'default' }) => {
+  const NavItem = ({ to, icon: Icon, label, onClick, isMobileItem }) => {
     const active = to ? isActive(to) : false;
     const collapsed = isSidebarCollapsed && !isMobileItem;
-    const isGold = variant === 'gold';
 
-    let className = `flex items-center ${collapsed ? 'justify-center px-0' : 'justify-between px-4'} py-3 rounded-xl transition-all duration-300 group w-full relative overflow-hidden `;
-
-    if (isGold) {
-      className += active
-        ? 'bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-black shadow-[0_0_20px_rgba(250,204,21,0.5)] font-black scale-[1.02]'
-        : 'text-yellow-500 hover:bg-yellow-500/10 hover:text-yellow-400 border border-yellow-500/30 hover:border-yellow-500/60 shadow-[inset_0_0_15px_rgba(250,204,21,0.1)]';
-    } else {
-      className += active
+    const className = `flex items-center ${collapsed ? 'justify-center px-0' : 'justify-between px-4'} py-3 rounded-xl transition-all duration-300 group w-full relative overflow-hidden ${
+      active
         ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/20'
-        : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white';
-    }
+        : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+    }`;
 
-    const iconColor = isGold
-      ? (active ? 'text-black' : 'text-yellow-500 group-hover:text-yellow-400')
-      : (active ? 'text-white' : 'text-zinc-500 group-hover:text-white');
+    const iconColor = active ? 'text-white' : 'text-zinc-500 group-hover:text-white';
 
     const content = (
-      <>
-        {isGold && !active && (
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-        )}
-        <div className={`flex items-center relative z-10 ${collapsed ? 'justify-center' : 'gap-3'}`}>
-          <Icon size={20} className={`shrink-0 transition-colors ${iconColor} ${isGold && !active ? 'animate-pulse' : ''}`} />
-          {!collapsed && <span className={`${isGold ? 'font-bold uppercase tracking-wider text-sm' : 'font-medium'} whitespace-nowrap`}>{label}</span>}
-        </div>
-      </>
+      <div className={`flex items-center relative z-10 ${collapsed ? 'justify-center' : 'gap-3'}`}>
+        <Icon size={20} className={`shrink-0 transition-colors ${iconColor}`} />
+        {!collapsed && <span className="font-medium whitespace-nowrap">{label}</span>}
+      </div>
     );
 
     return onClick ? (
@@ -67,8 +53,12 @@ export default function AppLayout() {
       <aside className={`hidden md:flex flex-col border-r border-white/5 bg-zinc-950 h-full shrink-0 transition-all duration-300 ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
         <div className={`p-6 flex items-center h-24 ${isSidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
           {isSidebarCollapsed ? (
-            <button onClick={() => setIsSidebarCollapsed(false)} className="hover:opacity-80 transition-opacity outline-none">
-              <Film className="text-violet-500 w-8 h-8 shrink-0" />
+            <button
+              onClick={() => setIsSidebarCollapsed(false)}
+              className="hover:opacity-80 transition-opacity outline-none"
+              title="Expandir menu"
+            >
+              <PanelLeftOpen className="text-violet-500 w-7 h-7 shrink-0" />
             </button>
           ) : (
             <>
@@ -78,7 +68,11 @@ export default function AppLayout() {
                   Cine<span className="text-violet-500">Sorte</span>
                 </span>
               </div>
-              <button onClick={() => setIsSidebarCollapsed(true)} className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors shrink-0 outline-none">
+              <button
+                onClick={() => setIsSidebarCollapsed(true)}
+                className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors shrink-0 outline-none"
+                title="Recolher menu"
+              >
                 <ChevronLeft size={20} />
               </button>
             </>
@@ -86,8 +80,6 @@ export default function AppLayout() {
         </div>
 
         <nav className="flex-1 px-4 space-y-2 mt-2 overflow-y-auto scrollbar-hide overflow-x-hidden">
-          <NavItem to="/app/oscars" icon={Award} label="Oscar 2026" variant="gold" />
-          {!isSidebarCollapsed && <div className="border-t border-white/5 my-2" />}
           <NavItem to="/app" icon={Home} label="Início" />
           <NavItem to="/app/feed" icon={Globe} label="Feed Social" />
           <NavItem icon={Search} label="Buscar" onClick={() => setIsSearchOpen(true)} />
@@ -100,7 +92,7 @@ export default function AppLayout() {
         <div className="p-4 border-t border-white/5">
           <div className={`flex items-center gap-3 bg-zinc-900/50 ${isSidebarCollapsed ? 'p-0 bg-transparent justify-center' : 'p-2'} rounded-xl mb-3 min-w-0 transition-all`}>
             <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center shrink-0 border border-white/10 overflow-hidden">
-              {user?.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" /> : <span className="text-xs font-bold">{user?.name?.[0]}</span>}
+              {user?.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" alt="" /> : <span className="text-xs font-bold">{user?.name?.[0]}</span>}
             </div>
             {!isSidebarCollapsed && (
               <div className="min-w-0 flex-1">
@@ -109,7 +101,11 @@ export default function AppLayout() {
               </div>
             )}
           </div>
-          <button onClick={handleLogout} title={isSidebarCollapsed ? "Sair" : ""} className={`flex items-center ${isSidebarCollapsed ? 'justify-center w-10 h-10 mx-auto px-0' : 'gap-2 w-full px-4'} py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors overflow-hidden`}>
+          <button
+            onClick={handleLogout}
+            title={isSidebarCollapsed ? "Sair" : ""}
+            className={`flex items-center ${isSidebarCollapsed ? 'justify-center w-10 h-10 mx-auto px-0' : 'gap-2 w-full px-4'} py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors overflow-hidden`}
+          >
             <LogOut size={16} className="shrink-0" />
             {!isSidebarCollapsed && <span>Sair</span>}
           </button>
@@ -132,8 +128,6 @@ export default function AppLayout() {
             <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-zinc-400"><X size={32} /></button>
           </div>
           <nav className="space-y-2 flex-1">
-            <NavItem to="/app/oscars" icon={Award} label="Oscar 2026" variant="gold" isMobileItem={true} />
-            <div className="border-t border-white/5 my-2" />
             <NavItem to="/app" icon={Home} label="Início" isMobileItem={true} />
             <NavItem to="/app/feed" icon={Globe} label="Feed Social" isMobileItem={true} />
             <NavItem icon={Search} label="Buscar" onClick={() => { setIsSearchOpen(true); setIsMobileMenuOpen(false); }} isMobileItem={true} />

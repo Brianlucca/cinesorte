@@ -6,6 +6,7 @@ import {
   deleteReview,
   deleteListShare,
   getUserReviews,
+  getUserReviewsOnly,
   getTrending,
   followUser,
   getSuggestions,
@@ -29,6 +30,8 @@ export function useFeedLogic() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [hasNewPosts, setHasNewPosts] = useState(false);
+
+  const mineCursorRef = useRef(null);
 
   const [localUser, setLocalUser] = useState(user || {});
   const [suggestions, setSuggestions] = useState({ users: [], content: [] });
@@ -95,6 +98,7 @@ export function useFeedLogic() {
     try {
       let data = [];
       let rawCount = 0;
+      let currentMineHasMore = false;
       const PAGE_SIZE = 20;
 
       if (feedType === 'following') {
@@ -103,12 +107,18 @@ export function useFeedLogic() {
         data = Array.isArray(followingData) ? followingData : [];
 
       } else if (feedType === 'collections') {
-        data = await getSharedListsFeed(currentPage);
-        rawCount = Array.isArray(data) ? data.length : 0;
+        const collectionsData = await getSharedListsFeed(currentPage);
+        data = Array.isArray(collectionsData) ? collectionsData : [];
+        rawCount = data.length;
 
       } else if (feedType === 'mine' && localUser?.username) {
-        data = await getUserReviews(localUser.username, currentPage);
-        rawCount = Array.isArray(data) ? data.length : 0;
+        const cursor = isRefresh || currentPage === 1 ? null : mineCursorRef.current;
+        const response = await getUserReviewsOnly(localUser.username, cursor);
+        const rawItems = response?.items || [];
+        currentMineHasMore = response?.hasMore || false;
+        mineCursorRef.current = response?.nextCursor || null;
+        data = rawItems;
+        rawCount = rawItems.length;
       }
 
       const safeData = Array.isArray(data) ? data.map(normalizeItem) : [];
@@ -116,11 +126,14 @@ export function useFeedLogic() {
       const filteredData = safeData.filter(item => {
         if (item.type === 'list_share' && item.listCount === 0) return false;
         if (feedType === 'collections') return item.type === 'list_share';
-        if (feedType === 'mine') return item.username === localUser?.username;
         return true;
       });
 
-      setHasMore(rawCount >= PAGE_SIZE && filteredData.length >= PAGE_SIZE);
+      if (feedType === 'mine') {
+        setHasMore(currentMineHasMore);
+      } else {
+        setHasMore(rawCount >= PAGE_SIZE && filteredData.length >= PAGE_SIZE);
+      }
 
       if (isRefresh || currentPage === 1) {
         setReviews(filteredData);
@@ -196,6 +209,7 @@ export function useFeedLogic() {
     setPage(1);
     setReviews([]);
     setHasMore(true);
+    mineCursorRef.current = null;
   };
 
   const loadMore = () => {
