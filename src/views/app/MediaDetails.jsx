@@ -21,7 +21,7 @@ import { createPortal } from 'react-dom';
 import { useMediaDetailsLogic } from "../../hooks/useMediaDetailsLogic";
 import MediaCard from "../../components/ui/MediaCard";
 import TrailerModal from "../../components/media/TrailerModal";
-import ReviewsSection from "../../components/media/ReviewsSection";
+import ReviewsSection from "../../components/media/reviews/ReviewsSection";
 import AddToListModal from "../../components/media/AddToListModal";
 import SeasonInfo from "../../components/media/SeasonInfo";
 import MediaImages from "../../components/media/MediaImages";
@@ -35,6 +35,7 @@ export default function MediaDetails() {
     loading,
     interactions,
     userLists,
+    followingList,
     addingToListId,
     modals,
     setModals,
@@ -412,6 +413,7 @@ export default function MediaDetails() {
             onEditReview={actions.handleEditReview}
             onEditReply={actions.handleEditReply}
             isEliteUser={isEliteUser}
+            followingList={followingList}
           />
         </div>
 
