@@ -1,8 +1,19 @@
 {
-    "rewrites": [
-      {
-        "source": "/(.*)",
-        "destination": "/"
-      }
-    ]
-  }
+  "rewrites": [
+    {
+      "source": "/share/:type/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(whatsapp|telegrambot|twitterbot|facebookexternalhit|discordbot|linkedinbot|slackbot|viber|skype).*"
+        }
+      ],
+      "destination": "/api/share?type=:type&id=:id"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
+}
