@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { HelmetProvider } from 'react-helmet-async';
 import AuthLayout from './components/layout/AuthLayout';
 import AppLayout from './components/layout/AppLayout';
 import Landing from './views/Landing';
@@ -19,6 +20,7 @@ import MovieRoulette from './views/app/MovieRoulette';
 import Feed from './views/app/Feed';
 import PublicProfile from './views/app/PublicProfile';
 import Oscars from './views/app/Oscars';
+import SharedMediaPreview from './views/app/SharedMediaPreview';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -32,6 +34,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={user ? <Navigate to="/app" /> : <Landing />} />
+      
+      <Route path="/share/:type/:id" element={<SharedMediaPreview />} />
       
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
@@ -68,10 +72,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+    <HelmetProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </HelmetProvider>
   );
 }
