@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Heart, UserPlus, TrendingUp, Layers, Info, CheckCheck } from "lucide-react";
+import { Bell, Heart, UserPlus, TrendingUp, Layers, Info, CheckCheck, AtSign, X } from "lucide-react";
 import { getNotifications, markNotificationRead } from "../../services/api";
 
 export default function NotificationBell({ isMobile }) {
   const [notifications, setNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [popupNotif, setPopupNotif] = useState(null);
+  
   const dropdownRef = useRef(null);
+  const isInitialLoad = useRef(true);
+  const lastSeenId = useRef(null);
   const navigate = useNavigate();
 
   const loadNotifications = async () => {
@@ -14,6 +18,16 @@ export default function NotificationBell({ isMobile }) {
       const data = await getNotifications();
       const list = Array.isArray(data) ? data : [];
       setNotifications(list);
+
+      if (list.length > 0) {
+        const newest = list[0];
+        if (!isInitialLoad.current && lastSeenId.current !== newest.id && !newest.read) {
+          setPopupNotif(newest);
+          setTimeout(() => setPopupNotif(null), 6000);
+        }
+        lastSeenId.current = newest.id;
+      }
+      isInitialLoad.current = false;
     } catch (e) {
     }
   };
@@ -42,6 +56,7 @@ export default function NotificationBell({ isMobile }) {
     setIsOpen(!isOpen);
     if (!isOpen) {
       loadNotifications();
+      setPopupNotif(null);
     }
   };
 
@@ -73,9 +88,20 @@ export default function NotificationBell({ isMobile }) {
         if (targetUser) {
             navigate(`/app/profile/${targetUser}`);
         }
-    } else if (notif.type === 'new_content' && notif.mediaId && notif.mediaType) {
-        let cleanId = notif.mediaId.replace(/^(movie-|tv-)/, '');
-        navigate(`/app/${notif.mediaType}/${cleanId}`);
+    } else if ((notif.type === 'new_content' || notif.type === 'mention') && notif.mediaId && notif.mediaType) {
+        let cleanId = String(notif.mediaId).replace(/^(movie-|tv-)/, '');
+        
+        if (notif.mediaType === 'episode' || (cleanId.includes('-s') && cleanId.includes('-e'))) {
+            const match = cleanId.match(/^(\d+)-s(\d+)-e(\d+)$/);
+            if (match) {
+                const [, tvId, season, episode] = match;
+                navigate(`/app/tv/${tvId}/season/${season}/episode/${episode}`);
+            } else {
+                navigate(`/app/tv/${cleanId}`);
+            }
+        } else {
+            navigate(`/app/${notif.mediaType}/${cleanId}`);
+        }
     } else if (notif.type === 'level_up') {
         navigate('/app/profile');
     } else if (notif.type === 'list_share') {
@@ -100,6 +126,7 @@ export default function NotificationBell({ isMobile }) {
       case "new_content": return <Heart size={16} className="text-red-500" />;
       case "level_up": return <TrendingUp size={16} className="text-yellow-500" />;
       case "list_share": return <Layers size={16} className="text-purple-500" />;
+      case "mention": return <AtSign size={16} className="text-violet-500" />;
       default: return <Info size={16} className="text-zinc-400" />;
     }
   };
@@ -133,6 +160,27 @@ export default function NotificationBell({ isMobile }) {
           <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-zinc-950 animate-pulse" />
         )}
       </button>
+
+      {popupNotif && !isOpen && (
+        <div 
+          onClick={() => { setPopupNotif(null); handleNotificationClick(popupNotif); }}
+          className="absolute z-50 md:right-[calc(100%+16px)] right-0 top-[calc(100%+10px)] md:top-0 w-64 bg-zinc-900 border border-violet-500/50 rounded-xl shadow-2xl p-3 flex items-start gap-3 cursor-pointer animate-in fade-in slide-in-from-top-2 md:slide-in-from-right-2 duration-300"
+        >
+          <div className="shrink-0 mt-0.5">
+            {getIcon(popupNotif.type)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-violet-400 mb-0.5">Nova Notificação</p>
+            <p className="text-xs text-zinc-300 leading-snug line-clamp-2">{popupNotif.message}</p>
+          </div>
+          <button 
+            onClick={(e) => { e.stopPropagation(); setPopupNotif(null); }} 
+            className="text-zinc-500 hover:text-white shrink-0 p-1 -mt-1 -mr-1"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       {isOpen && (
         <div className="absolute z-50 w-80 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden right-0 top-full mt-4">
