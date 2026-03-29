@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Film, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react';
 import ForgotPasswordModal from '../../components/ui/ForgotPasswordModal';
@@ -12,8 +12,17 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (user) {
+      const params = new URLSearchParams(location.search);
+      const redirectPath = params.get('redirect');
+      navigate(redirectPath ? decodeURIComponent(redirectPath) : '/app');
+    }
+  }, [user, navigate, location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +30,9 @@ export default function Login() {
     setLoading(true);
     try {
       await login(email, password);
-      navigate('/app');
+      const params = new URLSearchParams(location.search);
+      const redirectPath = params.get('redirect');
+      navigate(redirectPath ? decodeURIComponent(redirectPath) : '/app');
     } catch (err) {
       setError(err.response?.data?.message || 'Email ou senha incorretos.');
     } finally {
@@ -155,7 +166,7 @@ export default function Login() {
 
             <div className="text-center">
                 <Link 
-                    to="/register" 
+                    to={`/register${location.search}`} 
                     className="inline-flex items-center gap-2 text-white font-medium hover:text-violet-400 transition-colors group"
                 >
                     Criar uma conta gratuita
