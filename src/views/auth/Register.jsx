@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Check, X, Eye, EyeOff, ArrowRight, Film, ShieldCheck } from 'lucide-react';
 import TermsModal from '../../components/ui/TermsModal';
@@ -12,8 +12,17 @@ export default function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { register } = useAuth();
+  const { register, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (user) {
+      const params = new URLSearchParams(location.search);
+      const redirectPath = params.get('redirect');
+      navigate(redirectPath ? decodeURIComponent(redirectPath) : '/app');
+    }
+  }, [user, navigate, location]);
 
   const nameRegex = /^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/;
   const nicknameRegex = /^[a-z0-9_]+$/;
@@ -64,7 +73,9 @@ export default function Register() {
           email: formData.email, 
           password: formData.password 
       });
-      navigate('/verify-email'); 
+      const params = new URLSearchParams(location.search);
+      const redirectPath = params.get('redirect');
+      navigate(redirectPath ? `/verify-email?redirect=${encodeURIComponent(redirectPath)}` : '/verify-email');
     } catch (err) {
         if (err.response?.data?.errors) {
             setError(err.response.data.errors[0] || 'Dados inválidos.');
@@ -252,7 +263,7 @@ export default function Register() {
 
             <p className="text-center text-zinc-500">
                 Já possui uma conta?{' '}
-                <Link to="/login" className="text-white font-medium hover:underline underline-offset-4 decoration-zinc-700 hover:decoration-white transition-all">
+                <Link to={`/login${location.search}`} className="text-white font-medium hover:underline underline-offset-4 decoration-zinc-700 hover:decoration-white transition-all">
                     Entrar agora
                 </Link>
             </p>

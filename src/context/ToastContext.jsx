@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
-import ToastGamification from '../components/ui/ToastGamification';
 
 const ToastContext = createContext();
 
@@ -45,8 +44,6 @@ export function ToastProvider({ children }) {
           <ToastItem key={t.id} toast={t} onRemove={removeToast} />
         ))}
       </div>
-
-      <ToastGamification activeLevel={levelUpData} onClose={closeLevelUp} />
     </ToastContext.Provider>
   );
 }

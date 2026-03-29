@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   getEpisodeDetails,
@@ -6,8 +6,12 @@ import {
   postReview,
   postComment,
   deleteReview,
+  deleteComment,
   toggleLikeReview,
-  getComments
+  getComments,
+  updateReview,
+  updateComment,
+  getUserFollowing,
 } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
@@ -19,7 +23,11 @@ export function useEpisodeDetailsLogic() {
 
   const [episode, setEpisode] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [followingList, setFollowingList] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const likeTimeouts = useRef({});
+  const likeClickCounts = useRef({});
 
   const uniqueMediaId = `tv-${tvId}-s${seasonNumber}-e${episodeNumber}`;
 
@@ -27,17 +35,32 @@ export function useEpisodeDetailsLogic() {
     async function loadData() {
       setLoading(true);
       try {
-        const [epData, reviewsData] = await Promise.all([
+        const promises = [
           getEpisodeDetails(tvId, seasonNumber, episodeNumber),
-          getMediaReviews(uniqueMediaId)
-        ]);
-        setEpisode(epData);
-        setReviews(Array.isArray(reviewsData) ? reviewsData.map(r => ({
-          ...r,
-          isLikedByCurrentUser: !!r.isLikedByCurrentUser,
-          likesCount: Number(r.likesCount) || 0,
-          replies: r.replies || []
-        })) : []);
+          getMediaReviews(uniqueMediaId),
+        ];
+
+        if (user?.uid) {
+          promises.push(getUserFollowing(user.uid));
+        }
+
+        const results = await Promise.all(promises);
+
+        setEpisode(results[0]);
+        setReviews(
+          Array.isArray(results[1])
+            ? results[1].map((r) => ({
+                ...r,
+                isLikedByCurrentUser: !!r.isLikedByCurrentUser,
+                likesCount: Number(r.likesCount) || 0,
+                replies: r.replies || [],
+              }))
+            : []
+        );
+
+        if (user?.uid && results[2]) {
+          setFollowingList(Array.isArray(results[2]) ? results[2] : []);
+        }
       } catch {
         toast.error('Erro', 'Não foi possível carregar o episódio.');
       } finally {
@@ -56,7 +79,7 @@ export function useEpisodeDetailsLogic() {
         mediaTitle: `${episode.name} (S${seasonNumber}E${episodeNumber})`,
         posterPath: episode.still_path,
         rating,
-        text
+        text,
       });
       toast.success('Publicado', 'Sua avaliação foi enviada!');
       const updated = await getMediaReviews(uniqueMediaId);
@@ -66,63 +89,144 @@ export function useEpisodeDetailsLogic() {
     }
   };
 
+  const handleEditReview = async (reviewId, newText, newRating) => {
+    try {
+      await updateReview(reviewId, {
+        text: newText,
+        rating: newRating !== null ? Number(newRating) : null,
+      });
+      setReviews((prev) =>
+        prev.map((r) =>
+          r.id === reviewId
+            ? { ...r, text: newText, rating: newRating !== null ? Number(newRating) : null, isEdited: true }
+            : r
+        )
+      );
+      toast.success('Editado', 'Sua publicação foi atualizada.');
+    } catch {
+      toast.error('Erro', 'Não foi possível editar.');
+    }
+  };
+
   const handlePostReply = async (reviewId, text) => {
     if (!user) return toast.error('Login necessário', 'Entre para responder.');
     try {
       await postComment({ reviewId, text });
       toast.success('Respondido', 'Seu comentário foi enviado.');
       const comments = await getComments(reviewId);
-      setReviews(prev => prev.map(r => {
-        if (r.id === reviewId) return { ...r, replies: comments, commentsCount: (r.commentsCount || 0) + 1 };
-        return r;
-      }));
+      setReviews((prev) =>
+        prev.map((r) =>
+          r.id === reviewId
+            ? { ...r, replies: comments, commentsCount: (r.commentsCount || 0) + 1 }
+            : r
+        )
+      );
     } catch {
       toast.error('Erro', 'Não foi possível enviar a resposta.');
+    }
+  };
+
+  const handleEditReply = async (commentId, newText, reviewId) => {
+    try {
+      await updateComment(commentId, { text: newText });
+      const comments = await getComments(reviewId);
+      setReviews((prev) =>
+        prev.map((r) => (r.id === reviewId ? { ...r, replies: comments } : r))
+      );
+      toast.success('Editado', 'Resposta atualizada.');
+    } catch {
+      toast.error('Erro', 'Não foi possível editar resposta.');
     }
   };
 
   const handleDeleteReview = async (reviewId) => {
     try {
       await deleteReview(reviewId);
-      setReviews(prev => prev.filter(r => r.id !== reviewId));
+      setReviews((prev) => prev.filter((r) => r.id !== reviewId));
       toast.success('Apagado', 'Avaliação removida.');
     } catch {
       toast.error('Erro', 'Não foi possível apagar.');
     }
   };
 
-  const handleLikeReview = async (reviewId) => {
-    if (!user) return toast.error('Login necessário', 'Entre para curtir.');
-    setReviews(prev => prev.map(r => {
-      if (r.id === reviewId) {
-        const nextLiked = !r.isLikedByCurrentUser;
-        return {
-          ...r,
-          isLikedByCurrentUser: nextLiked,
-          likesCount: Math.max(0, nextLiked ? (r.likesCount || 0) + 1 : (r.likesCount || 0) - 1)
-        };
-      }
-      return r;
-    }));
+  const handleDeleteComment = async (commentId) => {
     try {
-      await toggleLikeReview(reviewId);
-    } catch {
-      setReviews(prev => prev.map(r => {
-        if (r.id === reviewId) {
-          const revert = !r.isLikedByCurrentUser;
+      await deleteComment(commentId);
+      setReviews((prev) =>
+        prev.map((r) => {
+          const has = r.replies?.some((c) => c.id === commentId);
+          if (!has) return r;
           return {
             ...r,
-            isLikedByCurrentUser: revert,
-            likesCount: Math.max(0, revert ? (r.likesCount || 0) + 1 : (r.likesCount || 0) - 1)
+            replies: r.replies.filter((c) => c.id !== commentId),
+            commentsCount: Math.max(0, (r.commentsCount || 0) - 1),
           };
-        }
-        return r;
-      }));
+        })
+      );
+      toast.success('Apagado', 'Resposta removida.');
+    } catch {
+      toast.error('Erro', 'Não foi possível apagar a resposta.');
+    }
+  };
+
+  const handleLikeReview = async (reviewId) => {
+    if (!user) return toast.error('Login necessário', 'Entre para curtir.');
+
+    likeClickCounts.current[reviewId] = (likeClickCounts.current[reviewId] || 0) + 1;
+
+    setReviews((prev) =>
+      prev.map((r) => {
+        if (r.id !== reviewId) return r;
+        const next = !r.isLikedByCurrentUser;
+        return {
+          ...r,
+          isLikedByCurrentUser: next,
+          likesCount: Math.max(0, next ? (r.likesCount || 0) + 1 : (r.likesCount || 0) - 1),
+        };
+      })
+    );
+
+    if (likeTimeouts.current[reviewId]) clearTimeout(likeTimeouts.current[reviewId]);
+
+    likeTimeouts.current[reviewId] = setTimeout(async () => {
+      const clicks = likeClickCounts.current[reviewId] || 0;
+      if (clicks % 2 !== 0) {
+        try { await toggleLikeReview(reviewId); } catch {}
+      }
+      delete likeClickCounts.current[reviewId];
+      delete likeTimeouts.current[reviewId];
+    }, 1000);
+  };
+
+  const handleLoadReplies = async (reviewId) => {
+    try {
+      const comments = await getComments(reviewId);
+      setReviews((prev) =>
+        prev.map((r) => (r.id === reviewId ? { ...r, replies: comments } : r))
+      );
+    } catch {
+      toast.error('Erro', 'Não foi possível carregar as respostas.');
     }
   };
 
   return {
-    episode, reviews, loading, tvId, seasonNumber, episodeNumber, user,
-    actions: { handlePostReview, handlePostReply, handleDeleteReview, handleLikeReview }
+    episode,
+    reviews,
+    followingList,
+    loading,
+    tvId,
+    seasonNumber,
+    episodeNumber,
+    user,
+    actions: {
+      handlePostReview,
+      handleEditReview,
+      handlePostReply,
+      handleEditReply,
+      handleDeleteReview,
+      handleDeleteComment,
+      handleLikeReview,
+      handleLoadReplies,
+    },
   };
 }

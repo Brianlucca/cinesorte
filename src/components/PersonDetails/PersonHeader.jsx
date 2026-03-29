@@ -1,14 +1,14 @@
 import React from 'react';
 import { Share2, TrendingUp, MapPin } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 
 const PersonHeader = ({ details }) => {
+  const toast = useToast();
+
   const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: details.name,
-        url: window.location.href,
-      });
-    }
+    const shareUrl = `${window.location.origin}/share/person/${details.id}`;
+    navigator.clipboard.writeText(shareUrl);
+    toast.success("Copiado", "Link público copiado!");
   };
 
   const backdrop = details.profile_path 
@@ -65,7 +65,7 @@ const PersonHeader = ({ details }) => {
              <button
                 onClick={handleShare}
                 className="p-4 bg-white/10 hover:bg-white text-white hover:text-black rounded-full backdrop-blur-md border border-white/10 transition-all shadow-lg"
-                title="Compartilhar"
+                title="Copiar Link"
              >
                 <Share2 size={24} />
              </button>

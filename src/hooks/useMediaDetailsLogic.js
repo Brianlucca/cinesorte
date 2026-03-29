@@ -16,7 +16,8 @@ import {
   updateReview,
   updateComment,
   toggleLikeReview,
-  getComments, 
+  getComments,
+  getUserFollowing,
 } from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { useAuth } from "../context/AuthContext";
@@ -33,6 +34,7 @@ export function useMediaDetailsLogic() {
   const [loading, setLoading] = useState(true);
   const [interactions, setInteractions] = useState({ liked: false, watched: false });
   const [userLists, setUserLists] = useState([]);
+  const [followingList, setFollowingList] = useState([]);
   const [addingToListId, setAddingToListId] = useState(null);
 
   const [modals, setModals] = useState({
@@ -80,6 +82,7 @@ export function useMediaDetailsLogic() {
         if (user && user.uid) {
           promises.push(getUserInteractions());
           promises.push(getUserLists("me"));
+          promises.push(getUserFollowing(user.uid));
         }
 
         const results = await Promise.all(promises);
@@ -106,11 +109,14 @@ export function useMediaDetailsLogic() {
         if (user && user.uid) {
           const interactionsRaw = results[3];
           const listsRaw = results[4];
+          const followingRaw = results[5];
 
           const interactionList = Array.isArray(interactionsRaw) ? interactionsRaw : [];
           const myLists = Array.isArray(listsRaw) ? listsRaw : [];
+          const myFollowing = Array.isArray(followingRaw) ? followingRaw : [];
 
           setUserLists(myLists);
+          setFollowingList(myFollowing);
 
           const myInter = interactionList.find((i) => String(i.mediaId) === String(id));
           
@@ -168,11 +174,11 @@ export function useMediaDetailsLogic() {
         mediaTitle: media.title || media.name,
         posterPath: media.poster_path,
         backdropPath: media.backdrop_path || "",
-        rating: Number(rating),
+        rating: rating !== null ? Number(rating) : null,
         text: text,
         isEliteReview: isElite 
       });
-      toast.success("Sucesso", "Avaliação publicada!");
+      toast.success("Sucesso", "Publicado com sucesso!");
       const updated = await getMediaReviews(id);
       setReviews(updated);
     } catch (error) {
@@ -184,11 +190,11 @@ export function useMediaDetailsLogic() {
 
   const handleEditReview = async (reviewId, newText, newRating) => {
     try {
-      await updateReview(reviewId, { text: newText, rating: newRating });
+      await updateReview(reviewId, { text: newText, rating: newRating !== null ? Number(newRating) : null });
       setReviews(prev => prev.map(r => 
-        r.id === reviewId ? { ...r, text: newText, rating: newRating, isEdited: true } : r
+        r.id === reviewId ? { ...r, text: newText, rating: newRating !== null ? Number(newRating) : null, isEdited: true } : r
       ));
-      toast.success("Editado", "Sua avaliação foi atualizada.");
+      toast.success("Editado", "Sua publicação foi atualizada.");
     } catch (error) {
       toast.error("Erro", "Não foi possível editar.");
     }
@@ -233,7 +239,7 @@ export function useMediaDetailsLogic() {
     try {
       await deleteReview(reviewId);
       setReviews((prev) => prev.filter((r) => r.id !== reviewId));
-      toast.success("Apagado", "Review removida.");
+      toast.success("Apagado", "Publicação removida.");
     } catch (error) {
       toast.error("Erro", "Não foi possível apagar.");
     }
@@ -339,6 +345,7 @@ export function useMediaDetailsLogic() {
     loading,
     interactions,
     userLists,
+    followingList,
     addingToListId,
     modals,
     setModals,
@@ -358,8 +365,9 @@ export function useMediaDetailsLogic() {
       handleLikeReview,
       handleLoadReplies,
       handleShare: () => {
-        navigator.clipboard.writeText(window.location.href);
-        toast.success("Copiado", "Link copiado!");
+        const shareUrl = `${window.location.origin}/share/${type}/${id}`;
+        navigator.clipboard.writeText(shareUrl);
+        toast.success("Copiado", "Link público copiado!");
       },
     },
   };

@@ -1,7 +1,9 @@
 import { Mail, ArrowRight, CheckCircle2, Film } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 export default function VerifyEmail() {
+  const location = useLocation();
+  
   return (
     <div className="min-h-screen w-full bg-zinc-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
       
@@ -41,7 +43,7 @@ export default function VerifyEmail() {
 
             <div className="w-full space-y-4">
                 <Link 
-                    to="/login"
+                    to={`/login${location.search}`}
                     className="w-full group flex items-center justify-center gap-2 py-4 bg-white text-black hover:bg-zinc-200 font-bold rounded-xl transition-all shadow-lg shadow-white/5 active:scale-[0.99]"
                 >
                     Voltar para Login
@@ -59,7 +61,7 @@ export default function VerifyEmail() {
         </div>
         
         <p className="text-center mt-8 text-xs text-zinc-600 font-medium">
-            &copy; 2026 CineSorte Inc.
+            &copy; 2026 CineSorte. Todos os Direitos Reservados.
         </p>
       </div>
     </div>
