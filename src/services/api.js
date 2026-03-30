@@ -26,6 +26,7 @@ api.interceptors.response.use(
 );
 
 export const login = (credentials) => api.post('/users/login', credentials);
+export const googleAuth = (data) => api.post('/users/auth/google', data);
 export const register = (userData) => api.post('/users/register', userData);
 export const logout = () => api.post('/users/logout');
 export const getMe = () => api.get('/users/me');
