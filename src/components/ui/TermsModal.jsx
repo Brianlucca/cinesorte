@@ -1,4 +1,4 @@
-import { ShieldCheck, FileText, Info, Database, Film, Server, Lock, UserCheck, Eye, Activity, X, HeartHandshake } from 'lucide-react';
+import { ShieldCheck, FileText, Info, Database, Film, Server, Lock, UserCheck, Eye, Activity, X, HeartHandshake, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function TermsModal({ variant = 'action', onClose }) {
@@ -15,7 +15,7 @@ export default function TermsModal({ variant = 'action', onClose }) {
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-white leading-tight">Termos de Uso e Transparência</h2>
-                            <p className="text-sm text-zinc-400">Versão 1.0 • CineSorte</p>
+                            <p className="text-sm text-zinc-400">Versão 2.0 • CineSorte</p>
                         </div>
                     </div>
                     {variant === 'info' && (
@@ -35,7 +35,7 @@ export default function TermsModal({ variant = 'action', onClose }) {
                             <Info size={18} /> Contexto do Projeto (Portfólio)
                         </h4>
                         <p className="text-sm text-zinc-300 leading-relaxed text-justify">
-                            O CineSorte é uma aplicação desenvolvida por <strong>Brian Lucca</strong> com fins estritamente educacionais, servindo como demonstração de competências técnicas em desenvolvimento Fullstack. Este ambiente simula uma aplicação real de alta fidelidade.
+                            O CineSorte é uma aplicação desenvolvida por <a href="SEU_LINK_DO_LINKEDIN_AQUI" target="_blank" rel="noopener noreferrer" className="font-bold text-violet-400 hover:text-violet-300 hover:underline transition-colors">Brian Lucca</a> com fins estritamente educacionais, servindo como demonstração de competências técnicas em desenvolvimento Fullstack. Este ambiente simula uma aplicação real de alta fidelidade.
                         </p>
                     </div>
 
@@ -95,14 +95,14 @@ export default function TermsModal({ variant = 'action', onClose }) {
                                 <p>
                                     Mesmo sendo um projeto de estudo, aplicamos rigorosos padrões de segurança de nível industrial:
                                 </p>
-                                <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                                <ul className="grid grid-cols-1 gap-3 mt-2">
                                     <li className="bg-zinc-950/50 p-3 rounded-lg border border-white/5 flex items-start gap-2">
-                                        <Server size={16} className="text-emerald-500 mt-0.5" />
+                                        <Server size={16} className="text-emerald-500 mt-0.5 shrink-0" />
                                         <span><strong>Gestão de Identidade:</strong> Suas credenciais são processadas pelo Google Firebase Auth. Nós não temos acesso e nem armazenamos sua senha original.</span>
                                     </li>
                                     <li className="bg-zinc-950/50 p-3 rounded-lg border border-white/5 flex items-start gap-2">
-                                        <Database size={16} className="text-emerald-500 mt-0.5" />
-                                        <span><strong>Tráfego Seguro:</strong> Toda a comunicação entre seu dispositivo e nossos servidores é criptografada via HTTPS (SSL/TLS).</span>
+                                        <ShieldCheck size={16} className="text-emerald-500 mt-0.5 shrink-0" />
+                                        <span><strong>Proteção de Autenticação e Tráfego:</strong> Utilizamos o Cloudflare Turnstile nas telas de acesso para bloquear robôs maliciosos e automatizações. Toda a comunicação entre seu dispositivo e nossos servidores é criptografada de ponta a ponta (HTTPS/SSL).</span>
                                     </li>
                                 </ul>
                             </div>
@@ -143,6 +143,24 @@ export default function TermsModal({ variant = 'action', onClose }) {
                                 </p>
                             </div>
                         </section>
+
+                        <section>
+                            <h4 className="text-white font-bold text-base flex items-center gap-2 mb-3">
+                                <AlertTriangle size={18} className="text-orange-500"/> 
+                                6. Isenção de Responsabilidade Legal
+                            </h4>
+                            <div className="pl-4 border-l-2 border-orange-500/20">
+                                <p className="mb-2">
+                                    Por ser uma aplicação de caráter estritamente educacional e experimental, o CineSorte é disponibilizado "no estado em que se encontra" (as-is), sem garantias de qualquer tipo. O usuário compreende e concorda expressamente que:
+                                </p>
+                                <ul className="list-disc pl-5 space-y-1 marker:text-orange-500">
+                                    <li><strong>Uso por conta e risco:</strong> O usuário é o único responsável por suas ações, interações e pelos dados inseridos na plataforma.</li>
+                                    <li><strong>Ausência de Garantias:</strong> O desenvolvedor está isento de qualquer responsabilidade por eventuais falhas do sistema, perda de dados, indisponibilidade ou uso indevido da plataforma por terceiros.</li>
+                                    <li><strong>Continuidade do Serviço:</strong> A plataforma não possui fins comerciais e pode ser modificada, ter seus dados resetados ou ser desativada permanentemente a qualquer momento, sem aviso prévio.</li>
+                                </ul>
+                            </div>
+                        </section>
+
                     </div>
                 </div>
 

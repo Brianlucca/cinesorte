@@ -1,16 +1,20 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { 
-    login as apiLogin, 
-    register as apiRegister, 
-    logout as apiLogout, 
-    getMe, 
-    updateProfile as apiUpdate, 
-    acceptTerms as apiAcceptTerms,
-    deleteAccount as apiDeleteAccount,
-    requestPasswordReset as apiResetPassword
+import { GoogleAuthProvider, signInWithPopup, getAuth } from 'firebase/auth';
+import {
+  login as apiLogin,
+  register as apiRegister,
+  logout as apiLogout,
+  getMe,
+  updateProfile as apiUpdate,
+  acceptTerms as apiAcceptTerms,
+  deleteAccount as apiDeleteAccount,
+  requestPasswordReset as apiResetPassword,
+  googleAuth as apiGoogleAuth,
 } from '../services/api';
 
 const AuthContext = createContext();
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -22,10 +26,8 @@ export function AuthProvider({ children }) {
       try {
         const data = await getMe();
         setUser(data);
-        if (data.termsVersion !== '1.0') {
-            setShowTermsModal(true);
-        }
-      } catch (error) {
+        if (data.termsVersion !== '2.0') setShowTermsModal(true);
+      } catch {
         setUser(null);
       } finally {
         setLoading(false);
@@ -34,36 +36,41 @@ export function AuthProvider({ children }) {
     loadUser();
   }, []);
 
-  async function login(email, password) {
+  async function login(email, password, turnstileToken) {
+    const data = await apiLogin({ email, password, turnstileToken });
+    setUser({ ...data });
     try {
-        const data = await apiLogin({ email, password });
-        setUser({ ...data });
-        
-        try {
-            const userDetails = await getMe();
-            setUser(userDetails);
-            if (userDetails.termsVersion !== '1.0') {
-                setShowTermsModal(true);
-            }
-        } catch(e) {}
+      const userDetails = await getMe();
+      setUser(userDetails);
+      if (userDetails.termsVersion !== '2.0') setShowTermsModal(true);
+    } catch {}
+    return data;
+  }
 
-        return data;
-    } catch (error) {
-        throw error;
-    }
+  async function loginWithGoogle() {
+    const firebaseAuth = getAuth();
+    const result = await signInWithPopup(firebaseAuth, googleProvider);
+    const idToken = await result.user.getIdToken();
+    const data = await apiGoogleAuth({ idToken });
+    setUser({ ...data });
+    try {
+      const userDetails = await getMe();
+      setUser(userDetails);
+      if (userDetails.termsVersion !== '2.0') setShowTermsModal(true);
+    } catch {}
+    return data;
   }
 
   async function register(data) {
     const payload = { ...data, nickname: data.nickname.toLowerCase() };
-    const response = await apiRegister(payload);
-    return response;
+    return await apiRegister(payload);
   }
 
   async function logout() {
     try {
       await apiLogout();
-    } catch (error) {
-    } finally {
+    } catch {}
+    finally {
       setUser(null);
       setShowTermsModal(false);
     }
@@ -76,42 +83,40 @@ export function AuthProvider({ children }) {
   }
 
   async function acceptTerms() {
-      try {
-          await apiAcceptTerms('1.0');
-          setShowTermsModal(false);
-          setUser(prev => ({ ...prev, termsVersion: '1.0' }));
-      } catch (error) {
-      }
+    try {
+      await apiAcceptTerms('2.0');
+      setShowTermsModal(false);
+      setUser((prev) => ({ ...prev, termsVersion: '2.0' }));
+    } catch {}
   }
 
   async function deleteAccount() {
-      try {
-          await apiDeleteAccount();
-          setUser(null);
-          setShowTermsModal(false);
-      } catch (error) {
-          throw error;
-      }
+    await apiDeleteAccount();
+    setUser(null);
+    setShowTermsModal(false);
   }
 
   async function resetPassword(email) {
-      return await apiResetPassword(email);
+    return await apiResetPassword(email);
   }
 
   return (
-    <AuthContext.Provider value={{ 
-      authenticated: !!user, 
-      user, 
-      loading, 
-      showTermsModal,
-      login, 
-      register, 
-      logout, 
-      updateProfile,
-      acceptTerms,
-      deleteAccount,
-      resetPassword
-    }}>
+    <AuthContext.Provider
+      value={{
+        authenticated: !!user,
+        user,
+        loading,
+        showTermsModal,
+        login,
+        loginWithGoogle,
+        register,
+        logout,
+        updateProfile,
+        acceptTerms,
+        deleteAccount,
+        resetPassword,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
