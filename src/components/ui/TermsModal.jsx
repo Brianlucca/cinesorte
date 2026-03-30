@@ -35,7 +35,7 @@ export default function TermsModal({ variant = 'action', onClose }) {
                             <Info size={18} /> Contexto do Projeto (Portfólio)
                         </h4>
                         <p className="text-sm text-zinc-300 leading-relaxed text-justify">
-                            O CineSorte é uma aplicação desenvolvida por <a href="SEU_LINK_DO_LINKEDIN_AQUI" target="_blank" rel="noopener noreferrer" className="font-bold text-violet-400 hover:text-violet-300 hover:underline transition-colors">Brian Lucca</a> com fins estritamente educacionais, servindo como demonstração de competências técnicas em desenvolvimento Fullstack. Este ambiente simula uma aplicação real de alta fidelidade.
+                            O CineSorte é uma aplicação desenvolvida por <span className="font-bold text-violet-400 hover:text-violet-300 hover:underline transition-colors">Brian Lucca</span> com fins estritamente educacionais, servindo como demonstração de competências técnicas em desenvolvimento Fullstack. Este ambiente simula uma aplicação real de alta fidelidade.
                         </p>
                     </div>
 
