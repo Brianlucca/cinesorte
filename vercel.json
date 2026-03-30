@@ -6,7 +6,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i).*(whatsapp|telegrambot|twitterbot|facebookexternalhit|discordbot|linkedinbot|slackbot|viber|skype).*"
+          "value": "(?i).*(whatsapp|telegrambot|twitterbot|facebookexternalhit|facebookcatalog|discordbot|linkedinbot|slackbot|viber|skype|googlebot|bingbot|applebot|duckduckbot|yandexbot|pinterestbot|snapchat|embedly|outbrain|quora|vkshare|w3c_validator|xing-contenttabreceiver|preview|crawler|spider|bot).*"
         }
       ],
       "destination": "/api/share?type=:type&id=:id"
