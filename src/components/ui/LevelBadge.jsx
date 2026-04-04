@@ -46,7 +46,7 @@ export default function LevelBadge({ title, size = "md" }) {
           icon: <Flame className="text-orange-700" size={size === "lg" ? 20 : 14} />,
           effect: "bronze"
         };
-      default: // Espectador e outros
+      default:
         return {
           container: "bg-zinc-900/50 border border-zinc-800",
           text: "text-zinc-500 font-medium",
@@ -64,7 +64,6 @@ export default function LevelBadge({ title, size = "md" }) {
 
   return (
     <div className={`relative inline-flex items-center gap-2 ${sizeClasses} ${style.container} backdrop-blur-md overflow-hidden group select-none`}>
-      {/* Efeito de "Raios" passando (Shine effect) para níveis altos */}
       {(style.effect === 'raios-cyan' || style.effect === 'aura-roxa') && (
         <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       )}

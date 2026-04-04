@@ -25,18 +25,18 @@ export default function AppLayout() {
     const active = to ? isActive(to) : false;
     const collapsed = isSidebarCollapsed && !isMobileItem;
 
-    const className = `flex items-center ${collapsed ? 'justify-center px-0' : 'justify-between px-4'} py-3 rounded-xl transition-all duration-300 group w-full relative overflow-hidden ${
+    const className = `flex items-center ${collapsed ? 'justify-center px-0' : 'justify-between px-4'} py-3.5 rounded-2xl transition-all duration-300 group w-full relative overflow-hidden ${
       active
-        ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/20'
-        : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+        ? 'bg-violet-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)]'
+        : 'text-zinc-500 hover:bg-white/5 hover:text-white'
     }`;
 
-    const iconColor = active ? 'text-white' : 'text-zinc-500 group-hover:text-white';
+    const iconColor = active ? 'text-white' : 'text-zinc-500 group-hover:text-violet-400';
 
     const content = (
       <div className={`flex items-center relative z-10 ${collapsed ? 'justify-center' : 'gap-3'}`}>
-        <Icon size={20} className={`shrink-0 transition-colors ${iconColor}`} />
-        {!collapsed && <span className="font-medium whitespace-nowrap">{label}</span>}
+        <Icon size={20} className={`shrink-0 transition-colors duration-300 ${iconColor}`} />
+        {!collapsed && <span className="font-bold text-sm tracking-wide">{label}</span>}
       </div>
     );
 
@@ -83,31 +83,32 @@ export default function AppLayout() {
           <NavItem to="/app" icon={Home} label="Início" />
           <NavItem to="/app/feed" icon={Globe} label="Feed Social" />
           <NavItem icon={Search} label="Buscar" onClick={() => setIsSearchOpen(true)} />
+          <div className="my-2 h-px bg-white/5 mx-2" />
           <NavItem to="/app/roulette" icon={Dices} label="Roleta" />
           <NavItem to="/app/lists" icon={List} label="Minhas Listas" />
           <NavItem to="/app/profile" icon={User} label="Perfil" />
           <NavItem to="/app/settings" icon={Settings} label="Configurações" />
         </nav>
 
-        <div className="p-4 border-t border-white/5">
-          <div className={`flex items-center gap-3 bg-zinc-900/50 ${isSidebarCollapsed ? 'p-0 bg-transparent justify-center' : 'p-2'} rounded-xl mb-3 min-w-0 transition-all`}>
-            <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center shrink-0 border border-white/10 overflow-hidden">
-              {user?.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" alt="" /> : <span className="text-xs font-bold">{user?.name?.[0]}</span>}
+        <div className="p-4 border-t border-white/5 bg-white/[0.01]">
+          <div className={`flex items-center gap-3 overflow-hidden ${isSidebarCollapsed ? 'justify-center bg-transparent border-transparent p-0' : 'p-3 bg-white/5 border border-white/5 shadow-inner rounded-2xl'} mb-4 transition-all duration-200`}>
+            <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center shrink-0 border border-white/10 overflow-hidden shadow-lg">
+              {user?.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" alt="" /> : <span className="text-sm font-black text-violet-400">{(user?.name?.[0] || 'U').toUpperCase()}</span>}
             </div>
             {!isSidebarCollapsed && (
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold truncate">{user?.name}</p>
-                <p className="text-[10px] text-zinc-500 truncate">@{user?.username}</p>
+              <div className="min-w-0 flex-1 animate-in fade-in duration-300">
+                <p className="text-sm font-black text-white truncate">{user?.name}</p>
+                <p className="text-[10px] font-bold text-zinc-500 truncate uppercase tracking-widest">@{user?.username}</p>
               </div>
             )}
           </div>
           <button
             onClick={handleLogout}
             title={isSidebarCollapsed ? "Sair" : ""}
-            className={`flex items-center ${isSidebarCollapsed ? 'justify-center w-10 h-10 mx-auto px-0' : 'gap-2 w-full px-4'} py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors overflow-hidden`}
+            className={`flex items-center ${isSidebarCollapsed ? 'justify-center w-12 h-12 mx-auto px-0 rounded-2xl' : 'gap-3 w-full px-4 py-3 rounded-2xl'} text-sm font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 hover:border-red-500/20 border border-transparent transition-all group overflow-hidden`}
           >
-            <LogOut size={16} className="shrink-0" />
-            {!isSidebarCollapsed && <span>Sair</span>}
+            <LogOut size={18} className="shrink-0 group-hover:scale-110 transition-transform" />
+            {!isSidebarCollapsed && <span className="uppercase tracking-widest text-xs whitespace-nowrap">Sair da Conta</span>}
           </button>
         </div>
       </aside>
@@ -131,15 +132,16 @@ export default function AppLayout() {
             <NavItem to="/app" icon={Home} label="Início" isMobileItem={true} />
             <NavItem to="/app/feed" icon={Globe} label="Feed Social" isMobileItem={true} />
             <NavItem icon={Search} label="Buscar" onClick={() => { setIsSearchOpen(true); setIsMobileMenuOpen(false); }} isMobileItem={true} />
+            <div className="my-2 h-px bg-white/5 mx-2" />
             <NavItem to="/app/roulette" icon={Dices} label="Roleta" isMobileItem={true} />
             <NavItem to="/app/lists" icon={List} label="Minhas Listas" isMobileItem={true} />
             <NavItem to="/app/profile" icon={User} label="Perfil" isMobileItem={true} />
             <NavItem to="/app/settings" icon={Settings} label="Configurações" isMobileItem={true} />
           </nav>
 
-          <div className="mt-auto pt-6 border-t border-white/5">
-            <button onClick={handleLogout} className="flex items-center gap-2 w-full px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded-xl transition-colors">
-              <LogOut size={20} /> Sair da conta
+          <div className="mt-auto pt-8 border-t border-white/5">
+            <button onClick={handleLogout} className="flex items-center justify-center gap-3 w-full py-4 bg-red-500/10 text-red-500 rounded-2xl font-black uppercase tracking-widest text-xs border border-red-500/20 active:scale-95 transition-all">
+              <LogOut size={18} /> Sair da conta
             </button>
           </div>
         </div>

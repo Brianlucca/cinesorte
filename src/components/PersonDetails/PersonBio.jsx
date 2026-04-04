@@ -10,20 +10,20 @@ const PersonBio = ({ biography }) => {
   const displayBio = isExpanded ? biography : biography.slice(0, 600) + (isLong ? '...' : '');
 
   return (
-    <section className="mb-12">
+    <div className="w-full">
       <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-         <div className="w-1 h-8 bg-violet-600 rounded-full"></div>
+         <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
          Biografia
       </h2>
-      <div className="bg-zinc-900/50 p-8 rounded-3xl border border-white/5 relative overflow-hidden">
-        <p className="text-zinc-300 leading-8 text-lg text-justify whitespace-pre-line font-light">
+      <div className="relative overflow-hidden">
+        <p className="text-zinc-300 leading-relaxed text-lg text-justify whitespace-pre-line font-light">
           {displayBio}
         </p>
         
         {isLong && (
             <button 
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="mt-6 flex items-center gap-2 text-violet-400 font-bold hover:text-violet-300 transition-colors text-sm uppercase tracking-widest"
+                className="mt-6 flex items-center gap-2 text-violet-400 font-bold hover:text-violet-300 transition-colors text-xs uppercase tracking-widest"
             >
                 {isExpanded ? (
                     <>Ler menos <ChevronUp size={16} /></>
@@ -33,7 +33,7 @@ const PersonBio = ({ biography }) => {
             </button>
         )}
       </div>
-    </section>
+    </div>
   );
 };
 

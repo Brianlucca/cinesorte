@@ -11,14 +11,12 @@ export default function Diary({ items }) {
 
   if (!items || items.length === 0) {
     return (
-      <div className="text-center py-20 bg-zinc-900/30 rounded-3xl border border-white/5 border-dashed">
-        <Calendar className="mx-auto text-zinc-700 mb-4" size={48} />
-        <p className="text-zinc-500 italic text-lg">
-          Seu diário de bordo está vazio.
-        </p>
-        <p className="text-zinc-600 text-sm mt-2">
-          Marque filmes como assistidos para preencher sua linha do tempo.
-        </p>
+      <div className="flex flex-col items-center justify-center py-24 bg-white/[0.01] rounded-[2rem] border border-white/5 border-dashed shadow-inner animate-in zoom-in-95 duration-500">
+        <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-5 border border-white/5 shadow-inner">
+          <Calendar size={28} className="text-zinc-600" />
+        </div>
+        <p className="text-white font-black text-xl tracking-tight mb-2">Diário Vazio</p>
+        <p className="text-zinc-500 font-medium text-sm">Marque filmes como assistidos para preencher sua linha do tempo.</p>
       </div>
     );
   }
@@ -87,21 +85,21 @@ export default function Diary({ items }) {
   }, [items, cacheVersion]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 justify-between">
-        <div className="text-sm text-zinc-400">
-          Total: <span className="font-bold text-white">{items.length}</span>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-white/5 pb-6">
+        <div className="text-xs font-black uppercase tracking-widest text-zinc-500">
+          Total de Itens: <span className="text-white text-sm ml-1">{items.length}</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-inner">
           <button
             onClick={() => setMode("genre")}
-            className={`px-3 py-2 rounded-lg text-sm font-bold ${mode === "genre" ? "bg-violet-600 text-white" : "bg-zinc-800 text-zinc-300"}`}
+            className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${mode === "genre" ? "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.2)]" : "text-zinc-500 hover:text-white hover:bg-white/5"}`}
           >
             Por gênero
           </button>
           <button
             onClick={() => setMode("all")}
-            className={`px-3 py-2 rounded-lg text-sm font-bold ${mode === "all" ? "bg-violet-600 text-white" : "bg-zinc-800 text-zinc-300"}`}
+            className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${mode === "all" ? "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.2)]" : "text-zinc-500 hover:text-white hover:bg-white/5"}`}
           >
             Todos
           </button>
@@ -110,24 +108,25 @@ export default function Diary({ items }) {
 
       {mode === "genre" &&
         (loadingGenres ? (
-          <div className="text-center py-12 bg-zinc-900/50 rounded-xl">
-            Carregando gêneros...
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <div className="w-12 h-12 border-4 border-violet-600/30 border-t-violet-500 rounded-full animate-spin"></div>
+            <p className="text-zinc-500 font-bold text-xs uppercase tracking-widest">Carregando gêneros...</p>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-12">
             {Object.keys(groupedByGenre)
               .sort()
               .map((genre) => {
                 const list = groupedByGenre[genre] || [];
                 return (
-                  <div key={genre}>
-                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                      {genre}{" "}
-                      <span className="text-zinc-600 text-sm font-normal">
-                        ({list.length})
+                  <div key={genre} className="animate-in fade-in duration-500">
+                    <h3 className="text-2xl md:text-3xl font-black text-white mb-6 flex items-center gap-4 tracking-tight capitalize">
+                      {genre}
+                      <span className="text-[10px] font-black uppercase tracking-widest bg-white/10 text-zinc-300 px-3 py-1.5 rounded-lg border border-white/5 shadow-inner">
+                        {list.length} {list.length === 1 ? 'item' : 'itens'}
                       </span>
                     </h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
                       {list.map((item, idx) => {
                         return (
                           <div
@@ -136,24 +135,25 @@ export default function Diary({ items }) {
                           >
                             <Link
                               to={`/app/${item.mediaType || "movie"}/${item.mediaId}`}
+                              className="block"
                             >
-                              <div className="aspect-[2/3] rounded-xl overflow-hidden shadow-lg bg-zinc-800 relative">
+                              <div className="aspect-[2/3] rounded-2xl overflow-hidden shadow-[0_15px_30px_rgba(0,0,0,0.5)] bg-black relative border border-white/5">
                                 {item.posterPath ? (
                                   <img
                                     src={`https://image.tmdb.org/t/p/w342${item.posterPath}`}
                                     alt={item.mediaTitle}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                   />
                                 ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-zinc-600">
-                                    <Film size={24} />
+                                  <div className="w-full h-full flex items-center justify-center text-zinc-600 bg-white/5">
+                                    <Film size={28} />
                                   </div>
                                 )}
-                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-                                  <span className="text-white font-bold text-sm line-clamp-2 leading-tight">
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-4 md:p-5">
+                                  <span className="text-white font-black text-sm md:text-base line-clamp-2 leading-tight tracking-tight mb-1">
                                     {item.mediaTitle}
                                   </span>
-                                  <span className="text-zinc-400 text-xs mt-1">
+                                  <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
                                     {item.timestamp && item.timestamp._seconds
                                       ? new Date(
                                           item.timestamp._seconds * 1000,
@@ -177,27 +177,27 @@ export default function Diary({ items }) {
         ))}
 
       {mode === "all" && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5 animate-in fade-in duration-500">
           {items.map((item, idx) => (
             <div key={`${item.mediaId}-${idx}`} className="group relative">
-              <Link to={`/app/${item.mediaType || "movie"}/${item.mediaId}`}>
-                <div className="aspect-[2/3] rounded-xl overflow-hidden shadow-lg bg-zinc-800 relative">
+              <Link to={`/app/${item.mediaType || "movie"}/${item.mediaId}`} className="block">
+                <div className="aspect-[2/3] rounded-2xl overflow-hidden shadow-[0_15px_30px_rgba(0,0,0,0.5)] bg-black relative border border-white/5">
                   {item.posterPath ? (
                     <img
                       src={`https://image.tmdb.org/t/p/w342${item.posterPath}`}
                       alt={item.mediaTitle}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-zinc-600">
-                      <Film size={24} />
+                    <div className="w-full h-full flex items-center justify-center text-zinc-600 bg-white/5">
+                      <Film size={28} />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-                    <span className="text-white font-bold text-sm line-clamp-2 leading-tight">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-4 md:p-5">
+                    <span className="text-white font-black text-sm md:text-base line-clamp-2 leading-tight tracking-tight mb-1">
                       {item.mediaTitle}
                     </span>
-                    <span className="text-zinc-400 text-xs mt-1">
+                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
                       {item.timestamp && item.timestamp._seconds
                         ? new Date(
                             item.timestamp._seconds * 1000,

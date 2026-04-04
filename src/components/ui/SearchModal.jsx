@@ -8,33 +8,33 @@ const PersonCard = ({ item, onClose }) => (
   <Link
     to={`/app/person/${item.id}`}
     onClick={onClose}
-    className="relative group aspect-[2/3] bg-zinc-900/30 rounded-xl border border-white/5 hover:border-violet-500/50 transition-all hover:-translate-y-1 overflow-hidden flex flex-col items-center justify-center p-4 text-center cursor-pointer shadow-lg"
+    className="relative group bg-white/[0.02] rounded-[2rem] border border-white/5 hover:border-violet-500/30 transition-all duration-300 hover:-translate-y-1.5 overflow-hidden flex flex-col items-center justify-center p-6 text-center cursor-pointer shadow-xl"
   >
-    <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-zinc-800 group-hover:border-violet-500 transition-colors mb-3 bg-zinc-950">
+    <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white/5 group-hover:border-violet-500/50 transition-all duration-500 mb-4 bg-zinc-900 shadow-inner">
       {item.profile_path ? (
         <img
           src={`https://image.tmdb.org/t/p/w185${item.profile_path}`}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           alt={item.name}
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center text-zinc-600">
+        <div className="w-full h-full flex items-center justify-center text-zinc-700">
           <User size={32} />
         </div>
       )}
     </div>
-    <h3 className="font-bold text-white text-sm leading-tight group-hover:text-violet-400 transition-colors line-clamp-2">
+    <h3 className="font-black text-white text-sm leading-tight group-hover:text-violet-400 transition-colors line-clamp-2 uppercase tracking-tight">
       {item.name}
     </h3>
   </Link>
 );
 
 const LoadingState = () => (
-  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
     {[...Array(8)].map((_, i) => (
-      <div key={i} className="space-y-3 animate-pulse">
-        <div className="aspect-[2/3] bg-zinc-800/50 rounded-xl border border-white/5"></div>
-        <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
+      <div key={i} className="space-y-4 animate-pulse">
+        <div className="aspect-[2/3] bg-white/5 rounded-[1.5rem] border border-white/5"></div>
+        <div className="h-3 bg-white/5 rounded-full w-3/4 mx-auto"></div>
       </div>
     ))}
   </div>
@@ -68,81 +68,84 @@ export default function SearchModal({ isOpen, onClose }) {
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [isOpen]);
+  }, [isOpen, clearSearch]);
 
   if (!isMounted) return null;
 
   return (
-    <div className={`fixed inset-0 z-[999] flex items-start justify-center pt-4 md:pt-20 px-4 transition-opacity duration-300 ${isActive ? "opacity-100" : "opacity-0"}`}>
-      <div 
-        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-        onClick={onClose}
-      />
+    <div className={`fixed inset-0 z-[9999] flex items-start justify-center pt-10 md:pt-20 px-6 transition-all duration-500 ${isActive ? "opacity-100" : "opacity-0"}`}>
+      <div className="absolute inset-0 bg-zinc-950/90 backdrop-blur-xl" onClick={onClose} />
       
-      <div className={`relative w-full max-w-4xl bg-zinc-950 border border-white/10 rounded-3xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col transition-all duration-300 transform ${isActive ? "scale-100 translate-y-0" : "scale-95 -translate-y-4"}`}>
-        <div className="p-6 border-b border-white/10 flex items-center gap-4">
-          <SearchIcon className="w-6 h-6 text-violet-500" />
+      <div className={`relative w-full max-w-4xl bg-zinc-900/50 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden max-h-[85vh] flex flex-col transition-all duration-500 transform ${isActive ? "scale-100 translate-y-0" : "scale-95 -translate-y-8"}`}>
+        
+        <div className="p-7 border-b border-white/5 flex items-center gap-5 bg-white/[0.02]">
+          <div className="p-2.5 bg-violet-600/20 rounded-xl shadow-inner ml-2">
+            <SearchIcon className="w-6 h-6 text-violet-400" />
+          </div>
           <input
             autoFocus
             type="text"
-            placeholder="O que você quer assistir hoje?"
-            className="flex-1 bg-transparent text-white text-xl focus:outline-none placeholder:text-zinc-600"
+            placeholder="Pesquisar filmes, séries ou artistas..."
+            className="flex-1 bg-transparent text-white text-xl md:text-2xl font-medium focus:outline-none placeholder:text-zinc-600"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <button 
-            onClick={onClose}
-            className="p-2 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-colors"
-          >
-            <X size={24} />
+          <button onClick={onClose} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-zinc-500 hover:text-white transition-all border border-white/5 mr-2">
+            <X size={22} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-zinc-800">
+        <div className="flex-1 overflow-y-auto p-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           {loading ? (
             <LoadingState />
           ) : results.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-3 duration-500">
               {results.map((item) => (
                 item.media_type === "person" || (item.profile_path && !item.poster_path) ? (
                   <PersonCard key={item.id} item={item} onClose={onClose} />
                 ) : (
-                  <div key={item.id} onClick={onClose}>
+                  <div key={item.id} onClick={onClose} className="transition-transform hover:-translate-y-2 duration-300">
                     <MediaCard media={item} />
                   </div>
                 )
               ))}
             </div>
           ) : query.length > 1 ? (
-            <div className="py-20 text-center text-zinc-500">
-              <p className="text-xl font-bold text-white">Nenhum resultado encontrado</p>
-              <p className="text-sm">Tente buscar por termos mais genéricos.</p>
+            <div className="py-24 text-center animate-in zoom-in-95 duration-500">
+              <div className="w-20 h-20 bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-dashed border-white/10">
+                <SearchIcon size={32} className="text-zinc-700" />
+              </div>
+              <p className="text-2xl font-black text-white tracking-tight">Nenhum resultado encontrado</p>
+              <p className="text-zinc-500 mt-2 font-medium">Tente buscar por termos mais genéricos.</p>
             </div>
           ) : (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 bg-zinc-900/50 rounded-2xl border border-white/5 flex flex-col items-center text-center">
-                  <Film className="text-violet-500 mb-2" />
-                  <span className="text-white font-medium text-sm">Filmes</span>
-                </div>
-                <div className="p-4 bg-zinc-900/50 rounded-2xl border border-white/5 flex flex-col items-center text-center">
-                  <Tv className="text-indigo-500 mb-2" />
-                  <span className="text-white font-medium text-sm">Séries</span>
-                </div>
-                <div className="p-4 bg-zinc-900/50 rounded-2xl border border-white/5 flex flex-col items-center text-center">
-                  <Sparkles className="text-pink-500 mb-2" />
-                  <span className="text-white font-medium text-sm">Artistas</span>
-                </div>
+            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-700">
+              <div className="grid grid-cols-3 gap-5">
+                {[
+                  { label: 'Filmes', icon: Film, color: 'text-violet-500', bg: 'bg-violet-500/10' },
+                  { label: 'Séries', icon: Tv, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+                  { label: 'Artistas', icon: Sparkles, color: 'text-pink-500', bg: 'bg-pink-500/10' }
+                ].map((cat, i) => (
+                  <div key={i} className="p-6 bg-white/[0.03] rounded-3xl border border-white/5 flex flex-col items-center gap-3 group hover:bg-white/[0.06] hover:scale-105 transition-all cursor-default">
+                    <div className={`p-4 ${cat.bg} rounded-2xl shadow-inner`}>
+                        <cat.icon className={cat.color} size={28} />
+                    </div>
+                    <span className="text-white font-black text-xs uppercase tracking-[0.2em]">{cat.label}</span>
+                  </div>
+                ))}
               </div>
 
-              <div className="space-y-4">
-                <h4 className="text-zinc-400 text-xs font-bold uppercase tracking-widest px-1">Sugestões de Gênero</h4>
-                <div className="flex flex-wrap gap-2">
+              <div className="space-y-5">
+                <div className="flex items-center gap-3 px-1">
+                  <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
+                  <h4 className="text-white text-sm font-black uppercase tracking-[0.2em]">Sugestões de Gênero</h4>
+                </div>
+                <div className="flex flex-wrap gap-3">
                   {SUGGESTED_GENRES.map((genre) => (
                     <button
                       key={genre.id}
                       onClick={() => searchByGenre(genre.id)}
-                      className="px-4 py-2 bg-zinc-900 border border-white/5 rounded-full text-sm text-zinc-300 hover:border-violet-500/50 hover:text-white hover:bg-zinc-800 transition-all active:scale-95"
+                      className="px-6 py-3 bg-white/5 border border-white/5 rounded-2xl text-sm font-black text-zinc-400 hover:border-violet-500/50 hover:text-white hover:bg-violet-600 transition-all active:scale-95 shadow-lg uppercase tracking-wider"
                     >
                       {genre.name}
                     </button>

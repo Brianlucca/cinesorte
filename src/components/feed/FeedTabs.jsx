@@ -8,24 +8,21 @@ export default function FeedTabs({ activeTab, onChange }) {
   ];
 
   return (
-    <div className="flex gap-1">
+    <div className="flex items-center p-1.5 bg-white/[0.02] border border-white/10 rounded-2xl w-max shadow-lg backdrop-blur-xl">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
           <button
             key={tab.id}
             onClick={() => onChange(tab.id)}
-            className={`relative flex items-center gap-2 px-5 py-2 text-sm font-bold rounded-full transition-all duration-200 whitespace-nowrap ${
-              isActive
-                ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30'
-                : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
+            className={`flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
+              isActive 
+                ? 'bg-violet-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)]' 
+                : 'text-zinc-500 hover:text-white hover:bg-white/5'
             }`}
           >
-            <tab.icon size={14} />
+            <tab.icon size={16} />
             {tab.label}
-            {isActive && (
-              <span className="absolute inset-0 rounded-full ring-1 ring-violet-400/30 pointer-events-none" />
-            )}
           </button>
         );
       })}

@@ -64,104 +64,136 @@ export default function ListDetails() {
 
   if (loading) {
     return (
-        <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-            <div className="w-10 h-10 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950 gap-6 animate-in fade-in duration-700">
+        <div className="w-14 h-14 border-4 border-violet-600/20 border-t-violet-500 rounded-full animate-spin shadow-[0_0_30px_rgba(139,92,246,0.3)]"></div>
+        <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Carregando coleção...</p>
+      </div>
     );
   }
 
   if (!list) return null;
 
   return (
-    <div className="min-h-screen bg-zinc-950 pb-20">
-        <div className="relative min-h-[40vh] w-full overflow-hidden flex items-end">
-            <div className="absolute inset-0 bg-zinc-900" />
+    <div className="min-h-screen bg-zinc-950 pb-24 animate-in fade-in duration-700">
+        <div className="relative min-h-[50vh] w-full overflow-hidden flex items-end">
+            <div className="absolute inset-0 bg-black" />
+            
             {backdrops.length > 0 && (
-                <div className={`w-full h-full absolute inset-0 opacity-60 blur-3xl scale-125 saturate-150 grid ${backdrops.length === 1 ? 'grid-cols-1' : 'grid-cols-2 grid-rows-2'}`}>
+                <div className={`w-full h-full absolute inset-0 opacity-50 blur-2xl scale-110 saturate-150 grid ${backdrops.length === 1 ? 'grid-cols-1' : 'grid-cols-2 grid-rows-2'}`}>
                     {backdrops.map((img, i) => (
                         <div key={i} className="relative w-full h-full overflow-hidden">
-                            <img src={img} className="w-full h-full object-cover transform scale-150" alt="" />
+                            <img src={img} className="w-full h-full object-cover transform scale-125" alt="" />
                         </div>
                     ))}
                 </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-zinc-950/40" />
             
-
-            <div className="relative w-full p-6 md:p-12 z-20 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent" />
+            
+            <div className="relative w-full max-w-[1600px] mx-auto px-6 md:px-12 pb-8 z-20 flex flex-col md:flex-row md:items-end justify-between gap-8 mt-32">
                 <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                        <span className="bg-violet-600/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-3 mb-5">
+                        <span className="bg-violet-600/20 border border-violet-500/30 text-violet-400 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-[0_0_20px_rgba(139,92,246,0.3)] backdrop-blur-md">
                             <Layers size={14} /> Coleção
                         </span>
+
+                        {list.clonedFrom && (
+                            <span className="bg-black/40 border border-white/5 text-zinc-300 px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 backdrop-blur-md">
+                                <Copy size={14} /> Cópia
+                            </span>
+                        )}
+
                         {list.updatedAt && (
-                            <span className="text-zinc-400 text-sm font-medium flex items-center gap-1">
+                            <span className="bg-white/5 border border-white/5 text-zinc-300 px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 backdrop-blur-md">
                                 <Calendar size={14} /> Atualizada em {formatDate(list.updatedAt)}
                             </span>
                         )}
                     </div>
-                    <h1 className="text-4xl md:text-6xl font-black text-white leading-tight drop-shadow-2xl mb-4 break-words">
+                    
+                    <h1 className="text-4xl md:text-6xl font-black text-white leading-tight drop-shadow-2xl mb-6 break-words tracking-tighter">
                         {list.name}
                     </h1>
+                    
                     {list.description && (
-                        <p className="text-lg text-zinc-200 max-w-3xl font-medium drop-shadow-md leading-relaxed whitespace-pre-wrap">
+                        <p className="text-sm md:text-base text-zinc-300 max-w-3xl font-medium drop-shadow-lg leading-relaxed whitespace-pre-wrap mb-8">
                             {list.description}
                         </p>
                     )}
                     
-                    <div className="flex items-center gap-4 mt-6">
-                        <Link to={`/app/profile/${list.owner?.username}`} className="flex items-center gap-3 bg-black/40 hover:bg-black/60 px-4 py-2 rounded-xl backdrop-blur-md border border-white/10 transition-all group">
-                            <div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden border border-white/20">
-                                {list.owner?.photoURL ? (
+                    <div className="flex flex-wrap items-center gap-4">
+                        <Link to={`/app/profile/${list.clonedFrom ? list.clonedFrom.owner : list.owner?.username}`} className="flex items-center gap-4 bg-white/[0.02] hover:bg-white/[0.05] px-5 py-3 rounded-2xl backdrop-blur-md border border-white/5 transition-all group shadow-inner">
+                            <div className="w-12 h-12 rounded-xl bg-zinc-800 overflow-hidden border border-white/10 shadow-lg">
+                                {!list.clonedFrom && list.owner?.photoURL ? (
                                     <img src={list.owner.photoURL} className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-white"><User size={20} /></div>
+                                    <div className="w-full h-full flex items-center justify-center text-white font-black text-lg">
+                                        {(list.clonedFrom ? list.clonedFrom.owner?.[0] : list.owner?.username?.[0] || 'U').toUpperCase()}
+                                    </div>
                                 )}
                             </div>
                             <div>
-                                <p className="text-xs text-zinc-400 uppercase font-bold">Criado por</p>
-                                <p className="text-white font-bold group-hover:text-violet-400 transition-colors">@{list.owner?.username || 'Usuario'}</p>
+                                <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-0.5">
+                                    {list.clonedFrom ? 'Criador Original' : 'Criado por'}
+                                </p>
+                                <p className="text-sm text-white font-bold group-hover:text-violet-400 transition-colors">@{list.clonedFrom ? list.clonedFrom.owner : (list.owner?.username || 'Usuario')}</p>
                             </div>
                         </Link>
+
+                        {list.clonedFrom && (
+                            <div className="flex items-center gap-4 bg-white/[0.01] px-5 py-3 rounded-2xl backdrop-blur-md border border-white/5 shadow-inner cursor-default">
+                                <div className="w-12 h-12 rounded-xl bg-zinc-900/50 overflow-hidden border border-white/5 shadow-lg flex items-center justify-center text-zinc-500">
+                                    <User size={20} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-0.5">
+                                        Copiado por
+                                    </p>
+                                    <p className="text-sm text-zinc-300 font-bold">@{list.owner?.username || username}</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <div className="flex gap-3 shrink-0">
+                <div className="flex gap-4 shrink-0 w-full md:w-auto mt-6 md:mt-0">
                     {user?.username !== username && (
                         <button 
                             onClick={handleClone}
                             disabled={cloning}
-                            className="bg-white text-black hover:bg-zinc-200 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50"
+                            className="flex-1 md:flex-none bg-white text-black hover:bg-zinc-200 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(255,255,255,0.2)] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Copy size={18} /> {cloning ? 'Salvando...' : 'Salvar Coleção'}
                         </button>
                     )}
-                    <button className="bg-white/10 hover:bg-white/20 text-white p-3 rounded-xl backdrop-blur-md border border-white/10 transition-all">
-                        <Share2 size={20} />
-                    </button>
                 </div>
             </div>
         </div>
 
-        <div className="max-w-[1600px] mx-auto px-6 md:px-12 py-12">
-            <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    Itens <span className="text-zinc-500 text-lg font-normal">({list.items?.length || 0})</span>
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 py-10">
+            <div className="flex items-center gap-4 mb-10 pb-6 border-b border-white/5">
+                <h2 className="text-sm font-black text-white flex items-center gap-3 uppercase tracking-widest">
+                    Itens 
+                    <span className="text-violet-400 bg-violet-500/10 px-3 py-1 rounded-lg border border-violet-500/20">
+                        {list.items?.length || 0}
+                    </span>
                 </h2>
             </div>
 
             {list.items && list.items.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
                     {list.items.map((item) => (
-                        <Link key={item.id} to={`/app/${item.media_type || 'movie'}/${item.id}`} className="group block h-full">
+                        <Link key={item.id} to={`/app/${item.media_type || 'movie'}/${item.id}`} className="group block h-full transition-transform duration-500 hover:-translate-y-2">
                             <MediaCard media={item} />
                         </Link>
                     ))}
                 </div>
             ) : (
-                <div className="py-20 text-center border-2 border-dashed border-white/5 rounded-3xl bg-zinc-900/30">
-                    <Film size={48} className="mx-auto text-zinc-700 mb-4" />
-                    <p className="text-zinc-500 font-medium">Esta coleção está vazia.</p>
+                <div className="py-32 flex flex-col items-center justify-center text-center border border-dashed border-white/10 rounded-[2.5rem] bg-white/[0.01] animate-in zoom-in-95 duration-500">
+                    <div className="w-20 h-20 bg-white/5 rounded-[2rem] flex items-center justify-center mb-6 shadow-inner border border-white/5">
+                        <Film size={32} className="text-zinc-600" />
+                    </div>
+                    <p className="text-white font-black text-xl mb-2 tracking-tight">Coleção Vazia</p>
+                    <p className="text-zinc-500 font-medium text-sm">Ainda não há filmes ou séries nesta lista.</p>
                 </div>
             )}
         </div>

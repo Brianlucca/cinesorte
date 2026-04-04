@@ -12,6 +12,7 @@ import {
   updateReview,
   updateComment,
   getUserFollowing,
+  getMovieDetails,
 } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
@@ -22,6 +23,7 @@ export function useEpisodeDetailsLogic() {
   const { user } = useAuth();
 
   const [episode, setEpisode] = useState(null);
+  const [tvShow, setTvShow] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [followingList, setFollowingList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,21 +37,22 @@ export function useEpisodeDetailsLogic() {
     async function loadData() {
       setLoading(true);
       try {
-        const promises = [
+        const basePromises = [
           getEpisodeDetails(tvId, seasonNumber, episodeNumber),
           getMediaReviews(uniqueMediaId),
+          getMovieDetails('tv', tvId)
         ];
 
-        if (user?.uid) {
-          promises.push(getUserFollowing(user.uid));
-        }
+        const userPromise = user?.uid ? getUserFollowing(user.uid) : Promise.resolve(null);
 
-        const results = await Promise.all(promises);
+        const [episodeData, reviewsData, tvShowData, followingData] = await Promise.all([...basePromises, userPromise]);
 
-        setEpisode(results[0]);
+        setEpisode(episodeData);
+        setTvShow(tvShowData);
+        
         setReviews(
-          Array.isArray(results[1])
-            ? results[1].map((r) => ({
+          Array.isArray(reviewsData)
+            ? reviewsData.map((r) => ({
                 ...r,
                 isLikedByCurrentUser: !!r.isLikedByCurrentUser,
                 likesCount: Number(r.likesCount) || 0,
@@ -58,8 +61,8 @@ export function useEpisodeDetailsLogic() {
             : []
         );
 
-        if (user?.uid && results[2]) {
-          setFollowingList(Array.isArray(results[2]) ? results[2] : []);
+        if (followingData) {
+          setFollowingList(Array.isArray(followingData) ? followingData : []);
         }
       } catch {
         toast.error('Erro', 'Não foi possível carregar o episódio.');
@@ -211,6 +214,7 @@ export function useEpisodeDetailsLogic() {
 
   return {
     episode,
+    tvShow,
     reviews,
     followingList,
     loading,

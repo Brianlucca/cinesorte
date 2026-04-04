@@ -33,9 +33,9 @@ export default function TrailerRow({ title, items }) {
   if (!items || items.length === 0) return null;
 
   return (
-    <div className="mb-8 relative z-20 group w-full">
+    <div className="relative w-full group/row z-10">
         {selectedTrailer && createPortal(
-            <div className="fixed inset-0 z-[100000] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[100000] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md">
                 <TrailerModal 
                     isOpen={!!selectedTrailer} 
                     onClose={() => setSelectedTrailer(null)} 
@@ -45,25 +45,32 @@ export default function TrailerRow({ title, items }) {
             document.body
         )}
 
-      <div className="flex justify-between items-end mb-4 px-6 md:px-16">
-          <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3 border-l-4 border-red-600 pl-4 uppercase tracking-wider">
+      <div className="flex justify-between items-center px-6 md:px-12 mb-0">
+          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+            <span className="w-1.5 h-6 bg-red-600 rounded-full"></span>
             {title}
           </h2>
 
-          <div className="flex gap-3">
-              <button onClick={() => slide('left')} className="p-2.5 rounded-full bg-zinc-800/80 hover:bg-red-600 transition-all active:scale-95 border border-white/5">
-                  <ChevronLeft size={22} className="text-white" />
+          <div className="flex gap-2 opacity-0 group-hover/row:opacity-100 transition-opacity duration-300">
+              <button 
+                onClick={() => slide('left')} 
+                className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all shadow-lg"
+              >
+                  <ChevronLeft size={20} />
               </button>
-              <button onClick={() => slide('right')} className="p-2.5 rounded-full bg-zinc-800/80 hover:bg-red-600 transition-all active:scale-95 border border-white/5">
-                  <ChevronRight size={22} className="text-white" />
+              <button 
+                onClick={() => slide('right')} 
+                className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all shadow-lg"
+              >
+                  <ChevronRight size={20} />
               </button>
           </div>
       </div>
       
       <div 
         ref={rowRef} 
-        className="flex gap-6 overflow-x-auto scroll-smooth py-4 px-6 md:px-16 scrollbar-hide w-full"
-        style={{ scrollbarWidth: 'none' }}
+        className="flex gap-5 overflow-x-auto scroll-smooth pt-6 pb-8 px-6 md:px-12 scrollbar-hide w-full"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {items.map((item, index) => {
             const isHovering = hoveredTrailerId === item.id;
@@ -74,14 +81,15 @@ export default function TrailerRow({ title, items }) {
                     onMouseEnter={() => handleMouseEnter(item.id)}
                     onMouseLeave={handleMouseLeave}
                     onClick={() => setSelectedTrailer(item.trailerKey)}
-                    className="flex-none w-[320px] md:w-[480px] group/card cursor-pointer relative"
+                    className="flex-none w-[320px] md:w-[480px] group/card cursor-pointer relative transition-all duration-500 hover:-translate-y-2"
                 >
-                    <div className="aspect-video rounded-2xl overflow-hidden bg-zinc-900 shadow-lg border border-white/10 relative transition-all duration-300 hover:border-red-500/50 hover:shadow-red-900/20">
+                    <div className="aspect-video rounded-2xl overflow-hidden bg-white/[0.02] border border-white/5 relative shadow-2xl group-hover/card:border-red-500/50 transition-all duration-300 group-hover/card:shadow-[0_10px_30px_rgba(220,38,38,0.2)]">
                         
                         <img 
                             src={`https://image.tmdb.org/t/p/w780${item.backdrop_path}`} 
-                            alt={item.title} 
-                            className={`w-full h-full object-cover transition-opacity duration-500 ${isHovering ? 'opacity-0' : 'opacity-90'}`}
+                            alt={item.title || item.name} 
+                            className={`w-full h-full object-cover transition-all duration-700 ${isHovering ? 'opacity-0 scale-100' : 'opacity-100 scale-105 group-hover/card:scale-110'}`}
+                            loading="lazy"
                         />
 
                         {isHovering && item.trailerKey && (
@@ -89,26 +97,28 @@ export default function TrailerRow({ title, items }) {
                                 <iframe
                                     className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                                     src={`https://www.youtube.com/embed/${item.trailerKey}?autoplay=1&mute=0&controls=0&modestbranding=1&loop=1&playlist=${item.trailerKey}&rel=0&showinfo=0&iv_load_policy=3`}
-                                    title={item.title}
+                                    title={item.title || item.name}
                                     frameBorder="0"
                                     allow="autoplay; encrypted-media"
                                     allowFullScreen
                                 />
-                                <div className="absolute top-4 right-4 bg-black/50 p-2 rounded-full backdrop-blur-md animate-in fade-in zoom-in">
-                                    <Volume2 size={20} className="text-white" />
+                                <div className="absolute top-4 right-4 bg-black/50 p-2 rounded-full backdrop-blur-md animate-in fade-in zoom-in border border-white/10">
+                                    <Volume2 size={16} className="text-white" />
                                 </div>
                             </div>
                         )}
 
-                        <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${isHovering ? 'opacity-0' : 'opacity-100'}`}>
-                            <div className="w-16 h-16 bg-red-600/90 rounded-full flex items-center justify-center pl-1 shadow-lg shadow-red-900/50 group-hover/card:scale-105 transition-transform duration-300">
-                                <Play fill="white" className="text-white" size={32} />
+                        <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 pointer-events-none ${isHovering ? 'opacity-0' : 'opacity-100'}`}>
+                            <div className="w-16 h-16 bg-red-600/90 rounded-full flex items-center justify-center pl-1 shadow-lg shadow-red-900/50 group-hover/card:scale-110 transition-transform duration-300 backdrop-blur-sm">
+                                <Play fill="white" className="text-white" size={28} />
                             </div>
                         </div>
 
-                        <div className={`absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none transition-opacity duration-300 ${isHovering ? 'opacity-0' : 'opacity-100'}`}>
-                            <h3 className="text-white font-bold text-xl truncate drop-shadow-md">{item.title}</h3>
-                            <p className="text-zinc-300 text-sm mt-1 line-clamp-2">
+                        <div className={`absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent flex flex-col justify-end p-5 transition-opacity duration-300 pointer-events-none ${isHovering ? 'opacity-0' : 'opacity-100'}`}>
+                            <span className="font-bold text-white text-lg mb-1 line-clamp-1 leading-tight drop-shadow-md">
+                                {item.title || item.name}
+                            </span>
+                            <p className="text-zinc-300 text-sm line-clamp-2 drop-shadow-sm font-medium">
                                 {item.overview}
                             </p>
                         </div>
@@ -116,7 +126,7 @@ export default function TrailerRow({ title, items }) {
                 </div>
             );
         })}
-        <div className="w-8 flex-none"></div>
+        <div className="w-12 flex-none"></div>
       </div>
     </div>
   );

@@ -1,11 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { 
-    getMovieDetails, 
-    getMediaReviews, 
-    postReview, 
-    postComment, 
-    deleteReview, 
-    recordInteraction 
+  getMovieDetails, 
+  getMediaReviews, 
+  postReview, 
+  postComment, 
+  deleteReview, 
+  recordInteraction,
+  updateReview,
+  updateComment,
+  deleteComment,
+  getComments
 } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
@@ -75,15 +79,49 @@ export const usePersonDetails = (id) => {
     }
   };
 
+  const handleEditReview = async (reviewId, newText, newRating) => {
+    try {
+      await updateReview(reviewId, {
+        text: newText,
+        rating: newRating !== null ? Number(newRating) : null,
+      });
+      setReviews((prev) =>
+        prev.map((r) =>
+          r.id === reviewId
+            ? { ...r, text: newText, rating: newRating !== null ? Number(newRating) : null, isEdited: true }
+            : r
+        )
+      );
+      toast.success('Editado', 'Seu comentário foi atualizado.');
+    } catch (error) {
+      toast.error('Erro', 'Não foi possível editar.');
+    }
+  };
+
   const handlePostReply = async (reviewId, text) => {
     if (!user) return toast.error('Login necessário');
     try {
         await postComment({ reviewId, text });
         toast.success('Respondido', 'Resposta enviada.');
-        const updatedReviews = await getMediaReviews(uniquePersonId);
-        setReviews(updatedReviews);
+        const comments = await getComments(reviewId);
+        setReviews((prev) =>
+          prev.map((r) => (r.id === reviewId ? { ...r, replies: comments, commentsCount: (r.commentsCount || 0) + 1 } : r))
+        );
     } catch (error) {
         toast.error('Erro', 'Falha ao responder.');
+    }
+  };
+
+  const handleEditReply = async (commentId, newText, reviewId) => {
+    try {
+      await updateComment(commentId, { text: newText });
+      const comments = await getComments(reviewId);
+      setReviews((prev) =>
+        prev.map((r) => (r.id === reviewId ? { ...r, replies: comments } : r))
+      );
+      toast.success('Editado', 'Resposta atualizada.');
+    } catch (error) {
+      toast.error('Erro', 'Não foi possível editar a resposta.');
     }
   };
 
@@ -94,6 +132,26 @@ export const usePersonDetails = (id) => {
         toast.success('Apagado', 'Comentário removido.');
     } catch (error) {
         toast.error('Erro', 'Não foi possível apagar.');
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await deleteComment(commentId);
+      setReviews((prev) =>
+        prev.map((r) => {
+          const has = r.replies?.some((c) => c.id === commentId);
+          if (!has) return r;
+          return {
+            ...r,
+            replies: r.replies.filter((c) => c.id !== commentId),
+            commentsCount: Math.max(0, (r.commentsCount || 0) - 1),
+          };
+        })
+      );
+      toast.success('Apagado', 'Resposta removida.');
+    } catch (error) {
+      toast.error('Erro', 'Não foi possível apagar a resposta.');
     }
   };
 
@@ -122,8 +180,11 @@ export const usePersonDetails = (id) => {
       isLiked,
       actions: {
           handlePostReview,
+          handleEditReview,
           handlePostReply,
+          handleEditReply,
           handleDeleteReview,
+          handleDeleteComment,
           toggleFollowPerson
       }
   };

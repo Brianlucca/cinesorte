@@ -115,7 +115,8 @@ export function useMyListsLogic() {
         if (itemsToRemove.length > 0) {
           return { 
             ...list, 
-            items: list.items.filter(item => !itemsToRemove.includes(item.id)) 
+            items: list.items.filter(item => !itemsToRemove.includes(item.id)),
+            updatedAt: new Date().toISOString()
           };
         }
         return list;
@@ -147,11 +148,12 @@ export function useMyListsLogic() {
       });
       
       const newList = { 
-        id: res.listId, 
+        id: res.listId || res.data?.listId, 
         name: listName, 
         description: description || '', 
         items: [], 
-        isPublic: true 
+        isPublic: true,
+        updatedAt: new Date().toISOString()
       };
       setLists(prev => [newList, ...prev]);
       toast.success('Lista Criada', `A lista "${listName}" foi criada.`);
@@ -182,7 +184,12 @@ export function useMyListsLogic() {
       
       setLists(prev => prev.map(l => {
         if (l.id === listId) {
-          return { ...l, name: listName, description };
+          return { 
+            ...l, 
+            name: listName, 
+            description,
+            updatedAt: new Date().toISOString() 
+          };
         }
         return l;
       }));

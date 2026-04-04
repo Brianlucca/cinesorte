@@ -68,14 +68,9 @@ export default function MediaDetails() {
       (v) => v.type === "Trailer" && v.site === "YouTube"
     )?.key;
 
-  const directors =
-    media.credits?.crew?.filter((c) => c.job === "Director") || [];
+  const directors = media.credits?.crew?.filter((c) => c.job === "Director") || [];
   const creators = media.created_by || [];
-  const writers =
-    media.credits?.crew
-      ?.filter((c) => c.job === "Screenplay" || c.job === "Writer")
-      .slice(0, 3) || [];
-
+  const writers = media.credits?.crew?.filter((c) => c.job === "Screenplay" || c.job === "Writer").slice(0, 3) || [];
   const externalIds = media.external_ids || {};
 
   const getStatusColor = (status) => {
@@ -103,7 +98,7 @@ export default function MediaDetails() {
   };
 
   return (
-    <div className="-mt-24 md:-mt-8 pb-20 w-full overflow-x-hidden animate-in fade-in duration-700">
+    <div className="-mt-24 md:-mt-8 pb-20 w-full overflow-x-hidden bg-zinc-950 animate-in fade-in duration-700">
       
       {modals.trailer && createPortal(
         <div className="fixed inset-0 z-[100000] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm">
@@ -142,7 +137,6 @@ export default function MediaDetails() {
         </div>
 
         <div className="absolute bottom-0 top-0 left-0 w-full flex flex-col justify-end px-6 md:px-12 pb-24 max-w-6xl z-20">
-          
           <div className="flex flex-wrap gap-2 mb-4 animate-in slide-in-from-bottom-2 fade-in duration-1000">
             {media.genres?.map((g) => (
               <span
@@ -165,7 +159,6 @@ export default function MediaDetails() {
           )}
 
           <div className="flex flex-wrap items-center gap-8 text-sm md:text-base font-medium text-zinc-100 mb-10 animate-in slide-in-from-bottom-8 fade-in duration-1000">
-            
             <div className="flex items-center gap-3 bg-transparent border border-white/30 backdrop-blur-md px-5 py-3 rounded-2xl">
                 <div className="flex items-center gap-2">
                   {renderStars(communityStats ? parseFloat(communityStats.average) * 2 : media.vote_average)}
@@ -214,9 +207,7 @@ export default function MediaDetails() {
           <div className="flex flex-wrap gap-4 animate-in slide-in-from-bottom-10 fade-in duration-1000">
             {trailerKey && (
               <button
-                onClick={() =>
-                  setModals((prev) => ({ ...prev, trailer: true }))
-                }
+                onClick={() => setModals((prev) => ({ ...prev, trailer: true }))}
                 className="flex items-center gap-3 px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
               >
                 <Play size={20} fill="currentColor" /> Assistir Trailer
@@ -253,9 +244,7 @@ export default function MediaDetails() {
               </button>
 
               <button
-                onClick={() =>
-                  setModals((prev) => ({ ...prev, addToList: true }))
-                }
+                onClick={() => setModals((prev) => ({ ...prev, addToList: true }))}
                 className="p-4 rounded-xl bg-black/40 border-2 border-white/10 text-white hover:bg-white/10 backdrop-blur-md transition-all hover:scale-105"
                 title="Adicionar à lista"
               >
@@ -274,30 +263,34 @@ export default function MediaDetails() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 max-w-[1600px] mx-auto px-6 md:px-12 relative z-20">
-        <div className="lg:col-span-2 space-y-12">
-          <section>
-            <h2 className="text-2xl font-bold text-white mb-4 border-l-4 border-violet-600 pl-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-[1600px] mx-auto px-6 md:px-12 relative z-20">
+        
+        <div className="lg:col-span-8 space-y-8">
+          
+          <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
               Sinopse
             </h2>
-            <p className="text-zinc-300 leading-relaxed text-lg text-justify bg-zinc-900/50 p-8 rounded-2xl border border-white/5 shadow-inner">
+            <p className="text-zinc-300 leading-relaxed text-lg text-justify font-light">
               {media.overview || "Nenhuma descrição disponível."}
             </p>
           </section>
 
           {(directors.length > 0 || creators.length > 0) && (
-            <section>
-              <h2 className="text-2xl font-bold text-white mb-6 border-l-4 border-violet-600 pl-4">
+            <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
+              <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
+                <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
                 {media.created_by ? "Criadores" : "Direção & Roteiro"}
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {(media.created_by || directors).map((p) => (
                   <Link
                     to={`/app/person/${p.id}`}
                     key={p.id}
-                    className="flex items-center gap-4 bg-zinc-900 p-4 rounded-xl border border-white/5 hover:border-violet-500/50 transition-colors group"
+                    className="flex items-center gap-5 p-3 rounded-2xl hover:bg-white/5 transition-colors group"
                   >
-                    <div className="w-16 h-16 rounded-full overflow-hidden bg-zinc-800">
+                    <div className="w-16 h-16 rounded-full overflow-hidden bg-zinc-800 border border-white/10 group-hover:border-violet-500/50 transition-colors">
                       {p.profile_path ? (
                         <img
                           src={`https://image.tmdb.org/t/p/w185${p.profile_path}`}
@@ -311,10 +304,10 @@ export default function MediaDetails() {
                       )}
                     </div>
                     <div>
-                      <h4 className="font-bold text-white group-hover:text-violet-400 transition-colors">
+                      <h4 className="font-bold text-white text-lg group-hover:text-violet-400 transition-colors">
                         {p.name}
                       </h4>
-                      <p className="text-sm text-zinc-500">
+                      <p className="text-sm text-zinc-500 font-medium">
                         {p.job || "Criador"}
                       </p>
                     </div>
@@ -324,9 +317,9 @@ export default function MediaDetails() {
                   <Link
                     to={`/app/person/${p.id}`}
                     key={`${p.id}-writer`}
-                    className="flex items-center gap-4 bg-zinc-900 p-4 rounded-xl border border-white/5 hover:border-violet-500/50 transition-colors group"
+                    className="flex items-center gap-5 p-3 rounded-2xl hover:bg-white/5 transition-colors group"
                   >
-                    <div className="w-16 h-16 rounded-full overflow-hidden bg-zinc-800">
+                    <div className="w-16 h-16 rounded-full overflow-hidden bg-zinc-800 border border-white/10 group-hover:border-violet-500/50 transition-colors">
                       {p.profile_path ? (
                         <img
                           src={`https://image.tmdb.org/t/p/w185${p.profile_path}`}
@@ -340,10 +333,10 @@ export default function MediaDetails() {
                       )}
                     </div>
                     <div>
-                      <h4 className="font-bold text-white group-hover:text-violet-400 transition-colors">
+                      <h4 className="font-bold text-white text-lg group-hover:text-violet-400 transition-colors">
                         {p.name}
                       </h4>
-                      <p className="text-sm text-zinc-500">Roteiro</p>
+                      <p className="text-sm text-zinc-500 font-medium">Roteiro</p>
                     </div>
                   </Link>
                 ))}
@@ -352,21 +345,25 @@ export default function MediaDetails() {
           )}
 
           {media.credits?.cast?.length > 0 && (
-            <section>
-              <h2 className="text-2xl font-bold text-white mb-6 border-l-4 border-violet-600 pl-4 flex justify-between items-end">
-                Elenco Principal
-                <span className="text-sm font-normal text-zinc-500">
+            <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
+              <div className="flex justify-between items-end mb-8">
+                <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                  <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
+                  Elenco Principal
+                </h2>
+                <span className="text-sm font-medium text-zinc-500 bg-zinc-900/50 px-3 py-1 rounded-full">
                   {media.credits.cast.length} membros
                 </span>
-              </h2>
-              <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-violet-600 scrollbar-track-zinc-900 px-2">
+              </div>
+              
+              <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                 {media.credits.cast.slice(0, 15).map((person) => (
                   <Link
                     to={`/app/person/${person.id}`}
                     key={person.id}
-                    className="min-w-[140px] w-[140px] group block"
+                    className="min-w-[130px] w-[130px] group block"
                   >
-                    <div className="aspect-[2/3] rounded-xl overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:scale-105 transition-transform duration-300 border border-white/5 relative">
+                    <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-zinc-800 mb-4 shadow-lg group-hover:-translate-y-2 transition-transform duration-300 border border-white/5">
                       {person.profile_path ? (
                         <img
                           src={`https://image.tmdb.org/t/p/w185${person.profile_path}`}
@@ -382,7 +379,7 @@ export default function MediaDetails() {
                     <p className="text-sm font-bold text-white truncate group-hover:text-violet-400 transition-colors">
                       {person.name}
                     </p>
-                    <p className="text-xs text-zinc-500 truncate">
+                    <p className="text-xs text-zinc-500 truncate mt-0.5">
                       {person.character}
                     </p>
                   </Link>
@@ -391,43 +388,55 @@ export default function MediaDetails() {
             </section>
           )}
 
+          <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
+            <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
+              Avaliações da Comunidade
+            </h2>
+            <ReviewsSection
+              reviews={reviews}
+              onPostReview={actions.handlePostReview}
+              onReply={actions.handlePostReply}
+              onDelete={actions.handleDeleteReview}
+              onDeleteComment={actions.handleDeleteComment}
+              onLike={actions.handleLikeReview}
+              onLoadReplies={actions.handleLoadReplies}
+              onEditReview={actions.handleEditReview}
+              onEditReply={actions.handleEditReply}
+              isEliteUser={isEliteUser}
+              followingList={followingList}
+            />
+          </section>
+
           {media.seasons && (
-            <SeasonInfo tvId={media.id} seasons={media.seasons} />
+            <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
+              <SeasonInfo tvId={media.id} seasons={media.seasons} />
+            </div>
           )}
 
           {media.images && (
-            <MediaImages
-              images={media.images}
-              title={media.title || media.name}
-            />
+            <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
+              <MediaImages
+                images={media.images}
+                title={media.title || media.name}
+              />
+            </div>
           )}
-
-          <ReviewsSection
-            reviews={reviews}
-            onPostReview={actions.handlePostReview}
-            onReply={actions.handlePostReply}
-            onDelete={actions.handleDeleteReview}
-            onDeleteComment={actions.handleDeleteComment}
-            onLike={actions.handleLikeReview}
-            onLoadReplies={actions.handleLoadReplies}
-            onEditReview={actions.handleEditReview}
-            onEditReply={actions.handleEditReply}
-            isEliteUser={isEliteUser}
-            followingList={followingList}
-          />
         </div>
 
-        <div className="space-y-8">
-          <div className="bg-zinc-900 p-6 rounded-3xl border border-white/5 space-y-6 sticky top-24">
-            <div className="flex justify-center gap-4 border-b border-white/5 pb-6">
+        <div className="lg:col-span-4 space-y-8">
+          
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 p-8 rounded-3xl sticky top-24 space-y-8">
+            
+            <div className="flex justify-center gap-4">
               {externalIds.instagram_id && (
                 <a
                   href={`https://instagram.com/${externalIds.instagram_id}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-3 bg-zinc-800 rounded-full hover:bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-500 hover:text-white transition-all"
+                  className="p-3.5 bg-white/5 rounded-2xl hover:bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-500 hover:text-white text-zinc-300 transition-all border border-white/5 hover:border-transparent"
                 >
-                  <Instagram size={24} />
+                  <Instagram size={22} />
                 </a>
               )}
               {externalIds.twitter_id && (
@@ -435,9 +444,9 @@ export default function MediaDetails() {
                   href={`https://twitter.com/${externalIds.twitter_id}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-3 bg-zinc-800 rounded-full hover:bg-black hover:text-white transition-all"
+                  className="p-3.5 bg-white/5 rounded-2xl hover:bg-black hover:text-white text-zinc-300 transition-all border border-white/5 hover:border-transparent"
                 >
-                  <Twitter size={24} />
+                  <Twitter size={22} />
                 </a>
               )}
               {externalIds.facebook_id && (
@@ -445,9 +454,9 @@ export default function MediaDetails() {
                   href={`https://facebook.com/${externalIds.facebook_id}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-3 bg-zinc-800 rounded-full hover:bg-blue-600 hover:text-white transition-all"
+                  className="p-3.5 bg-white/5 rounded-2xl hover:bg-blue-600 hover:text-white text-zinc-300 transition-all border border-white/5 hover:border-transparent"
                 >
-                  <Facebook size={24} />
+                  <Facebook size={22} />
                 </a>
               )}
               {media.homepage && (
@@ -455,16 +464,16 @@ export default function MediaDetails() {
                   href={media.homepage}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-3 bg-zinc-800 rounded-full hover:bg-violet-600 hover:text-white transition-all"
+                  className="p-3.5 bg-white/5 rounded-2xl hover:bg-violet-600 hover:text-white text-zinc-300 transition-all border border-white/5 hover:border-transparent"
                   title="Website Oficial"
                 >
-                  <Globe size={24} />
+                  <Globe size={22} />
                 </a>
               )}
             </div>
 
             <div>
-              <h3 className="font-bold text-white mb-4 text-lg border-l-4 border-violet-600 pl-3">
+              <h3 className="font-bold text-white text-sm uppercase tracking-widest text-zinc-400 mb-4">
                 Onde Assistir
               </h3>
               {providers.length > 0 ? (
@@ -477,71 +486,57 @@ export default function MediaDetails() {
                     >
                       <img
                         src={`https://image.tmdb.org/t/p/original${prov.logo_path}`}
-                        className="w-full rounded-xl shadow-md border border-white/5 transition-transform hover:scale-105"
+                        className="w-full rounded-2xl shadow-lg border border-white/10 transition-transform hover:scale-110"
                         alt={prov.provider_name}
                       />
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-zinc-500 text-center py-4 bg-zinc-950/50 rounded-xl">
-                  Indisponível em streamings no momento.
-                </p>
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
+                  <p className="text-sm text-zinc-400">Indisponível em streamings</p>
+                </div>
               )}
             </div>
 
             <div>
-              <h3 className="font-bold text-white mb-4 text-lg border-l-4 border-violet-600 pl-3">
+              <h3 className="font-bold text-white text-sm uppercase tracking-widest text-zinc-400 mb-4">
                 Ficha Técnica
               </h3>
               <div className="space-y-4">
-                <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                  <span className="text-zinc-500 text-sm font-medium">
-                    Título Original
-                  </span>
-                  <span className="text-white text-sm font-bold text-right w-1/2">
-                    {media.original_title || media.original_name}
-                  </span>
+                <div className="flex flex-col gap-1">
+                  <span className="text-zinc-500 text-xs font-semibold uppercase">Título Original</span>
+                  <span className="text-white text-sm font-medium">{media.original_title || media.original_name}</span>
                 </div>
-                <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                  <span className="text-zinc-500 text-sm font-medium">
-                    Status
-                  </span>
-                  <span
-                    className={`text-sm font-bold ${getStatusColor(media.status)}`}
-                  >
-                    {media.status}
-                  </span>
+                
+                <div className="flex flex-col gap-1">
+                  <span className="text-zinc-500 text-xs font-semibold uppercase">Status</span>
+                  <span className={`text-sm font-bold ${getStatusColor(media.status)}`}>{media.status}</span>
                 </div>
-                <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                  <span className="text-zinc-500 text-sm font-medium">
-                    Idioma Original
-                  </span>
-                  <span className="text-white text-sm font-bold uppercase">
-                    {media.original_language}
-                  </span>
+
+                <div className="flex flex-col gap-1">
+                  <span className="text-zinc-500 text-xs font-semibold uppercase">Idioma</span>
+                  <span className="text-white text-sm font-medium uppercase">{media.original_language}</span>
                 </div>
 
                 {(media.budget > 0 || media.revenue > 0) && (
-                  <div className="pt-2 space-y-3">
+                  <div className="grid grid-cols-2 gap-4 pt-2">
                     {media.budget > 0 && (
-                      <div className="bg-zinc-950/50 p-3 rounded-xl border border-white/5">
-                        <div className="flex items-center gap-2 text-zinc-400 text-xs font-bold uppercase mb-1">
+                      <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                        <div className="flex items-center gap-1.5 text-zinc-400 text-[10px] font-bold uppercase mb-1">
                           <Tag size={12} /> Orçamento
                         </div>
-                        <div className="text-white font-mono font-bold text-lg">
+                        <div className="text-white font-mono font-bold text-sm truncate">
                           ${media.budget.toLocaleString()}
                         </div>
                       </div>
                     )}
                     {media.revenue > 0 && (
-                      <div className="bg-zinc-950/50 p-3 rounded-xl border border-white/5">
-                        <div className="flex items-center gap-2 text-zinc-400 text-xs font-bold uppercase mb-1">
+                      <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                        <div className="flex items-center gap-1.5 text-zinc-400 text-[10px] font-bold uppercase mb-1">
                           <DollarSign size={12} /> Receita
                         </div>
-                        <div
-                          className={`font-mono font-bold text-lg ${media.revenue > media.budget ? "text-green-400" : "text-red-400"}`}
-                        >
+                        <div className={`font-mono font-bold text-sm truncate ${media.revenue > media.budget ? "text-green-400" : "text-red-400"}`}>
                           ${media.revenue.toLocaleString()}
                         </div>
                       </div>
@@ -550,25 +545,20 @@ export default function MediaDetails() {
                 )}
 
                 {media.type && (
-                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                    <span className="text-zinc-500 text-sm font-medium">
-                      Tipo
-                    </span>
-                    <span className="text-white text-sm font-bold">
-                      {media.type}
-                    </span>
+                  <div className="flex flex-col gap-1 pt-2">
+                    <span className="text-zinc-500 text-xs font-semibold uppercase">Tipo</span>
+                    <span className="text-white text-sm font-medium">{media.type}</span>
                   </div>
                 )}
+                
                 {media.networks && (
                   <div className="pt-2">
-                    <span className="text-zinc-500 text-xs font-bold uppercase block mb-2">
-                      Canal / Rede
-                    </span>
+                    <span className="text-zinc-500 text-xs font-semibold uppercase mb-3 block">Canal / Rede</span>
                     <div className="flex flex-wrap gap-2">
                       {media.networks.map((n) => (
                         <div
                           key={n.id}
-                          className="bg-white p-2 rounded h-8 flex items-center"
+                          className="bg-white p-2.5 rounded-xl h-10 flex items-center shadow-inner"
                         >
                           {n.logo_path ? (
                             <img
@@ -577,9 +567,7 @@ export default function MediaDetails() {
                               alt={n.name}
                             />
                           ) : (
-                            <span className="text-black font-bold text-xs">
-                              {n.name}
-                            </span>
+                            <span className="text-black font-bold text-xs">{n.name}</span>
                           )}
                         </div>
                       ))}
@@ -590,14 +578,14 @@ export default function MediaDetails() {
             </div>
 
             {media.production_companies?.length > 0 && (
-              <div>
-                <h3 className="font-bold text-white mb-4 text-lg border-l-4 border-violet-600 pl-3">
+              <div className="pt-4 border-t border-white/5">
+                <h3 className="font-bold text-white text-sm uppercase tracking-widest text-zinc-400 mb-4">
                   Produção
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {media.production_companies.slice(0, 4).map((c) => (
-                    <div key={c.id} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded bg-white flex items-center justify-center p-0.5 shrink-0">
+                    <div key={c.id} className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center p-1.5 shrink-0 shadow-inner">
                         {c.logo_path ? (
                           <img
                             src={`https://image.tmdb.org/t/p/w92${c.logo_path}`}
@@ -605,12 +593,10 @@ export default function MediaDetails() {
                             alt={c.name}
                           />
                         ) : (
-                          <Building size={14} className="text-black" />
+                          <Building size={16} className="text-black" />
                         )}
                       </div>
-                      <span className="text-sm text-zinc-300 font-medium">
-                        {c.name}
-                      </span>
+                      <span className="text-sm text-zinc-300 font-medium">{c.name}</span>
                     </div>
                   ))}
                 </div>
@@ -618,8 +604,8 @@ export default function MediaDetails() {
             )}
           </div>
 
-          <div className="bg-zinc-900 p-6 rounded-3xl border border-white/5">
-            <h3 className="font-bold text-white mb-6 text-lg border-b border-white/5 pb-2">
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 p-8 rounded-3xl">
+            <h3 className="font-bold text-white text-sm uppercase tracking-widest text-zinc-400 mb-6">
               Recomendações
             </h3>
             {similar.length > 0 ? (
@@ -629,11 +615,12 @@ export default function MediaDetails() {
                 ))}
               </div>
             ) : (
-              <p className="text-zinc-500 text-center text-sm">
-                Carregando sugestões...
-              </p>
+              <div className="p-6 bg-white/5 rounded-2xl border border-white/5 text-center">
+                <p className="text-sm text-zinc-400">Carregando sugestões...</p>
+              </div>
             )}
           </div>
+          
         </div>
       </div>
     </div>
