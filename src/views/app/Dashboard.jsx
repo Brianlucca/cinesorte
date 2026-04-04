@@ -48,83 +48,42 @@ export default function Dashboard() {
       </div>
     );
 
+  const sections = [
+    { id: 'recommendedMovies', title: "Escolhidos para Você", type: 'movie' },
+    { id: 'streaming', title: "Populares no Streaming", type: 'movie' },
+    { id: 'trendingDay', title: "Tendências de Hoje", type: 'movie' },
+    { id: 'recommendedSeries', title: "Séries que Você Pode Gostar", type: 'movie' },
+    { id: 'onTv', title: "Populares na TV", type: 'movie' },
+    { id: 'trailers', title: "Últimos Trailers", type: 'trailer' },
+    { id: 'series', title: "Séries Populares", type: 'movie' },
+    { id: 'animes', title: "Lançamentos de Animes", type: 'movie' },
+    { id: 'inTheaters', title: "Nos Cinemas", type: 'movie' },
+    { id: 'trendingWeek', title: "Top da Semana", type: 'movie' },
+    { id: 'movies', title: "Filmes Populares", type: 'movie' },
+  ];
+
   return (
-    <div className="-mt-24 md:-mt-8 pb-20 w-full max-w-full overflow-x-hidden bg-zinc-950">
+    <div className="-mt-24 md:-mt-8 pb-20 w-full max-w-full overflow-x-hidden bg-zinc-950 animate-in fade-in duration-700">
 
       <Hero items={heroItems} />
 
-      <div className="flex flex-col gap-4 relative z-20 -mt-8 md:-mt-24 px-4 md:px-0 bg-gradient-to-t from-zinc-950 via-zinc-950/90 to-transparent pt-16">
-        {data.recommendedMovies && data.recommendedMovies.length > 0 && (
-          <RowWrapper>
-            <MovieRow
-              title="Escolhidos para Você"
-              items={data.recommendedMovies}
-            />
-          </RowWrapper>
-        )}
+      <div className="flex flex-col gap-12 relative z-20 -mt-12 md:-mt-32 pt-20 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent">
+        {sections.map((section) => {
+          const items = data[section.id];
+          if (!items || items.length === 0) return null;
 
-        {data.streaming && data.streaming.length > 0 && (
-          <RowWrapper>
-            <MovieRow title="Populares no Streaming" items={data.streaming} />
-          </RowWrapper>
-        )}
-
-        {data.trendingDay && data.trendingDay.length > 0 && (
-          <RowWrapper>
-            <MovieRow title="Tendências de Hoje" items={data.trendingDay} />
-          </RowWrapper>
-        )}
-
-        {data.recommendedSeries && data.recommendedSeries.length > 0 && (
-          <RowWrapper>
-            <MovieRow
-              title="Séries que Você Pode Gostar"
-              items={data.recommendedSeries}
-            />
-          </RowWrapper>
-        )}
-
-        {data.onTv && data.onTv.length > 0 && (
-          <RowWrapper>
-            <MovieRow title="Populares na TV" items={data.onTv} />
-          </RowWrapper>
-        )}
-
-        {data.trailers && data.trailers.length > 0 && (
-          <RowWrapper>
-            <TrailerRow title="Últimos Trailers" items={data.trailers} />
-          </RowWrapper>
-        )}
-
-        {data.series && data.series.length > 0 && (
-          <RowWrapper>
-            <MovieRow title="Séries Populares" items={data.series} />
-          </RowWrapper>
-        )}
-
-        {data.animes && data.animes.length > 0 && (
-          <RowWrapper>
-            <MovieRow title="Lançamentos de Animes" items={data.animes} />
-          </RowWrapper>
-        )}
-
-        {data.inTheaters && data.inTheaters.length > 0 && (
-          <RowWrapper>
-            <MovieRow title="Nos Cinemas" items={data.inTheaters} />
-          </RowWrapper>
-        )}
-
-        {data.trendingWeek && data.trendingWeek.length > 0 && (
-          <RowWrapper>
-            <MovieRow title="Top da Semana" items={data.trendingWeek} />
-          </RowWrapper>
-        )}
-
-        {data.movies && data.movies.length > 0 && (
-          <RowWrapper>
-            <MovieRow title="Filmes Populares" items={data.movies} />
-          </RowWrapper>
-        )}
+          return (
+            <RowWrapper key={section.id}>
+              <div className="max-w-[1600px] mx-auto">
+                {section.type === 'trailer' ? (
+                  <TrailerRow title={section.title} items={items} />
+                ) : (
+                  <MovieRow title={section.title} items={items} />
+                )}
+              </div>
+            </RowWrapper>
+          );
+        })}
       </div>
     </div>
   );

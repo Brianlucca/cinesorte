@@ -48,22 +48,39 @@ export function useRouletteLogic() {
     setWinner(null);
 
     try {
-      let pool = [];
+      let validItems = [];
 
       if (source === 'global') {
         const type = Math.random() > 0.5 ? 'movie' : 'tv';
-        const randomPage = Math.floor(Math.random() * 10) + 1;
-        const res = await api.get('/tmdb/discover', {
-          params: { 
-            page: randomPage, 
-            media_type: type, 
-            language: 'pt-BR', 
-            with_genres: selectedGenre,
-            "vote_average.gte": 6 
+        const maxPage = selectedGenre ? 4 : 20;
+        
+        const pagesToFetch = [
+          Math.floor(Math.random() * maxPage) + 1,
+          Math.floor(Math.random() * maxPage) + 1,
+          Math.floor(Math.random() * maxPage) + 1
+        ];
+
+        const requests = pagesToFetch.map(p => {
+          const params = { page: p, media_type: type, language: 'pt-BR', "vote_average.gte": 6 };
+          if (selectedGenre) params.with_genres = selectedGenre;
+          return api.get('/tmdb/discover', { params });
+        });
+
+        const responses = await Promise.allSettled(requests);
+        let combinedResults = [];
+        
+        responses.forEach(res => {
+          if (res.status === 'fulfilled') {
+            const data = Array.isArray(res.value) ? res.value : (res.value?.results || []);
+            combinedResults = [...combinedResults, ...data];
           }
         });
-        pool = Array.isArray(res) ? res : (res.results || []);
+
+        validItems = combinedResults.filter(item => item && item.poster_path && (item.title || item.name));
+        validItems = Array.from(new Map(validItems.map(item => [item.id, item])).values());
+
       } else {
+        let pool = [];
         if (selectedListId === 'all') {
           pool = userLists.flatMap(list => list.items || []);
         } else {
@@ -74,16 +91,17 @@ export function useRouletteLogic() {
         if (selectedGenre) {
           pool = pool.filter(item => {
             const itemGenres = item.genre_ids || item.genres?.map(g => g.id) || [];
-            return itemGenres.includes(selectedGenre);
+            return itemGenres.includes(Number(selectedGenre));
           });
         }
+        validItems = pool.filter(item => item && item.poster_path && (item.title || item.name));
       }
-
-      const validItems = pool.filter(item => item && item.poster_path && (item.title || item.name));
 
       if (validItems.length === 0) {
-        throw new Error('Nenhum título encontrado. Tente mudar os filtros.');
+        throw new Error('Nenhum título encontrado com estes filtros.');
       }
+
+      validItems = validItems.sort(() => Math.random() - 0.5);
 
       let currentIndex = 0;
       timerRef.current = setInterval(() => {
@@ -92,14 +110,17 @@ export function useRouletteLogic() {
       }, 100);
 
       await new Promise(resolve => setTimeout(resolve, 2500));
+
       clearInterval(timerRef.current);
 
       const finalWinner = validItems[Math.floor(Math.random() * validItems.length)];
       setPreviewMedia(finalWinner);
       setWinner(finalWinner);
+      
       setTimeout(() => setIsModalOpen(true), 400);
 
     } catch (error) {
+      clearInterval(timerRef.current);
       toast.error('Roleta', error.message);
     } finally {
       setLoading(false);

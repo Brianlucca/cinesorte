@@ -17,6 +17,7 @@ import TrailerModal from '../../components/media/TrailerModal';
 export default function EpisodeDetails() {
   const {
     episode,
+    tvShow,
     reviews,
     followingList,
     loading,
@@ -51,7 +52,7 @@ export default function EpisodeDetails() {
   )?.key;
 
   return (
-    <div className="-mt-24 md:-mt-8 pb-20 w-full overflow-x-hidden animate-in fade-in duration-700">
+    <div className="-mt-24 md:-mt-8 pb-20 w-full overflow-x-hidden bg-zinc-950 animate-in fade-in duration-700">
       {trailerKey &&
         trailerOpen &&
         createPortal(
@@ -76,87 +77,100 @@ export default function EpisodeDetails() {
           ) : (
             <div className="w-full h-full bg-zinc-900" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/60 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/90 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/10 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
         </div>
 
         <button
           onClick={() => navigate(-1)}
-          className="absolute top-28 left-6 z-50 p-2 bg-black/40 backdrop-blur-md border border-white/10 rounded-full text-white hover:bg-violet-600 transition-colors"
+          className="absolute top-28 left-6 md:left-12 z-50 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl text-white hover:bg-white/10 transition-all shadow-lg"
         >
           <ChevronLeft size={24} />
         </button>
 
-        <div className="absolute bottom-0 top-0 left-0 w-full flex flex-col justify-end px-6 md:px-12 pb-16 max-w-5xl z-20">
-          <div className="flex gap-3 mb-4">
-            <span className="bg-violet-600 px-3 py-1 rounded-md text-xs font-bold text-white uppercase tracking-wider">
+        <div className="absolute bottom-0 top-0 left-0 w-full flex flex-col justify-end px-6 md:px-12 pb-16 max-w-6xl z-20">
+          <div className="flex flex-wrap gap-3 mb-5 animate-in slide-in-from-bottom-2 fade-in duration-1000">
+            {tvShow && (
+              <Link 
+                to={`/app/tv/${tvId}`}
+                className="bg-white/10 hover:bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-md text-xs font-bold text-white uppercase tracking-wider border border-white/10 transition-colors shadow-lg"
+              >
+                {tvShow.name}
+              </Link>
+            )}
+            <span className="bg-violet-600 px-4 py-1.5 rounded-md text-xs font-bold text-white uppercase tracking-wider shadow-lg">
               Temporada {seasonNumber}
             </span>
-            <span className="bg-white/10 backdrop-blur-md px-3 py-1 rounded-md text-xs font-bold text-white uppercase tracking-wider border border-white/10">
+            <span className="bg-white/5 backdrop-blur-md px-4 py-1.5 rounded-md text-xs font-bold text-white uppercase tracking-wider border border-white/10 shadow-lg">
               Episódio {episode.episode_number}
             </span>
           </div>
 
-          <h1 className="text-3xl md:text-5xl font-black text-white mb-4 leading-tight drop-shadow-2xl">
+          <h1 className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight drop-shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-1000">
             {episode.name}
           </h1>
 
-          <div className="flex flex-wrap items-center gap-6 text-sm md:text-base font-medium text-zinc-200 mb-8">
-            <span className="flex items-center gap-2 text-yellow-400 font-bold">
-              <Star size={18} fill="currentColor" /> {episode.vote_average?.toFixed(1)}
+          <div className="flex flex-wrap items-center gap-6 text-sm md:text-base font-medium text-zinc-200 mb-8 animate-in slide-in-from-bottom-6 fade-in duration-1000">
+            <span className="flex items-center gap-2 bg-yellow-500/10 text-yellow-500 px-3 py-1 rounded-md border border-yellow-500/20 font-bold">
+              <Star size={18} fill="currentColor" /> {episode.vote_average?.toFixed(1) || '0.0'}
             </span>
-            <div className="h-4 w-px bg-white/20" />
+            <div className="h-5 w-px bg-white/20" />
             <span className="flex items-center gap-2">
-              <Calendar size={18} />{' '}
+              <Calendar size={18} className="text-zinc-400" />{' '}
               {episode.air_date
                 ? new Date(episode.air_date).toLocaleDateString()
-                : '—'}
+                : 'TBA'}
             </span>
             {episode.runtime && (
               <>
-                <div className="h-4 w-px bg-white/20" />
+                <div className="h-5 w-px bg-white/20" />
                 <span className="flex items-center gap-2">
-                  <Clock size={18} /> {episode.runtime} min
+                  <Clock size={18} className="text-zinc-400" /> {episode.runtime} min
                 </span>
               </>
             )}
           </div>
 
-          {trailerKey && (
-            <button
-              onClick={() => setTrailerOpen(true)}
-              className="flex items-center gap-3 px-8 py-3 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all hover:scale-105 shadow-lg w-max"
-            >
-              <Play size={20} fill="currentColor" /> Assistir Trailer
-            </button>
-          )}
+          <div className="animate-in slide-in-from-bottom-8 fade-in duration-1000">
+            {trailerKey && (
+              <button
+                onClick={() => setTrailerOpen(true)}
+                className="flex items-center gap-3 px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.3)] w-max"
+              >
+                <Play size={20} fill="currentColor" /> Assistir Trailer
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 max-w-[1600px] mx-auto px-6 md:px-12 relative z-20">
-        <div className="lg:col-span-2 space-y-12">
-          <section>
-            <h2 className="text-2xl font-bold text-white mb-4 border-l-4 border-violet-600 pl-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-[1600px] mx-auto px-6 md:px-12 relative z-20">
+        
+        <div className="lg:col-span-8 space-y-8">
+          <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
               Sinopse
             </h2>
-            <p className="text-zinc-300 leading-relaxed text-lg text-justify bg-zinc-900/50 p-6 rounded-2xl border border-white/5 shadow-inner">
-              {episode.overview || 'Nenhuma descrição disponível.'}
+            <p className="text-zinc-300 leading-relaxed text-lg text-justify font-light">
+              {episode.overview || 'Nenhuma descrição disponível para este episódio.'}
             </p>
           </section>
 
           {episode.guest_stars?.length > 0 && (
-            <section>
-              <h2 className="text-2xl font-bold text-white mb-6 border-l-4 border-violet-600 pl-4">
+            <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
+              <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
+                <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
                 Atores Convidados
               </h2>
-              <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-violet-600 scrollbar-track-zinc-900 px-2">
+              <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                 {episode.guest_stars.map((person) => (
                   <Link
                     to={`/app/person/${person.id}`}
                     key={person.id}
-                    className="min-w-[120px] w-[120px] group block"
+                    className="min-w-[130px] w-[130px] group block"
                   >
-                    <div className="aspect-[2/3] rounded-xl overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:scale-105 transition-transform duration-300 border border-white/5">
+                    <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-zinc-800 mb-4 shadow-lg group-hover:-translate-y-2 transition-transform duration-300 border border-white/5">
                       {person.profile_path ? (
                         <img
                           src={`https://image.tmdb.org/t/p/w185${person.profile_path}`}
@@ -172,7 +186,7 @@ export default function EpisodeDetails() {
                     <p className="text-sm font-bold text-white truncate group-hover:text-violet-400 transition-colors">
                       {person.name}
                     </p>
-                    <p className="text-xs text-zinc-500 truncate">{person.character}</p>
+                    <p className="text-xs text-zinc-500 truncate mt-0.5">{person.character}</p>
                   </Link>
                 ))}
               </div>
@@ -180,81 +194,101 @@ export default function EpisodeDetails() {
           )}
 
           {episode.images?.stills?.length > 0 && (
-            <section>
-              <h2 className="text-2xl font-bold text-white mb-6 border-l-4 border-violet-600 pl-4 flex items-center gap-2">
-                <ImageIcon size={24} /> Galeria
+            <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
+              <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
+                <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
+                Galeria
               </h2>
-              <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-violet-600 scrollbar-track-zinc-900 px-2">
+              <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                 {episode.images.stills.slice(0, 8).map((img, idx) => (
                   <div
                     key={idx}
-                    className="min-w-[300px] aspect-video rounded-xl overflow-hidden border border-white/10"
+                    className="min-w-[300px] aspect-video rounded-2xl overflow-hidden border border-white/5 shadow-lg relative group"
                   >
                     <img
                       src={`https://image.tmdb.org/t/p/w500${img.file_path}`}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       alt=""
                     />
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                      <ImageIcon size={32} className="text-white/70" />
+                    </div>
                   </div>
                 ))}
               </div>
             </section>
           )}
 
-          <ReviewsSection
-            reviews={reviews}
-            onPostReview={actions.handlePostReview}
-            onReply={actions.handlePostReply}
-            onLike={actions.handleLikeReview}
-            onDelete={actions.handleDeleteReview}
-            onDeleteComment={actions.handleDeleteComment}
-            onEditReview={actions.handleEditReview}
-            onEditReply={actions.handleEditReply}
-            onLoadReplies={actions.handleLoadReplies}
-            followingList={followingList}
-          />
+          <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
+            <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
+              Avaliações do Episódio
+            </h2>
+            <ReviewsSection
+              reviews={reviews}
+              onPostReview={actions.handlePostReview}
+              onReply={actions.handlePostReply}
+              onLike={actions.handleLikeReview}
+              onDelete={actions.handleDeleteReview}
+              onDeleteComment={actions.handleDeleteComment}
+              onEditReview={actions.handleEditReview}
+              onEditReply={actions.handleEditReply}
+              onLoadReplies={actions.handleLoadReplies}
+              followingList={followingList}
+            />
+          </section>
         </div>
 
-        <div className="space-y-8">
-          <div className="bg-zinc-900 p-6 rounded-3xl border border-white/5 space-y-4 sticky top-24">
-            <h3 className="font-bold text-white mb-4 text-lg border-b border-white/5 pb-2">
-              Ficha Técnica
-            </h3>
-            <div className="flex justify-between items-center border-b border-white/5 pb-3">
-              <span className="text-zinc-500 text-sm">Temporada</span>
-              <span className="text-white font-medium text-sm">{seasonNumber}</span>
-            </div>
-            <div className="flex justify-between items-center border-b border-white/5 pb-3">
-              <span className="text-zinc-500 text-sm">Episódio</span>
-              <span className="text-white font-medium text-sm">{episode.episode_number}</span>
+        <div className="lg:col-span-4 space-y-8">
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 p-8 rounded-3xl sticky top-24 self-start space-y-8">
+            <div>
+              <h3 className="font-bold text-white text-sm uppercase tracking-widest text-zinc-400 mb-6">
+                Ficha Técnica
+              </h3>
+              
+              <div className="space-y-4">
+                <div className="flex flex-col gap-1 border-b border-white/5 pb-4">
+                  <span className="text-zinc-500 text-xs font-semibold uppercase tracking-widest">Temporada</span>
+                  <span className="text-white text-sm font-medium">{seasonNumber}</span>
+                </div>
+                <div className="flex flex-col gap-1 border-b border-white/5 pb-4">
+                  <span className="text-zinc-500 text-xs font-semibold uppercase tracking-widest">Episódio</span>
+                  <span className="text-white text-sm font-medium">{episode.episode_number}</span>
+                </div>
+              </div>
             </div>
 
             {episode.crew && (
-              <div className="pt-4 space-y-4">
-                {episode.crew
-                  .filter((c) => c.job === 'Director' || c.job === 'Writer')
-                  .slice(0, 4)
-                  .map((c) => (
-                    <div key={`${c.id}-${c.job}`} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-zinc-800 overflow-hidden shrink-0">
-                        {c.profile_path ? (
-                          <img
-                            src={`https://image.tmdb.org/t/p/w185${c.profile_path}`}
-                            className="w-full h-full object-cover"
-                            alt={c.name}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-zinc-500">
-                            <User size={12} />
-                          </div>
-                        )}
+              <div className="pt-2">
+                <h3 className="font-bold text-white text-sm uppercase tracking-widest text-zinc-400 mb-6">
+                  Equipe Principal
+                </h3>
+                <div className="space-y-5">
+                  {episode.crew
+                    .filter((c) => c.job === 'Director' || c.job === 'Writer')
+                    .slice(0, 5)
+                    .map((c) => (
+                      <div key={`${c.id}-${c.job}`} className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden shrink-0 border border-white/10">
+                          {c.profile_path ? (
+                            <img
+                              src={`https://image.tmdb.org/t/p/w185${c.profile_path}`}
+                              className="w-full h-full object-cover"
+                              alt={c.name}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-zinc-500">
+                              <User size={16} />
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white">{c.name}</p>
+                          <p className="text-xs text-zinc-500 font-medium">{c.job}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-white">{c.name}</p>
-                        <p className="text-xs text-zinc-500">{c.job}</p>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                </div>
               </div>
             )}
           </div>

@@ -47,7 +47,6 @@ const UserSearch = () => {
   const handleSelectUser = (targetUsername) => {
     setQuery('');
     setResults([]);
-    
     if (user && user.username === targetUsername) {
       navigate('/app/profile');
     } else {
@@ -55,100 +54,55 @@ const UserSearch = () => {
     }
   };
 
-  const clearSearch = () => {
-    setQuery('');
-    setResults([]);
-  };
-
   return (
-    <div className="relative w-full max-w-md" ref={searchRef}>
-      <div className={`relative group transition-all duration-300 ease-out ${isFocused ? 'scale-[1.02]' : 'scale-100'}`}>
-        <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-300 pointer-events-none ${isFocused ? 'text-violet-500' : 'text-zinc-500'}`}>
-          {loading ? (
-            <Loader2 className="animate-spin" size={20} />
-          ) : (
-            <Search size={20} />
-          )}
+    <div className="relative w-full" ref={searchRef}>
+      <div className={`relative group transition-all duration-500 ${isFocused ? 'scale-[1.01]' : 'scale-100'}`}>
+        <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 pointer-events-none z-10 ${isFocused ? 'text-violet-400' : 'text-zinc-500'}`}>
+          {loading ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
         </div>
         
         <input
           type="text"
-          placeholder="Encontrar usuários..."
+          placeholder="Buscar exploradores..."
           value={query}
           onFocus={() => setIsFocused(true)}
-          onBlur={() => {
-              setTimeout(() => {
-                 if (!query) setIsFocused(false);
-              }, 200);
-          }}
           onChange={(e) => setQuery(e.target.value)}
           className={`
-            w-full bg-zinc-900 text-white pl-12 pr-10 py-3.5 rounded-2xl 
-            border transition-all duration-300 ease-out placeholder:text-zinc-600 outline-none
-            ${isFocused 
-                ? 'border-violet-500/50 shadow-[0_0_20px_rgba(139,92,246,0.15)] ring-1 ring-violet-500/20' 
-                : 'border-white/5 hover:border-white/10 hover:bg-zinc-800/50 shadow-lg'
-            }
+            w-full bg-white/[0.03] text-white pl-12 pr-12 py-4 rounded-2xl 
+            border transition-all duration-300 placeholder:text-zinc-600 outline-none text-sm
+            ${isFocused ? 'border-violet-500/40 bg-white/[0.05] shadow-[0_0_20px_rgba(139,92,246,0.1)]' : 'border-white/5 shadow-lg'}
           `}
         />
 
         {query && (
-          <button 
-            onClick={clearSearch}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-zinc-500 hover:text-white hover:bg-white/10 transition-colors duration-200"
-          >
-            <X size={16} />
+          <button onClick={() => { setQuery(''); setResults([]); }} className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-xl text-zinc-500 hover:text-white bg-white/5 transition-all">
+            <X size={14} />
           </button>
         )}
       </div>
       
       {query.trim().length >= 3 && (
-        <div className="absolute top-full left-0 right-0 mt-3 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-4 duration-300 ease-out origin-top">
-          <div className="px-4 py-3 bg-zinc-950/30 border-b border-white/5">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Resultados</span>
+        <div className="absolute top-full left-0 right-0 mt-4 bg-zinc-950/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.7)] overflow-hidden z-[9999] animate-in fade-in slide-in-from-top-4 duration-300 ease-out origin-top">
+          <div className="px-6 py-4 bg-white/[0.02] border-b border-white/5 flex items-center gap-3">
+            <span className="w-1.5 h-4 bg-violet-500 rounded-full"></span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Resultados</span>
           </div>
           
-          <ul className="max-h-[320px] overflow-y-auto custom-scrollbar p-2">
+          <ul className="max-h-[380px] overflow-y-auto p-2 scrollbar-hide">
             {results.length > 0 ? (
               results.map((resultUser) => (
-                <li 
-                  key={resultUser.uid} 
-                  onClick={() => handleSelectUser(resultUser.username)}
-                  className="flex items-center gap-3 p-3 cursor-pointer hover:bg-white/5 rounded-xl transition-colors duration-200 group"
-                >
-                  <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-sm font-bold text-white uppercase overflow-hidden border border-white/5 group-hover:border-violet-500/30 transition-colors duration-300 shrink-0 shadow-lg">
-                    {resultUser.photoURL ? (
-                      <img src={resultUser.photoURL} alt={resultUser.username} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="group-hover:text-violet-400 transition-colors duration-300">
-                        {resultUser.username?.charAt(0)}
-                      </span>
-                    )}
+                <li key={resultUser.uid} onClick={() => handleSelectUser(resultUser.username)} className="flex items-center gap-4 p-3.5 cursor-pointer hover:bg-white/[0.05] rounded-2xl transition-all group">
+                  <div className="w-11 h-11 rounded-xl bg-zinc-800 flex items-center justify-center overflow-hidden border border-white/5 shrink-0">
+                    {resultUser.photoURL ? <img src={resultUser.photoURL} className="w-full h-full object-cover" alt="" /> : <span className="text-xs font-black text-zinc-500">{resultUser.username?.charAt(0).toUpperCase()}</span>}
                   </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="font-bold text-white text-sm truncate group-hover:text-violet-400 transition-colors duration-200">
-                      @{resultUser.username}
-                    </span>
-                    <span className="text-zinc-500 text-xs truncate font-medium">
-                      {resultUser.name}
-                    </span>
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="font-bold text-zinc-100 text-sm truncate group-hover:text-violet-400 transition-colors">@{resultUser.username}</span>
+                    <span className="text-zinc-500 text-[10px] truncate font-bold uppercase tracking-wider mt-0.5">{resultUser.name}</span>
                   </div>
-                  {user && user.username === resultUser.username && (
-                    <span className="ml-auto text-[10px] font-bold bg-violet-500/10 text-violet-400 px-2 py-1 rounded-md border border-violet-500/20">
-                      VOCÊ
-                    </span>
-                  )}
                 </li>
               ))
             ) : (
-              !loading && (
-                <li className="py-8 text-center flex flex-col items-center gap-3 animate-in fade-in zoom-in duration-300">
-                  <div className="w-12 h-12 rounded-full bg-zinc-800/50 flex items-center justify-center text-zinc-600">
-                    <Search size={24} />
-                  </div>
-                  <p className="text-zinc-500 text-sm font-medium">Nenhum usuário encontrado.</p>
-                </li>
-              )
+              !loading && <li className="py-10 text-center text-zinc-600 text-xs font-bold uppercase tracking-widest">Nenhum resultado</li>
             )}
           </ul>
         </div>

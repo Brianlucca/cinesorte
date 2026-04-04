@@ -159,18 +159,18 @@ export default function ReviewItem({
                 </div>
               )}
             </div>
-            {isOwner && (
-              <div className="flex gap-2">
+            {isOwner && !isEditing && (
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className="text-zinc-400 hover:text-white transition-colors"
+                  onClick={() => setIsEditing(true)}
+                  className="text-zinc-500 hover:text-blue-400 bg-white/5 hover:bg-blue-500/10 transition-colors p-2 rounded-xl shadow-sm"
                   title="Editar"
                 >
                   <Edit2 size={16} />
                 </button>
                 <button
                   onClick={() => onDelete(review.id)}
-                  className="text-zinc-400 hover:text-red-500 transition-colors"
+                  className="text-zinc-500 hover:text-red-400 bg-white/5 hover:bg-red-500/10 transition-colors p-2 rounded-xl shadow-sm"
                   title="Excluir"
                 >
                   <Trash2 size={16} />
@@ -312,8 +312,8 @@ export default function ReviewItem({
                         {reply.userPhoto ? (
                           <img src={reply.userPhoto} className="w-full h-full object-cover" alt="" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[10px] text-zinc-500">
-                            {reply.username.charAt(0).toUpperCase()}
+                          <div className="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 font-bold uppercase">
+                            {reply.username.charAt(0)}
                           </div>
                         )}
                       </div>
@@ -335,24 +335,24 @@ export default function ReviewItem({
                               <span className="text-[10px] text-zinc-600 italic">(editado)</span>
                             )}
                           </div>
-                          {reply.isOwner && (
-                            <div className="flex gap-2">
+                          {reply.isOwner && editingReplyId !== reply.id && (
+                            <div className="flex items-center gap-2 ml-4">
                               <button
                                 onClick={() => {
                                   setEditingReplyId(reply.id);
                                   setEditReplyText(reply.text);
                                 }}
-                                className="text-zinc-400 hover:text-white transition-colors"
+                                className="text-zinc-500 hover:text-blue-400 bg-white/5 hover:bg-blue-500/10 transition-colors p-1.5 rounded-lg shadow-sm"
                                 title="Editar"
                               >
-                                <Edit2 size={12} />
+                                <Edit2 size={14} />
                               </button>
                               <button
                                 onClick={() => onDeleteComment(reply.id)}
-                                className="text-zinc-400 hover:text-red-500 transition-colors"
+                                className="text-zinc-500 hover:text-red-400 bg-white/5 hover:bg-red-500/10 transition-colors p-1.5 rounded-lg shadow-sm"
                                 title="Excluir"
                               >
-                                <Trash2 size={12} />
+                                <Trash2 size={14} />
                               </button>
                             </div>
                           )}

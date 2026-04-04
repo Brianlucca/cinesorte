@@ -26,64 +26,73 @@ const PersonDetails = () => {
   if (!details) return null;
 
   return (
-    <div className="-mt-24 md:-mt-8 pb-20 w-full overflow-x-hidden animate-in fade-in duration-700 bg-zinc-950 min-h-screen">
+    <div className="-mt-24 md:-mt-8 pb-20 w-full animate-in fade-in duration-700 bg-zinc-950 min-h-screen">
       
       <PersonHeader details={details} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-12 max-w-[1600px] mx-auto px-6 md:px-12 relative z-20 -mt-10 md:mt-0">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 max-w-[1600px] mx-auto px-6 md:px-12 relative z-20 -mt-10 md:mt-8 items-start">
         
-        <div className="hidden lg:block">
-           <PersonInfo details={details} />
+        <div className="hidden lg:block lg:col-span-5 xl:col-span-4">
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl">
+            <PersonInfo details={details} />
+          </div>
         </div>
 
-        <div className="w-full">
+        <div className="lg:col-span-7 xl:col-span-8 flex flex-col min-h-[500px]">
             
-            <div className="flex gap-8 border-b border-white/10 mb-10 sticky top-20 bg-zinc-950/90 backdrop-blur-xl z-30 pt-4 px-2">
-                <button 
-                    onClick={() => setActiveTab('overview')}
-                    className={`pb-4 text-sm font-bold uppercase tracking-wider flex items-center gap-2 transition-all relative ${activeTab === 'overview' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-                >
-                    <LayoutList size={18} /> Visão Geral
-                    {activeTab === 'overview' && (
-                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]"></span>
-                    )}
-                </button>
-                <button 
-                    onClick={() => setActiveTab('reviews')}
-                    className={`pb-4 text-sm font-bold uppercase tracking-wider flex items-center gap-2 transition-all relative ${activeTab === 'reviews' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-                >
-                    <MessageSquare size={18} /> Comentários
-                    <span className="bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-full text-xs border border-white/5">{reviews.length}</span>
-                    {activeTab === 'reviews' && (
-                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]"></span>
-                    )}
-                </button>
-            </div>
-
-            <div className="lg:hidden mb-8">
+            <div className="lg:hidden mb-8 bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-6 md:p-8 shadow-2xl">
                 <PersonInfo details={details} />
             </div>
 
-            <div className="min-h-[500px]">
+            <div className="top-20 lg:top-24 z-30 pt-4 pb-6 bg-zinc-950/80 backdrop-blur-xl -mx-6 px-6 md:mx-0 md:px-0 mb-4 border-b border-white/5 md:border-none">
+                <div className="flex items-center p-1.5 bg-white/[0.02] border border-white/10 rounded-2xl w-max shadow-lg">
+                    <button 
+                        onClick={() => setActiveTab('overview')}
+                        className={`flex items-center gap-2.5 px-6 py-3 rounded-xl text-xs md:text-sm font-bold uppercase tracking-wider transition-all duration-300 ${activeTab === 'overview' ? 'bg-violet-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)]' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                        <LayoutList size={18} /> Visão Geral
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('reviews')}
+                        className={`flex items-center gap-2.5 px-6 py-3 rounded-xl text-xs md:text-sm font-bold uppercase tracking-wider transition-all duration-300 ${activeTab === 'reviews' ? 'bg-violet-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)]' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                        <MessageSquare size={18} /> Comentários
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] md:text-xs font-black transition-colors ${activeTab === 'reviews' ? 'bg-white/20 text-white' : 'bg-zinc-800 text-zinc-400'}`}>
+                            {reviews.length}
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <div className="flex-1 w-full relative">
                 {activeTab === 'overview' && (
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-2">
-                        <PersonBio biography={details.biography} />
+                    <div className="animate-in fade-in slide-in-from-bottom-8 duration-500 space-y-8 pb-10">
+                        <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10 shadow-lg">
+                            <PersonBio biography={details.biography} />
+                        </div>
                         
                         {details.images && (
-                            <PersonImages images={details.images} name={details.name} />
+                            <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10 shadow-lg">
+                                <PersonImages images={details.images} name={details.name} />
+                            </div>
                         )}
 
-                        <PersonFilmography credits={details.combined_credits} />
+                        <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10 shadow-lg">
+                            <PersonFilmography credits={details.combined_credits} />
+                        </div>
                     </div>
                 )}
 
                 {activeTab === 'reviews' && (
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="animate-in fade-in slide-in-from-bottom-8 duration-500 bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10 shadow-lg">
                         <PersonReviewsSection 
                             reviews={reviews}
                             onPostReview={actions.handlePostReview}
+                            onEditReview={actions.handleEditReview}
                             onReply={actions.handlePostReply}
+                            onEditReply={actions.handleEditReply}
                             onDelete={actions.handleDeleteReview}
+                            onDeleteComment={actions.handleDeleteComment}
                         />
                     </div>
                 )}

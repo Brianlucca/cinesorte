@@ -17,73 +17,78 @@ export default function CreatePostModal({ isOpen, onClose, form, actions }) {
 
   return (
     <div className={`fixed inset-0 z-[9999] flex items-end sm:items-center justify-center transition-all duration-300 ${animateShow ? 'opacity-100' : 'opacity-0'}`}>
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={onClose} />
 
-      <div className={`relative w-full sm:max-w-lg bg-zinc-950 sm:rounded-2xl rounded-t-3xl border border-zinc-800 overflow-hidden flex flex-col transition-all duration-500 ease-out transform ${animateShow ? 'translate-y-0' : 'translate-y-8'}`}
+      <div className={`relative w-full sm:max-w-xl bg-zinc-950/90 backdrop-blur-2xl sm:rounded-[2.5rem] rounded-t-[2.5rem] border border-white/10 overflow-hidden flex flex-col transition-all duration-500 ease-out transform ${animateShow ? 'translate-y-0' : 'translate-y-12'} shadow-[0_0_50px_rgba(0,0,0,0.5)]`}
         style={{ maxHeight: '92vh' }}>
 
         {form.step === 1 && (
-          <div className="flex flex-col h-full" style={{ maxHeight: '92vh' }}>
-            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-zinc-800/80 shrink-0">
+          <div className="flex flex-col h-full">
+            <div className="flex items-center justify-between px-8 pt-8 pb-6 shrink-0">
               <div>
-                <h2 className="text-lg font-black text-white tracking-tight">Nova Avaliação</h2>
-                <p className="text-xs text-zinc-500 mt-0.5">Busque um filme ou série</p>
+                <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">
+                  <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
+                  Nova Avaliação
+                </h2>
+                <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1 ml-4.5">O que você assistiu?</p>
               </div>
-              <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-xl transition-all">
-                <X size={18} />
+              <button onClick={onClose} className="p-3 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/5">
+                <X size={20} />
               </button>
             </div>
 
-            <div className="px-4 py-3 shrink-0">
-              <div className="relative">
-                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <div className="px-8 pb-4 shrink-0">
+              <div className="relative group">
+                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-violet-400 transition-colors" />
                 <input
                   type="text"
                   autoFocus
-                  placeholder="Digite o título..."
-                  className="w-full bg-zinc-900 border border-zinc-800 focus:border-violet-500 text-white text-sm rounded-xl pl-10 pr-4 py-3 focus:outline-none transition-colors placeholder:text-zinc-600"
+                  placeholder="Pesquisar filme ou série..."
+                  className="w-full bg-white/5 border border-white/10 focus:border-violet-500/50 text-white text-base rounded-2xl pl-12 pr-4 py-4 focus:outline-none transition-all placeholder:text-zinc-600 shadow-inner"
                   value={form.query}
                   onChange={(e) => actions.setSearchQuery(e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 pb-4" style={{ minHeight: 0 }}>
+            <div className="flex-1 overflow-y-auto px-6 pb-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
               {form.results.length > 0 ? (
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {form.results.map((item) => (
                     <button
                       key={item.id}
                       onClick={() => actions.handleSelectMedia(item)}
-                      className="flex items-center gap-3 p-3 w-full rounded-xl hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all group text-left"
+                      className="flex items-center gap-4 p-3 w-full rounded-2xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group text-left"
                     >
-                      <div className="w-10 h-14 bg-zinc-800 rounded-lg overflow-hidden shrink-0">
+                      <div className="w-12 h-16 bg-zinc-800 rounded-xl overflow-hidden shrink-0 shadow-lg border border-white/5">
                         {item.poster_path ? (
                           <img src={`https://image.tmdb.org/t/p/w154${item.poster_path}`} className="w-full h-full object-cover" alt="" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-zinc-600"><Film size={16} /></div>
+                          <div className="w-full h-full flex items-center justify-center text-zinc-600"><Film size={20} /></div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-white text-sm truncate group-hover:text-violet-400 transition-colors">{item.title || item.name}</h4>
-                        <div className="flex items-center gap-2 text-[11px] text-zinc-600 mt-0.5">
-                          <span className="uppercase font-bold">{item.media_type === 'tv' ? 'Série' : 'Filme'}</span>
+                        <h4 className="font-bold text-zinc-100 text-base truncate group-hover:text-violet-400 transition-colors">{item.title || item.name}</h4>
+                        <div className="flex items-center gap-2 text-[10px] font-black text-zinc-500 uppercase tracking-wider mt-1">
+                          <span className="bg-white/5 px-2 py-0.5 rounded border border-white/5">{item.media_type === 'tv' ? 'Série' : 'Filme'}</span>
                           <span>·</span>
-                          <span>{(item.release_date || item.first_air_date)?.split('-')[0] || '—'}</span>
+                          <span className="text-zinc-400">{(item.release_date || item.first_air_date)?.split('-')[0] || '—'}</span>
                         </div>
                       </div>
                     </button>
                   ))}
                 </div>
               ) : form.query.length > 2 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-zinc-600">
-                  <Film size={28} className="mb-2 opacity-40" />
-                  <p className="text-sm">Nenhum resultado</p>
+                <div className="flex flex-col items-center justify-center py-20 text-zinc-600 animate-in fade-in zoom-in-95">
+                  <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                    <Film size={32} className="opacity-20" />
+                  </div>
+                  <p className="text-sm font-bold uppercase tracking-widest opacity-40">Nenhum título encontrado</p>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-16 text-zinc-700">
-                  <Search size={28} className="mb-2 opacity-40" />
-                  <p className="text-sm">Digite para buscar</p>
+                <div className="flex flex-col items-center justify-center py-20 text-zinc-700 animate-in fade-in">
+                  <Search size={40} className="mb-4 opacity-10" />
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-30 text-center px-10">Busque por títulos, franquias ou personagens</p>
                 </div>
               )}
             </div>
@@ -91,66 +96,71 @@ export default function CreatePostModal({ isOpen, onClose, form, actions }) {
         )}
 
         {form.step === 2 && (
-          <div className="flex flex-col" style={{ maxHeight: '92vh' }}>
-            <div className="relative h-36 shrink-0 overflow-hidden">
+          <div className="flex flex-col">
+            <div className="relative h-48 shrink-0 overflow-hidden">
               {backdropUrl ? (
                 <>
-                  <div className="absolute inset-0 bg-cover bg-center opacity-40 scale-110" style={{ backgroundImage: `url(${backdropUrl})`, filter: 'blur(8px)' }} />
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-zinc-950" />
+                  <img 
+                    src={backdropUrl} 
+                    className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-30" 
+                    alt="" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-zinc-950/50 to-zinc-950" />
                 </>
               ) : (
                 <div className="absolute inset-0 bg-zinc-900" />
               )}
 
-              <button
-                onClick={() => actions.setPostStep(1)}
-                className="absolute top-4 left-4 z-10 flex items-center gap-1.5 text-white/70 hover:text-white bg-black/30 hover:bg-black/50 px-3 py-1.5 rounded-full text-xs font-bold transition-all backdrop-blur-sm"
-              >
-                <ChevronLeft size={14} /> Voltar
-              </button>
-
-              <button onClick={onClose} className="absolute top-4 right-4 z-10 p-1.5 text-white/70 hover:text-white bg-black/30 rounded-full transition-all">
-                <X size={16} />
-              </button>
-
-              <div className="absolute bottom-0 left-0 right-0 px-4 pb-0 flex items-end gap-4">
-                <div
-                  className="w-20 h-28 rounded-xl shadow-2xl overflow-hidden border border-zinc-700 shrink-0 -mb-8 cursor-pointer group relative"
+              <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-20">
+                <button
                   onClick={() => actions.setPostStep(1)}
+                  className="flex items-center gap-2 text-white/70 hover:text-white bg-black/40 hover:bg-black/60 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] transition-all backdrop-blur-xl border border-white/10"
+                >
+                  <ChevronLeft size={14} /> Alterar
+                </button>
+
+                <button onClick={onClose} className="p-2.5 text-white/70 hover:text-white bg-black/40 rounded-2xl transition-all border border-white/10 backdrop-blur-xl">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="absolute bottom-0 left-8 right-8 flex items-end gap-6">
+                <div
+                  className="w-24 h-36 rounded-[1.5rem] shadow-2xl overflow-hidden border-2 border-white/10 shrink-0 -mb-10 relative group"
                 >
                   {form.media?.poster_path ? (
                     <img src={`https://image.tmdb.org/t/p/w342${form.media.poster_path}`} className="w-full h-full object-cover" alt="" />
                   ) : (
-                    <div className="w-full h-full bg-zinc-800 flex items-center justify-center"><Film size={20} className="text-zinc-600" /></div>
+                    <div className="w-full h-full bg-zinc-800 flex items-center justify-center"><Film size={24} className="text-zinc-600" /></div>
                   )}
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="text-[10px] font-black text-white uppercase">Trocar</span>
-                  </div>
                 </div>
-                <div className="pb-2 min-w-0 flex-1">
-                  <h3 className="font-black text-white text-lg leading-tight truncate drop-shadow-lg">{form.media?.title || form.media?.name}</h3>
+                <div className="pb-4 min-w-0 flex-1">
+                  <h3 className="font-black text-white text-2xl leading-tight truncate drop-shadow-2xl">{form.media?.title || form.media?.name}</h3>
                   {(form.media?.release_date || form.media?.first_air_date) && (
-                    <div className="flex items-center gap-1 text-zinc-400 text-xs mt-0.5">
-                      <Calendar size={11} className="text-violet-400" />
+                    <div className="flex items-center gap-2 text-zinc-400 text-xs font-bold uppercase tracking-widest mt-1">
+                      <Calendar size={12} className="text-violet-500" />
                       <span>{(form.media.release_date || form.media.first_air_date)?.split('-')[0]}</span>
+                      <span className="text-zinc-700">·</span>
+                      <span className="text-violet-400">{form.media.media_type === 'tv' ? 'Série' : 'Filme'}</span>
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
-            <div className="flex-1 flex flex-col px-4 pt-12 pb-4 overflow-y-auto" style={{ minHeight: 0 }}>
-              <div className="flex justify-center mb-5">
-                <div className="flex gap-2">
+            <div className="flex-1 flex flex-col px-8 pt-16 pb-8">
+              <div className="flex flex-col items-center mb-8">
+                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-3">Sua Nota</span>
+                <div className="flex gap-3">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
                       onClick={() => actions.setRating(star)}
-                      className="group focus:outline-none transition-transform hover:-translate-y-0.5 active:scale-90"
+                      className="focus:outline-none transition-all hover:scale-125 active:scale-90"
                     >
                       <Star
-                        size={28}
-                        className={`transition-all duration-200 ${star <= form.rating ? 'fill-yellow-500 text-yellow-500' : 'fill-zinc-800 text-zinc-700 group-hover:text-zinc-600'}`}
+                        size={32}
+                        className={`transition-all duration-300 ${star <= form.rating ? 'fill-yellow-400 text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.3)]' : 'fill-white/5 text-zinc-800 hover:text-zinc-600'}`}
                         strokeWidth={1.5}
                       />
                     </button>
@@ -158,23 +168,28 @@ export default function CreatePostModal({ isOpen, onClose, form, actions }) {
                 </div>
               </div>
 
-              <textarea
-                value={form.text}
-                onChange={(e) => actions.setPostText(e.target.value)}
-                placeholder="Escreva sua opinião sobre este título..."
-                className="w-full flex-1 bg-zinc-900 border border-zinc-800 focus:border-violet-500/60 text-white text-sm rounded-xl p-4 resize-none placeholder:text-zinc-600 focus:outline-none transition-colors leading-relaxed"
-                style={{ minHeight: '120px' }}
-                autoFocus
-              />
+              <div className="relative">
+                <textarea
+                  value={form.text}
+                  onChange={(e) => actions.setPostText(e.target.value)}
+                  placeholder="O que você achou dessa obra?"
+                  className="w-full bg-white/[0.03] border border-white/10 focus:border-violet-500/50 text-white text-base rounded-[1.5rem] p-6 resize-none placeholder:text-zinc-600 focus:outline-none transition-all leading-relaxed shadow-inner min-h-[160px]"
+                  autoFocus
+                />
+              </div>
 
-              <div className="flex items-center justify-between mt-3">
-                <span className="text-xs text-zinc-600 font-medium">{form.text.length} caracteres</span>
+              <div className="flex items-center justify-between mt-6">
+                <div className="flex flex-col">
+                  <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${form.text.length > 450 ? 'text-yellow-500' : 'text-zinc-600'}`}>
+                    {form.text.length} / 500
+                  </span>
+                </div>
                 <button
                   onClick={actions.handlePostSubmit}
                   disabled={form.isSubmitting || !form.text.trim()}
-                  className="px-6 py-2.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-violet-600/20"
+                  className="px-10 py-4 bg-violet-600 hover:bg-violet-500 disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl flex items-center gap-3 transition-all active:scale-95 shadow-[0_0_25px_rgba(139,92,246,0.3)]"
                 >
-                  {form.isSubmitting ? <Loader2 className="animate-spin" size={15} /> : 'Publicar'}
+                  {form.isSubmitting ? <Loader2 className="animate-spin" size={16} /> : 'Publicar'}
                 </button>
               </div>
             </div>

@@ -93,15 +93,15 @@ export default function Register() {
   };
 
   const PasswordPill = ({ met, text }) => (
-    <div className={`px-2 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wider border transition-all ${
-      met ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-zinc-800/50 border-zinc-800 text-zinc-500'
+    <div className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all ${
+      met ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-black/40 border-white/5 text-zinc-500'
     }`}>
       {text}
     </div>
   );
 
   return (
-    <div className="flex min-h-screen bg-zinc-950">
+    <div className="flex min-h-screen bg-zinc-950 overflow-x-hidden">
       <div className="hidden lg:flex w-1/2 relative bg-zinc-900 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 to-black z-10" />
         <img
@@ -110,111 +110,111 @@ export default function Register() {
           className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay"
         />
         <div className="relative z-20 p-12 flex flex-col justify-between h-full">
-          <span className="text-2xl font-bold text-white tracking-tight">CineSorte</span>
+          <span className="text-3xl font-black text-white tracking-tight">CineSorte</span>
           <div className="space-y-6 max-w-lg">
-            <h1 className="text-5xl font-black text-white leading-tight">
+            <h1 className="text-5xl font-black text-white leading-tight tracking-tight">
               Descubra seu próximo{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
                 filme favorito
               </span>.
             </h1>
-            <p className="text-lg text-zinc-400 leading-relaxed">
+            <p className="text-lg text-zinc-400 leading-relaxed font-medium">
               Junte-se a milhares de cinéfilos. Crie listas, compartilhe reviews e participe de uma comunidade apaixonada por cinema e séries.
             </p>
           </div>
-          <div className="text-xs text-zinc-500 font-mono">© 2026 CineSorte. Todos os Direitos Reservados.</div>
+          <div className="text-xs text-zinc-500 font-bold uppercase tracking-widest">© 2026 CineSorte. Todos os Direitos Reservados.</div>
         </div>
       </div>
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
-        <div className="w-full max-w-md space-y-6">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 overflow-y-auto overflow-x-hidden">
+        <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 py-8">
           <div className="text-center lg:text-left">
-            <h2 className="text-3xl font-bold text-white tracking-tight">Crie sua conta</h2>
-            <p className="mt-2 text-zinc-400">Preencha seus dados para começar.</p>
+            <h2 className="text-4xl font-black text-white tracking-tight">Crie sua conta</h2>
+            <p className="mt-2 text-zinc-500 font-medium">Preencha seus dados para começar.</p>
           </div>
 
           {error && (
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-              <div className="w-1 h-1 rounded-full bg-red-500" />
+            <div className="p-5 rounded-2xl bg-red-500/5 border border-red-500/10 text-red-400 text-sm font-medium flex items-center gap-3 shadow-inner">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider ml-1">Nome</label>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Nome</label>
                 <div className="relative">
                   <input name="name" type="text"
-                    className={`w-full bg-zinc-900/50 border rounded-xl px-4 py-3 text-white outline-none transition-all placeholder:text-zinc-600 ${formData.name && !validations.isNameValid ? 'border-red-500/50' : 'border-zinc-800 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50'}`}
+                    className={`w-full bg-black/40 border rounded-2xl px-5 py-4 text-white font-medium outline-none transition-all shadow-inner placeholder:text-zinc-600 ${formData.name && !validations.isNameValid ? 'border-red-500/50 focus:bg-black/60' : 'border-white/5 focus:border-violet-500/50 focus:bg-black/60'}`}
                     placeholder="João Silva" value={formData.name} onChange={handleChange} />
-                  {validations.isNameValid && <Check size={16} className="absolute right-3 top-3.5 text-emerald-500" />}
+                  {validations.isNameValid && <Check size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-emerald-500" />}
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider ml-1">Nickname</label>
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Nickname</label>
                 <div className="relative">
                   <input name="nickname" type="text"
-                    className={`w-full bg-zinc-900/50 border rounded-xl px-4 py-3 text-white outline-none transition-all placeholder:text-zinc-600 lowercase ${formData.nickname && !validations.isNickValid ? 'border-red-500/50' : 'border-zinc-800 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50'}`}
+                    className={`w-full bg-black/40 border rounded-2xl px-5 py-4 text-white font-medium outline-none transition-all shadow-inner placeholder:text-zinc-600 lowercase ${formData.nickname && !validations.isNickValid ? 'border-red-500/50 focus:bg-black/60' : 'border-white/5 focus:border-violet-500/50 focus:bg-black/60'}`}
                     placeholder="joaosilva" value={formData.nickname} onChange={handleChange} />
-                  {validations.isNickValid && <Check size={16} className="absolute right-3 top-3.5 text-emerald-500" />}
+                  {validations.isNickValid && <Check size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-emerald-500" />}
                 </div>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider ml-1">Email</label>
+            <div className="space-y-3">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Email</label>
               <div className="relative">
                 <input name="email" type="email"
-                  className={`w-full bg-zinc-900/50 border rounded-xl px-4 py-3 text-white outline-none transition-all placeholder:text-zinc-600 ${formData.email && !validations.isEmailValid ? 'border-red-500/50' : 'border-zinc-800 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50'}`}
+                  className={`w-full bg-black/40 border rounded-2xl px-5 py-4 text-white font-medium outline-none transition-all shadow-inner placeholder:text-zinc-600 ${formData.email && !validations.isEmailValid ? 'border-red-500/50 focus:bg-black/60' : 'border-white/5 focus:border-violet-500/50 focus:bg-black/60'}`}
                   placeholder="exemplo@email.com" value={formData.email} onChange={handleChange} />
-                {validations.isEmailValid && <Check size={16} className="absolute right-3 top-3.5 text-emerald-500" />}
+                {validations.isEmailValid && <Check size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-emerald-500" />}
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider ml-1">Senha</label>
+            <div className="space-y-3">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Senha</label>
               <div className="relative">
                 <input name="password" type={showPassword ? 'text' : 'password'}
-                  className={`w-full bg-zinc-900/50 border rounded-xl px-4 py-3 text-white outline-none transition-all placeholder:text-zinc-600 pr-12 ${formData.password && !validations.isPwdValid ? 'border-amber-500/50' : 'border-zinc-800 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50'}`}
+                  className={`w-full bg-black/40 border rounded-2xl pl-5 pr-14 py-4 text-white font-medium outline-none transition-all shadow-inner placeholder:text-zinc-600 ${formData.password && !validations.isPwdValid ? 'border-amber-500/50 focus:bg-black/60' : 'border-white/5 focus:border-violet-500/50 focus:bg-black/60'}`}
                   placeholder="••••••••" value={formData.password} onChange={handleChange} />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3.5 text-zinc-500 hover:text-white transition-colors">
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors">
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-              <div className="flex gap-2 pt-1 flex-wrap">
+              <div className="flex gap-2 pt-2 flex-wrap">
                 <PasswordPill met={validations.pwdLength} text="6+ Caracteres" />
                 <PasswordPill met={validations.pwdUpper} text="Maiúscula" />
                 <PasswordPill met={validations.pwdSpecial} text="Símbolo (!@#)" />
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider ml-1">Confirmação</label>
+            <div className="space-y-3">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Confirmação</label>
               <div className="relative">
                 <input name="confirmPassword" type="password"
-                  className={`w-full bg-zinc-900/50 border rounded-xl px-4 py-3 text-white outline-none transition-all placeholder:text-zinc-600 ${formData.confirmPassword && !validations.isMatch ? 'border-red-500/50' : 'border-zinc-800 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50'}`}
+                  className={`w-full bg-black/40 border rounded-2xl px-5 py-4 text-white font-medium outline-none transition-all shadow-inner placeholder:text-zinc-600 ${formData.confirmPassword && !validations.isMatch ? 'border-red-500/50 focus:bg-black/60' : 'border-white/5 focus:border-violet-500/50 focus:bg-black/60'}`}
                   placeholder="••••••••" value={formData.confirmPassword} onChange={handleChange} />
-                {formData.confirmPassword && validations.isMatch && <Check size={16} className="absolute right-3 top-3.5 text-emerald-500" />}
+                {formData.confirmPassword && validations.isMatch && <Check size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-emerald-500" />}
               </div>
             </div>
 
-            <label className="flex items-start gap-3 p-4 border border-zinc-800 rounded-xl bg-zinc-900/30 hover:bg-zinc-900/60 hover:border-zinc-700 cursor-pointer transition-all group">
-              <div className="relative flex items-center mt-0.5">
+            <label className="flex items-start gap-4 p-5 border border-white/5 rounded-2xl bg-black/20 hover:bg-black/40 cursor-pointer transition-all group shadow-inner">
+              <div className="relative flex items-center mt-0.5 shrink-0">
                 <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)}
-                  className="peer appearance-none w-5 h-5 border-2 border-zinc-600 rounded bg-zinc-800 checked:bg-violet-600 checked:border-violet-600 transition-all" />
-                <Check size={14} className="absolute left-0.5 top-0.5 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
+                  className="peer appearance-none w-6 h-6 border-2 border-zinc-600 rounded-lg bg-black/50 checked:bg-violet-600 checked:border-violet-600 transition-all outline-none" />
+                <Check size={16} className="absolute left-1 top-1 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
               </div>
-              <div className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors">
+              <div className="text-sm font-medium text-zinc-400 group-hover:text-zinc-300 transition-colors leading-relaxed">
                 Concordo com os{' '}
-                <button type="button" onClick={() => setShowTermsPreview(true)} className="text-white font-medium underline underline-offset-2 decoration-zinc-600 hover:decoration-violet-500 transition-all">
+                <button type="button" onClick={(e) => { e.preventDefault(); setShowTermsPreview(true); }} className="text-white font-bold hover:text-violet-400 transition-colors relative z-10">
                   Termos de Uso
                 </button>{' '}
                 e Política de Privacidade.
               </div>
             </label>
 
-            <div className="flex justify-center lg:justify-start">
+            <div className="flex justify-center lg:justify-start w-full overflow-hidden">
               <Turnstile
                 siteKey={TURNSTILE_SITE_KEY}
                 onSuccess={(token) => setTurnstileToken(token)}
@@ -225,18 +225,16 @@ export default function Register() {
             </div>
 
             <button type="submit" disabled={loading || !turnstileToken}
-              className="w-full group relative overflow-hidden bg-white text-black font-bold py-4 rounded-xl text-lg hover:bg-zinc-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-white/5 active:scale-[0.99]"
+              className="w-full flex items-center justify-center gap-3 py-4 bg-white text-black hover:bg-zinc-200 rounded-2xl font-black text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-95 group"
             >
-              <span className="relative z-10 flex items-center justify-center gap-2">
-                {loading ? 'Processando...' : 'Criar minha conta'}
-                {!loading && <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />}
-              </span>
+              {loading ? 'Processando...' : 'Criar minha conta'}
+              {!loading && <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />}
             </button>
           </form>
 
-          <p className="text-center text-zinc-500">
+          <p className="text-center text-zinc-500 font-medium pt-4">
             Já possui uma conta?{' '}
-            <Link to={`/login${location.search}`} className="text-white font-medium hover:underline underline-offset-4 decoration-zinc-700 hover:decoration-white transition-all">
+            <Link to={`/login${location.search}`} className="text-white font-bold hover:text-violet-400 transition-colors">
               Entrar agora
             </Link>
           </p>
