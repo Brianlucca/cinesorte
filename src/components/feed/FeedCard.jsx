@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Star, Trash2, MessageCircle, Share2, Heart, ChevronDown, ChevronUp, Crown, Layers, Film, Loader2, Zap, Eye, Sparkles } from "lucide-react";
+import { Star, Trash2, MessageCircle, Share2, Heart, ChevronDown, ChevronUp, Crown, Layers, Film, Zap, Eye, Sparkles } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 
 function buildMediaLink(item) {
@@ -41,6 +41,7 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
   const MAX_TEXT_LENGTH = 160;
 
   const mediaLink = buildMediaLink(item);
+  const displayedReplies = replies.slice(0, visibleComments);
 
   const getEliteStyle = (title) => {
     switch (title) {
