@@ -19,7 +19,6 @@ import Settings from './views/app/Settings';
 import MovieRoulette from './views/app/MovieRoulette';
 import Feed from './views/app/Feed';
 import PublicProfile from './views/app/PublicProfile';
-import Oscars from './views/app/Oscars';
 import SharedMediaPreview from './views/app/SharedMediaPreview';
 
 const PrivateRoute = ({ children }) => {
@@ -54,7 +53,6 @@ function AppRoutes() {
         <Route path="profile/:username" element={<PublicProfile />} /> 
 
         <Route path="lists" element={<MyLists />} />
-        <Route path="oscars" element={<Oscars />} />
         <Route path="lists/:username/:listId" element={<ListDetails />} />
         
         <Route path="profile" element={<Profile />} />
