@@ -20,7 +20,7 @@ export default function TrailerRow({ title, items }) {
   const handleMouseEnter = (id) => {
     hoverTimeoutRef.current = setTimeout(() => {
       setHoveredTrailerId(id);
-    }, 800);
+    }, 280);
   };
 
   const handleMouseLeave = () => {
@@ -45,7 +45,7 @@ export default function TrailerRow({ title, items }) {
             document.body
         )}
 
-      <div className="flex justify-between items-center px-6 md:px-12 mb-0">
+      <div className="flex justify-between items-center px-6 md:px-10 xl:px-14 2xl:px-16 mb-0">
           <h2 className="text-2xl font-bold text-white flex items-center gap-3">
             <span className="w-1.5 h-6 bg-red-600 rounded-full"></span>
             {title}
@@ -69,7 +69,7 @@ export default function TrailerRow({ title, items }) {
       
       <div 
         ref={rowRef} 
-        className="flex gap-5 overflow-x-auto scroll-smooth pt-6 pb-8 px-6 md:px-12 scrollbar-hide w-full"
+        className="flex gap-4 md:gap-5 overflow-x-auto scroll-smooth pt-6 pb-8 px-6 md:px-10 xl:px-14 2xl:px-16 scrollbar-hide w-full"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {items.map((item, index) => {
@@ -81,14 +81,14 @@ export default function TrailerRow({ title, items }) {
                     onMouseEnter={() => handleMouseEnter(item.id)}
                     onMouseLeave={handleMouseLeave}
                     onClick={() => setSelectedTrailer(item.trailerKey)}
-                    className="flex-none w-[320px] md:w-[480px] group/card cursor-pointer relative transition-all duration-500 hover:-translate-y-2"
+                    className="flex-none w-[320px] md:w-[480px] xl:w-[520px] group/card cursor-pointer relative transition-all duration-300 hover:-translate-y-1.5"
                 >
                     <div className="aspect-video rounded-2xl overflow-hidden bg-white/[0.02] border border-white/5 relative shadow-2xl group-hover/card:border-red-500/50 transition-all duration-300 group-hover/card:shadow-[0_10px_30px_rgba(220,38,38,0.2)]">
                         
                         <img 
                             src={`https://image.tmdb.org/t/p/w780${item.backdrop_path}`} 
                             alt={item.title || item.name} 
-                            className={`w-full h-full object-cover transition-all duration-700 ${isHovering ? 'opacity-0 scale-100' : 'opacity-100 scale-105 group-hover/card:scale-110'}`}
+                            className={`w-full h-full object-cover transition-all duration-350 ${isHovering ? 'opacity-0 scale-100' : 'opacity-100 scale-[1.02] group-hover/card:scale-[1.05]'}`}
                             loading="lazy"
                         />
 
@@ -109,7 +109,7 @@ export default function TrailerRow({ title, items }) {
                         )}
 
                         <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 pointer-events-none ${isHovering ? 'opacity-0' : 'opacity-100'}`}>
-                            <div className="w-16 h-16 bg-red-600/90 rounded-full flex items-center justify-center pl-1 shadow-lg shadow-red-900/50 group-hover/card:scale-110 transition-transform duration-300 backdrop-blur-sm">
+                            <div className="w-16 h-16 bg-red-600/90 rounded-full flex items-center justify-center pl-1 shadow-lg shadow-red-900/50 group-hover/card:scale-105 transition-transform duration-300 backdrop-blur-sm">
                                 <Play fill="white" className="text-white" size={28} />
                             </div>
                         </div>
@@ -126,7 +126,7 @@ export default function TrailerRow({ title, items }) {
                 </div>
             );
         })}
-        <div className="w-12 flex-none"></div>
+        <div className="w-6 md:w-10 flex-none"></div>
       </div>
     </div>
   );
