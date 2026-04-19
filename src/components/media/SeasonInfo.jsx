@@ -43,7 +43,7 @@ export default function SeasonInfo({ tvId, seasons }) {
                   {season.vote_average > 0 ? season.vote_average.toFixed(1) : 'N/A'}
                 </span>
                 <span className="flex items-center gap-1">
-                  {season.episode_count} Episodios
+                  {season.episode_count} Episódios
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar size={14} />

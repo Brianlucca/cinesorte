@@ -13,7 +13,7 @@ export function MentionDropdown({ filteredUsers, mentionIndex, onSelect, anchorR
       style={{ top, left, width }}
     >
       <div className="px-3 pb-2 mb-1 border-b border-white/5 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-        Mencionar usuario
+        Mencionar usuário
       </div>
       {filteredUsers.map((u, i) => (
         <button

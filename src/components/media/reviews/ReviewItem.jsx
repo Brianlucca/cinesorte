@@ -123,19 +123,19 @@ const ELITE_THEME = {
     chip: "border-cyan-400/25 bg-cyan-400/10 text-cyan-200",
     text: "text-cyan-200",
   },
-  "Entidade Cinematografica": {
+  "Entidade Cinematográfica": {
     card: "border-fuchsia-500/35 bg-[linear-gradient(180deg,rgba(147,51,234,0.12),rgba(9,9,11,0.92))] shadow-[0_0_38px_rgba(168,85,247,0.12)]",
     accent: "bg-fuchsia-400",
     chip: "border-fuchsia-400/25 bg-fuchsia-400/10 text-fuchsia-200",
     text: "text-fuchsia-200",
   },
-  "Oraculo da Setima Arte": {
+  "Oráculo da Sétima Arte": {
     card: "border-emerald-500/35 bg-[linear-gradient(180deg,rgba(16,185,129,0.12),rgba(9,9,11,0.92))] shadow-[0_0_38px_rgba(16,185,129,0.12)]",
     accent: "bg-emerald-400",
     chip: "border-emerald-400/25 bg-emerald-400/10 text-emerald-200",
     text: "text-emerald-200",
   },
-  "Mestre da Critica": {
+  "Mestre da Crítica": {
     card: "border-amber-500/35 bg-[linear-gradient(180deg,rgba(245,158,11,0.12),rgba(9,9,11,0.92))] shadow-[0_0_38px_rgba(245,158,11,0.12)]",
     accent: "bg-amber-400",
     chip: "border-amber-400/25 bg-amber-400/10 text-amber-200",
@@ -268,7 +268,7 @@ export default function ReviewItem({
             }}
             className="text-[10px] font-bold uppercase tracking-wider text-violet-300 hover:text-white"
           >
-            Limpar mencao
+            Limpar menção
           </button>
         </div>
       )}
@@ -477,7 +477,7 @@ export default function ReviewItem({
                 ))}
                 <span className="ml-2 text-2xl font-bold text-white">{review.rating.toFixed(1)}</span>
               </div>
-              <p className="pl-1 text-xs font-medium uppercase tracking-wider text-zinc-500">Avaliacao sem comentario</p>
+              <p className="pl-1 text-xs font-medium uppercase tracking-wider text-zinc-500">Avaliação sem comentário</p>
             </div>
           ) : null}
 

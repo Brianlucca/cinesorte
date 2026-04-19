@@ -89,12 +89,12 @@ export default function ReviewsSection({
 
   const handleSubmitGeneral = async () => {
     if (generalRating === null && generalText.trim().length === 0) {
-      setErrorMsgGeneral("Por favor, adicione um comentario ou nota.");
+      setErrorMsgGeneral("Por favor, adicione um comentário ou nota.");
       return;
     }
 
     if (generalText.trim().length > 0 && generalText.trim().length < 3) {
-      setErrorMsgGeneral("Minimo de 3 caracteres.");
+      setErrorMsgGeneral("Mínimo de 3 caracteres.");
       return;
     }
 
@@ -135,8 +135,8 @@ export default function ReviewsSection({
                 <Star size={13} className="mt-1 fill-yellow-400 text-yellow-400" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-lg font-bold leading-tight text-white">Media da Comunidade</h3>
-                <p className="mt-1 text-sm font-medium text-zinc-400">{`Baseado em ${stats.count} avaliacoes`}</p>
+                <h3 className="text-lg font-bold leading-tight text-white">Média da Comunidade</h3>
+                <p className="mt-1 text-sm font-medium text-zinc-400">{`Baseado em ${stats.count} avaliações`}</p>
               </div>
             </div>
 
@@ -169,7 +169,7 @@ export default function ReviewsSection({
             </div>
             <div>
               <h2 className="text-lg font-bold text-white">Review Fixada</h2>
-              <p className="text-sm text-zinc-500">Comentario destacado de um usuario elite.</p>
+              <p className="text-sm text-zinc-500">Comentário destacado de um usuário elite.</p>
             </div>
           </div>
           <ReviewItem review={topEliteReview} isElite {...reviewItemProps} />
@@ -246,7 +246,7 @@ export default function ReviewsSection({
                 }}
                 followingList={followingList}
                 onFocus={() => setIsFocusedGeneral(true)}
-                placeholder="Escreva sua avaliacao sobre a obra..."
+                placeholder="Escreva sua avaliação sobre a obra..."
                 inputRefExternal={generalInputRef}
                 className={`w-full resize-none bg-transparent text-base text-zinc-100 placeholder:text-zinc-600 focus:outline-none ${
                   isFocusedGeneral ? "min-h-[150px]" : "min-h-[68px]"
@@ -290,7 +290,7 @@ export default function ReviewsSection({
 
       <div className="space-y-5">
         <div className="mb-1 flex items-center gap-3">
-          <h2 className="text-lg font-bold text-white">Comentarios Recentes</h2>
+          <h2 className="text-lg font-bold text-white">Comentários Recentes</h2>
           <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-white/8 px-3 text-sm font-bold text-zinc-300">
             {reviews.length}
           </span>
@@ -300,7 +300,7 @@ export default function ReviewsSection({
           regularReviews.map((review) => <ReviewItem key={review.id} review={review} isElite={false} {...reviewItemProps} />)
         ) : !topEliteReview ? (
           <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.02] p-8 text-center text-zinc-500">
-            Ainda nao ha reviews para esta obra.
+            Ainda não há reviews para esta obra.
           </div>
         ) : null}
       </div>
