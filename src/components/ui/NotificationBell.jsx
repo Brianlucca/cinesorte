@@ -154,7 +154,7 @@ export default function NotificationBell({ isMobile }) {
   const hasUnread = notifications.some(n => !n.read);
 
   return (
-    <div className="relative md:fixed md:top-6 md:right-8 md:z-50" ref={dropdownRef}>
+    <div className="relative z-[100060] md:fixed md:top-6 md:right-8 md:z-[100060]" ref={dropdownRef}>
       <button
         onClick={handleOpen}
         className="relative p-2 text-zinc-400 hover:text-white transition-colors bg-zinc-900/50 md:bg-zinc-900/80 rounded-full md:backdrop-blur-md md:border md:border-white/10 md:shadow-lg"
@@ -168,7 +168,7 @@ export default function NotificationBell({ isMobile }) {
       {popupNotif && !isOpen && (
         <div 
           onClick={() => { setPopupNotif(null); handleNotificationClick(popupNotif); }}
-          className="absolute z-50 md:right-[calc(100%+16px)] right-0 top-[calc(100%+10px)] md:top-0 w-64 bg-zinc-900 border border-violet-500/50 rounded-xl shadow-2xl p-3 flex items-start gap-3 cursor-pointer animate-in fade-in slide-in-from-top-2 md:slide-in-from-right-2 duration-300"
+          className="absolute z-[100061] md:right-[calc(100%+16px)] right-0 top-[calc(100%+10px)] md:top-0 w-64 bg-zinc-900 border border-violet-500/50 rounded-xl shadow-2xl p-3 flex items-start gap-3 cursor-pointer animate-in fade-in slide-in-from-top-2 md:slide-in-from-right-2 duration-300"
         >
           <div className="shrink-0 mt-0.5">
             {getIcon(popupNotif.type)}
@@ -187,7 +187,7 @@ export default function NotificationBell({ isMobile }) {
       )}
 
       {isOpen && (
-        <div className="absolute z-50 w-80 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden right-0 top-full mt-4">
+        <div className="absolute z-[100061] w-80 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden right-0 top-full mt-4">
           <div className="p-3 border-b border-white/5 flex justify-between items-center bg-zinc-900/95 backdrop-blur-sm sticky top-0 z-10">
             <div className="flex items-center gap-2">
                 <h3 className="font-bold text-sm text-white">Notificações</h3>

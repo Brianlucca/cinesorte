@@ -7,6 +7,7 @@ import FeedCard from "../../components/feed/FeedCard";
 import CreatePostModal from "../../components/feed/CreatePostModal";
 import Modal from "../../components/ui/Modal";
 import UserSearch from "../../components/UserSearch";
+import LevelBadge from "../../components/ui/LevelBadge";
 
 export default function Feed() {
   const { user, state, actions } = useFeedLogic();
@@ -172,7 +173,11 @@ export default function Feed() {
                       </Link>
                       <div className="min-w-0">
                         <Link to={`/app/profile/${u.username}`} className="text-sm font-bold text-white hover:text-violet-400 transition-colors truncate block">@{u.username}</Link>
-                        {u.levelTitle && <span className="text-[10px] text-zinc-500 font-medium truncate block uppercase tracking-wider">{u.levelTitle}</span>}
+                        {u.levelTitle && (
+                          <div className="mt-1 origin-left scale-[0.95]">
+                            <LevelBadge title={u.levelTitle} />
+                          </div>
+                        )}
                       </div>
                     </div>
                     <button

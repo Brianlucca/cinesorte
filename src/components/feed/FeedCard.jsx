@@ -8,14 +8,11 @@ import {
   Heart,
   ChevronDown,
   ChevronUp,
-  Crown,
   Layers,
   Film,
-  Zap,
-  Eye,
-  Sparkles,
 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
+import LevelBadge from "../ui/LevelBadge";
 
 function SpoilerText({ children, isRevealed }) {
   return (
@@ -162,15 +159,15 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
   const getEliteStyle = (title) => {
     switch (title) {
       case "Divindade do Cinema":
-        return { accent: "border-l-cyan-500", badge: "text-cyan-400 bg-cyan-400/10", icon: <Eye size={10} />, shadow: "shadow-cyan-500/10" };
+        return { accent: "border-l-cyan-500", shadow: "shadow-cyan-500/10" };
       case "Entidade Cinematográfica":
-        return { accent: "border-l-purple-500", badge: "text-purple-400 bg-purple-400/10", icon: <Sparkles size={10} />, shadow: "shadow-purple-500/10" };
+        return { accent: "border-l-purple-500", shadow: "shadow-purple-500/10" };
       case "Oráculo da Sétima Arte":
-        return { accent: "border-l-emerald-500", badge: "text-emerald-400 bg-emerald-400/10", icon: <Zap size={10} />, shadow: "shadow-emerald-500/10" };
+        return { accent: "border-l-emerald-500", shadow: "shadow-emerald-500/10" };
       case "Mestre da Crítica":
-        return { accent: "border-l-amber-500", badge: "text-amber-400 bg-amber-400/10", icon: <Crown size={10} />, shadow: "shadow-amber-500/10" };
+        return { accent: "border-l-amber-500", shadow: "shadow-amber-500/10" };
       default:
-        return { accent: "border-l-violet-500/50", badge: "text-zinc-500 bg-white/5", icon: null, shadow: "" };
+        return { accent: "border-l-violet-500/50", shadow: "" };
     }
   };
 
@@ -248,9 +245,9 @@ export default function FeedCard({ item, currentUser, onDelete, onLike, onLoadCo
                 @{displayUsername}
               </Link>
               {item.levelTitle && (
-                <span className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-[9px] font-black uppercase tracking-widest ${style.badge}`}>
-                  {style.icon} {item.levelTitle.split(" ")[0]}
-                </span>
+                <div className="origin-left scale-[0.92]">
+                  <LevelBadge title={item.levelTitle} />
+                </div>
               )}
             </div>
 
