@@ -268,7 +268,7 @@ export default function ReviewItem({
             }}
             className="text-[10px] font-bold uppercase tracking-wider text-violet-300 hover:text-white"
           >
-            Limpar menÃ§Ã£o
+            Limpar menção
           </button>
         </div>
       )}
@@ -477,7 +477,7 @@ export default function ReviewItem({
                 ))}
                 <span className="ml-2 text-2xl font-bold text-white">{review.rating.toFixed(1)}</span>
               </div>
-              <p className="pl-1 text-xs font-medium uppercase tracking-wider text-zinc-500">AvaliaÃ§Ã£o sem comentÃ¡rio</p>
+              <p className="pl-1 text-xs font-medium uppercase tracking-wider text-zinc-500">Avaliação sem comentário</p>
             </div>
           ) : null}
 
