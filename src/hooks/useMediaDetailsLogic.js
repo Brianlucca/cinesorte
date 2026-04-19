@@ -190,9 +190,14 @@ export function useMediaDetailsLogic() {
 
   const handleEditReview = async (reviewId, newText, newRating) => {
     try {
-      await updateReview(reviewId, { text: newText, rating: newRating !== null ? Number(newRating) : null });
+      await updateReview(reviewId, {
+        text: newText,
+        rating: newRating !== null ? Number(newRating) : null,
+      });
       setReviews(prev => prev.map(r => 
-        r.id === reviewId ? { ...r, text: newText, rating: newRating !== null ? Number(newRating) : null, isEdited: true } : r
+        r.id === reviewId
+          ? { ...r, text: newText, rating: newRating !== null ? Number(newRating) : null, isEdited: true }
+          : r
       ));
       toast.success("Editado", "Sua publicação foi atualizada.");
     } catch (error) {
@@ -271,10 +276,13 @@ export function useMediaDetailsLogic() {
       await addMediaToList(listId, {
         id: media.id,
         title: media.title || media.name,
+        name: media.name || media.title,
         poster_path: media.poster_path,
         backdrop_path: media.backdrop_path,
         media_type: type,
         vote_average: media.vote_average || 0,
+        release_date: media.release_date || null,
+        first_air_date: media.first_air_date || null,
       });
       toast.success("Salvo", "Adicionado à sua lista.");
       const updatedLists = await getUserLists("me");

@@ -111,10 +111,10 @@ export function useEpisodeDetailsLogic() {
     }
   };
 
-  const handlePostReply = async (reviewId, text) => {
+  const handlePostReply = async (reviewId, text, parentId = null) => {
     if (!user) return toast.error('Login necessário', 'Entre para responder.');
     try {
-      await postComment({ reviewId, text });
+      await postComment({ reviewId, text, parentId });
       toast.success('Respondido', 'Seu comentário foi enviado.');
       const comments = await getComments(reviewId);
       setReviews((prev) =>

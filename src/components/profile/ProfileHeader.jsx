@@ -1,5 +1,6 @@
 import { Camera, Image as ImageIcon, Settings, Edit3, Calendar, Users, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import LevelBadge from '../ui/LevelBadge';
 
 export default function ProfileHeader({ user, onEditAvatar, onEditBackground, onShowFollowers, onShowFollowing }) {
   return (
@@ -54,6 +55,11 @@ export default function ProfileHeader({ user, onEditAvatar, onEditBackground, on
                             </div>
                         </div>
                     </div>
+                    {user?.levelTitle && (
+                        <div className="absolute -bottom-3 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap drop-shadow-xl">
+                            <LevelBadge title={user.levelTitle} size="md" />
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex-1 text-center md:text-left pb-2 w-full">

@@ -69,7 +69,7 @@ export default function Profile() {
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500 pt-8 px-4 md:px-8 pb-20 relative">
         
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-6">
-            <h1 className="text-4xl font-black text-white tracking-tight flex items-center gap-3">
+            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight flex items-center gap-3">
               <span className="w-1.5 h-8 bg-violet-500 rounded-full"></span>
               Meu Perfil
             </h1>

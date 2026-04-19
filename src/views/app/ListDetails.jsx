@@ -135,7 +135,7 @@ export default function ListDetails() {
                                 <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-0.5">
                                     {list.clonedFrom ? 'Criador Original' : 'Criado por'}
                                 </p>
-                                <p className="text-sm text-white font-bold group-hover:text-violet-400 transition-colors">@{list.clonedFrom ? list.clonedFrom.owner : (list.owner?.username || 'Usuario')}</p>
+                                <p className="text-sm text-white font-bold group-hover:text-violet-400 transition-colors">@{list.clonedFrom ? list.clonedFrom.owner : (list.owner?.username || 'Usuário')}</p>
                             </div>
                         </Link>
 

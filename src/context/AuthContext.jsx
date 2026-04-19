@@ -15,6 +15,7 @@ import {
 const AuthContext = createContext();
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
+const CURRENT_TERMS_VERSION = '3.0';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -26,7 +27,7 @@ export function AuthProvider({ children }) {
       try {
         const data = await getMe();
         setUser(data);
-        if (data.termsVersion !== '2.0') setShowTermsModal(true);
+        if (data.termsVersion !== CURRENT_TERMS_VERSION) setShowTermsModal(true);
       } catch {
         setUser(null);
       } finally {
@@ -36,13 +37,26 @@ export function AuthProvider({ children }) {
     loadUser();
   }, []);
 
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setUser(null);
+      setShowTermsModal(false);
+    };
+
+    window.addEventListener('cinesorte:session-expired', handleSessionExpired);
+
+    return () => {
+      window.removeEventListener('cinesorte:session-expired', handleSessionExpired);
+    };
+  }, []);
+
   async function login(email, password, turnstileToken) {
     const data = await apiLogin({ email, password, turnstileToken });
     setUser({ ...data });
     try {
       const userDetails = await getMe();
       setUser(userDetails);
-      if (userDetails.termsVersion !== '2.0') setShowTermsModal(true);
+      if (userDetails.termsVersion !== CURRENT_TERMS_VERSION) setShowTermsModal(true);
     } catch {}
     return data;
   }
@@ -56,7 +70,7 @@ export function AuthProvider({ children }) {
     try {
       const userDetails = await getMe();
       setUser(userDetails);
-      if (userDetails.termsVersion !== '2.0') setShowTermsModal(true);
+      if (userDetails.termsVersion !== CURRENT_TERMS_VERSION) setShowTermsModal(true);
     } catch {}
     return data;
   }
@@ -84,9 +98,9 @@ export function AuthProvider({ children }) {
 
   async function acceptTerms() {
     try {
-      await apiAcceptTerms('2.0');
+      await apiAcceptTerms(CURRENT_TERMS_VERSION);
       setShowTermsModal(false);
-      setUser((prev) => ({ ...prev, termsVersion: '2.0' }));
+      setUser((prev) => ({ ...prev, termsVersion: CURRENT_TERMS_VERSION }));
     } catch {}
   }
 
@@ -97,7 +111,10 @@ export function AuthProvider({ children }) {
   }
 
   async function resetPassword(email) {
-    return await apiResetPassword(email);
+    const response = await apiResetPassword(email);
+    setUser(null);
+    setShowTermsModal(false);
+    return response;
   }
 
   return (

@@ -18,7 +18,7 @@ export default function MovieRow({ title, items }) {
   return (
     <div className="relative w-full group/row z-10">
       
-      <div className="flex justify-between items-center px-6 md:px-12 mb-0">
+      <div className="flex justify-between items-center px-6 md:px-10 xl:px-14 2xl:px-16 mb-0">
           <h2 className="text-2xl font-bold text-white flex items-center gap-3">
             <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
             {title}
@@ -42,20 +42,20 @@ export default function MovieRow({ title, items }) {
       
       <div 
         ref={rowRef} 
-        className="flex gap-5 overflow-x-auto scroll-smooth pt-6 pb-8 px-6 md:px-12 scrollbar-hide w-full"
+        className="flex gap-4 md:gap-5 overflow-x-auto scroll-smooth pt-6 pb-8 px-6 md:px-10 xl:px-14 2xl:px-16 scrollbar-hide w-full"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {items.map((item, index) => (
             <Link 
                 key={`${item.id}-${index}`}
                 to={`/app/${item.media_type || (item.first_air_date ? 'tv' : 'movie')}/${item.id}`} 
-                className="flex-none w-[160px] md:w-[220px] group/card transition-all duration-500 hover:-translate-y-2"
+                className="flex-none w-[160px] md:w-[220px] xl:w-[236px] 2xl:w-[248px] group/card transition-all duration-300 hover:-translate-y-1.5"
             >
-                <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-white/[0.02] border border-white/5 relative shadow-2xl group-hover/card:border-white/20 transition-all">
+                <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-white/[0.02] border border-white/5 relative shadow-2xl group-hover/card:border-white/20 transition-all duration-300">
                     <img 
                         src={`https://image.tmdb.org/t/p/w500${item.poster_path}`} 
                         alt={item.title || item.name} 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105" 
+                        className="w-full h-full object-cover transition-transform duration-350 group-hover/card:scale-[1.03]" 
                         loading="lazy"
                     />
                     
@@ -64,7 +64,7 @@ export default function MovieRow({ title, items }) {
                         <span className="text-[10px] font-black text-white">{item.vote_average?.toFixed(1)}</span>
                     </div>
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-5">
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5">
                         <span className="font-bold text-white text-sm mb-3 line-clamp-2 leading-tight">
                             {item.title || item.name}
                         </span>
@@ -76,7 +76,7 @@ export default function MovieRow({ title, items }) {
                 </div>
             </Link>
         ))}
-        <div className="w-12 flex-none"></div>
+        <div className="w-6 md:w-10 flex-none"></div>
       </div>
     </div>
   );

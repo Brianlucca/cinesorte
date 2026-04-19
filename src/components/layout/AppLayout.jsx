@@ -98,7 +98,7 @@ export default function AppLayout() {
             {!isSidebarCollapsed && (
               <div className="min-w-0 flex-1 animate-in fade-in duration-300">
                 <p className="text-sm font-black text-white truncate">{user?.name}</p>
-                <p className="text-[10px] font-bold text-zinc-500 truncate uppercase tracking-widest">@{user?.username}</p>
+                <p className="text-[10px] font-bold text-zinc-500 truncate tracking-widest">@{user?.username?.toLowerCase()}</p>
               </div>
             )}
           </div>

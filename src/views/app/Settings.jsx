@@ -1,18 +1,31 @@
-import { useState } from "react";
-import {
-  User, Shield, LogOut, Trash2, Save, Mail, Key, Info,
-  Camera, ChevronRight, ChevronDown, Lock, Headset, Send
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { User, Shield, Trash2, Save, Mail, Key, Info, Camera, Lock, Headset, Plus } from "lucide-react";
 import { useSettingsLogic } from "../../hooks/useSettingsLogic";
 import Modal from "../../components/ui/Modal";
 import AvatarSelectorModal from "../../components/ui/AvatarSelectorModal";
 import { useToast } from "../../context/ToastContext";
+import { createSupportTicket, getMySupportTickets } from "../../services/api";
+import SettingsSidebar from "../../components/settings/SettingsSidebar";
+import SupportContactPanel from "../../components/settings/SupportContactPanel";
+import SupportTicketTable from "../../components/settings/SupportTicketTable";
+
+const SUBJECT_OPTIONS = [
+  { value: "SUGESTAO", label: "Feedback / Sugestão" },
+  { value: "BUG_REPORT", label: "Relatar um Erro (Bug)" },
+  { value: "PROBLEMA_CONTA", label: "Problemas com a Conta" },
+  { value: "DENUNCIA", label: "Denunciar" },
+  { value: "OUTRO_ASSUNTO", label: "Outros Assuntos" },
+];
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("profile");
   const [deleteInput, setDeleteInput] = useState("");
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
+  const [isLoadingTickets, setIsLoadingTickets] = useState(false);
   const [contactMessage, setContactMessage] = useState("");
+  const [contactSubject, setContactSubject] = useState(SUBJECT_OPTIONS[0].value);
+  const [supportTickets, setSupportTickets] = useState([]);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const { user, form, ui, modals, actions } = useSettingsLogic();
   const toast = useToast();
 
@@ -23,98 +36,80 @@ export default function Settings() {
     { id: "about", label: "Sobre o Sistema", icon: Info },
   ];
 
+  const loadSupportTickets = async () => {
+    if (!user) return;
+
+    setIsLoadingTickets(true);
+    try {
+      const tickets = await getMySupportTickets();
+      setSupportTickets(Array.isArray(tickets) ? tickets : []);
+    } catch (error) {
+      toast.error("Erro", error.message || "Não foi possível carregar seus protocolos.");
+    } finally {
+      setIsLoadingTickets(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "support" && user) {
+      loadSupportTickets();
+    }
+  }, [activeTab, user]);
+
   const handleContactSubmit = async (e) => {
     e.preventDefault();
-
-    const lastSentDate = localStorage.getItem("support_last_sent");
-    if (lastSentDate) {
-      const diffHours = Math.ceil(Math.abs(new Date() - new Date(lastSentDate)) / (1000 * 60 * 60));
-      if (diffHours < 24) {
-        toast.error("Limite atingido", "Você só pode enviar uma mensagem de suporte a cada 24 horas.");
-        return;
-      }
-    }
-
     setIsSubmittingContact(true);
-    const formData = new FormData(e.target);
 
     try {
-      const formSpreeUrl = import.meta.env.VITE_FORMSPREE_URL;
-      if (!formSpreeUrl) {
-        toast.error("Erro de Configuração", "URL do formulário não encontrada.");
-        return;
-      }
-
-      const response = await fetch(formSpreeUrl, {
-        method: "POST",
-        body: formData,
-        headers: { 'Accept': 'application/json' }
+      const response = await createSupportTicket({
+        subject: contactSubject,
+        message: contactMessage,
       });
 
-      if (response.ok) {
-        toast.success("Enviado", "Sua mensagem foi recebida! Responderemos em breve por email.");
-        e.target.reset();
-        setContactMessage("");
-        localStorage.setItem("support_last_sent", new Date().toISOString());
-      } else {
-        toast.error("Erro", "Não foi possível enviar a mensagem. Tente mais tarde.");
+      if (response?.ticket) {
+        setSupportTickets((prev) => [response.ticket, ...prev.filter((ticket) => ticket.id !== response.ticket.id)]);
       }
-    } catch {
-      toast.error("Erro", "Problema de conexão ao enviar formulário.");
+
+      toast.success(
+        "Chamado enviado",
+        response?.ticket?.protocol
+          ? `Seu protocolo é ${response.ticket.protocol}. Também enviamos uma confirmação para o seu email.`
+          : "Seu chamado foi recebido com sucesso e a confirmação foi enviada por email."
+      );
+
+      setContactMessage("");
+      setContactSubject(SUBJECT_OPTIONS[0].value);
+      setIsSupportModalOpen(false);
+    } catch (error) {
+      toast.error("Erro", error.message || "Não foi possível enviar sua mensagem agora.");
     } finally {
       setIsSubmittingContact(false);
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto pt-8 pb-20 px-4 md:px-8 animate-in fade-in duration-500 relative">
-      
+    <div className="max-w-[1320px] mx-auto pt-8 pb-20 px-4 md:px-6 xl:px-8 animate-in fade-in duration-500 relative">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-violet-600/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-6 mb-8">
-        <h1 className="text-4xl font-black text-white tracking-tight flex items-center gap-3">
+        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight flex items-center gap-3">
           <span className="w-1.5 h-8 bg-violet-500 rounded-full"></span>
           Configurações
         </h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6 md:gap-8">
-        <aside className="space-y-4">
-          <div className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2rem] p-3 shadow-xl">
-            {menuItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-sm font-bold transition-all mb-1 last:mb-0 ${
-                  activeTab === item.id
-                    ? "bg-white/10 text-white shadow-inner border border-white/5"
-                    : "text-zinc-500 hover:text-white hover:bg-white/[0.02] border border-transparent"
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <item.icon size={18} className={activeTab === item.id ? "text-violet-400" : ""} />
-                  {item.label}
-                </div>
-                {activeTab === item.id && <ChevronRight size={16} className="text-zinc-400" />}
-              </button>
-            ))}
-          </div>
+      <div className="grid grid-cols-1 xl:grid-cols-[260px_minmax(0,1fr)] gap-6 xl:gap-8">
+        <SettingsSidebar
+          menuItems={menuItems}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onLogout={actions.logout}
+        />
 
-          <div className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2rem] p-3 shadow-xl">
-            <button
-              onClick={actions.logout}
-              className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold text-red-500 hover:bg-red-500/10 hover:text-red-400 transition-colors border border-transparent hover:border-red-500/20"
-            >
-              <LogOut size={18} />
-              Sair da Conta
-            </button>
-          </div>
-        </aside>
-
-        <main className="min-h-[500px]">
+        <main className="min-h-[500px] min-w-0">
           {activeTab === "profile" && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-6 md:p-10 shadow-xl">
+              <div className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-xl">
                 <div className="flex flex-col md:flex-row items-center gap-8 mb-10 border-b border-white/5 pb-10">
                   <div className="relative group shrink-0">
                     <div className="w-28 h-28 rounded-full bg-zinc-900 border border-white/10 shadow-2xl overflow-hidden relative">
@@ -126,7 +121,7 @@ export default function Settings() {
                         </div>
                       )}
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                         <Camera size={28} className="text-white" />
+                        <Camera size={28} className="text-white" />
                       </div>
                     </div>
                     <button
@@ -202,7 +197,7 @@ export default function Settings() {
 
           {activeTab === "security" && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-6 md:p-10 shadow-xl space-y-8">
+              <div className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-xl space-y-8">
                 <div>
                   <h3 className="text-2xl font-black text-white tracking-tight mb-2">Acesso e Segurança</h3>
                   <p className="text-zinc-500 font-medium">Gerencie o acesso à sua conta.</p>
@@ -215,7 +210,7 @@ export default function Settings() {
                         <Mail size={20} />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white mb-0.5">Email Cadastrado</p>
+                        <p className="text-sm font-bold text-white mb-0.5">E-mail Cadastrado</p>
                         <p className="text-sm text-zinc-500">{user?.email}</p>
                       </div>
                     </div>
@@ -231,7 +226,7 @@ export default function Settings() {
                       </div>
                       <div>
                         <p className="text-sm font-bold text-white mb-0.5">Senha</p>
-                        <p className="text-sm text-zinc-500 tracking-[0.2em]">••••••••••••••••</p>
+                        <p className="text-sm text-zinc-500 tracking-[0.2em]">****************</p>
                       </div>
                     </div>
                     <button
@@ -244,19 +239,22 @@ export default function Settings() {
                 </div>
               </div>
 
-              <div className="bg-red-950/20 border border-red-500/20 rounded-[2.5rem] p-6 md:p-10 shadow-xl relative overflow-hidden">
+              <div className="bg-red-950/20 border border-red-500/20 rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-xl relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent pointer-events-none" />
                 <div className="relative z-10">
                   <h3 className="text-2xl font-black text-red-500 tracking-tight mb-2">Zona de Perigo</h3>
                   <p className="text-red-400/60 font-medium mb-8">Ações irreversíveis e permanentes.</p>
-                  
+
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 bg-black/40 border border-red-500/10 rounded-2xl shadow-inner">
                     <div>
                       <p className="text-lg font-black text-white">Excluir Conta</p>
                       <p className="text-sm text-zinc-500 mt-1">Isso apagará todos os seus dados, listas e reviews.</p>
                     </div>
                     <button
-                      onClick={() => { setDeleteInput(""); actions.openModal("deleteAccount"); }}
+                      onClick={() => {
+                        setDeleteInput("");
+                        actions.openModal("deleteAccount");
+                      }}
                       className="px-8 py-4 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-2xl text-sm font-black transition-all shadow-inner active:scale-95 w-full md:w-auto"
                     >
                       Excluir Conta
@@ -269,110 +267,68 @@ export default function Settings() {
 
           {activeTab === "support" && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-6 md:p-10 shadow-xl">
-                <div className="mb-10 border-b border-white/5 pb-8">
-                  <h3 className="text-2xl font-black text-white tracking-tight mb-2">Central de Ajuda</h3>
-                  <p className="text-zinc-500 font-medium">Limite de 1 contato a cada 24 horas.</p>
-                </div>
-
-                <form onSubmit={handleContactSubmit} className="space-y-6">
-                  <div className="space-y-3">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Seu Email (Para Resposta)</label>
-                    <div className="relative flex items-center">
-                      <Mail size={18} className="absolute left-5 text-zinc-600 z-10" />
-                      <input
-                        key={user?.email}
-                        type="email"
-                        name="email"
-                        defaultValue={user?.email || ""}
-                        readOnly
-                        className="w-full bg-black/40 border border-white/5 rounded-2xl pl-14 pr-5 py-4 text-zinc-500 font-medium cursor-not-allowed outline-none shadow-inner"
-                      />
-                      <Lock size={16} className="absolute right-5 text-zinc-600" />
-                    </div>
+              <div className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-xl">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                  <div className="max-w-2xl">
+                    <p className="text-[11px] font-black uppercase tracking-[0.22em] text-violet-400 mb-3">Suporte & Contato</p>
+                    <h3 className="text-3xl font-black text-white tracking-tight mb-3">Central de Chamados</h3>
+                    <p className="text-zinc-400 font-medium leading-relaxed">
+                      Abra um chamado e acompanhe abaixo os protocolos que você já enviou.
+                    </p>
                   </div>
-
-                  <div className="space-y-3">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Assunto</label>
-                    <div className="relative flex items-center">
-                      <select
-                        name="subject"
-                        required
-                        className="w-full bg-black/40 border border-white/5 rounded-2xl pl-5 pr-12 py-4 text-white font-medium focus:border-violet-500/50 outline-none transition-all appearance-none cursor-pointer shadow-inner"
-                      >
-                        <option value="SUGESTÃO" className="bg-zinc-900">Feedback / Sugestão</option>
-                        <option value="BUG_REPORT" className="bg-zinc-900">Relatar um Erro (Bug)</option>
-                        <option value="PROBLEMA_CONTA" className="bg-zinc-900">Problemas com a Conta</option>
-                        <option value="DENUNCIA" className="bg-zinc-900">Denunciar</option>
-                        <option value="OUTRO_ASSUNTO" className="bg-zinc-900">Outros Assuntos</option>
-                      </select>
-                      <ChevronDown size={18} className="absolute right-5 text-zinc-500 pointer-events-none" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <label className="flex items-center justify-between text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
-                      Sua Mensagem
-                      <span className="font-medium normal-case tracking-normal">({contactMessage.length}/500)</span>
-                    </label>
-                    <textarea
-                      name="message"
-                      required
-                      rows={6}
-                      maxLength={500}
-                      value={contactMessage}
-                      onChange={(e) => setContactMessage(e.target.value)}
-                      placeholder="Descreva detalhadamente como podemos ajudar..."
-                      className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 text-white font-medium focus:border-violet-500/50 focus:bg-black/60 outline-none transition-all resize-none shadow-inner placeholder:text-zinc-600"
-                    />
-                  </div>
-
                   <button
-                    type="submit"
-                    disabled={isSubmittingContact}
-                    className="w-full flex items-center justify-center gap-3 py-4 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-2xl font-black text-sm transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] active:scale-95 mt-4"
+                    type="button"
+                    onClick={() => setIsSupportModalOpen(true)}
+                    className="inline-flex items-center justify-center gap-3 px-7 py-4 bg-violet-600 hover:bg-violet-500 text-white rounded-2xl font-black text-sm transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] active:scale-95"
                   >
-                    {isSubmittingContact ? "Enviando..." : "Enviar Mensagem"}
-                    <Send size={18} />
+                    <Plus size={18} />
+                    Abrir Chamado
                   </button>
-                </form>
+                </div>
               </div>
+
+              <SupportTicketTable tickets={supportTickets} isLoading={isLoadingTickets} onRefresh={loadSupportTickets} />
             </div>
           )}
 
           {activeTab === "about" && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-6 md:p-10 shadow-xl">
+              <div className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-xl">
                 <h3 className="text-2xl font-black text-white tracking-tight mb-8">Sobre o CineSorte</h3>
-                
+
                 <div className="space-y-6">
                   <p className="text-base leading-relaxed font-medium text-zinc-300 bg-white/[0.02] p-6 rounded-2xl border border-white/5 shadow-inner">
                     O CineSorte é uma plataforma de portfólio desenvolvida para demonstrar
                     capacidades avançadas de engenharia de software fullstack.
                   </p>
-                  
+
                   <div className="bg-black/40 p-6 md:p-8 rounded-2xl border border-white/5 shadow-inner">
-                      <h4 className="text-lg font-black text-white mb-4 flex items-center gap-3">
-                        <Shield size={20} className="text-violet-400" /> Transparência de Dados
-                      </h4>
-                      <ul className="space-y-3">
-                        <li className="flex items-center gap-3 text-zinc-400 font-medium">
-                          <span className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
-                          Utilizamos a API do TMDB para metadados de filmes.
-                        </li>
-                        <li className="flex items-center gap-3 text-zinc-400 font-medium">
-                          <span className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
-                          Não hospedamos conteúdo pirata ou arquivos de vídeo.
-                        </li>
-                        <li className="flex items-center gap-3 text-zinc-400 font-medium">
-                          <span className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
-                          Seus dados são protegidos via Firebase.
-                        </li>
-                      </ul>
+                    <h4 className="text-lg font-black text-white mb-4 flex items-center gap-3">
+                      <Shield size={20} className="text-violet-400" /> Transparência de Dados
+                    </h4>
+                    <ul className="space-y-3">
+                      <li className="flex items-center gap-3 text-zinc-400 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
+                        Utilizamos a API da TMDB para metadados, imagens e informações de filmes e séries.
+                      </li>
+                      <li className="flex items-center gap-3 text-zinc-400 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
+                        Não hospedamos conteúdo pirata ou arquivos de vídeo.
+                      </li>
+                      <li className="flex items-center gap-3 text-zinc-400 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
+                        Seus dados são protegidos via Firebase.
+                      </li>
+                    </ul>
+                    <div className="mt-5 rounded-2xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-100">
+                      Este produto usa a API da TMDB, mas não é endossado nem certificado pela TMDB.
+                    </div>
                   </div>
 
                   <div className="pt-8 mt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 bg-white/5 px-4 py-2 rounded-lg border border-white/5">Versão 4.0.0</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 bg-white/5 px-4 py-2 rounded-lg border border-white/5">
+                      Versão 4.0.0
+                    </span>
                     <a
                       href="https://www.linkedin.com/in/brian-lucca-cardozo"
                       target="_blank"
@@ -395,10 +351,24 @@ export default function Settings() {
         onSelect={actions.handleAvatarUpdate}
       />
 
+      <Modal isOpen={isSupportModalOpen} onClose={() => setIsSupportModalOpen(false)} title="Abrir Chamado">
+        <div className="pt-2">
+          <SupportContactPanel
+            email={user?.email}
+            subject={contactSubject}
+            message={contactMessage}
+            isSubmitting={isSubmittingContact}
+            onSubjectChange={setContactSubject}
+            onMessageChange={setContactMessage}
+            onSubmit={handleContactSubmit}
+          />
+        </div>
+      </Modal>
+
       <Modal isOpen={modals.resetPassword} onClose={() => actions.closeModal("resetPassword")} title="Redefinir Senha">
         <div className="space-y-6 pt-2">
           <div className="p-5 bg-violet-500/10 rounded-2xl border border-violet-500/20 text-violet-300 text-sm font-medium shadow-inner">
-            Enviaremos um email seguro para <strong className="text-white bg-black/40 px-2 py-0.5 rounded ml-1">{user?.email}</strong> com as instruções.
+            Enviaremos um e-mail seguro para <strong className="text-white bg-black/40 px-2 py-0.5 rounded ml-1">{user?.email}</strong> com as instruções.
           </div>
           <div className="flex justify-end gap-4 mt-8">
             <button onClick={() => actions.closeModal("resetPassword")} className="px-6 py-4 text-zinc-500 hover:text-white font-black text-xs uppercase tracking-widest transition-colors">
@@ -409,7 +379,7 @@ export default function Settings() {
               disabled={ui.isLoading}
               className="px-8 py-4 bg-white text-black hover:bg-zinc-200 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] active:scale-95"
             >
-              {ui.isLoading ? "Enviando..." : "Enviar Email"}
+              {ui.isLoading ? "Enviando..." : "Enviar E-mail"}
             </button>
           </div>
         </div>
