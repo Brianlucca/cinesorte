@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { 
     getUserInteractions, 
-    getUserReviews,
     getUserReviewsOnly,
     getUserStats, 
     getUserFollowers, 
@@ -59,10 +58,9 @@ export function useProfileLogic() {
     if (!authUser?.uid || !authUser?.username) return;
     setLoading(true);
     try {
-      const [interactionsData, reviewsResponse, activityResponse, statsData, listsData, meData] = await Promise.all([
+      const [interactionsData, reviewsResponse, statsData, listsData, meData] = await Promise.all([
           getUserInteractions(),
           getUserReviewsOnly(authUser.username),
-          getUserReviews(authUser.username),
           getUserStats(),
           getUserLists('me'),
           getMe()
@@ -76,10 +74,6 @@ export function useProfileLogic() {
       setAllReviews(rawReviews);
       setHasMoreReviews(reviewsResponse?.hasMore || false);
       setReviewsCursor(reviewsResponse?.nextCursor || null);
-
-      const rawActivity = Array.isArray(activityResponse)
-        ? activityResponse
-        : (activityResponse?.items || []);
 
       const processedInteractions = [];
       if (interactionsData && Array.isArray(interactionsData)) {

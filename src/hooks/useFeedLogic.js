@@ -5,7 +5,6 @@ import {
   postReview,
   deleteReview,
   deleteListShare,
-  getUserReviews,
   getUserReviewsOnly,
   getTrending,
   followUser,
@@ -27,11 +26,14 @@ export function useFeedLogic() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [feedType, setFeedType] = useState('following');
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [hasNewPosts, setHasNewPosts] = useState(false);
 
   const mineCursorRef = useRef(null);
+  const feedCursorRef = useRef({
+    following: null,
+    collections: null,
+  });
 
   const [localUser, setLocalUser] = useState(user || {});
   const [suggestions, setSuggestions] = useState({ users: [], content: [] });
@@ -97,19 +99,22 @@ export function useFeedLogic() {
 
     try {
       let data = [];
-      let rawCount = 0;
       let currentMineHasMore = false;
-      const PAGE_SIZE = 20;
+      let currentHasMore = false;
 
       if (feedType === 'following') {
-        const followingData = await getFollowingFeed(currentPage);
-        rawCount = Array.isArray(followingData) ? followingData.length : 0;
-        data = Array.isArray(followingData) ? followingData : [];
+        const cursor = isRefresh || currentPage === 1 ? null : feedCursorRef.current.following;
+        const response = await getFollowingFeed(cursor);
+        data = response?.items || [];
+        currentHasMore = response?.hasMore || false;
+        feedCursorRef.current.following = response?.nextCursor || null;
 
       } else if (feedType === 'collections') {
-        const collectionsData = await getSharedListsFeed(currentPage);
-        data = Array.isArray(collectionsData) ? collectionsData : [];
-        rawCount = data.length;
+        const cursor = isRefresh || currentPage === 1 ? null : feedCursorRef.current.collections;
+        const response = await getSharedListsFeed(cursor);
+        data = response?.items || [];
+        currentHasMore = response?.hasMore || false;
+        feedCursorRef.current.collections = response?.nextCursor || null;
 
       } else if (feedType === 'mine' && localUser?.username) {
         const cursor = isRefresh || currentPage === 1 ? null : mineCursorRef.current;
@@ -118,7 +123,6 @@ export function useFeedLogic() {
         currentMineHasMore = response?.hasMore || false;
         mineCursorRef.current = response?.nextCursor || null;
         data = rawItems;
-        rawCount = rawItems.length;
       }
 
       const safeData = Array.isArray(data) ? data.map(normalizeItem) : [];
@@ -132,7 +136,7 @@ export function useFeedLogic() {
       if (feedType === 'mine') {
         setHasMore(currentMineHasMore);
       } else {
-        setHasMore(rawCount >= PAGE_SIZE && filteredData.length >= PAGE_SIZE);
+        setHasMore(currentHasMore);
       }
 
       if (isRefresh || currentPage === 1) {
@@ -167,9 +171,9 @@ export function useFeedLogic() {
       let newData = [];
 
       if (feedType === 'following') {
-        newData = await getFollowingFeed(1);
+        newData = (await getFollowingFeed())?.items || [];
       } else if (feedType === 'collections') {
-        newData = await getSharedListsFeed(1);
+        newData = (await getSharedListsFeed())?.items || [];
       }
 
       const processedNew = (Array.isArray(newData) ? newData : []).map(item => ({
@@ -195,7 +199,6 @@ export function useFeedLogic() {
   const loadNewPosts = async () => {
     try {
       setHasNewPosts(false);
-      setPage(1);
       setReviews([]);
       await loadFeed(1, true);
     } catch {
@@ -206,17 +209,15 @@ export function useFeedLogic() {
   const handleSetFeedType = (type) => {
     if (feedType === type) return;
     setFeedType(type);
-    setPage(1);
     setReviews([]);
     setHasMore(true);
     mineCursorRef.current = null;
+    feedCursorRef.current[type] = null;
   };
 
   const loadMore = () => {
     if (!loading && !loadingMore && hasMore) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      loadFeed(nextPage, false);
+      loadFeed(2, false);
     }
   };
 
@@ -245,10 +246,10 @@ export function useFeedLogic() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (reviews.length > 0 && feedType !== 'mine') {
+      if (!document.hidden && reviews.length > 0 && feedType !== 'mine') {
         checkForNewPosts();
       }
-    }, 60000);
+    }, 180000);
     return () => clearInterval(interval);
   }, [checkForNewPosts, reviews.length, feedType]);
 

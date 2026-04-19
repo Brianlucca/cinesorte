@@ -93,7 +93,7 @@ export function useSettingsLogic() {
     try {
       await resetPassword(user.email);
       toggleModal('resetPassword', false);
-      notify('success', 'Email Enviado', `Verifique a caixa de entrada de ${user.email}`);
+        notify('success', 'Email Enviado', `Verifique a caixa de entrada de ${user.email}. Sua sessão foi encerrada por segurança.`);
     } catch {
       notify('error', 'Falha no Envio', 'Ocorreu um erro ao tentar enviar o email.');
     } finally {
