@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, Heart, UserPlus, TrendingUp, Layers, Info, CheckCheck, AtSign, X } from "lucide-react";
-import { getNotifications, markNotificationRead } from "../../services/api";
+import { getNotifications, getUnreadCount, markNotificationRead } from "../../services/api";
 
 export default function NotificationBell({ isMobile }) {
   const [notifications, setNotifications] = useState([]);
+  const [badgeCount, setBadgeCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [popupNotif, setPopupNotif] = useState(null);
   
@@ -18,6 +19,7 @@ export default function NotificationBell({ isMobile }) {
       const data = await getNotifications();
       const list = Array.isArray(data) ? data : [];
       setNotifications(list);
+      setBadgeCount(list.filter((item) => !item.read).length);
 
       if (list.length > 0) {
         const newest = list[0];
@@ -32,31 +34,31 @@ export default function NotificationBell({ isMobile }) {
     }
   };
 
-  useEffect(() => {
-    loadNotifications();
-    const interval = setInterval(loadNotifications, 60000);
-    return () => clearInterval(interval);
-  }, []);
+  const loadUnreadCount = async () => {
+    try {
+      const response = await getUnreadCount();
+      setBadgeCount(Number(response?.count) || 0);
+    } catch (e) {
+    }
+  };
 
-  const badgeCount = useMemo(() => {
-    const now = new Date();
-    return notifications.filter(n => {
-      if (n.read) return false;
-      
-      const date = n.createdAt?._seconds 
-        ? new Date(n.createdAt._seconds * 1000) 
-        : new Date(n.createdAt);
-      
-      const diffHours = (now - date) / (1000 * 60 * 60);
-      return diffHours < 1; 
-    }).length;
-  }, [notifications]);
+  useEffect(() => {
+    loadUnreadCount();
+    const interval = setInterval(() => {
+      if (!document.hidden && !isOpen) {
+        loadUnreadCount();
+      }
+    }, 120000);
+    return () => clearInterval(interval);
+  }, [isOpen]);
 
   const handleOpen = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
       loadNotifications();
       setPopupNotif(null);
+    } else {
+      loadUnreadCount();
     }
   };
 
@@ -78,6 +80,7 @@ export default function NotificationBell({ isMobile }) {
             setNotifications((prev) => 
                 prev.map(n => n.id === notif.id ? { ...n, read: true } : n)
             );
+            setBadgeCount((prev) => Math.max(0, prev - 1));
         } catch (e) {}
     }
 
@@ -114,6 +117,7 @@ export default function NotificationBell({ isMobile }) {
     if (unread.length === 0) return;
 
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setBadgeCount(0);
 
     try {
         await Promise.all(unread.map(n => markNotificationRead(n.id)));
