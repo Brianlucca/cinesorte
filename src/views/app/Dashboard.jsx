@@ -74,13 +74,11 @@ export default function Dashboard() {
 
           return (
             <RowWrapper key={section.id}>
-              <div className="max-w-[1600px] mx-auto">
-                {section.type === 'trailer' ? (
-                  <TrailerRow title={section.title} items={items} />
-                ) : (
-                  <MovieRow title={section.title} items={items} />
-                )}
-              </div>
+              {section.type === 'trailer' ? (
+                <TrailerRow title={section.title} items={items} />
+              ) : (
+                <MovieRow title={section.title} items={items} />
+              )}
             </RowWrapper>
           );
         })}
