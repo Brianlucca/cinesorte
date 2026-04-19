@@ -6,7 +6,7 @@ export default function ListsHeader({ lists, onCreate, children }) {
   return (
     <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end mb-12 border-b border-white/5 pb-10 gap-8 animate-in fade-in slide-in-from-top-4 duration-500">
       <div className="flex-1">
-          <h1 className="text-4xl md:text-5xl font-black text-white flex items-center gap-4 mb-3 tracking-tighter">
+          <h1 className="text-4xl md:text-5xl font-black text-white flex items-center gap-4 mb-3 tracking-tight">
               <div className="p-3 bg-violet-600/10 rounded-2xl border border-violet-500/20 shadow-inner">
                 <Library className="text-violet-500" size={32} /> 
               </div>
