@@ -31,7 +31,7 @@ export default function Feed() {
 
         <div className="w-full min-w-0 lg:col-span-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10">
-            <h1 className="text-4xl font-black text-white tracking-tight flex items-center gap-3">
+            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight flex items-center gap-3">
               <span className="w-1.5 h-8 bg-violet-500 rounded-full"></span>
               Feed
             </h1>
@@ -140,7 +140,7 @@ export default function Feed() {
             </button>
           </div>
 
-          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-[2rem] p-8 shadow-2xl relative">
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-[2rem] p-8 shadow-2xl relative z-50">
             <UserSearch
               query={state.userSearch.query}
               results={state.userSearch.results}

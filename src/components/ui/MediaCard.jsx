@@ -42,7 +42,7 @@ export default function MediaCard({ media }) {
         </h3>
         <div className="flex justify-between items-center mt-3">
           <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
-            {type === 'movie' ? 'Filme' : 'Serie'}
+            {type === 'movie' ? 'Filme' : 'Série'}
           </span>
           <span className="text-xs text-zinc-400">{year || '-'}</span>
         </div>

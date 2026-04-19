@@ -91,7 +91,7 @@ export default function EpisodeDetails() {
         <div className="absolute bottom-0 top-0 left-0 w-full flex flex-col justify-end px-6 md:px-12 pb-16 max-w-6xl z-20">
           <div className="flex flex-wrap gap-3 mb-5 animate-in slide-in-from-bottom-2 fade-in duration-1000">
             {tvShow && (
-              <Link 
+              <Link
                 to={`/app/tv/${tvId}`}
                 className="bg-white/10 hover:bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-md text-xs font-bold text-white uppercase tracking-wider border border-white/10 transition-colors shadow-lg"
               >
@@ -131,11 +131,11 @@ export default function EpisodeDetails() {
             )}
           </div>
 
-          <div className="animate-in slide-in-from-bottom-8 fade-in duration-1000">
+          <div className="flex flex-wrap gap-4 animate-in slide-in-from-bottom-8 fade-in duration-1000">
             {trailerKey && (
               <button
                 onClick={() => setTrailerOpen(true)}
-                className="flex items-center gap-3 px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.3)] w-max"
+                className="flex items-center gap-3 px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
               >
                 <Play size={20} fill="currentColor" /> Assistir Trailer
               </button>
@@ -145,7 +145,6 @@ export default function EpisodeDetails() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-[1600px] mx-auto px-6 md:px-12 relative z-20">
-        
         <div className="lg:col-span-8 space-y-8">
           <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
@@ -245,8 +244,12 @@ export default function EpisodeDetails() {
               <h3 className="font-bold text-white text-sm uppercase tracking-widest text-zinc-400 mb-6">
                 Ficha Técnica
               </h3>
-              
+
               <div className="space-y-4">
+                <div className="flex flex-col gap-1 border-b border-white/5 pb-4">
+                  <span className="text-zinc-500 text-xs font-semibold uppercase tracking-widest">Série</span>
+                  <span className="text-white text-sm font-medium">{tvShow?.name || 'N/A'}</span>
+                </div>
                 <div className="flex flex-col gap-1 border-b border-white/5 pb-4">
                   <span className="text-zinc-500 text-xs font-semibold uppercase tracking-widest">Temporada</span>
                   <span className="text-white text-sm font-medium">{seasonNumber}</span>
