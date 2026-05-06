@@ -19,7 +19,6 @@ const SUBJECT_OPTIONS = [
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("profile");
-  const [deleteInput, setDeleteInput] = useState("");
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
   const [contactMessage, setContactMessage] = useState("");
@@ -251,10 +250,7 @@ export default function Settings() {
                       <p className="text-sm text-zinc-500 mt-1">Isso apagará todos os seus dados, listas e reviews.</p>
                     </div>
                     <button
-                      onClick={() => {
-                        setDeleteInput("");
-                        actions.openModal("deleteAccount");
-                      }}
+                      onClick={() => actions.openModal("deleteAccount")}
                       className="px-8 py-4 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-2xl text-sm font-black transition-all shadow-inner active:scale-95 w-full md:w-auto"
                     >
                       Excluir Conta
@@ -388,30 +384,23 @@ export default function Settings() {
       <Modal isOpen={modals.deleteAccount} onClose={() => actions.closeModal("deleteAccount")} title="Excluir Conta" type="danger">
         <div className="space-y-8 pt-2">
           <p className="text-zinc-300 text-sm leading-relaxed font-medium bg-red-500/5 p-5 rounded-2xl border border-red-500/10">
-            Esta ação é <strong className="text-red-400">irreversível</strong>. Todos os seus dados, listas, reviews e histórico serão apagados permanentemente.
+            Esta ação é irreversível. Para proteger sua conta, enviaremos um email para confirmar a exclusão antes de apagar seus dados, listas, reviews e histórico.
           </p>
-          <div className="space-y-3">
-            <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">
-              Digite <span className="text-red-400 mx-1">DELETAR</span> para confirmar
-            </label>
-            <input
-              type="text"
-              value={deleteInput}
-              onChange={(e) => setDeleteInput(e.target.value)}
-              className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 text-white font-black uppercase tracking-widest focus:border-red-500 focus:bg-black/60 outline-none transition-all shadow-inner"
-              placeholder="DELETAR"
-            />
+          <div className="rounded-2xl border border-white/5 bg-black/30 p-5">
+            <p className="text-sm font-medium leading-relaxed text-zinc-400">
+              O link será enviado para <span className="text-white">{user?.email}</span> e terá validade limitada. Se você não clicar no botão do email, nada será excluído.
+            </p>
           </div>
           <div className="flex justify-end gap-4 mt-8">
             <button onClick={() => actions.closeModal("deleteAccount")} className="px-6 py-4 text-zinc-500 hover:text-white font-black text-xs uppercase tracking-widest transition-colors">
               Cancelar
             </button>
             <button
-              onClick={() => actions.confirmDeleteAccount(deleteInput)}
-              disabled={ui.isLoading || deleteInput !== "DELETAR"}
+              onClick={actions.confirmDeleteAccount}
+              disabled={ui.isLoading}
               className="px-8 py-4 bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3 transition-all shadow-[0_0_20px_rgba(220,38,38,0.3)] active:scale-95"
             >
-              {ui.isLoading ? "Apagando..." : <><Trash2 size={16} /> Apagar Tudo</>}
+              {ui.isLoading ? "Enviando..." : <><Trash2 size={16} /> Enviar email</>}
             </button>
           </div>
         </div>

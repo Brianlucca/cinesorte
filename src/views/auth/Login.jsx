@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Film, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, HelpCircle } from 'lucide-react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import ForgotPasswordModal from '../../components/ui/ForgotPasswordModal';
+import AuthHelpModal from '../../components/ui/AuthHelpModal';
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
@@ -12,6 +13,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState(null);
@@ -42,7 +44,19 @@ export default function Login() {
       await login(email, password, turnstileToken);
       navigate(getRedirect());
     } catch (err) {
-      setError(err.response?.data?.message || 'Email ou senha incorretos.');
+      const message = err.response?.data?.message || err.message || 'Email ou senha incorretos.';
+      if (message.toLowerCase().includes('verificado')) {
+        sessionStorage.setItem('cinesorte:pendingVerificationEmail', email);
+        const redirectPath = new URLSearchParams(location.search).get('redirect');
+        navigate(
+          redirectPath
+            ? `/verify-email?redirect=${encodeURIComponent(redirectPath)}`
+            : '/verify-email',
+          { state: { email } }
+        );
+        return;
+      }
+      setError(message);
       setTurnstileToken(null);
     } finally {
       setLoading(false);
@@ -191,10 +205,22 @@ export default function Login() {
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
+
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => setShowHelpModal(true)}
+              className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-zinc-500 transition-colors hover:text-white"
+            >
+              <HelpCircle size={16} />
+              Preciso de ajuda
+            </button>
+          </div>
         </div>
       </div>
 
       {showForgotModal && <ForgotPasswordModal onClose={() => setShowForgotModal(false)} />}
+      <AuthHelpModal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} />
     </div>
   );
 }

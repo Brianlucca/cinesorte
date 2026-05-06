@@ -34,10 +34,13 @@ api.interceptors.response.use(
 export const login = (credentials) => api.post("/users/login", credentials);
 export const googleAuth = (data) => api.post("/users/auth/google", data);
 export const register = (userData) => api.post("/users/register", userData);
+export const resendVerificationEmail = (email) => api.post("/users/resend-verification-email", { email });
 export const logout = () => api.post("/users/logout");
 export const getMe = () => api.get("/users/me");
 export const updateProfile = (data) => api.put("/users/me", data);
-export const deleteAccount = () => api.delete("/users/me");
+export const requestAccountDeletion = () => api.post("/users/me/delete-request");
+export const deleteAccount = requestAccountDeletion;
+export const confirmAccountDeletion = (token) => api.post("/users/confirm-account-deletion", { token });
 export const acceptTerms = (version) => api.post("/users/terms", { version });
 export const getPublicProfile = (username) => api.get(`/users/profile/${username}`);
 export const requestPasswordReset = (email) => api.post("/users/reset-password", { email });

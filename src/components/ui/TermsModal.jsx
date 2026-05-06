@@ -1,16 +1,17 @@
 import {
-  ShieldCheck,
-  FileText,
-  Info,
-  Film,
-  Server,
-  Lock,
-  UserCheck,
-  Eye,
   Activity,
-  X,
-  HeartHandshake,
   AlertTriangle,
+  Eye,
+  FileText,
+  Film,
+  HeartHandshake,
+  Info,
+  Lock,
+  MapPin,
+  Server,
+  ShieldCheck,
+  UserCheck,
+  X,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -29,7 +30,7 @@ export default function TermsModal({ variant = 'action', onClose }) {
               <h2 className="text-xl font-bold text-white leading-tight">
                 Termos de Uso e Transparência
               </h2>
-              <p className="text-sm text-zinc-400">Versão 3.0 • CineSorte</p>
+              <p className="text-sm text-zinc-400">Versão 4.0 • CineSorte</p>
             </div>
           </div>
           {variant === 'info' && (
@@ -63,8 +64,7 @@ export default function TermsModal({ variant = 'action', onClose }) {
               </h4>
               <div className="pl-4 border-l-2 border-red-500/20 space-y-3">
                 <p className="font-medium text-white/90">
-                  Queremos manter um ambiente seguro, respeitoso e acolhedor para toda a
-                  comunidade.
+                  Queremos manter um ambiente seguro, respeitoso e acolhedor para toda a comunidade.
                 </p>
                 <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/20 text-red-200/90">
                   <strong>Tolerância zero:</strong> não aceitamos:
@@ -75,8 +75,7 @@ export default function TermsModal({ variant = 'action', onClose }) {
                   </ul>
                 </div>
                 <p className="text-zinc-500 italic text-xs">
-                  Conteúdos impróprios podem ser bloqueados automaticamente e o
-                  descumprimento das regras pode levar à remoção permanente da conta.
+                  Conteúdos impróprios podem ser bloqueados automaticamente e o descumprimento das regras pode levar à remoção permanente da conta.
                 </p>
               </div>
             </section>
@@ -88,32 +87,31 @@ export default function TermsModal({ variant = 'action', onClose }) {
               </h4>
               <div className="pl-4 border-l-2 border-amber-500/20 space-y-3">
                 <p>
-                  Para proteger contas, combater abuso e investigar acessos indevidos,
-                  registramos eventos de segurança relacionados ao uso da plataforma.
+                  Para proteger contas, combater abuso e investigar acessos indevidos, registramos eventos de segurança relacionados ao uso da plataforma.
                 </p>
                 <ul className="grid grid-cols-1 gap-2 mt-2">
                   <li className="bg-zinc-950/50 p-3 rounded-lg border border-white/5 flex items-start gap-2">
                     <ShieldCheck size={16} className="text-amber-500 mt-0.5 shrink-0" />
                     <span>
-                      <strong>Aceite dos termos:</strong> registramos data, hora e
-                      navegador para comprovar a ciência das regras.
+                      <strong>Aceite dos termos:</strong> registramos data, hora e navegador para comprovar a ciência das regras.
                     </span>
                   </li>
                   <li className="bg-zinc-950/50 p-3 rounded-lg border border-white/5 flex items-start gap-2">
                     <Activity size={16} className="text-amber-500 mt-0.5 shrink-0" />
                     <span>
-                      <strong>Logs de autenticação e segurança:</strong> podemos registrar
-                      IP, navegador, rota acessada, data, hora e resultado de eventos como
-                      login, logout, redefinição de senha e sessões inválidas, sempre para
-                      prevenção de fraude, auditoria e proteção da conta.
+                      <strong>Logs de autenticação e segurança:</strong> podemos registrar IP, navegador, rota acessada, data, hora e resultado de eventos como login, logout, redefinição de senha e sessões inválidas, sempre para prevenção de fraude, auditoria e proteção da conta.
+                    </span>
+                  </li>
+                  <li className="bg-zinc-950/50 p-3 rounded-lg border border-white/5 flex items-start gap-2">
+                    <MapPin size={16} className="text-amber-500 mt-0.5 shrink-0" />
+                    <span>
+                      <strong>Alertas de novo acesso:</strong> ao detectar login, podemos usar o IP do acesso para estimar cidade, região, país e coordenadas aproximadas por meio de serviços externos de geolocalização, como ipapi.co, e renderizar um mapa aproximado no email de segurança. A localização pode variar conforme provedor, VPN, rede móvel ou proxy.
                     </span>
                   </li>
                   <li className="bg-zinc-950/50 p-3 rounded-lg border border-white/5 flex items-start gap-2">
                     <Activity size={16} className="text-amber-500 mt-0.5 shrink-0" />
                     <span>
-                      <strong>Histórico de alterações:</strong> mudanças sensíveis no perfil,
-                      como username, foto, capa e biografia, podem ser registradas para
-                      auditoria de segurança.
+                      <strong>Histórico de alterações:</strong> mudanças sensíveis no perfil, como username, foto, capa e biografia, podem ser registradas para auditoria de segurança.
                     </span>
                   </li>
                 </ul>
@@ -127,23 +125,19 @@ export default function TermsModal({ variant = 'action', onClose }) {
               </h4>
               <div className="pl-4 border-l-2 border-emerald-500/20 space-y-3">
                 <p>
-                  Mesmo sendo um projeto independente, aplicamos medidas de segurança para
-                  proteger autenticação, sessões e tráfego.
+                  Mesmo sendo um projeto independente, aplicamos medidas de segurança para proteger autenticação, sessões e tráfego.
                 </p>
                 <ul className="grid grid-cols-1 gap-3 mt-2">
                   <li className="bg-zinc-950/50 p-3 rounded-lg border border-white/5 flex items-start gap-2">
                     <Server size={16} className="text-emerald-500 mt-0.5 shrink-0" />
                     <span>
-                      <strong>Gestão de identidade:</strong> as credenciais são processadas
-                      pelo Google Firebase Auth. O CineSorte não armazena sua senha em texto
-                      puro e não tem acesso à senha original da sua conta.
+                      <strong>Gestão de identidade:</strong> as credenciais são processadas pelo Google Firebase Auth. O CineSorte não armazena sua senha em texto puro e não tem acesso à senha original da sua conta.
                     </span>
                   </li>
                   <li className="bg-zinc-950/50 p-3 rounded-lg border border-white/5 flex items-start gap-2">
                     <ShieldCheck size={16} className="text-emerald-500 mt-0.5 shrink-0" />
                     <span>
-                      <strong>Proteção de acesso:</strong> usamos verificações de segurança,
-                      proteção contra abuso automatizado e tráfego criptografado via HTTPS.
+                      <strong>Proteção de acesso:</strong> usamos verificações de segurança, proteção contra abuso automatizado e tráfego criptografado via HTTPS.
                     </span>
                   </li>
                 </ul>
@@ -160,14 +154,8 @@ export default function TermsModal({ variant = 'action', onClose }) {
                   O CineSorte funciona como catálogo pessoal e rede social de filmes e séries:
                 </p>
                 <ul className="list-disc pl-5 space-y-1 marker:text-pink-500">
-                  <li>
-                    <strong>Não hospedamos vídeos:</strong> não é possível assistir filmes ou
-                    séries dentro da plataforma.
-                  </li>
-                  <li>
-                    <strong>Fonte de dados:</strong> sinopses, datas e imagens podem ser
-                    consumidas da API pública do TMDB.
-                  </li>
+                  <li><strong>Não hospedamos vídeos:</strong> não é possível assistir filmes ou séries dentro da plataforma.</li>
+                  <li><strong>Fonte de dados:</strong> sinopses, datas e imagens podem ser consumidas da API pública do TMDB.</li>
                 </ul>
               </div>
             </section>
@@ -186,8 +174,7 @@ export default function TermsModal({ variant = 'action', onClose }) {
                   <li>prevenção de fraude, abuso e invasão de conta.</li>
                 </ul>
                 <p className="mt-2 text-blue-200/80 italic">
-                  Seus dados não são vendidos a terceiros e os logs de segurança são usados
-                  exclusivamente para proteção da plataforma e dos usuários.
+                  Seus dados não são vendidos a terceiros e os logs de segurança são usados exclusivamente para proteção da plataforma e dos usuários.
                 </p>
               </div>
             </section>
@@ -199,16 +186,12 @@ export default function TermsModal({ variant = 'action', onClose }) {
               </h4>
               <div className="pl-4 border-l-2 border-orange-500/20">
                 <p className="mb-2">
-                  O CineSorte é disponibilizado no estado em que se encontra, podendo sofrer
-                  alterações, pausas, redefinições de dados ou encerramento sem aviso prévio.
+                  O CineSorte é disponibilizado no estado em que se encontra, podendo sofrer alterações, pausas, redefinições de dados ou encerramento sem aviso prévio.
                 </p>
                 <ul className="list-disc pl-5 space-y-1 marker:text-orange-500">
                   <li>o uso da plataforma é por conta e risco do usuário;</li>
                   <li>o desenvolvedor não garante disponibilidade contínua;</li>
-                  <li>
-                    a plataforma pode evoluir, mudar regras internas e atualizar estes termos
-                    quando necessário.
-                  </li>
+                  <li>a plataforma pode evoluir, mudar regras internas e atualizar estes termos quando necessário.</li>
                 </ul>
               </div>
             </section>
