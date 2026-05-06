@@ -9,13 +9,14 @@ import {
   acceptTerms as apiAcceptTerms,
   deleteAccount as apiDeleteAccount,
   requestPasswordReset as apiResetPassword,
+  resendVerificationEmail as apiResendVerificationEmail,
   googleAuth as apiGoogleAuth,
 } from '../services/api';
 
 const AuthContext = createContext();
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
-const CURRENT_TERMS_VERSION = '3.0';
+const CURRENT_TERMS_VERSION = '4.0';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -105,9 +106,7 @@ export function AuthProvider({ children }) {
   }
 
   async function deleteAccount() {
-    await apiDeleteAccount();
-    setUser(null);
-    setShowTermsModal(false);
+    return await apiDeleteAccount();
   }
 
   async function resetPassword(email) {
@@ -115,6 +114,10 @@ export function AuthProvider({ children }) {
     setUser(null);
     setShowTermsModal(false);
     return response;
+  }
+
+  async function resendVerificationEmail(email) {
+    return await apiResendVerificationEmail(email);
   }
 
   return (
@@ -132,6 +135,7 @@ export function AuthProvider({ children }) {
         acceptTerms,
         deleteAccount,
         resetPassword,
+        resendVerificationEmail,
       }}
     >
       {children}

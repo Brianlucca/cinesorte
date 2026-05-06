@@ -101,18 +101,18 @@ export function useSettingsLogic() {
     }
   };
 
-  const confirmDeleteAccount = async (confirmationText) => {
-    if (confirmationText !== 'DELETAR') return;
+  const confirmDeleteAccount = async () => {
     setIsLoading(true);
     try {
       await deleteAccount();
       toggleModal('deleteAccount', false);
-      notify('info', 'Conta Excluída', 'Sua conta foi removida permanentemente.');
+      notify('success', 'Email enviado', 'Enviamos um link para confirmar a exclusão da sua conta.');
     } catch (error) {
       const msg = error.code === 'auth/requires-recent-login'
         ? 'Por segurança, faça login novamente antes de excluir sua conta.'
-        : (error.response?.data?.message || 'Não foi possível excluir sua conta. Tente novamente.');
-      notify('error', 'Erro Crítico', msg);
+        : 'Erro, tente novamente mais tarde.';
+      notify('error', 'Erro', msg);
+    } finally {
       setIsLoading(false);
     }
   };

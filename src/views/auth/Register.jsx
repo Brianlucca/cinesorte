@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Check, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Check, Eye, EyeOff, ArrowRight, HelpCircle } from 'lucide-react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import TermsModal from '../../components/ui/TermsModal';
+import AuthHelpModal from '../../components/ui/AuthHelpModal';
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
@@ -13,6 +14,7 @@ export default function Register() {
   });
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTermsPreview, setShowTermsPreview] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,7 +37,7 @@ export default function Register() {
   const nameRegex = /^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/;
   const nicknameRegex = /^[a-z0-9_]+$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const passwordSpecialRegex = /[!@#$&*.,?_~\-]/;
+  const passwordSpecialRegex = /[!@#$&*.,?_~-]/;
   const passwordUpperRegex = /[A-Z]/;
 
   const validations = useMemo(() => {
@@ -77,12 +79,14 @@ export default function Register() {
         password: formData.password,
         turnstileToken,
       });
+      sessionStorage.setItem('cinesorte:pendingVerificationEmail', formData.email);
       const params = new URLSearchParams(location.search);
       const redirectPath = params.get('redirect');
       navigate(
         redirectPath
           ? `/verify-email?redirect=${encodeURIComponent(redirectPath)}`
-          : '/verify-email'
+          : '/verify-email',
+        { state: { email: formData.email } }
       );
     } catch (err) {
       setError(err.response?.data?.errors?.[0] || err.response?.data?.message || 'Falha no cadastro.');
@@ -238,10 +242,22 @@ export default function Register() {
               Entrar agora
             </Link>
           </p>
+
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => setShowHelpModal(true)}
+              className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-zinc-500 transition-colors hover:text-white"
+            >
+              <HelpCircle size={16} />
+              Preciso de ajuda
+            </button>
+          </div>
         </div>
       </div>
 
       {showTermsPreview && <TermsModal variant="info" onClose={() => setShowTermsPreview(false)} />}
+      <AuthHelpModal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} />
     </div>
   );
 }
