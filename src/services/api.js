@@ -38,9 +38,7 @@ export const resendVerificationEmail = (email) => api.post("/users/resend-verifi
 export const logout = () => api.post("/users/logout");
 export const getMe = () => api.get("/users/me");
 export const updateProfile = (data) => api.put("/users/me", data);
-export const requestAccountDeletion = () => api.post("/users/me/delete-request");
-export const deleteAccount = requestAccountDeletion;
-export const confirmAccountDeletion = (token) => api.post("/users/confirm-account-deletion", { token });
+export const deleteAccount = (confirmText) => api.delete("/users/me", { data: { confirmText } });
 export const acceptTerms = (version) => api.post("/users/terms", { version });
 export const getPublicProfile = (username) => api.get(`/users/profile/${username}`);
 export const requestPasswordReset = (email) => api.post("/users/reset-password", { email });

@@ -1,31 +1,18 @@
-import { useEffect, useState } from "react";
-import { User, Shield, Trash2, Save, Mail, Key, Info, Camera, Lock, Headset, Plus } from "lucide-react";
+﻿import { useEffect, useState } from "react";
+import { User, Shield, Trash2, Save, Mail, Key, Info, Camera, Lock, Headset } from "lucide-react";
 import { useSettingsLogic } from "../../hooks/useSettingsLogic";
 import Modal from "../../components/ui/Modal";
 import AvatarSelectorModal from "../../components/ui/AvatarSelectorModal";
 import { useToast } from "../../context/ToastContext";
-import { createSupportTicket, getMySupportTickets } from "../../services/api";
+import { getMySupportTickets } from "../../services/api";
 import SettingsSidebar from "../../components/settings/SettingsSidebar";
-import SupportContactPanel from "../../components/settings/SupportContactPanel";
 import SupportTicketTable from "../../components/settings/SupportTicketTable";
-
-const SUBJECT_OPTIONS = [
-  { value: "SUGESTAO", label: "Feedback / Sugestão" },
-  { value: "BUG_REPORT", label: "Relatar um Erro (Bug)" },
-  { value: "PROBLEMA_CONTA", label: "Problemas com a Conta" },
-  { value: "DENUNCIA", label: "Denunciar" },
-  { value: "OUTRO_ASSUNTO", label: "Outros Assuntos" },
-];
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("profile");
-  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
-  const [contactMessage, setContactMessage] = useState("");
-  const [contactSubject, setContactSubject] = useState(SUBJECT_OPTIONS[0].value);
   const [supportTickets, setSupportTickets] = useState([]);
-  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
-  const { user, form, ui, modals, actions } = useSettingsLogic();
+  const { user, form, deleteConfirmText, ui, modals, actions } = useSettingsLogic();
   const toast = useToast();
 
   const menuItems = [
@@ -54,37 +41,6 @@ export default function Settings() {
       loadSupportTickets();
     }
   }, [activeTab, user]);
-
-  const handleContactSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmittingContact(true);
-
-    try {
-      const response = await createSupportTicket({
-        subject: contactSubject,
-        message: contactMessage,
-      });
-
-      if (response?.ticket) {
-        setSupportTickets((prev) => [response.ticket, ...prev.filter((ticket) => ticket.id !== response.ticket.id)]);
-      }
-
-      toast.success(
-        "Chamado enviado",
-        response?.ticket?.protocol
-          ? `Seu protocolo é ${response.ticket.protocol}. Também enviamos uma confirmação para o seu email.`
-          : "Seu chamado foi recebido com sucesso e a confirmação foi enviada por email."
-      );
-
-      setContactMessage("");
-      setContactSubject(SUBJECT_OPTIONS[0].value);
-      setIsSupportModalOpen(false);
-    } catch (error) {
-      toast.error("Erro", error.message || "Não foi possível enviar sua mensagem agora.");
-    } finally {
-      setIsSubmittingContact(false);
-    }
-  };
 
   return (
     <div className="max-w-[1320px] mx-auto pt-8 pb-20 px-4 md:px-6 xl:px-8 animate-in fade-in duration-500 relative">
@@ -269,17 +225,21 @@ export default function Settings() {
                     <p className="text-[11px] font-black uppercase tracking-[0.22em] text-violet-400 mb-3">Suporte & Contato</p>
                     <h3 className="text-3xl font-black text-white tracking-tight mb-3">Central de Chamados</h3>
                     <p className="text-zinc-400 font-medium leading-relaxed">
-                      Abra um chamado e acompanhe abaixo os protocolos que você já enviou.
+                      A abertura de chamados está Em manutenção. Você ainda pode consultar abaixo os protocolos já enviados.
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsSupportModalOpen(true)}
-                    className="inline-flex items-center justify-center gap-3 px-7 py-4 bg-violet-600 hover:bg-violet-500 text-white rounded-2xl font-black text-sm transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] active:scale-95"
-                  >
-                    <Plus size={18} />
-                    Abrir Chamado
-                  </button>
+                  <div className="inline-flex items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-4 text-sm font-black uppercase tracking-widest text-amber-300">
+                    Em manutenção
+                  </div>
+                </div>
+                <div className="mt-8 rounded-2xl border border-white/5 bg-black/30 p-5">
+                  <p className="text-sm font-medium leading-relaxed text-zinc-400">
+                    A abertura de chamados pelo site está temporariamente indisponível. Para falar com o suporte, envie um email para{" "}
+                    <a href="mailto:cinesorte@gmail.com" className="text-white transition-colors hover:text-violet-300">
+                      cinesorte@gmail.com
+                    </a>
+                    .
+                  </p>
                 </div>
               </div>
 
@@ -347,20 +307,6 @@ export default function Settings() {
         onSelect={actions.handleAvatarUpdate}
       />
 
-      <Modal isOpen={isSupportModalOpen} onClose={() => setIsSupportModalOpen(false)} title="Abrir Chamado">
-        <div className="pt-2">
-          <SupportContactPanel
-            email={user?.email}
-            subject={contactSubject}
-            message={contactMessage}
-            isSubmitting={isSubmittingContact}
-            onSubjectChange={setContactSubject}
-            onMessageChange={setContactMessage}
-            onSubmit={handleContactSubmit}
-          />
-        </div>
-      </Modal>
-
       <Modal isOpen={modals.resetPassword} onClose={() => actions.closeModal("resetPassword")} title="Redefinir Senha">
         <div className="space-y-6 pt-2">
           <div className="p-5 bg-violet-500/10 rounded-2xl border border-violet-500/20 text-violet-300 text-sm font-medium shadow-inner">
@@ -384,13 +330,24 @@ export default function Settings() {
       <Modal isOpen={modals.deleteAccount} onClose={() => actions.closeModal("deleteAccount")} title="Excluir Conta" type="danger">
         <div className="space-y-8 pt-2">
           <p className="text-zinc-300 text-sm leading-relaxed font-medium bg-red-500/5 p-5 rounded-2xl border border-red-500/10">
-            Esta ação é irreversível. Para proteger sua conta, enviaremos um email para confirmar a exclusão antes de apagar seus dados, listas, reviews e histórico.
+            Esta ação é irreversível. Para proteger sua conta, a exclusão só funciona quando seu login é recente. Se a sessão estiver antiga, você será desconectado e deverá entrar novamente antes de tentar excluir.
           </p>
           <div className="rounded-2xl border border-white/5 bg-black/30 p-5">
             <p className="text-sm font-medium leading-relaxed text-zinc-400">
-              O link será enviado para <span className="text-white">{user?.email}</span> e terá validade limitada. Se você não clicar no botão do email, nada será excluído.
+              Para confirmar, digite <span className="text-white">DELETAR CONTA</span>. Seus dados, listas, reviews e histórico serão apagados permanentemente.
             </p>
           </div>
+          <label className="block">
+            <span className="mb-3 block text-xs font-black uppercase tracking-widest text-zinc-500">
+              Confirmação
+            </span>
+            <input
+              value={deleteConfirmText}
+              onChange={(event) => actions.setDeleteConfirmText(event.target.value)}
+              placeholder="DELETAR CONTA"
+              className="w-full rounded-2xl border border-red-500/20 bg-black/40 px-5 py-4 text-sm font-semibold text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-red-500/60"
+            />
+          </label>
           <div className="flex justify-end gap-4 mt-8">
             <button onClick={() => actions.closeModal("deleteAccount")} className="px-6 py-4 text-zinc-500 hover:text-white font-black text-xs uppercase tracking-widest transition-colors">
               Cancelar
@@ -400,7 +357,7 @@ export default function Settings() {
               disabled={ui.isLoading}
               className="px-8 py-4 bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3 transition-all shadow-[0_0_20px_rgba(220,38,38,0.3)] active:scale-95"
             >
-              {ui.isLoading ? "Enviando..." : <><Trash2 size={16} /> Enviar email</>}
+              {ui.isLoading ? "Excluindo..." : <><Trash2 size={16} /> Excluir conta</>}
             </button>
           </div>
         </div>

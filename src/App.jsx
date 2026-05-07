@@ -7,7 +7,6 @@ import Landing from './views/Landing';
 import Login from './views/auth/Login';
 import Register from './views/auth/Register';
 import VerifyEmail from './views/auth/VerifyEmail';
-import ConfirmDeleteAccount from './views/auth/ConfirmDeleteAccount';
 import Dashboard from './views/app/Dashboard';
 import MediaDetails from './views/app/MediaDetails';
 import SeasonDetails from './views/app/SeasonDetails';
@@ -41,7 +40,6 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/confirm-delete-account" element={<ConfirmDeleteAccount />} />
       </Route>
 
       <Route path="/app" element={

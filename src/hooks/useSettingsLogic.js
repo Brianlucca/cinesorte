@@ -9,6 +9,7 @@ export function useSettingsLogic() {
   const [form, setForm] = useState({ username: '', bio: '', name: '' });
   const [usernameStatus, setUsernameStatus] = useState({ isLocked: false, daysRemaining: 0 });
   const [isLoading, setIsLoading] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [modals, setModals] = useState({
     resetPassword: false,
     deleteAccount: false,
@@ -39,6 +40,7 @@ export function useSettingsLogic() {
 
   const toggleModal = (modalName, isOpen) => {
     setModals(prev => ({ ...prev, [modalName]: isOpen }));
+    if (modalName === 'deleteAccount' && !isOpen) setDeleteConfirmText('');
   };
 
   const handleInputChange = (field, value) => {
@@ -102,16 +104,21 @@ export function useSettingsLogic() {
   };
 
   const confirmDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETAR CONTA') {
+      notify('error', 'Confirmação inválida', 'Digite DELETAR CONTA para confirmar a exclusão.');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await deleteAccount();
+      await deleteAccount(deleteConfirmText);
       toggleModal('deleteAccount', false);
-      notify('success', 'Email enviado', 'Enviamos um link para confirmar a exclusão da sua conta.');
+      notify('success', 'Conta excluída', 'Sua conta foi excluída com sucesso.');
     } catch (error) {
-      const msg = error.code === 'auth/requires-recent-login'
-        ? 'Por segurança, faça login novamente antes de excluir sua conta.'
-        : 'Erro, tente novamente mais tarde.';
-      notify('error', 'Erro', msg);
+      const msg = error.status === 401
+        ? 'Por segurança, faça login novamente e tente excluir a conta em seguida.'
+        : error.message || 'Erro, tente novamente mais tarde.';
+      notify('error', 'Não foi possível excluir', msg);
     } finally {
       setIsLoading(false);
     }
@@ -120,6 +127,7 @@ export function useSettingsLogic() {
   return {
     user,
     form,
+    deleteConfirmText,
     ui: {
       isLoading,
       isUsernameLocked: usernameStatus.isLocked,
@@ -132,6 +140,7 @@ export function useSettingsLogic() {
       handleAvatarUpdate,
       confirmResetPassword,
       confirmDeleteAccount,
+      setDeleteConfirmText,
       logout,
       openModal: (name) => toggleModal(name, true),
       closeModal: (name) => toggleModal(name, false)

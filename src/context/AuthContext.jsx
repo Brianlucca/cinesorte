@@ -105,8 +105,11 @@ export function AuthProvider({ children }) {
     } catch {}
   }
 
-  async function deleteAccount() {
-    return await apiDeleteAccount();
+  async function deleteAccount(confirmText) {
+    const response = await apiDeleteAccount(confirmText);
+    setUser(null);
+    setShowTermsModal(false);
+    return response;
   }
 
   async function resetPassword(email) {
