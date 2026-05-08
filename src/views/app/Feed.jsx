@@ -12,8 +12,18 @@ import LevelBadge from "../../components/ui/LevelBadge";
 export default function Feed() {
   const { user, state, actions } = useFeedLogic();
   const observerTarget = useRef(null);
+  const getSuggestionPhoto = (suggestedUser) =>
+    suggestedUser?.photoURL ||
+    suggestedUser?.userPhoto ||
+    suggestedUser?.avatarURL ||
+    suggestedUser?.avatarUrl ||
+    suggestedUser?.photo ||
+    suggestedUser?.user?.photoURL ||
+    suggestedUser?.user?.userPhoto ||
+    null;
 
   useEffect(() => {
+    const target = observerTarget.current;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && state.hasMore && !state.loading && !state.loadingMore) {
@@ -22,8 +32,8 @@ export default function Feed() {
       },
       { threshold: 0.1, rootMargin: '100px' }
     );
-    if (observerTarget.current) observer.observe(observerTarget.current);
-    return () => { if (observerTarget.current) observer.unobserve(observerTarget.current); };
+    if (target) observer.observe(target);
+    return () => { if (target) observer.unobserve(target); };
   }, [state.hasMore, state.loading, state.loadingMore, actions]);
 
   return (
@@ -156,36 +166,42 @@ export default function Feed() {
                 <span className="w-1.5 h-4 bg-violet-500 rounded-full"></span>
                 Sugestões
               </h3>
-              <div className="space-y-6">
+              <div className="divide-y divide-white/5">
                 {state.suggestions.users.map(u => (
-                  <div key={u.username} className="flex items-center justify-between gap-3 group/user">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <Link to={`/app/profile/${u.username}`} className="shrink-0">
-                        <div className="w-10 h-10 rounded-xl bg-zinc-800 overflow-hidden border border-white/5 shadow-lg group-hover/user:scale-105 transition-transform">
-                          {u.photoURL ? (
-                            <img src={u.photoURL} className="w-full h-full object-cover" alt="" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs font-black text-zinc-600">
-                              {(u.username?.[0] || "U").toUpperCase()}
+                  <div key={u.username} className="group/user py-4 first:pt-0 last:pb-0">
+                    <div className="flex items-start gap-3">
+                      <div className="flex min-w-0 flex-1 gap-3">
+                        <Link to={`/app/profile/${u.username}`} className="shrink-0">
+                          <div className="w-11 h-11 rounded-xl bg-zinc-800 overflow-hidden border border-white/5 shadow-lg transition-all group-hover/user:border-violet-500/30">
+                            {getSuggestionPhoto(u) ? (
+                              <img src={getSuggestionPhoto(u)} className="w-full h-full object-cover" alt="" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-xs font-black text-zinc-600">
+                                {(u.username?.[0] || "U").toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                        </Link>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <Link to={`/app/profile/${u.username}`} className="min-w-0 truncate text-sm font-bold text-white transition-colors hover:text-violet-400">@{u.username}</Link>
+                          </div>
+                          {u.levelTitle && (
+                            <div className="mt-2 flex max-w-full">
+                              <div className="max-w-full overflow-hidden rounded-lg">
+                                <LevelBadge title={u.levelTitle} />
+                              </div>
                             </div>
                           )}
                         </div>
-                      </Link>
-                      <div className="min-w-0">
-                        <Link to={`/app/profile/${u.username}`} className="text-sm font-bold text-white hover:text-violet-400 transition-colors truncate block">@{u.username}</Link>
-                        {u.levelTitle && (
-                          <div className="mt-1 origin-left scale-[0.95]">
-                            <LevelBadge title={u.levelTitle} />
-                          </div>
-                        )}
                       </div>
+                      <button
+                        onClick={() => actions.handleFollowUser(u.username)}
+                        className="shrink-0 rounded-lg bg-violet-500/10 px-3.5 py-2 text-[10px] font-black uppercase tracking-widest text-violet-400 transition-all hover:bg-violet-600 hover:text-white"
+                      >
+                        Seguir
+                      </button>
                     </div>
-                    <button
-                      onClick={() => actions.handleFollowUser(u.username)}
-                      className="text-[10px] font-black uppercase tracking-widest text-violet-400 hover:text-white bg-violet-500/10 hover:bg-violet-600 px-4 py-2 rounded-lg transition-all shrink-0"
-                    >
-                      Seguir
-                    </button>
                   </div>
                 ))}
               </div>

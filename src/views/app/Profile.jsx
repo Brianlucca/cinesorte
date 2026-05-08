@@ -165,13 +165,24 @@ export default function Profile() {
                     </button>
                 </div>
                 {ui.activeTab === 'activity' && (
-                    <div className="flex gap-2 pb-4 md:pb-0 overflow-x-auto scrollbar-hide">
-                        <button onClick={() => actions.setActivityFilter('all')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${ui.activityFilter === 'all' ? 'bg-white text-black border-transparent' : 'bg-black/40 text-zinc-500 border-white/5 hover:text-white'}`}>Tudo</button>
-                        <button onClick={() => actions.setActivityFilter('watched')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${ui.activityFilter === 'watched' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-black/40 text-zinc-500 border-white/5 hover:text-white'}`}>Assistidos</button>
-                        <button onClick={() => actions.setActivityFilter('like')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${ui.activityFilter === 'like' ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-black/40 text-zinc-500 border-white/5 hover:text-white'}`}>Curtidas</button>
+                    <div className="flex flex-wrap gap-2 pb-4 md:pb-0">
+                        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                            <button onClick={() => actions.setActivityFilter('all')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${ui.activityFilter === 'all' ? 'bg-white text-black border-transparent' : 'bg-black/40 text-zinc-500 border-white/5 hover:text-white'}`}>Tudo</button>
+                            <button onClick={() => actions.setActivityFilter('watched')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${ui.activityFilter === 'watched' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-black/40 text-zinc-500 border-white/5 hover:text-white'}`}>Assistidos</button>
+                            <button onClick={() => actions.setActivityFilter('like')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${ui.activityFilter === 'like' ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-black/40 text-zinc-500 border-white/5 hover:text-white'}`}>Curtidas</button>
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto scrollbar-hide border-l border-white/10 pl-2">
+                            <button onClick={() => actions.setActivityOrder('desc')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${ui.activityOrder === 'desc' ? 'bg-violet-500/20 text-violet-300 border-violet-500/30' : 'bg-black/40 text-zinc-500 border-white/5 hover:text-white'}`}>Recentes</button>
+                            <button onClick={() => actions.setActivityOrder('asc')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${ui.activityOrder === 'asc' ? 'bg-violet-500/20 text-violet-300 border-violet-500/30' : 'bg-black/40 text-zinc-500 border-white/5 hover:text-white'}`}>Antigos</button>
+                        </div>
                     </div>
                 )}
             </div>
+            {(ui.activeTab === 'activity' || ui.activeTab === 'diary') && (
+                <p className="mb-6 rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 text-xs font-medium leading-relaxed text-zinc-500">
+                    As datas mostram o dia em que o conteúdo foi marcado como assistido ou curtido.
+                </p>
+            )}
             
             <div className="animate-in fade-in duration-300">
               {ui.activeTab === 'activity' && <ActivityFeed interactions={data.displayItems} />}

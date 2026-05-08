@@ -14,6 +14,15 @@ import {
 
 const ITEMS_PER_PAGE = 10;
 
+const parseInteractionDate = (value) => {
+  if (!value) return null;
+  if (value._seconds) return new Date(value._seconds * 1000);
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
 export function useProfileLogic() {
   const { user: authUser, updateProfile: updateAuthProfile } = useAuth();
   const toast = useToast();
@@ -38,6 +47,7 @@ export function useProfileLogic() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('activity'); 
   const [activityFilter, setActivityFilter] = useState('all'); 
+  const [activityOrder, setActivityOrder] = useState('desc');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   const [reviewsCursor, setReviewsCursor] = useState(null);
@@ -79,29 +89,34 @@ export function useProfileLogic() {
       if (interactionsData && Array.isArray(interactionsData)) {
         interactionsData.forEach(item => {
           if (item.liked) {
+            const actionDate = parseInteractionDate(item.likedAt) || parseInteractionDate(item.timestamp);
             processedInteractions.push({
               ...item,
               action: 'like',
-              sortDate: item.timestamp?._seconds ? new Date(item.timestamp._seconds * 1000) : new Date()
+              actionDate,
+              sortDate: actionDate
             });
           }
           if (item.watched) {
+            const actionDate = parseInteractionDate(item.watchedAt) || parseInteractionDate(item.timestamp);
             processedInteractions.push({
               ...item,
               action: 'watched',
-              sortDate: item.timestamp?._seconds ? new Date(item.timestamp._seconds * 1000) : new Date()
+              actionDate,
+              sortDate: actionDate
             });
           }
         });
       }
-      processedInteractions.sort((a, b) => b.sortDate - a.sortDate);
+      processedInteractions.sort((a, b) => (b.sortDate?.getTime() || 0) - (a.sortDate?.getTime() || 0));
       setAllInteractions(processedInteractions);
 
-    } catch (error) {
+    } catch {
+      toast.error('Erro', 'Nao foi possivel carregar seu perfil.');
     } finally {
       setLoading(false);
     }
-  }, [authUser?.uid, authUser?.username]);
+  }, [authUser?.uid, authUser?.username, toast]);
 
   useEffect(() => {
     loadData();
@@ -125,7 +140,7 @@ export function useProfileLogic() {
     } finally {
       setLoadingMoreReviews(false);
     }
-  }, [authUser?.username, reviewsCursor, loadingMoreReviews]);
+  }, [authUser?.username, reviewsCursor, loadingMoreReviews, toast]);
 
   const updateAvatar = async (url) => {
     try {
@@ -177,9 +192,16 @@ export function useProfileLogic() {
   };
 
   const filteredInteractions = useMemo(() => {
-    if (activityFilter === 'all') return allInteractions;
-    return allInteractions.filter(item => item.action === activityFilter);
-  }, [allInteractions, activityFilter]);
+    const filtered = activityFilter === 'all'
+      ? allInteractions
+      : allInteractions.filter(item => item.action === activityFilter);
+
+    return [...filtered].sort((a, b) => {
+      const dateA = a.sortDate?.getTime?.() || a.timestamp?._seconds || 0;
+      const dateB = b.sortDate?.getTime?.() || b.timestamp?._seconds || 0;
+      return activityOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+  }, [allInteractions, activityFilter, activityOrder]);
 
   const displayData = useMemo(() => {
     if (activeTab === 'activity') return filteredInteractions.slice(0, visibleCount);
@@ -213,6 +235,7 @@ export function useProfileLogic() {
 
   const handleTabChange = (tab) => { setActiveTab(tab); setVisibleCount(ITEMS_PER_PAGE); };
   const handleFilterChange = (filter) => { setActivityFilter(filter); setVisibleCount(ITEMS_PER_PAGE); };
+  const handleActivityOrderChange = (order) => { setActivityOrder(order); setVisibleCount(ITEMS_PER_PAGE); };
   const openModal = (name) => setModals(prev => ({ ...prev, [name]: true }));
   const closeModal = (name) => setModals(prev => ({ ...prev, [name]: false }));
 
@@ -238,11 +261,12 @@ export function useProfileLogic() {
       followingList,
       year: new Date().getFullYear()
     },
-    ui: { loading, activeTab, activityFilter, hasMore, loadingLists, loadingMoreReviews },
+    ui: { loading, activeTab, activityFilter, activityOrder, hasMore, loadingLists, loadingMoreReviews },
     modals,
     actions: {
       setActiveTab: handleTabChange,
       setActivityFilter: handleFilterChange,
+      setActivityOrder: handleActivityOrderChange,
       loadMore: handleLoadMore,
       openModal,
       closeModal,

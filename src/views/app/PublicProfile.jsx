@@ -147,7 +147,7 @@ export default function PublicProfile() {
         <div className="bg-zinc-950/50 backdrop-blur-md rounded-3xl p-6 border border-white/5 shadow-xl min-h-[500px]">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-2 mb-6">
                 <div className="flex gap-6 overflow-x-auto scrollbar-hide">
-                    <button className="flex items-center gap-2 pb-4 text-sm font-bold transition-all border-b-2 whitespace-nowrap text-white border-violet-500">
+                    <button className="flex items-center gap-2 pb-4 text-base font-bold transition-all border-b-2 whitespace-nowrap text-white border-violet-500">
                         <MessageSquare size={18} /> Reviews
                     </button>
                 </div>
