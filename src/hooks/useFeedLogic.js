@@ -34,6 +34,7 @@ export function useFeedLogic() {
     following: null,
     collections: null,
   });
+  const feedRequestIdRef = useRef(0);
 
   const [localUser, setLocalUser] = useState(user || {});
   const [suggestions, setSuggestions] = useState({ users: [], content: [] });
@@ -66,7 +67,7 @@ export function useFeedLogic() {
             }
             return { ...prev, ...user, ...stats };
           });
-        } catch (e) {
+        } catch {
           setLocalUser(user);
         }
       }
@@ -74,7 +75,7 @@ export function useFeedLogic() {
     syncUserStats();
   }, [user]);
 
-  const normalizeItem = (item) => {
+  const normalizeItem = useCallback((item) => {
     let listItemsSafe = Array.isArray(item.listItems) ? item.listItems : [];
     const isList = item.type === 'list_share' || (item.listName && listItemsSafe.length > 0);
     const derivedType = isList ? 'list_share' : (item.type || 'review');
@@ -91,9 +92,12 @@ export function useFeedLogic() {
       username: item.username || item.user?.username,
       userPhoto: item.userPhoto || item.user?.photoURL
     };
-  };
+  }, []);
 
   const loadFeed = useCallback(async (currentPage = 1, isRefresh = false) => {
+    const requestId = ++feedRequestIdRef.current;
+    const requestedFeedType = feedType;
+
     if (currentPage === 1) setLoading(true);
     else setLoadingMore(true);
 
@@ -102,38 +106,46 @@ export function useFeedLogic() {
       let currentMineHasMore = false;
       let currentHasMore = false;
 
-      if (feedType === 'following') {
+      if (requestedFeedType === 'following') {
         const cursor = isRefresh || currentPage === 1 ? null : feedCursorRef.current.following;
         const response = await getFollowingFeed(cursor);
         data = response?.items || [];
         currentHasMore = response?.hasMore || false;
-        feedCursorRef.current.following = response?.nextCursor || null;
+        if (requestId === feedRequestIdRef.current) {
+          feedCursorRef.current.following = response?.nextCursor || null;
+        }
 
-      } else if (feedType === 'collections') {
+      } else if (requestedFeedType === 'collections') {
         const cursor = isRefresh || currentPage === 1 ? null : feedCursorRef.current.collections;
         const response = await getSharedListsFeed(cursor);
         data = response?.items || [];
         currentHasMore = response?.hasMore || false;
-        feedCursorRef.current.collections = response?.nextCursor || null;
+        if (requestId === feedRequestIdRef.current) {
+          feedCursorRef.current.collections = response?.nextCursor || null;
+        }
 
-      } else if (feedType === 'mine' && localUser?.username) {
+      } else if (requestedFeedType === 'mine' && localUser?.username) {
         const cursor = isRefresh || currentPage === 1 ? null : mineCursorRef.current;
         const response = await getUserReviewsOnly(localUser.username, cursor);
         const rawItems = response?.items || [];
         currentMineHasMore = response?.hasMore || false;
-        mineCursorRef.current = response?.nextCursor || null;
+        if (requestId === feedRequestIdRef.current) {
+          mineCursorRef.current = response?.nextCursor || null;
+        }
         data = rawItems;
       }
+
+      if (requestId !== feedRequestIdRef.current) return;
 
       const safeData = Array.isArray(data) ? data.map(normalizeItem) : [];
 
       const filteredData = safeData.filter(item => {
         if (item.type === 'list_share' && item.listCount === 0) return false;
-        if (feedType === 'collections') return item.type === 'list_share';
+        if (requestedFeedType === 'collections') return item.type === 'list_share';
         return true;
       });
 
-      if (feedType === 'mine') {
+      if (requestedFeedType === 'mine') {
         setHasMore(currentMineHasMore);
       } else {
         setHasMore(currentHasMore);
@@ -149,13 +161,16 @@ export function useFeedLogic() {
         });
       }
     } catch {
+      if (requestId !== feedRequestIdRef.current) return;
       if (currentPage === 1) setReviews([]);
       setHasMore(false);
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (requestId === feedRequestIdRef.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
-  }, [feedType, localUser?.username]);
+  }, [feedType, localUser?.username, normalizeItem]);
 
   const getDateValue = (dateInput) => {
     if (!dateInput) return 0;
@@ -193,7 +208,9 @@ export function useFeedLogic() {
       });
 
       setHasNewPosts(hasNewer);
-    } catch {}
+    } catch {
+      // Polling is best-effort; the current feed stays visible on failure.
+    }
   }, [feedType, reviews, loading, loadingMore]);
 
   const loadNewPosts = async () => {
@@ -208,11 +225,16 @@ export function useFeedLogic() {
 
   const handleSetFeedType = (type) => {
     if (feedType === type) return;
+    feedRequestIdRef.current += 1;
     setFeedType(type);
     setReviews([]);
+    setLoading(true);
+    setLoadingMore(false);
     setHasMore(true);
     mineCursorRef.current = null;
-    feedCursorRef.current[type] = null;
+    if (type === 'following' || type === 'collections') {
+      feedCursorRef.current[type] = null;
+    }
   };
 
   const loadMore = () => {
@@ -236,13 +258,18 @@ export function useFeedLogic() {
         users: validUsers.slice(0, 5),
         content: Array.isArray(contentData) ? contentData.slice(0, 4) : []
       });
-    } catch {}
+    } catch {
+      // Sidebar suggestions are optional and should not block the feed.
+    }
   }, [localUser?.username]);
 
   useEffect(() => {
     loadFeed(1, true);
+  }, [loadFeed]);
+
+  useEffect(() => {
     loadSidebarData();
-  }, [loadFeed, loadSidebarData]);
+  }, [loadSidebarData]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -373,7 +400,11 @@ export function useFeedLogic() {
     likeTimeouts.current[reviewId] = setTimeout(async () => {
       const clicks = likeClickCounts.current[reviewId] || 0;
       if (clicks % 2 !== 0) {
-        try { await toggleLikeReview(reviewId); } catch {}
+        try {
+          await toggleLikeReview(reviewId);
+        } catch {
+          // Keep the optimistic like state; the next feed refresh will reconcile it.
+        }
       }
       delete likeClickCounts.current[reviewId];
       delete likeTimeouts.current[reviewId];
