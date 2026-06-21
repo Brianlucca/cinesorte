@@ -1,106 +1,127 @@
-import { useState, useEffect } from 'react';
-import { X, Maximize2 } from 'lucide-react';
-import { createPortal } from 'react-dom';
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { Maximize2, X } from "lucide-react";
 
-export default function MediaImages({ images }) {
-    const [selectedImage, setSelectedImage] = useState(null);
+export default function MediaImages({ images, title = "Galeria" }) {
+  const [selectedImage, setSelectedImage] = useState(null);
 
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') setSelectedImage(null);
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
+  useEffect(() => {
+    if (!selectedImage) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setSelectedImage(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedImage]);
 
-    if (!images || (images.backdrops.length === 0 && images.posters.length === 0)) return null;
+  const backdrops = images?.backdrops?.slice(0, 5) || [];
+  const posters = images?.posters?.slice(0, 12) || [];
 
-    const backdrops = images.backdrops?.slice(0, 25) || [];
-    const posters = images.posters?.slice(0, 25) || [];
+  if (backdrops.length === 0 && posters.length === 0) return null;
 
-    return (
-        <section className="w-full">
-            <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
-                <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
-                Galeria
-            </h2>
+  const ImageButton = ({ image, className, label }) => (
+    <button
+      type="button"
+      onClick={() => setSelectedImage(image.file_path)}
+      className={`group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-zinc-900 text-left shadow-xl transition-all hover:-translate-y-1 hover:border-violet-300/30 ${className}`}
+      aria-label={label}
+    >
+      <img
+        src={`https://image.tmdb.org/t/p/w780${image.file_path}`}
+        alt=""
+        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+        loading="lazy"
+      />
+      <span className="absolute inset-0 grid place-items-center bg-black/0 opacity-0 transition-all group-hover:bg-black/35 group-hover:opacity-100">
+        <Maximize2 className="text-white drop-shadow-xl" size={28} />
+      </span>
+    </button>
+  );
 
-            <div className="space-y-10">
-                {backdrops.length > 0 && (
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-4">Ambiente & Cenas</h3>
-                        <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                            {backdrops.map((img, idx) => (
-                                <button 
-                                    key={idx} 
-                                    onClick={() => setSelectedImage(img.file_path)}
-                                    className="relative flex-none w-72 md:w-96 aspect-video rounded-2xl overflow-hidden group border border-white/5 bg-zinc-900/50 shadow-lg hover:-translate-y-1 transition-all duration-300"
-                                >
-                                    <img 
-                                        src={`https://image.tmdb.org/t/p/w780${img.file_path}`} 
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                        alt={`Backdrop ${idx}`}
-                                        loading="lazy"
-                                    />
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
-                                        <Maximize2 className="text-white/80 drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" size={32} />
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
+  return (
+    <section>
+      <div className="mb-6">
+        <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
+          Bastidores visuais
+        </span>
+        <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">Galeria</h2>
+      </div>
 
-                {posters.length > 0 && (
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-                        <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-4">Posters Oficiais</h3>
-                        <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                            {posters.map((img, idx) => (
-                                <button 
-                                    key={idx} 
-                                    onClick={() => setSelectedImage(img.file_path)}
-                                    className="relative flex-none w-32 md:w-48 aspect-[2/3] rounded-2xl overflow-hidden group border border-white/5 bg-zinc-900/50 shadow-lg hover:-translate-y-1 transition-all duration-300"
-                                >
-                                    <img 
-                                        src={`https://image.tmdb.org/t/p/w500${img.file_path}`} 
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                        alt={`Poster ${idx}`}
-                                        loading="lazy"
-                                    />
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
-                                        <Maximize2 className="text-white/80 drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" size={28} />
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
+      {backdrops.length > 0 && (
+        <div className="grid h-[360px] grid-cols-2 grid-rows-2 gap-2.5 md:h-[520px] md:grid-cols-4 md:gap-3">
+          <ImageButton
+            image={backdrops[0]}
+            label="Ampliar imagem principal"
+            className="col-span-2 row-span-2"
+          />
+          {backdrops.slice(1, 5).map((image) => (
+            <ImageButton
+              key={image.file_path}
+              image={image}
+              label="Ampliar cena"
+              className="hidden md:block"
+            />
+          ))}
+        </div>
+      )}
 
-            {selectedImage && createPortal(
-                <div 
-                    className="fixed inset-0 z-[100000] bg-zinc-950/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300"
-                    onClick={() => setSelectedImage(null)}
-                >
-                    <button 
-                        className="absolute top-6 right-6 md:top-8 md:right-8 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 p-3 rounded-full transition-all shadow-lg z-[100001]"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedImage(null);
-                        }}
-                    >
-                        <X size={24} />
-                    </button>
-                    
-                    <img 
-                        src={`https://image.tmdb.org/t/p/original${selectedImage}`} 
-                        className="max-w-full max-h-[90vh] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-300 object-contain border border-white/5 select-none"
-                        alt="Zoom"
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                </div>,
-                document.body
-            )}
-        </section>
-    );
+      {posters.length > 0 && (
+        <div className="mt-8">
+          <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+            Pôsteres oficiais
+          </h3>
+          <div className="flex snap-x snap-mandatory gap-3.5 overflow-x-auto pb-3 scrollbar-hide md:gap-4">
+            {posters.map((image, index) => (
+              <button
+                type="button"
+                key={image.file_path}
+                onClick={() => setSelectedImage(image.file_path)}
+                className="group relative aspect-[2/3] w-28 shrink-0 snap-start overflow-hidden rounded-2xl border border-white/[0.07] bg-zinc-900 transition-all hover:-translate-y-1 hover:border-violet-300/30 md:w-40"
+                aria-label={`Ampliar pôster ${index + 1}`}
+              >
+                <img
+                  src={`https://image.tmdb.org/t/p/w500${image.file_path}`}
+                  alt=""
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  loading="lazy"
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {selectedImage &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[100000] flex items-center justify-center bg-zinc-950/95 p-4 backdrop-blur-xl md:p-8"
+            onClick={() => setSelectedImage(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Imagem ampliada de ${title}`}
+          >
+            <button
+              type="button"
+              aria-label="Fechar imagem"
+              className="absolute right-5 top-5 z-10 grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-black/40 text-zinc-300 backdrop-blur-xl transition-all hover:bg-white hover:text-black md:right-8 md:top-8"
+              onClick={() => setSelectedImage(null)}
+            >
+              <X size={22} />
+            </button>
+            <img
+              src={`https://image.tmdb.org/t/p/original${selectedImage}`}
+              className="max-h-[90vh] max-w-full select-none rounded-2xl border border-white/5 object-contain shadow-2xl trailer-cinema-video-enter"
+              alt={`Imagem de ${title}`}
+              onClick={(event) => event.stopPropagation()}
+            />
+          </div>,
+          document.body,
+        )}
+    </section>
+  );
 }

@@ -1,30 +1,51 @@
 import {
-  Star,
-  Clock,
+  Building,
   Calendar,
-  Play,
-  Heart,
   Check,
+  Clock,
+  DollarSign,
+  Facebook,
+  Globe,
+  Heart,
+  Instagram,
+  Play,
   Plus,
   Share2,
-  Facebook,
-  Twitter,
-  Instagram,
+  Star,
   Tag,
-  DollarSign,
-  Building,
+  Twitter,
   User,
-  Globe
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { createPortal } from 'react-dom';
 import { useMediaDetailsLogic } from "../../hooks/useMediaDetailsLogic";
-import MediaCard from "../../components/ui/MediaCard";
-import TrailerModal from "../../components/media/TrailerModal";
-import ReviewsSection from "../../components/media/reviews/ReviewsSection";
 import AddToListModal from "../../components/media/AddToListModal";
-import SeasonInfo from "../../components/media/SeasonInfo";
 import MediaImages from "../../components/media/MediaImages";
+import ReviewsSection from "../../components/media/reviews/ReviewsSection";
+import SeasonInfo from "../../components/media/SeasonInfo";
+import TrailerModal from "../../components/media/TrailerModal";
+import MovieRow from "../../components/dashboard/MovieRow";
+
+const SectionHeading = ({ eyebrow, children, aside }) => (
+  <div className="mb-6 flex items-end justify-between gap-4">
+    <div>
+      {eyebrow && (
+        <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
+          {eyebrow}
+        </span>
+      )}
+      <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">{children}</h2>
+    </div>
+    {aside}
+  </div>
+);
+
+const getStatusColor = (status) => {
+  if (["Released", "Returning Series"].includes(status)) return "text-emerald-400";
+  if (status === "Ended") return "text-red-400";
+  if (status === "In Production") return "text-yellow-300";
+  if (status === "Planned") return "text-sky-400";
+  return "text-zinc-300";
+};
 
 export default function MediaDetails() {
   const {
@@ -41,79 +62,75 @@ export default function MediaDetails() {
     setModals,
     isEliteUser,
     communityStats,
-    actions
+    actions,
   } = useMediaDetailsLogic();
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-zinc-950">
-        <div className="w-12 h-12 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="grid h-screen place-items-center bg-zinc-950">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-violet-600 border-t-transparent" />
       </div>
     );
+  }
 
-  if (!media)
+  if (!media) {
     return (
-      <div className="h-screen flex items-center justify-center text-white">
+      <div className="grid h-screen place-items-center bg-zinc-950 text-white">
         Conteúdo não encontrado.
       </div>
     );
+  }
 
+  const title = media.title || media.name;
   const banner = media.backdrop_path
     ? `https://image.tmdb.org/t/p/original${media.backdrop_path}`
     : null;
-    
+  const poster = media.poster_path
+    ? `https://image.tmdb.org/t/p/w500${media.poster_path}`
+    : null;
   const trailerKey =
     media.trailer?.key ||
     media.videos?.results?.find(
-      (v) => v.type === "Trailer" && v.site === "YouTube"
+      (video) => video.type === "Trailer" && video.site === "YouTube",
     )?.key;
-
-  const directors = media.credits?.crew?.filter((c) => c.job === "Director") || [];
+  const directors = media.credits?.crew?.filter((person) => person.job === "Director") || [];
   const creators = media.created_by || [];
-  const writers = media.credits?.crew?.filter((c) => c.job === "Screenplay" || c.job === "Writer").slice(0, 3) || [];
+  const writers =
+    media.credits?.crew
+      ?.filter((person) => ["Screenplay", "Writer"].includes(person.job))
+      .slice(0, 3) || [];
+  const creativeLeads = creators.length > 0 ? creators : directors;
   const externalIds = media.external_ids || {};
+  const releaseDate = media.release_date || media.first_air_date;
+  const releaseLabel = releaseDate
+    ? new Date(`${releaseDate}T12:00:00`).toLocaleDateString("pt-BR", {
+        year: "numeric",
+        month: "long",
+      })
+    : "Data não informada";
+  const runtime = media.runtime || media.episode_run_time?.[0];
+  const communityAverage = communityStats
+    ? Number(communityStats.average).toFixed(1)
+    : null;
+  const tmdbAverage = Number(media.vote_average || 0).toFixed(1);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Released": return "text-green-400";
-      case "Ended": return "text-red-400";
-      case "Returning Series": return "text-green-400";
-      case "In Production": return "text-yellow-400";
-      case "Planned": return "text-blue-400";
-      default: return "text-zinc-400";
-    }
-  };
-
-  const renderStars = (voteAverage) => {
-    const stars = [];
-    const ratingOutOf5 = voteAverage / 2;
-    for (let i = 1; i <= 5; i++) {
-      if (i <= Math.round(ratingOutOf5)) {
-        stars.push(<Star key={i} size={16} className="fill-yellow-500 text-yellow-500" />);
-      } else {
-        stars.push(<Star key={i} size={16} className="text-zinc-600" />);
-      }
-    }
-    return stars;
-  };
+  const openTrailer = () =>
+    setModals((previous) => ({ ...previous, trailer: true }));
+  const openList = () =>
+    setModals((previous) => ({ ...previous, addToList: true }));
 
   return (
-    <div className="-mt-24 md:-mt-8 pb-20 w-full overflow-x-hidden bg-zinc-950 animate-in fade-in duration-700">
-      
-      {modals.trailer && createPortal(
-        <div className="fixed inset-0 z-[100000] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm">
-            <TrailerModal
-                isOpen={modals.trailer}
-                onClose={() => setModals((prev) => ({ ...prev, trailer: false }))}
-                videoKey={trailerKey}
-            />
-        </div>,
-        document.body
-      )}
+    <div className="-mt-24 w-full overflow-x-hidden bg-zinc-950 pb-32 text-white md:-mt-8 md:pb-20">
+      <TrailerModal
+        isOpen={modals.trailer}
+        onClose={() => setModals((previous) => ({ ...previous, trailer: false }))}
+        videoKey={trailerKey}
+        title={title}
+      />
 
       <AddToListModal
         isOpen={modals.addToList}
-        onClose={() => setModals((prev) => ({ ...prev, addToList: false }))}
+        onClose={() => setModals((previous) => ({ ...previous, addToList: false }))}
         lists={userLists}
         onAdd={actions.handleAddToList}
         onCreate={actions.handleCreateList}
@@ -121,278 +138,249 @@ export default function MediaDetails() {
         addingToListId={addingToListId}
       />
 
-      <div className="relative w-full h-[90vh] mb-12 group">
+      <header className="relative min-h-[760px] h-[92svh] max-h-[980px] overflow-hidden">
         <div className="absolute inset-0">
           {banner ? (
-            <img
-              src={banner}
-              alt="Banner"
-              className="w-full h-full object-cover object-top"
-            />
+            <img src={banner} alt="" className="h-full w-full object-cover object-top" />
           ) : (
-            <div className="w-full h-full bg-zinc-900" />
+            <div className="h-full w-full bg-zinc-900" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/10 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,9,11,0.98)_0%,rgba(9,9,11,0.78)_42%,rgba(9,9,11,0.18)_78%,rgba(9,9,11,0.08)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(0deg,#09090b_0%,rgba(9,9,11,0.88)_10%,transparent_52%,rgba(9,9,11,0.38)_100%)]" />
+          <div className="absolute -bottom-24 left-1/3 h-80 w-80 rounded-full bg-violet-700/10 blur-[110px]" />
         </div>
 
-        <div className="absolute bottom-0 top-0 left-0 w-full flex flex-col justify-end px-6 md:px-12 pb-24 max-w-6xl z-20">
-          <div className="flex flex-wrap gap-2 mb-4 animate-in slide-in-from-bottom-2 fade-in duration-1000">
-            {media.genres?.map((g) => (
-              <span
-                key={g.id}
-                className="text-xs font-bold uppercase tracking-wider bg-white/10 backdrop-blur-xl border border-white/20 px-4 py-1.5 rounded-full text-white shadow-lg"
-              >
-                {g.name}
-              </span>
-            ))}
-          </div>
-
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 leading-snug pb-2 drop-shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-1000">
-            {media.title || media.name}
-          </h1>
-
-          {media.tagline && (
-            <p className="text-lg md:text-2xl text-zinc-200 font-light italic mb-8 max-w-3xl animate-in slide-in-from-bottom-6 fade-in duration-1000 drop-shadow-md">
-              "{media.tagline}"
-            </p>
-          )}
-
-          <div className="flex flex-wrap items-center gap-8 text-sm md:text-base font-medium text-zinc-100 mb-10 animate-in slide-in-from-bottom-8 fade-in duration-1000">
-            <div className="flex items-center gap-3 bg-transparent border border-white/30 backdrop-blur-md px-5 py-3 rounded-2xl">
-                <div className="flex items-center gap-2">
-                  {renderStars(communityStats ? parseFloat(communityStats.average) * 2 : media.vote_average)}
-                </div>
-                <span className="text-2xl font-bold text-white tracking-tighter">
-                  {communityStats ? parseFloat(communityStats.average).toFixed(1) : media.vote_average.toFixed(1)}
-                </span>
-                <div className="h-6 w-px bg-white/30 mx-1"></div>
-                <div className="flex flex-col leading-tight">
-                    <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
-                      {communityStats ? "CINESORTE" : "TMDB"}
-                    </span>
-                    <span className="text-[10px] text-zinc-400 uppercase tracking-wider">Score</span>
-                </div>
-            </div>
-
-            <div className="h-10 w-px bg-white/20 hidden md:block"></div>
-
-            <div className="flex items-center gap-6">
-                <span className="flex items-center gap-2 text-zinc-300">
-                    <Calendar size={20} className="text-zinc-400" />{" "}
-                    {new Date(
-                      media.release_date || media.first_air_date,
-                    ).toLocaleDateString("pt-BR", {
-                        year: "numeric",
-                        month: "long",
-                    })}
-                </span>
-
-                {media.runtime ? (
-                <span className="flex items-center gap-2 text-zinc-300">
-                    <Clock size={20} className="text-zinc-400" />
-                    {Math.floor(media.runtime / 60)}h {media.runtime % 60}m
-                </span>
-                ) : (
-                media.episode_run_time?.length > 0 && (
-                    <span className="flex items-center gap-2 text-zinc-300">
-                        <Clock size={20} className="text-zinc-400" />
-                        {media.episode_run_time[0]} min
-                    </span>
-                )
-                )}
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-4 animate-in slide-in-from-bottom-10 fade-in duration-1000">
-            {trailerKey && (
-              <button
-                onClick={() => setModals((prev) => ({ ...prev, trailer: true }))}
-                className="flex items-center gap-3 px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
-              >
-                <Play size={20} fill="currentColor" /> Assistir Trailer
-              </button>
+        <div className="relative z-10 mx-auto flex h-full w-full max-w-[1600px] items-end px-5 pb-20 pt-28 sm:px-8 md:px-12 md:pb-24 xl:px-16">
+          <div className="flex w-full items-end gap-8 xl:gap-12">
+            {poster && (
+              <div className="hidden w-[220px] shrink-0 overflow-hidden rounded-[1.75rem] border border-white/15 bg-zinc-900 shadow-[0_30px_80px_rgba(0,0,0,0.65)] lg:block xl:w-[260px]">
+                <img src={poster} alt={`Pôster de ${title}`} className="aspect-[2/3] w-full object-cover" />
+              </div>
             )}
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => actions.handleInteract("like")}
-                className={`p-4 rounded-xl border-2 transition-all duration-300 transform active:scale-90 ${
-                  interactions.liked
-                    ? "bg-red-600 border-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.5)]"
-                    : "bg-black/40 border-white/10 text-white hover:bg-white/10 backdrop-blur-md"
-                }`}
-                title="Favoritar"
-              >
-                <Heart
-                  size={24}
-                  fill={interactions.liked ? "white" : "none"}
-                  className={interactions.liked ? "animate-in zoom-in duration-300" : ""}
-                />
-              </button>
+            <div className="max-w-4xl min-w-0 pb-2">
+              <div className="mb-4 flex flex-wrap gap-2">
+                {media.genres?.slice(0, 4).map((genre) => (
+                  <span
+                    key={genre.id}
+                    className="rounded-full border border-white/15 bg-black/25 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-200 backdrop-blur-xl"
+                  >
+                    {genre.name}
+                  </span>
+                ))}
+              </div>
 
-              <button
-                onClick={() => actions.handleInteract("watched")}
-                className={`p-4 rounded-xl border-2 transition-all duration-300 transform active:scale-90 ${
-                  interactions.watched
-                    ? "bg-green-600 border-green-600 text-white shadow-[0_0_20px_rgba(22,163,74,0.5)]"
-                    : "bg-black/40 border-white/10 text-white hover:bg-white/10 backdrop-blur-md"
-                }`}
-                title="Já assisti"
-              >
-                <Check size={24} strokeWidth={3} className={interactions.watched ? "animate-in zoom-in duration-300" : ""} />
-              </button>
+              <h1 className="max-w-4xl text-4xl font-black leading-[0.95] tracking-[-0.04em] text-white drop-shadow-2xl sm:text-5xl md:text-6xl xl:text-7xl">
+                {title}
+              </h1>
 
-              <button
-                onClick={() => setModals((prev) => ({ ...prev, addToList: true }))}
-                className="p-4 rounded-xl bg-black/40 border-2 border-white/10 text-white hover:bg-white/10 backdrop-blur-md transition-all hover:scale-105"
-                title="Adicionar à lista"
-              >
-                <Plus size={24} />
-              </button>
+              {media.tagline && (
+                <p className="mt-4 max-w-2xl text-sm italic leading-relaxed text-zinc-300 sm:text-base md:text-lg">
+                  “{media.tagline}”
+                </p>
+              )}
 
-              <button
-                onClick={actions.handleShare}
-                className="p-4 rounded-xl bg-black/40 border-2 border-white/10 text-white hover:bg-white/10 backdrop-blur-md transition-all hover:scale-105"
-                title="Compartilhar"
-              >
-                <Share2 size={24} />
-              </button>
+              <div className="mt-6 flex flex-wrap items-center gap-2.5 text-xs font-semibold text-zinc-300 md:text-sm">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+                  <Calendar size={15} /> {releaseLabel}
+                </span>
+                {runtime && (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+                    <Clock size={15} />
+                    {media.runtime
+                      ? `${Math.floor(runtime / 60)}h ${runtime % 60}m`
+                      : `${runtime} min por episódio`}
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                {communityAverage && (
+                  <div className="min-w-32 rounded-2xl border border-violet-400/20 bg-violet-500/10 px-4 py-3 backdrop-blur-xl">
+                    <div className="flex items-center gap-2">
+                      <Star size={16} className="fill-violet-300 text-violet-300" />
+                      <span className="text-xl font-black">{communityAverage}</span>
+                      <span className="text-xs text-zinc-500">/ 5</span>
+                    </div>
+                    <span className="mt-1 block text-[9px] font-black uppercase tracking-[0.18em] text-violet-300/80">
+                      Comunidade
+                    </span>
+                  </div>
+                )}
+                <div className="min-w-32 rounded-2xl border border-yellow-300/15 bg-yellow-300/[0.07] px-4 py-3 backdrop-blur-xl">
+                  <div className="flex items-center gap-2">
+                    <Star size={16} className="fill-yellow-300 text-yellow-300" />
+                    <span className="text-xl font-black">{tmdbAverage}</span>
+                    <span className="text-xs text-zinc-500">/ 10</span>
+                  </div>
+                  <span className="mt-1 block text-[9px] font-black uppercase tracking-[0.18em] text-yellow-200/70">
+                    TMDB
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-7 hidden flex-wrap items-center gap-2.5 md:flex">
+                {trailerKey && (
+                  <button
+                    type="button"
+                    onClick={openTrailer}
+                    className="inline-flex items-center gap-2.5 rounded-full bg-white px-6 py-3.5 text-sm font-black text-zinc-950 transition-all hover:scale-[1.02] hover:bg-violet-100"
+                  >
+                    <Play size={18} className="fill-current" /> Assistir trailer
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => actions.handleInteract("watched")}
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-3 text-xs font-bold backdrop-blur-xl transition-all ${
+                    interactions.watched
+                      ? "border-emerald-400/40 bg-emerald-500/20 text-emerald-200"
+                      : "border-white/15 bg-black/25 hover:bg-white/10"
+                  }`}
+                >
+                  <Check size={17} /> {interactions.watched ? "Assistido" : "Já assisti"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => actions.handleInteract("like")}
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-3 text-xs font-bold backdrop-blur-xl transition-all ${
+                    interactions.liked
+                      ? "border-red-400/40 bg-red-500/20 text-red-200"
+                      : "border-white/15 bg-black/25 hover:bg-white/10"
+                  }`}
+                >
+                  <Heart size={17} fill={interactions.liked ? "currentColor" : "none"} />
+                  {interactions.liked ? "Favoritado" : "Favoritar"}
+                </button>
+                <button
+                  type="button"
+                  onClick={openList}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/25 px-4 py-3 text-xs font-bold backdrop-blur-xl transition-all hover:bg-white/10"
+                >
+                  <Plus size={17} /> Adicionar à lista
+                </button>
+                <button
+                  type="button"
+                  onClick={actions.handleShare}
+                  className="grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-black/25 backdrop-blur-xl transition-all hover:bg-white/10"
+                  aria-label="Compartilhar"
+                >
+                  <Share2 size={17} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-[1600px] mx-auto px-6 md:px-12 relative z-20">
-        
-        <div className="lg:col-span-8 space-y-8">
-          
-          <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
-              Sinopse
-            </h2>
-            <p className="text-zinc-300 leading-relaxed text-lg text-justify font-light">
+      <div className="relative z-20 mx-auto grid max-w-[1600px] grid-cols-1 gap-10 px-5 sm:px-8 md:px-12 lg:grid-cols-12 lg:gap-12 xl:px-16">
+        <main className="space-y-14 lg:col-span-8 md:space-y-16">
+          <section className="relative pl-5 md:pl-8">
+            <span className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-violet-400 via-violet-500/40 to-transparent" />
+            <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
+              A história
+            </span>
+            <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">Sinopse</h2>
+            <p className="mt-5 max-w-4xl text-base font-light leading-8 text-zinc-300 md:text-lg md:leading-9">
               {media.overview || "Nenhuma descrição disponível."}
             </p>
           </section>
 
-          {(directors.length > 0 || creators.length > 0) && (
-            <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
-              <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
-                <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
-                {media.created_by ? "Criadores" : "Direção & Roteiro"}
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {(media.created_by || directors).map((p) => (
-                  <Link
-                    to={`/app/person/${p.id}`}
-                    key={p.id}
-                    className="flex items-center gap-5 p-3 rounded-2xl hover:bg-white/5 transition-colors group"
-                  >
-                    <div className="w-16 h-16 rounded-full overflow-hidden bg-zinc-800 border border-white/10 group-hover:border-violet-500/50 transition-colors">
-                      {p.profile_path ? (
-                        <img
-                          src={`https://image.tmdb.org/t/p/w185${p.profile_path}`}
-                          className="w-full h-full object-cover"
-                          alt={p.name}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <User className="text-zinc-500" />
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-white text-lg group-hover:text-violet-400 transition-colors">
-                        {p.name}
-                      </h4>
-                      <p className="text-sm text-zinc-500 font-medium">
-                        {p.job || "Criador"}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-                {writers.map((p) => (
-                  <Link
-                    to={`/app/person/${p.id}`}
-                    key={`${p.id}-writer`}
-                    className="flex items-center gap-5 p-3 rounded-2xl hover:bg-white/5 transition-colors group"
-                  >
-                    <div className="w-16 h-16 rounded-full overflow-hidden bg-zinc-800 border border-white/10 group-hover:border-violet-500/50 transition-colors">
-                      {p.profile_path ? (
-                        <img
-                          src={`https://image.tmdb.org/t/p/w185${p.profile_path}`}
-                          className="w-full h-full object-cover"
-                          alt={p.name}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <User className="text-zinc-500" />
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-white text-lg group-hover:text-violet-400 transition-colors">
-                        {p.name}
-                      </h4>
-                      <p className="text-sm text-zinc-500 font-medium">Roteiro</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
+          {media.seasons?.length > 0 && (
+            <SeasonInfo tvId={media.id} seasons={media.seasons} />
           )}
 
           {media.credits?.cast?.length > 0 && (
-            <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
-              <div className="flex justify-between items-end mb-8">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                  <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
-                  Elenco Principal
-                </h2>
-                <span className="text-sm font-medium text-zinc-500 bg-zinc-900/50 px-3 py-1 rounded-full">
-                  {media.credits.cast.length} membros
-                </span>
-              </div>
-              
-              <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            <section>
+              <SectionHeading
+                eyebrow="Quem dá vida à história"
+                aside={
+                  <span className="text-xs font-semibold text-zinc-500">
+                    {media.credits.cast.length} integrantes
+                  </span>
+                }
+              >
+                Elenco principal
+              </SectionHeading>
+              <div className="flex snap-x snap-mandatory gap-3.5 overflow-x-auto pb-3 scrollbar-hide md:gap-4">
                 {media.credits.cast.slice(0, 15).map((person) => (
                   <Link
                     to={`/app/person/${person.id}`}
                     key={person.id}
-                    className="min-w-[130px] w-[130px] group block"
+                    className="group flex w-[250px] shrink-0 snap-start items-center gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3 transition-all hover:-translate-y-1 hover:border-violet-300/25 hover:bg-white/[0.05] md:w-[285px]"
                   >
-                    <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-zinc-800 mb-4 shadow-lg group-hover:-translate-y-2 transition-transform duration-300 border border-white/5">
+                    <div className="h-24 w-20 shrink-0 overflow-hidden rounded-xl bg-zinc-800">
                       {person.profile_path ? (
                         <img
                           src={`https://image.tmdb.org/t/p/w185${person.profile_path}`}
-                          className="w-full h-full object-cover"
                           alt={person.name}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          loading="lazy"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-zinc-600">
-                          <User size={40} />
+                        <div className="grid h-full place-items-center text-zinc-600">
+                          <User size={28} />
                         </div>
                       )}
                     </div>
-                    <p className="text-sm font-bold text-white truncate group-hover:text-violet-400 transition-colors">
-                      {person.name}
-                    </p>
-                    <p className="text-xs text-zinc-500 truncate mt-0.5">
-                      {person.character}
-                    </p>
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-bold text-white group-hover:text-violet-300">
+                        {person.name}
+                      </h3>
+                      <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-500">
+                        {person.character || "Personagem não informado"}
+                      </p>
+                    </div>
                   </Link>
                 ))}
               </div>
             </section>
           )}
 
-          <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
-            <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
-              Avaliações da Comunidade
-            </h2>
+          {(creativeLeads.length > 0 || writers.length > 0) && (
+            <section>
+              <SectionHeading eyebrow="Por trás das câmeras">
+                {creators.length > 0 ? "Criação e roteiro" : "Direção e roteiro"}
+              </SectionHeading>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[...creativeLeads, ...writers].map((person, index) => (
+                  <Link
+                    to={`/app/person/${person.id}`}
+                    key={`${person.id}-${person.job || "creator"}-${index}`}
+                    className="group flex items-center gap-4 rounded-2xl border border-white/[0.06] p-3 transition-colors hover:border-white/15 hover:bg-white/[0.035]"
+                  >
+                    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-zinc-800">
+                      {person.profile_path ? (
+                        <img
+                          src={`https://image.tmdb.org/t/p/w185${person.profile_path}`}
+                          alt={person.name}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="grid h-full place-items-center text-zinc-600">
+                          <User size={20} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-bold text-white group-hover:text-violet-300">
+                        {person.name}
+                      </h3>
+                      <span className="mt-1 block text-xs text-zinc-500">
+                        {person.job || (creators.length > 0 ? "Criação" : "Direção")}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {media.images && <MediaImages images={media.images} title={title} />}
+
+          <section className="rounded-[2rem] border border-white/[0.07] bg-gradient-to-br from-white/[0.035] to-transparent p-5 sm:p-7 md:p-9">
+            <SectionHeading eyebrow="Sua voz importa">Avaliações da comunidade</SectionHeading>
             <ReviewsSection
               reviews={reviews}
               onPostReview={actions.handlePostReview}
@@ -407,36 +395,152 @@ export default function MediaDetails() {
               followingList={followingList}
             />
           </section>
+        </main>
 
-          {media.seasons && (
-            <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
-              <SeasonInfo tvId={media.id} seasons={media.seasons} />
-            </div>
-          )}
+        <aside className="space-y-6 lg:col-span-4">
+          <div className="space-y-7 rounded-[1.75rem] border border-white/[0.07] bg-white/[0.025] p-5 sm:p-7 lg:sticky lg:top-24">
+            <section>
+              <h2 className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">
+                Onde assistir
+              </h2>
+              {providers.length > 0 ? (
+                <div className="mt-4 grid grid-cols-4 gap-3">
+                  {providers.map((provider) => (
+                    <div key={provider.provider_id} title={provider.provider_name}>
+                      <img
+                        src={`https://image.tmdb.org/t/p/w154${provider.logo_path}`}
+                        className="aspect-square w-full rounded-2xl border border-white/10 shadow-lg transition-transform hover:scale-105"
+                        alt={provider.provider_name}
+                        loading="lazy"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-4 rounded-2xl bg-white/[0.035] p-4 text-center text-xs text-zinc-500">
+                  Indisponível em streamings na sua região.
+                </p>
+              )}
+            </section>
 
-          {media.images && (
-            <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
-              <MediaImages
-                images={media.images}
-                title={media.title || media.name}
-              />
-            </div>
-          )}
-        </div>
+            <section className="border-t border-white/[0.06] pt-7">
+              <h2 className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">
+                Ficha técnica
+              </h2>
+              <dl className="mt-5 space-y-4">
+                <div>
+                  <dt className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">Título original</dt>
+                  <dd className="mt-1 text-sm font-semibold text-zinc-200">
+                    {media.original_title || media.original_name}
+                  </dd>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <dt className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">Status</dt>
+                    <dd className={`mt-1 text-sm font-bold ${getStatusColor(media.status)}`}>
+                      {media.status || "Não informado"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">Idioma</dt>
+                    <dd className="mt-1 text-sm font-bold uppercase text-zinc-200">
+                      {media.original_language || "—"}
+                    </dd>
+                  </div>
+                </div>
+                {media.type && (
+                  <div>
+                    <dt className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">Tipo</dt>
+                    <dd className="mt-1 text-sm font-semibold text-zinc-200">{media.type}</dd>
+                  </div>
+                )}
+              </dl>
+            </section>
 
-        <div className="lg:col-span-4 space-y-8">
-          
-          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 p-8 rounded-3xl sticky top-24 space-y-8">
-            
-            <div className="flex justify-center gap-4">
+            {(media.budget > 0 || media.revenue > 0) && (
+              <section className="grid grid-cols-2 gap-3 border-t border-white/[0.06] pt-7">
+                {media.budget > 0 && (
+                  <div className="rounded-2xl bg-white/[0.035] p-3.5">
+                    <span className="flex items-center gap-1.5 text-[9px] font-black uppercase text-zinc-500">
+                      <Tag size={11} /> Orçamento
+                    </span>
+                    <span className="mt-2 block truncate text-xs font-bold text-white">
+                      ${media.budget.toLocaleString("en-US")}
+                    </span>
+                  </div>
+                )}
+                {media.revenue > 0 && (
+                  <div className="rounded-2xl bg-white/[0.035] p-3.5">
+                    <span className="flex items-center gap-1.5 text-[9px] font-black uppercase text-zinc-500">
+                      <DollarSign size={11} /> Receita
+                    </span>
+                    <span className="mt-2 block truncate text-xs font-bold text-emerald-400">
+                      ${media.revenue.toLocaleString("en-US")}
+                    </span>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {media.networks?.length > 0 && (
+              <section className="border-t border-white/[0.06] pt-7">
+                <h2 className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">
+                  Canal ou rede
+                </h2>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {media.networks.map((network) => (
+                    <div key={network.id} className="flex h-10 items-center rounded-xl bg-white px-3">
+                      {network.logo_path ? (
+                        <img
+                          src={`https://image.tmdb.org/t/p/w92${network.logo_path}`}
+                          className="max-h-6 max-w-20 object-contain"
+                          alt={network.name}
+                        />
+                      ) : (
+                        <span className="text-xs font-bold text-black">{network.name}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {media.production_companies?.length > 0 && (
+              <section className="border-t border-white/[0.06] pt-7">
+                <h2 className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">
+                  Produção
+                </h2>
+                <div className="mt-4 space-y-3">
+                  {media.production_companies.slice(0, 4).map((company) => (
+                    <div key={company.id} className="flex items-center gap-3">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white p-1.5">
+                        {company.logo_path ? (
+                          <img
+                            src={`https://image.tmdb.org/t/p/w92${company.logo_path}`}
+                            className="max-h-full max-w-full object-contain"
+                            alt={company.name}
+                          />
+                        ) : (
+                          <Building size={16} className="text-black" />
+                        )}
+                      </div>
+                      <span className="text-xs font-semibold text-zinc-300">{company.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <section className="flex flex-wrap gap-2 border-t border-white/[0.06] pt-7">
               {externalIds.instagram_id && (
                 <a
                   href={`https://instagram.com/${externalIds.instagram_id}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-3.5 bg-white/5 rounded-2xl hover:bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-500 hover:text-white text-zinc-300 transition-all border border-white/5 hover:border-transparent"
+                  aria-label="Instagram"
+                  className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.05] text-zinc-400 transition-colors hover:bg-pink-600 hover:text-white"
                 >
-                  <Instagram size={22} />
+                  <Instagram size={17} />
                 </a>
               )}
               {externalIds.twitter_id && (
@@ -444,9 +548,10 @@ export default function MediaDetails() {
                   href={`https://twitter.com/${externalIds.twitter_id}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-3.5 bg-white/5 rounded-2xl hover:bg-black hover:text-white text-zinc-300 transition-all border border-white/5 hover:border-transparent"
+                  aria-label="Twitter"
+                  className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.05] text-zinc-400 transition-colors hover:bg-white hover:text-black"
                 >
-                  <Twitter size={22} />
+                  <Twitter size={17} />
                 </a>
               )}
               {externalIds.facebook_id && (
@@ -454,9 +559,10 @@ export default function MediaDetails() {
                   href={`https://facebook.com/${externalIds.facebook_id}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-3.5 bg-white/5 rounded-2xl hover:bg-blue-600 hover:text-white text-zinc-300 transition-all border border-white/5 hover:border-transparent"
+                  aria-label="Facebook"
+                  className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.05] text-zinc-400 transition-colors hover:bg-blue-600 hover:text-white"
                 >
-                  <Facebook size={22} />
+                  <Facebook size={17} />
                 </a>
               )}
               {media.homepage && (
@@ -464,169 +570,70 @@ export default function MediaDetails() {
                   href={media.homepage}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-3.5 bg-white/5 rounded-2xl hover:bg-violet-600 hover:text-white text-zinc-300 transition-all border border-white/5 hover:border-transparent"
-                  title="Website Oficial"
+                  aria-label="Site oficial"
+                  className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.05] text-zinc-400 transition-colors hover:bg-violet-600 hover:text-white"
                 >
-                  <Globe size={22} />
+                  <Globe size={17} />
                 </a>
               )}
-            </div>
-
-            <div>
-              <h3 className="font-bold text-white text-sm uppercase tracking-widest text-zinc-400 mb-4">
-                Onde Assistir
-              </h3>
-              {providers.length > 0 ? (
-                <div className="grid grid-cols-4 gap-3">
-                  {providers.map((prov) => (
-                    <div
-                      key={prov.provider_id}
-                      className="tooltip group relative"
-                      title={prov.provider_name}
-                    >
-                      <img
-                        src={`https://image.tmdb.org/t/p/original${prov.logo_path}`}
-                        className="w-full rounded-2xl shadow-lg border border-white/10 transition-transform hover:scale-110"
-                        alt={prov.provider_name}
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
-                  <p className="text-sm text-zinc-400">Indisponível em streamings</p>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <h3 className="font-bold text-white text-sm uppercase tracking-widest text-zinc-400 mb-4">
-                Ficha Técnica
-              </h3>
-              <div className="space-y-4">
-                <div className="flex flex-col gap-1">
-                  <span className="text-zinc-500 text-xs font-semibold uppercase">Título Original</span>
-                  <span className="text-white text-sm font-medium">{media.original_title || media.original_name}</span>
-                </div>
-                
-                <div className="flex flex-col gap-1">
-                  <span className="text-zinc-500 text-xs font-semibold uppercase">Status</span>
-                  <span className={`text-sm font-bold ${getStatusColor(media.status)}`}>{media.status}</span>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <span className="text-zinc-500 text-xs font-semibold uppercase">Idioma</span>
-                  <span className="text-white text-sm font-medium uppercase">{media.original_language}</span>
-                </div>
-
-                {(media.budget > 0 || media.revenue > 0) && (
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    {media.budget > 0 && (
-                      <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                        <div className="flex items-center gap-1.5 text-zinc-400 text-[10px] font-bold uppercase mb-1">
-                          <Tag size={12} /> Orçamento
-                        </div>
-                        <div className="text-white font-mono font-bold text-sm truncate">
-                          ${media.budget.toLocaleString()}
-                        </div>
-                      </div>
-                    )}
-                    {media.revenue > 0 && (
-                      <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                        <div className="flex items-center gap-1.5 text-zinc-400 text-[10px] font-bold uppercase mb-1">
-                          <DollarSign size={12} /> Receita
-                        </div>
-                        <div className={`font-mono font-bold text-sm truncate ${media.revenue > media.budget ? "text-green-400" : "text-red-400"}`}>
-                          ${media.revenue.toLocaleString()}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {media.type && (
-                  <div className="flex flex-col gap-1 pt-2">
-                    <span className="text-zinc-500 text-xs font-semibold uppercase">Tipo</span>
-                    <span className="text-white text-sm font-medium">{media.type}</span>
-                  </div>
-                )}
-                
-                {media.networks && (
-                  <div className="pt-2">
-                    <span className="text-zinc-500 text-xs font-semibold uppercase mb-3 block">Canal / Rede</span>
-                    <div className="flex flex-wrap gap-2">
-                      {media.networks.map((n) => (
-                        <div
-                          key={n.id}
-                          className="bg-white p-2.5 rounded-xl h-10 flex items-center shadow-inner"
-                        >
-                          {n.logo_path ? (
-                            <img
-                              src={`https://image.tmdb.org/t/p/w92${n.logo_path}`}
-                              className="h-full w-auto object-contain"
-                              alt={n.name}
-                            />
-                          ) : (
-                            <span className="text-black font-bold text-xs">{n.name}</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {media.production_companies?.length > 0 && (
-              <div className="pt-4 border-t border-white/5">
-                <h3 className="font-bold text-white text-sm uppercase tracking-widest text-zinc-400 mb-4">
-                  Produção
-                </h3>
-                <div className="space-y-4">
-                  {media.production_companies.slice(0, 4).map((c) => (
-                    <div key={c.id} className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center p-1.5 shrink-0 shadow-inner">
-                        {c.logo_path ? (
-                          <img
-                            src={`https://image.tmdb.org/t/p/w92${c.logo_path}`}
-                            className="w-full h-full object-contain"
-                            alt={c.name}
-                          />
-                        ) : (
-                          <Building size={16} className="text-black" />
-                        )}
-                      </div>
-                      <span className="text-sm text-zinc-300 font-medium">{c.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            </section>
           </div>
+        </aside>
+      </div>
 
-          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 p-8 rounded-3xl">
-            <h3 className="font-bold text-white text-sm uppercase tracking-widest text-zinc-400 mb-6">
-              Recomendações
-            </h3>
-            {similar.length > 0 ? (
-              <div className="grid grid-cols-2 gap-4">
-                {similar.map((item) => (
-                  <MediaCard key={item.id} media={item} />
-                ))}
-              </div>
-            ) : (
-              <div className="p-6 bg-white/5 rounded-2xl border border-white/5 text-center">
-                <p className="text-sm text-zinc-400">Carregando sugestões...</p>
-              </div>
-            )}
-          </div>
-          
+      {similar.length > 0 && (
+        <div className="mt-16 border-t border-white/[0.04] pt-12 md:mt-24 md:pt-16">
+          <MovieRow title="Você também pode gostar" items={similar} variant="poster" />
         </div>
+      )}
+
+      <div className="fixed bottom-4 left-1/2 z-40 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-center gap-1.5 rounded-2xl border border-white/10 bg-zinc-900/90 p-2 shadow-2xl backdrop-blur-2xl md:hidden">
+        {trailerKey && (
+          <button
+            type="button"
+            onClick={openTrailer}
+            className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-white px-3 text-xs font-black text-black"
+          >
+            <Play size={16} className="fill-current" /> Trailer
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => actions.handleInteract("watched")}
+          aria-label="Marcar como assistido"
+          className={`grid h-11 w-11 place-items-center rounded-xl ${
+            interactions.watched ? "bg-emerald-500 text-white" : "text-zinc-300 hover:bg-white/10"
+          }`}
+        >
+          <Check size={19} />
+        </button>
+        <button
+          type="button"
+          onClick={() => actions.handleInteract("like")}
+          aria-label="Favoritar"
+          className={`grid h-11 w-11 place-items-center rounded-xl ${
+            interactions.liked ? "bg-red-500 text-white" : "text-zinc-300 hover:bg-white/10"
+          }`}
+        >
+          <Heart size={19} fill={interactions.liked ? "currentColor" : "none"} />
+        </button>
+        <button
+          type="button"
+          onClick={openList}
+          aria-label="Adicionar à lista"
+          className="grid h-11 w-11 place-items-center rounded-xl text-zinc-300 hover:bg-white/10"
+        >
+          <Plus size={19} />
+        </button>
+        <button
+          type="button"
+          onClick={actions.handleShare}
+          aria-label="Compartilhar"
+          className="grid h-11 w-11 place-items-center rounded-xl text-zinc-300 hover:bg-white/10"
+        >
+          <Share2 size={18} />
+        </button>
       </div>
     </div>
   );
 }
-
-
-
-
