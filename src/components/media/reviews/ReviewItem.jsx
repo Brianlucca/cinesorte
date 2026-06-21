@@ -182,7 +182,7 @@ export default function ReviewItem({
   const replyEditorRef = useRef(null);
   const editReplyRef = useRef(null);
 
-  const replies = review.replies || [];
+  const replies = useMemo(() => review.replies || [], [review.replies]);
   const isLiked = !!review.isLikedByCurrentUser;
   const isOwner = !!review.isOwner;
   const hasText = review.text && review.text.trim().length > 0;
@@ -230,7 +230,9 @@ export default function ReviewItem({
       await onReply(review.id, replyText);
       resetReplyComposer();
       setShowReplies(true);
-    } catch {}
+    } catch {
+      return;
+    }
   };
 
   const openReplyComposer = (username, anchorId = "review") => {
@@ -253,7 +255,7 @@ export default function ReviewItem({
   };
 
   const renderReplyComposer = () => (
-    <div className="mt-4 w-full animate-in slide-in-from-top-2 space-y-4 rounded-2xl border border-white/5 bg-black/20 p-4">
+    <div className="mt-4 w-full animate-in slide-in-from-top-2 space-y-4 rounded-2xl border border-violet-400/10 bg-gradient-to-br from-violet-950/20 to-black/15 p-4">
       {replyTarget && (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-violet-500/15 bg-violet-500/8 px-3 py-2">
           <span className="text-xs font-semibold text-violet-200">
@@ -290,12 +292,12 @@ export default function ReviewItem({
           placeholder="Escreva sua resposta..."
           inputRefExternal={replyEditorRef}
           maxLength={400}
-          className="min-h-[100px] w-full rounded-2xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-white transition-colors focus:border-violet-500 focus:outline-none"
+          className="min-h-[100px] w-full rounded-2xl border border-white/[0.07] bg-black/20 px-4 py-3 text-sm text-white transition-colors focus:border-violet-400/50 focus:outline-none"
         />
         <button
           type="button"
           onClick={handleSubmitReply}
-          className="shrink-0 rounded-2xl bg-violet-600 p-3 text-white transition-colors hover:bg-violet-500"
+          className="shrink-0 rounded-2xl bg-white p-3 text-zinc-950 transition-all hover:bg-violet-100"
         >
           <Send size={18} />
         </button>
@@ -307,18 +309,22 @@ export default function ReviewItem({
     try {
       if (onEditReview) await onEditReview(review.id, editReviewText, editRating);
       setIsEditing(false);
-    } catch {}
+    } catch {
+      return;
+    }
   };
 
   const handleSaveReplyEdit = async (commentId) => {
     try {
       if (onEditReply) await onEditReply(commentId, editReplyText, review.id);
       setEditingReplyId(null);
-    } catch {}
+    } catch {
+      return;
+    }
   };
 
   const replyList = useMemo(
-    () => replies.sort((a, b) => (a.createdAt?._seconds || 0) - (b.createdAt?._seconds || 0)),
+    () => [...replies].sort((a, b) => (a.createdAt?._seconds || 0) - (b.createdAt?._seconds || 0)),
     [replies],
   );
 
@@ -326,15 +332,15 @@ export default function ReviewItem({
     <div
       className={`group w-full border transition-all duration-300 ${
         isElite
-          ? `rounded-3xl p-6 ${eliteTheme.card}`
-          : "rounded-3xl border-white/5 bg-white/[0.02] p-6 hover:border-white/10"
+          ? `rounded-[1.75rem] p-5 md:p-6 ${eliteTheme.card}`
+          : "rounded-[1.75rem] border-white/[0.07] bg-gradient-to-br from-white/[0.035] to-white/[0.012] p-5 hover:border-white/15 md:p-6"
       }`}
     >
-      <div className="flex w-full gap-4">
+      <div className="flex w-full gap-3.5 md:gap-4">
         <Link to={`/app/profile/${review.username}`} className="shrink-0 self-start">
           <div
-            className={`h-14 w-14 overflow-hidden rounded-full ring-2 transition-transform duration-300 group-hover:scale-105 ${
-              isElite ? "ring-white/20" : "bg-zinc-800 ring-zinc-900"
+            className={`h-11 w-11 overflow-hidden rounded-2xl ring-1 transition-transform duration-300 group-hover:scale-105 md:h-12 md:w-12 ${
+              isElite ? "ring-white/20" : "bg-zinc-800 ring-white/10"
             }`}
           >
             {review.userPhoto ? (
@@ -348,13 +354,13 @@ export default function ReviewItem({
         </Link>
 
         <div className="min-w-0 flex-1">
-          <div className="mb-4 flex items-start justify-between gap-4">
+          <div className="mb-4 flex items-start justify-between gap-3">
             <div className="min-w-0 w-full space-y-2">
               {isElite && <div className={`h-1.5 w-14 rounded-full ${eliteTheme.accent}`} />}
               <div className="flex flex-wrap items-center gap-3">
                 <Link
                   to={`/app/profile/${review.username}`}
-                  className={`text-xl font-black transition-colors hover:text-violet-400 ${isElite ? "text-zinc-100" : "text-white"}`}
+                  className={`text-base font-black transition-colors hover:text-violet-300 md:text-lg ${isElite ? "text-zinc-100" : "text-white"}`}
                 >
                   @{review.username}
                 </Link>
@@ -378,9 +384,9 @@ export default function ReviewItem({
                   </button>
                 )}
                 {!isEditing && hasText && hasRating && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/5 bg-zinc-900/70 px-2.5 py-1">
-                    <Star size={12} className="fill-yellow-500 text-yellow-500" />
-                    <span className="font-bold text-yellow-500">{review.rating.toFixed(1)}</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-yellow-300/10 bg-yellow-300/[0.07] px-2.5 py-1">
+                    <Star size={12} className="fill-yellow-300 text-yellow-300" />
+                    <span className="font-black text-yellow-200">{review.rating.toFixed(1)}</span>
                   </span>
                 )}
               </div>
@@ -390,14 +396,14 @@ export default function ReviewItem({
               <div className="shrink-0 flex items-center gap-2">
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="rounded-xl bg-white/5 p-2 text-zinc-500 shadow-sm transition-colors hover:bg-blue-500/10 hover:text-blue-400"
+                  className="rounded-xl border border-white/[0.05] bg-white/[0.035] p-2 text-zinc-500 transition-colors hover:bg-blue-500/10 hover:text-blue-400"
                   title="Editar"
                 >
                   <Edit2 size={16} />
                 </button>
                 <button
                   onClick={() => onDelete(review.id)}
-                  className="rounded-xl bg-white/5 p-2 text-zinc-500 shadow-sm transition-colors hover:bg-red-500/10 hover:text-red-400"
+                  className="rounded-xl border border-white/[0.05] bg-white/[0.035] p-2 text-zinc-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
                   title="Excluir"
                 >
                   <Trash2 size={16} />
@@ -407,7 +413,7 @@ export default function ReviewItem({
           </div>
 
           {isEditing ? (
-            <div className="relative mb-4 w-full animate-in fade-in zoom-in space-y-4 rounded-2xl border border-white/10 bg-zinc-950/60 p-4 duration-200">
+            <div className="relative mb-4 w-full animate-in fade-in zoom-in space-y-4 rounded-2xl border border-violet-400/15 bg-black/25 p-4 duration-200">
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -446,7 +452,7 @@ export default function ReviewItem({
                 onChange={setEditReviewText}
                 followingList={followingList}
                 inputRefExternal={reviewEditorRef}
-                className="min-h-[120px] w-full rounded-xl border border-white/5 bg-zinc-900 p-4 text-white focus:border-violet-500 focus:outline-none"
+                className="min-h-[120px] w-full rounded-xl border border-white/[0.07] bg-black/20 p-4 text-white focus:border-violet-400/50 focus:outline-none"
               />
               <div className="mt-3 flex justify-end gap-2">
                 <button
@@ -459,14 +465,14 @@ export default function ReviewItem({
                 <button
                   type="button"
                   onClick={handleSaveReviewEdit}
-                  className="rounded-lg bg-violet-600 px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-violet-500"
+                  className="rounded-full bg-white px-4 py-2 text-xs font-black text-zinc-950 transition-colors hover:bg-violet-100"
                 >
                   Salvar
                 </button>
               </div>
             </div>
           ) : !hasText && hasRating ? (
-            <div className="mb-4 flex w-full flex-col gap-2 rounded-2xl border border-white/5 bg-zinc-950/60 p-5 shadow-inner">
+            <div className="mb-4 flex w-full flex-col gap-2 rounded-2xl border border-yellow-300/10 bg-yellow-300/[0.04] p-5">
               <div className="flex items-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
@@ -482,7 +488,7 @@ export default function ReviewItem({
           ) : null}
 
           {hasText && !isEditing && (
-            <div className={`mb-5 w-full break-words space-y-4 ${isElite ? `text-lg ${eliteTheme.text}` : "text-base text-zinc-200"}`}>
+            <div className={`mb-5 w-full break-words space-y-4 leading-relaxed ${isElite ? `text-base md:text-lg ${eliteTheme.text}` : "text-sm text-zinc-300 md:text-base"}`}>
               <div>
                 {renderRichText(displayText, reviewSpoilerDisabled)}
                 {review.text.length > MAX_TEXT_LENGTH && (
@@ -498,10 +504,10 @@ export default function ReviewItem({
             </div>
           )}
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 border-t border-white/[0.05] pt-4">
             <button
               onClick={() => onLike(review.id)}
-              className={`flex items-center gap-2 transition-colors ${isLiked ? "text-red-500" : "text-zinc-500 hover:text-white"}`}
+              className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-bold transition-colors ${isLiked ? "bg-red-500/10 text-red-400" : "bg-white/[0.03] text-zinc-500 hover:bg-white/[0.06] hover:text-white"}`}
             >
               <Heart size={18} className={isLiked ? "fill-red-500" : ""} />
               {review.likesCount > 0 && <span className="text-xs font-bold">{review.likesCount}</span>}
@@ -514,7 +520,7 @@ export default function ReviewItem({
                 }
                 openReplyComposer(review.username, "review");
               }}
-              className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-zinc-500 hover:text-zinc-200"
+              className="inline-flex items-center gap-2 rounded-full bg-white/[0.03] px-3 py-2 text-[10px] font-black uppercase tracking-wider text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-200"
             >
               <MessageCircle size={18} /> {isReplying && replyAnchorId === "review" ? "Cancelar" : "Responder"}
             </button>
@@ -530,9 +536,9 @@ export default function ReviewItem({
                   {isLoadingReplies ? <Loader2 size={12} className="animate-spin" /> : `Ver respostas (${review.commentsCount})`}
                 </button>
               ) : (
-                <div className="ml-2 animate-in slide-in-from-top-2 space-y-4 border-l-2 border-zinc-800/60 pl-5 pt-4">
+                <div className="ml-1 animate-in slide-in-from-top-2 space-y-3 border-l border-violet-400/20 pl-4 pt-4 md:ml-2 md:pl-5">
                   {replyList.map((reply) => (
-                    <div key={reply.id} className="group/reply w-full rounded-2xl border border-white/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                    <div key={reply.id} className="group/reply w-full rounded-2xl border border-white/[0.06] bg-black/15 p-4 transition-colors hover:border-white/10">
                       <div className="flex gap-3">
                         <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-zinc-800 ring-1 ring-white/10">
                           {reply.userPhoto ? (

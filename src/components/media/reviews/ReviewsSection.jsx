@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { Star, User, TrendingUp, Sparkles, Pin } from "lucide-react";
+import { Pin, Sparkles, Star, TrendingUp, User } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 import { MentionTextarea } from "./MentionTextarea";
 import ReviewItem from "./ReviewItem";
@@ -48,7 +48,6 @@ export default function ReviewsSection({
   const currentUserTheme = ELITE_THEME[userLevelKey] || {
     chip: "border-violet-400/20 bg-violet-400/10 text-violet-200",
   };
-
   const generalInputRef = useRef(null);
   const [generalRating, setGeneralRating] = useState(null);
   const [generalText, setGeneralText] = useState("");
@@ -57,33 +56,42 @@ export default function ReviewsSection({
   const [errorMsgGeneral, setErrorMsgGeneral] = useState(null);
 
   const stats = useMemo(() => {
-    if (!reviews || reviews.length === 0) return null;
-    const valid = reviews.filter((r) => r.rating !== undefined && r.rating !== null);
+    const valid = reviews.filter(
+      (review) => review.rating !== undefined && review.rating !== null,
+    );
     if (valid.length === 0) return null;
-
-    const total = valid.reduce((acc, r) => acc + Number(r.rating), 0);
-    const avg = total / valid.length;
-
+    const total = valid.reduce((sum, review) => sum + Number(review.rating), 0);
     return {
-      average: avg.toFixed(1),
+      average: (total / valid.length).toFixed(1),
       count: valid.length,
-      positivePercent: Math.round((valid.filter((r) => r.rating >= 4).length / valid.length) * 100),
+      positivePercent: Math.round(
+        (valid.filter((review) => review.rating >= 4).length / valid.length) * 100,
+      ),
     };
   }, [reviews]);
 
   const { topEliteReview, regularReviews } = useMemo(() => {
-    if (typeof isEliteUser !== "function") return { topEliteReview: null, regularReviews: reviews };
-
-    const valid = reviews.filter((r) => r.rating !== undefined && r.rating !== null);
-    const eliteOnes = valid
-      .filter((r) => isEliteUser(r.levelTitle))
-      .sort((a, b) => (a.createdAt?._seconds || 0) - (b.createdAt?._seconds || 0));
-
-    const fixed = eliteOnes[0] || null;
+    if (typeof isEliteUser !== "function") {
+      return { topEliteReview: null, regularReviews: reviews };
+    }
+    const eliteReviews = reviews
+      .filter(
+        (review) =>
+          review.rating !== undefined &&
+          review.rating !== null &&
+          isEliteUser(review.levelTitle),
+      )
+      .sort(
+        (first, second) =>
+          (first.createdAt?._seconds || 0) - (second.createdAt?._seconds || 0),
+      );
+    const fixed = eliteReviews[0] || null;
     const others = reviews
-      .filter((r) => r.id !== fixed?.id)
-      .sort((a, b) => (b.createdAt?._seconds || 0) - (a.createdAt?._seconds || 0));
-
+      .filter((review) => review.id !== fixed?.id)
+      .sort(
+        (first, second) =>
+          (second.createdAt?._seconds || 0) - (first.createdAt?._seconds || 0),
+      );
     return { topEliteReview: fixed, regularReviews: others };
   }, [reviews, isEliteUser]);
 
@@ -92,12 +100,10 @@ export default function ReviewsSection({
       setErrorMsgGeneral("Por favor, adicione um comentário ou nota.");
       return;
     }
-
     if (generalText.trim().length > 0 && generalText.trim().length < 3) {
       setErrorMsgGeneral("Mínimo de 3 caracteres.");
       return;
     }
-
     setIsPostingGeneral(true);
     try {
       await onPostReview(generalRating, generalText);
@@ -127,104 +133,110 @@ export default function ReviewsSection({
   return (
     <div className="w-full">
       {stats && (
-        <div className="mb-6 rounded-2xl border border-white/10 bg-[#1a1a1d] px-4 py-4">
-          <div className="grid grid-cols-1 items-center gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-[72px] w-[72px] shrink-0 flex-col items-center justify-center rounded-xl bg-[#19191c]">
-                <span className="text-[2rem] font-bold leading-none text-white">{stats.average}</span>
-                <Star size={13} className="mt-1 fill-yellow-400 text-yellow-400" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-lg font-bold leading-tight text-white">Média da Comunidade</h3>
-                <p className="mt-1 text-sm font-medium text-zinc-400">{`Baseado em ${stats.count} avaliações`}</p>
-              </div>
-            </div>
-
-            <div className="rounded-xl bg-[#1d1d21] px-4 py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
-                  <TrendingUp size={15} />
+        <div className="mb-8 grid gap-3 md:grid-cols-[0.9fr_1.25fr]">
+          <div className="relative overflow-hidden rounded-3xl border border-yellow-300/10 bg-gradient-to-br from-yellow-300/[0.08] to-transparent p-5">
+            <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-yellow-300/10 blur-3xl" />
+            <div className="relative flex items-center gap-4">
+              <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-yellow-300/15 bg-black/20">
+                <div className="text-center">
+                  <span className="block text-2xl font-black text-white">{stats.average}</span>
+                  <Star size={12} className="mx-auto mt-1 fill-yellow-300 text-yellow-300" />
                 </div>
-                <p className="min-w-0 text-sm font-semibold text-zinc-300">
-                  <span className="mr-2 font-bold text-white">{stats.positivePercent}%</span>
-                  aprovam esta obra
-                </p>
               </div>
-              <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-zinc-800">
-                <div
-                  style={{ width: `${stats.positivePercent}%` }}
-                  className="h-full rounded-full bg-emerald-500 transition-all duration-1000"
-                />
+              <div>
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-yellow-200/60">
+                  Nota CineSorte
+                </span>
+                <h3 className="mt-1 text-base font-black text-white">Média da comunidade</h3>
+                <p className="mt-1 text-xs text-zinc-500">{stats.count} avaliações publicadas</p>
               </div>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-emerald-400/10 bg-gradient-to-br from-emerald-500/[0.07] to-transparent p-5">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-300">
+                <TrendingUp size={17} />
+              </span>
+              <div>
+                <span className="text-2xl font-black text-white">{stats.positivePercent}%</span>
+                <span className="ml-2 text-sm font-semibold text-zinc-400">recomendam esta obra</span>
+              </div>
+            </div>
+            <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/[0.05]">
+              <div
+                style={{ width: `${stats.positivePercent}%` }}
+                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-300 transition-all duration-1000"
+              />
             </div>
           </div>
         </div>
       )}
 
-      {topEliteReview && (
-        <div className="mb-8">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-zinc-200">
-              <Pin size={16} />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white">Review Fixada</h2>
-              <p className="text-sm text-zinc-500">Comentário destacado de um usuário elite.</p>
-            </div>
-          </div>
-          <ReviewItem review={topEliteReview} isElite {...reviewItemProps} />
-        </div>
-      )}
-
-      <div className="mb-10 flex gap-5">
+      <div className="mb-10 flex gap-3 sm:gap-4">
         <div className="hidden shrink-0 sm:block">
-          <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-zinc-800 text-xl font-bold uppercase text-white shadow-lg ring-4 ring-zinc-900">
+          <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl border border-white/10 bg-zinc-800 text-sm font-black uppercase text-white shadow-xl">
             {user?.photoURL ? (
               <img src={user.photoURL} className="h-full w-full object-cover" alt="" />
             ) : (
-              user?.username?.charAt(0).toUpperCase() || <User size={24} />
+              user?.username?.charAt(0).toUpperCase() || <User size={20} />
             )}
           </div>
         </div>
 
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <div
-            className={`relative rounded-3xl border bg-zinc-900/55 backdrop-blur-md transition-all duration-300 ${
-              isFocusedGeneral ? "z-[30] border-violet-500 shadow-[0_0_24px_rgba(139,92,246,0.16)]" : "border-white/10 hover:border-white/20"
+            className={`relative overflow-visible rounded-[1.75rem] border bg-gradient-to-br from-white/[0.045] to-white/[0.015] transition-all duration-300 ${
+              isFocusedGeneral
+                ? "z-[30] border-violet-400/45 shadow-[0_20px_60px_rgba(0,0,0,0.3)]"
+                : "border-white/[0.08] hover:border-white/15"
             }`}
           >
-            {isFocusedGeneral && (
-              <div className="flex flex-wrap items-center gap-3 border-b border-white/5 px-5 pb-4 pt-5">
-                <span className="text-sm font-medium text-zinc-400">Sua nota:</span>
-                <div className="flex gap-1.5">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button key={star} type="button" onClick={() => setGeneralRating(star)} className="transition-transform hover:scale-110 focus:outline-none">
-                      <Star
-                        size={24}
-                        className={generalRating && star <= generalRating ? "fill-yellow-400 text-yellow-400" : "fill-zinc-800 text-zinc-700 hover:text-zinc-500"}
-                      />
-                    </button>
-                  ))}
-                </div>
+            <div className="flex flex-col gap-3 border-b border-white/[0.06] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <div>
+                <h3 className="text-sm font-black text-white">Compartilhe sua visão</h3>
+                <p className="mt-0.5 text-[11px] text-zinc-500">Uma nota, uma análise ou os dois.</p>
+              </div>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    aria-label={`Dar nota ${star}`}
+                    onClick={() => {
+                      setGeneralRating(star);
+                      setIsFocusedGeneral(true);
+                    }}
+                    className="p-0.5 transition-transform hover:scale-110 focus:outline-none"
+                  >
+                    <Star
+                      size={21}
+                      className={
+                        generalRating && star <= generalRating
+                          ? "fill-yellow-300 text-yellow-300"
+                          : "fill-white/[0.04] text-zinc-700 hover:text-zinc-500"
+                      }
+                    />
+                  </button>
+                ))}
                 {generalRating !== null && (
                   <button
                     type="button"
                     onClick={() => setGeneralRating(null)}
-                    className="ml-auto rounded-lg bg-white/5 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-zinc-500 hover:text-white"
+                    className="ml-2 text-[9px] font-black uppercase tracking-wider text-zinc-600 hover:text-white"
                   >
                     Limpar
                   </button>
                 )}
               </div>
-            )}
+            </div>
 
-            <div className="space-y-4 p-5">
+            <div className="space-y-4 p-4 sm:p-5">
               {isFocusedGeneral && (
                 <div className="space-y-3">
                   {canUseRichFormatting && (
-                    <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] ${currentUserTheme.chip}`}>
-                      <Sparkles size={12} />
-                      Formatação elite liberada
+                    <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[9px] font-black uppercase tracking-[0.2em] ${currentUserTheme.chip}`}>
+                      <Sparkles size={11} /> Formatação elite
                     </div>
                   )}
                   <RichTextToolbar
@@ -237,50 +249,49 @@ export default function ReviewsSection({
                   />
                 </div>
               )}
-
               <MentionTextarea
                 value={generalText}
-                onChange={(val) => {
-                  setGeneralText(val);
+                onChange={(value) => {
+                  setGeneralText(value);
                   setErrorMsgGeneral(null);
                 }}
                 followingList={followingList}
                 onFocus={() => setIsFocusedGeneral(true)}
-                placeholder="Escreva sua avaliação sobre a obra..."
+                placeholder="O que esta obra fez você sentir?"
                 inputRefExternal={generalInputRef}
-                className={`w-full resize-none bg-transparent text-base text-zinc-100 placeholder:text-zinc-600 focus:outline-none ${
-                  isFocusedGeneral ? "min-h-[150px]" : "min-h-[68px]"
+                className={`w-full resize-none bg-transparent text-sm leading-relaxed text-zinc-100 placeholder:text-zinc-600 focus:outline-none sm:text-base ${
+                  isFocusedGeneral ? "min-h-[140px]" : "min-h-[58px]"
                 }`}
               />
             </div>
 
             {isFocusedGeneral && (
-              <div className="flex flex-col px-5 pb-5">
-                {errorMsgGeneral && <span className="mb-3 text-sm font-medium text-red-400">{errorMsgGeneral}</span>}
-                <div className="flex w-full items-center justify-between">
-                  <span className={`text-xs font-medium ${generalText.length > 450 ? "text-yellow-500" : "text-zinc-500"}`}>
+              <div className="flex flex-col gap-3 border-t border-white/[0.05] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                <div>
+                  {errorMsgGeneral && <span className="block text-xs font-semibold text-red-400">{errorMsgGeneral}</span>}
+                  <span className={`text-[10px] font-bold ${generalText.length > 450 ? "text-yellow-400" : "text-zinc-600"}`}>
                     {generalText.length}/500
                   </span>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsFocusedGeneral(false);
-                        setErrorMsgGeneral(null);
-                      }}
-                      className="text-sm font-semibold text-zinc-500 transition-colors hover:text-white"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSubmitGeneral}
-                      disabled={isPostingGeneral}
-                      className="inline-flex items-center justify-center rounded-2xl bg-violet-600 px-5 py-3 text-sm font-bold text-white transition-all hover:bg-violet-500 disabled:opacity-60"
-                    >
-                      {isPostingGeneral ? "Publicando..." : "Publicar review"}
-                    </button>
-                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsFocusedGeneral(false);
+                      setErrorMsgGeneral(null);
+                    }}
+                    className="rounded-full px-4 py-2.5 text-xs font-bold text-zinc-500 transition-colors hover:text-white"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSubmitGeneral}
+                    disabled={isPostingGeneral}
+                    className="rounded-full bg-white px-5 py-2.5 text-xs font-black text-zinc-950 transition-all hover:bg-violet-100 disabled:opacity-60"
+                  >
+                    {isPostingGeneral ? "Publicando..." : "Publicar review"}
+                  </button>
                 </div>
               </div>
             )}
@@ -288,19 +299,38 @@ export default function ReviewsSection({
         </div>
       </div>
 
-      <div className="space-y-5">
-        <div className="mb-1 flex items-center gap-3">
-          <h2 className="text-lg font-bold text-white">Comentários Recentes</h2>
-          <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-white/8 px-3 text-sm font-bold text-zinc-300">
+      {topEliteReview && (
+        <div className="mb-9">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="grid h-9 w-9 place-items-center rounded-2xl border border-violet-400/15 bg-violet-500/10 text-violet-300">
+              <Pin size={14} />
+            </span>
+            <div>
+              <h3 className="text-sm font-black text-white">Review em destaque</h3>
+              <p className="text-[11px] text-zinc-500">Uma análise selecionada da comunidade elite.</p>
+            </div>
+          </div>
+          <ReviewItem review={topEliteReview} isElite {...reviewItemProps} />
+        </div>
+      )}
+
+      <div className="space-y-4">
+        <div className="mb-5 flex items-center justify-between border-b border-white/[0.06] pb-4">
+          <h3 className="text-base font-black text-white">Reviews recentes</h3>
+          <span className="rounded-full border border-white/[0.07] bg-white/[0.035] px-3 py-1 text-[10px] font-black text-zinc-400">
             {reviews.length}
           </span>
         </div>
-
         {regularReviews.length > 0 ? (
-          regularReviews.map((review) => <ReviewItem key={review.id} review={review} isElite={false} {...reviewItemProps} />)
+          regularReviews.map((review) => (
+            <ReviewItem key={review.id} review={review} isElite={false} {...reviewItemProps} />
+          ))
         ) : !topEliteReview ? (
-          <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.02] p-8 text-center text-zinc-500">
-            Ainda não há reviews para esta obra.
+          <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.015] p-10 text-center">
+            <Star size={22} className="mx-auto text-zinc-700" />
+            <p className="mt-3 text-sm font-semibold text-zinc-500">
+              Ainda não há reviews. Seja a primeira pessoa a publicar.
+            </p>
           </div>
         ) : null}
       </div>
