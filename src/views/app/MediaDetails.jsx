@@ -397,187 +397,214 @@ export default function MediaDetails() {
           </section>
         </main>
 
-        <aside className="space-y-6 lg:col-span-4">
-          <div className="space-y-7 rounded-[1.75rem] border border-white/[0.07] bg-white/[0.025] p-5 sm:p-7 lg:sticky lg:top-24">
-            <section>
-              <h2 className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">
-                Onde assistir
-              </h2>
-              {providers.length > 0 ? (
-                <div className="mt-4 grid grid-cols-4 gap-3">
-                  {providers.map((provider) => (
-                    <div key={provider.provider_id} title={provider.provider_name}>
-                      <img
-                        src={`https://image.tmdb.org/t/p/w154${provider.logo_path}`}
-                        className="aspect-square w-full rounded-2xl border border-white/10 shadow-lg transition-transform hover:scale-105"
-                        alt={provider.provider_name}
-                        loading="lazy"
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="mt-4 rounded-2xl bg-white/[0.035] p-4 text-center text-xs text-zinc-500">
-                  Indisponível em streamings na sua região.
-                </p>
-              )}
-            </section>
+        <aside className="space-y-5 lg:col-span-4">
+          <section className="relative overflow-hidden rounded-[2rem] border border-violet-400/15 bg-gradient-to-br from-violet-950/35 via-white/[0.025] to-transparent p-5 sm:p-7">
+            <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-violet-500/10 blur-3xl" />
+            <div className="relative flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-violet-500/15 text-violet-300">
+                <Play size={17} className="fill-current" />
+              </span>
+              <div>
+                <span className="block text-[9px] font-black uppercase tracking-[0.22em] text-violet-400">
+                  Disponibilidade
+                </span>
+                <h2 className="mt-0.5 text-lg font-black text-white">Onde assistir</h2>
+              </div>
+            </div>
 
-            <section className="border-t border-white/[0.06] pt-7">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">
-                Ficha técnica
-              </h2>
-              <dl className="mt-5 space-y-4">
-                <div>
-                  <dt className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">Título original</dt>
-                  <dd className="mt-1 text-sm font-semibold text-zinc-200">
-                    {media.original_title || media.original_name}
-                  </dd>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <dt className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">Status</dt>
-                    <dd className={`mt-1 text-sm font-bold ${getStatusColor(media.status)}`}>
-                      {media.status || "Não informado"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">Idioma</dt>
-                    <dd className="mt-1 text-sm font-bold uppercase text-zinc-200">
-                      {media.original_language || "—"}
-                    </dd>
-                  </div>
-                </div>
-                {media.type && (
-                  <div>
-                    <dt className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">Tipo</dt>
-                    <dd className="mt-1 text-sm font-semibold text-zinc-200">{media.type}</dd>
-                  </div>
-                )}
-              </dl>
-            </section>
-
-            {(media.budget > 0 || media.revenue > 0) && (
-              <section className="grid grid-cols-2 gap-3 border-t border-white/[0.06] pt-7">
-                {media.budget > 0 && (
-                  <div className="rounded-2xl bg-white/[0.035] p-3.5">
-                    <span className="flex items-center gap-1.5 text-[9px] font-black uppercase text-zinc-500">
-                      <Tag size={11} /> Orçamento
+            {providers.length > 0 ? (
+              <div className="relative mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
+                {providers.slice(0, 8).map((provider) => (
+                  <div key={provider.provider_id} className="group min-w-0" title={provider.provider_name}>
+                    <img
+                      src={`https://image.tmdb.org/t/p/w154${provider.logo_path}`}
+                      className="aspect-square w-full rounded-2xl border border-white/10 shadow-xl transition-transform group-hover:-translate-y-1"
+                      alt={provider.provider_name}
+                      loading="lazy"
+                    />
+                    <span className="mt-1.5 block truncate text-center text-[9px] font-semibold text-zinc-500">
+                      {provider.provider_name}
                     </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="relative mt-5 rounded-2xl border border-white/[0.05] bg-black/15 p-4 text-center text-xs leading-relaxed text-zinc-500">
+                Indisponível em streamings na sua região.
+              </p>
+            )}
+          </section>
+
+          <section className="rounded-[2rem] border border-white/[0.07] bg-gradient-to-br from-white/[0.04] to-transparent p-5 sm:p-7">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-white/[0.06] text-zinc-300">
+                <Tag size={17} />
+              </span>
+              <div>
+                <span className="block text-[9px] font-black uppercase tracking-[0.22em] text-zinc-500">
+                  Informações
+                </span>
+                <h2 className="mt-0.5 text-lg font-black text-white">Ficha técnica</h2>
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-white/[0.05] bg-black/10 p-4">
+              <span className="text-[9px] font-black uppercase tracking-wider text-zinc-600">
+                Título original
+              </span>
+              <p className="mt-1.5 text-sm font-semibold leading-relaxed text-zinc-200">
+                {media.original_title || media.original_name}
+              </p>
+            </div>
+
+            <dl className="mt-3 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-white/[0.05] bg-white/[0.025] p-3.5">
+                <dt className="text-[9px] font-black uppercase tracking-wider text-zinc-600">Status</dt>
+                <dd className={`mt-1.5 text-xs font-black ${getStatusColor(media.status)}`}>
+                  {media.status || "Não informado"}
+                </dd>
+              </div>
+              <div className="rounded-2xl border border-white/[0.05] bg-white/[0.025] p-3.5">
+                <dt className="text-[9px] font-black uppercase tracking-wider text-zinc-600">Idioma</dt>
+                <dd className="mt-1.5 text-xs font-black uppercase text-zinc-200">
+                  {media.original_language || "—"}
+                </dd>
+              </div>
+              <div className="rounded-2xl border border-white/[0.05] bg-white/[0.025] p-3.5">
+                <dt className="text-[9px] font-black uppercase tracking-wider text-zinc-600">Lançamento</dt>
+                <dd className="mt-1.5 text-xs font-bold capitalize text-zinc-200">{releaseLabel}</dd>
+              </div>
+              <div className="rounded-2xl border border-white/[0.05] bg-white/[0.025] p-3.5">
+                <dt className="text-[9px] font-black uppercase tracking-wider text-zinc-600">Formato</dt>
+                <dd className="mt-1.5 text-xs font-bold text-zinc-200">
+                  {media.type || (media.first_air_date ? "Série" : "Filme")}
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          {(media.budget > 0 || media.revenue > 0) && (
+            <section className="rounded-[2rem] border border-emerald-400/10 bg-gradient-to-br from-emerald-950/20 to-transparent p-5 sm:p-7">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-300">
+                  <DollarSign size={18} />
+                </span>
+                <div>
+                  <span className="block text-[9px] font-black uppercase tracking-[0.22em] text-emerald-500/70">
+                    Mercado
+                  </span>
+                  <h2 className="mt-0.5 text-lg font-black text-white">Dados financeiros</h2>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {media.budget > 0 && (
+                  <div className="rounded-2xl bg-black/15 p-4">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-zinc-600">Orçamento</span>
                     <span className="mt-2 block truncate text-xs font-bold text-white">
                       ${media.budget.toLocaleString("en-US")}
                     </span>
                   </div>
                 )}
                 {media.revenue > 0 && (
-                  <div className="rounded-2xl bg-white/[0.035] p-3.5">
-                    <span className="flex items-center gap-1.5 text-[9px] font-black uppercase text-zinc-500">
-                      <DollarSign size={11} /> Receita
-                    </span>
+                  <div className="rounded-2xl bg-black/15 p-4">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-zinc-600">Receita</span>
                     <span className="mt-2 block truncate text-xs font-bold text-emerald-400">
                       ${media.revenue.toLocaleString("en-US")}
                     </span>
                   </div>
                 )}
-              </section>
-            )}
+              </div>
+            </section>
+          )}
 
-            {media.networks?.length > 0 && (
-              <section className="border-t border-white/[0.06] pt-7">
-                <h2 className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">
-                  Canal ou rede
-                </h2>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {media.networks.map((network) => (
-                    <div key={network.id} className="flex h-10 items-center rounded-xl bg-white px-3">
-                      {network.logo_path ? (
-                        <img
-                          src={`https://image.tmdb.org/t/p/w92${network.logo_path}`}
-                          className="max-h-6 max-w-20 object-contain"
-                          alt={network.name}
-                        />
-                      ) : (
-                        <span className="text-xs font-bold text-black">{network.name}</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {media.production_companies?.length > 0 && (
-              <section className="border-t border-white/[0.06] pt-7">
-                <h2 className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">
-                  Produção
-                </h2>
-                <div className="mt-4 space-y-3">
-                  {media.production_companies.slice(0, 4).map((company) => (
-                    <div key={company.id} className="flex items-center gap-3">
-                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white p-1.5">
-                        {company.logo_path ? (
+          {(media.networks?.length > 0 || media.production_companies?.length > 0) && (
+            <section className="rounded-[2rem] border border-white/[0.07] bg-white/[0.025] p-5 sm:p-7">
+              {media.networks?.length > 0 && (
+                <div>
+                  <span className="text-[9px] font-black uppercase tracking-[0.22em] text-zinc-500">
+                    Canal ou rede
+                  </span>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {media.networks.map((network) => (
+                      <div key={network.id} className="flex h-11 items-center rounded-xl bg-white px-3 shadow-lg">
+                        {network.logo_path ? (
                           <img
-                            src={`https://image.tmdb.org/t/p/w92${company.logo_path}`}
-                            className="max-h-full max-w-full object-contain"
-                            alt={company.name}
+                            src={`https://image.tmdb.org/t/p/w92${network.logo_path}`}
+                            className="max-h-6 max-w-24 object-contain"
+                            alt={network.name}
                           />
                         ) : (
-                          <Building size={16} className="text-black" />
+                          <span className="text-xs font-bold text-black">{network.name}</span>
                         )}
                       </div>
-                      <span className="text-xs font-semibold text-zinc-300">{company.name}</span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </section>
-            )}
+              )}
 
-            <section className="flex flex-wrap gap-2 border-t border-white/[0.06] pt-7">
-              {externalIds.instagram_id && (
-                <a
-                  href={`https://instagram.com/${externalIds.instagram_id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="Instagram"
-                  className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.05] text-zinc-400 transition-colors hover:bg-pink-600 hover:text-white"
-                >
-                  <Instagram size={17} />
-                </a>
-              )}
-              {externalIds.twitter_id && (
-                <a
-                  href={`https://twitter.com/${externalIds.twitter_id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="Twitter"
-                  className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.05] text-zinc-400 transition-colors hover:bg-white hover:text-black"
-                >
-                  <Twitter size={17} />
-                </a>
-              )}
-              {externalIds.facebook_id && (
-                <a
-                  href={`https://facebook.com/${externalIds.facebook_id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="Facebook"
-                  className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.05] text-zinc-400 transition-colors hover:bg-blue-600 hover:text-white"
-                >
-                  <Facebook size={17} />
-                </a>
-              )}
-              {media.homepage && (
-                <a
-                  href={media.homepage}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="Site oficial"
-                  className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.05] text-zinc-400 transition-colors hover:bg-violet-600 hover:text-white"
-                >
-                  <Globe size={17} />
-                </a>
+              {media.production_companies?.length > 0 && (
+                <div className={media.networks?.length > 0 ? "mt-6 border-t border-white/[0.06] pt-6" : ""}>
+                  <span className="text-[9px] font-black uppercase tracking-[0.22em] text-zinc-500">
+                    Produção
+                  </span>
+                  <div className="mt-4 grid gap-2.5">
+                    {media.production_companies.slice(0, 4).map((company) => (
+                      <div
+                        key={company.id}
+                        className="flex items-center gap-3 rounded-2xl border border-white/[0.05] bg-black/10 p-2.5"
+                      >
+                        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white p-1.5">
+                          {company.logo_path ? (
+                            <img
+                              src={`https://image.tmdb.org/t/p/w92${company.logo_path}`}
+                              className="max-h-full max-w-full object-contain"
+                              alt={company.name}
+                            />
+                          ) : (
+                            <Building size={16} className="text-black" />
+                          )}
+                        </div>
+                        <span className="text-xs font-semibold text-zinc-300">{company.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </section>
-          </div>
+          )}
+
+          {(externalIds.instagram_id ||
+            externalIds.twitter_id ||
+            externalIds.facebook_id ||
+            media.homepage) && (
+            <section className="flex items-center justify-between gap-4 rounded-[1.5rem] border border-white/[0.07] bg-white/[0.02] p-4 pl-5">
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
+                Links oficiais
+              </span>
+              <div className="flex gap-2">
+                {externalIds.instagram_id && (
+                  <a href={`https://instagram.com/${externalIds.instagram_id}`} target="_blank" rel="noreferrer" aria-label="Instagram" className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.05] text-zinc-400 transition-colors hover:bg-pink-600 hover:text-white">
+                    <Instagram size={16} />
+                  </a>
+                )}
+                {externalIds.twitter_id && (
+                  <a href={`https://twitter.com/${externalIds.twitter_id}`} target="_blank" rel="noreferrer" aria-label="Twitter" className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.05] text-zinc-400 transition-colors hover:bg-white hover:text-black">
+                    <Twitter size={16} />
+                  </a>
+                )}
+                {externalIds.facebook_id && (
+                  <a href={`https://facebook.com/${externalIds.facebook_id}`} target="_blank" rel="noreferrer" aria-label="Facebook" className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.05] text-zinc-400 transition-colors hover:bg-blue-600 hover:text-white">
+                    <Facebook size={16} />
+                  </a>
+                )}
+                {media.homepage && (
+                  <a href={media.homepage} target="_blank" rel="noreferrer" aria-label="Site oficial" className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.05] text-zinc-400 transition-colors hover:bg-violet-600 hover:text-white">
+                    <Globe size={16} />
+                  </a>
+                )}
+              </div>
+            </section>
+          )}
         </aside>
       </div>
 
