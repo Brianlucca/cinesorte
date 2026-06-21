@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { useDashboardLogic } from "../../hooks/useDashboardLogic";
 import Hero from "../../components/dashboard/Hero";
 import MovieRow from "../../components/dashboard/MovieRow";
@@ -12,34 +12,58 @@ const RowWrapper = ({ children }) => (
 
 export default function Dashboard() {
   const { data, currentHero, loading } = useDashboardLogic();
-  const [heroIndex, setHeroIndex] = useState(0);
-
-  const validHeroes = useMemo(() => {
-    return [
-      ...(data.recommendedMovies || []),
-      ...(data.trendingDay || []),
-    ].filter((i) => i.backdrop_path && !i.trailerKey).slice(0, 5);
-  }, [data.recommendedMovies, data.trendingDay]);
-
-  const activeHero = validHeroes[heroIndex] || currentHero;
-
-  useEffect(() => {
-    if (validHeroes.length <= 1) return;
-    const interval = setInterval(() => {
-      setHeroIndex((prev) => (prev + 1) % validHeroes.length);
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [validHeroes.length]);
 
   const heroItems = useMemo(() => {
-    if (!activeHero && (!data?.trailers || data.trailers.length === 0)) return [];
-    
-    const validTrailers = (data?.trailers || [])
-      .filter((t) => t && t.id !== activeHero?.id && (t.backdrop_path || t.trailerKey || t.key))
-      .slice(0, 7);
-      
-    return [activeHero, ...validTrailers].filter(Boolean);
-  }, [activeHero, data?.trailers]);
+    const seen = new Set();
+    const shuffle = (items) =>
+      [...items].sort(() => Math.random() - 0.5);
+    const sources = shuffle([
+      data.recommendedMovies || [],
+      data.trendingDay || [],
+      [
+        ...(data.recommendedSeries || []),
+        ...(data.series || []),
+      ],
+      data.inTheaters || [],
+      data.trailers || [],
+    ]).map(shuffle);
+    const selectedItems = [];
+    const maxSourceLength = Math.max(0, ...sources.map((source) => source.length));
+
+    for (let itemIndex = 0; itemIndex < maxSourceLength; itemIndex += 1) {
+      for (const source of sources) {
+        const item = source[itemIndex];
+        if (!item?.id || !item.backdrop_path) continue;
+        const mediaType = item.media_type || (item.first_air_date ? "tv" : "movie");
+        const key = `${mediaType}:${item.id}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        selectedItems.push(item);
+        if (selectedItems.length === 5) return selectedItems;
+      }
+    }
+
+    if (
+      selectedItems.length < 5 &&
+      currentHero?.id &&
+      currentHero.backdrop_path
+    ) {
+      const mediaType = currentHero.media_type ||
+        (currentHero.first_air_date ? "tv" : "movie");
+      const key = `${mediaType}:${currentHero.id}`;
+      if (!seen.has(key)) selectedItems.push(currentHero);
+    }
+
+    return selectedItems;
+  }, [
+    currentHero,
+    data.inTheaters,
+    data.recommendedMovies,
+    data.recommendedSeries,
+    data.series,
+    data.trailers,
+    data.trendingDay,
+  ]);
 
   if (loading)
     return (
