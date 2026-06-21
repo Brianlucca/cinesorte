@@ -1,11 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
   Calendar,
   ChevronLeft,
   ChevronRight,
+  Maximize2,
   Star,
+  Volume2,
+  X,
 } from "lucide-react";
 
 const SLIDE_DURATION = 14000;
@@ -46,11 +50,50 @@ export default function Hero({ items = [] }) {
     duration: SLIDE_DURATION / 1000,
     running: false,
   });
+  const [progressRevision, setProgressRevision] = useState(0);
+  const [cinemaMode, setCinemaMode] = useState({ open: false, startAt: 0 });
   const videoRevealTimeoutRef = useRef(null);
   const videoIframeRef = useRef(null);
   const youtubePlayerRef = useRef(null);
+  const cinemaIframeRef = useRef(null);
+  const cinemaPlayerRef = useRef(null);
   const item = items[currentIndex] || items[0];
   const videoKey = item?.trailerKey || item?.key;
+
+  const closeCinemaMode = useCallback(
+    (advanceToNext = false) => {
+      const resumeAt =
+        cinemaPlayerRef.current?.getCurrentTime?.() || cinemaMode.startAt;
+
+      cinemaPlayerRef.current?.pauseVideo?.();
+
+      if (advanceToNext) {
+        setCinemaMode({ open: false, startAt: 0 });
+        setCurrentIndex((previous) => (previous + 1) % items.length);
+        return;
+      }
+
+      const backgroundPlayer = youtubePlayerRef.current;
+      if (backgroundPlayer && videoKey) {
+        const remainingDuration = Math.max(
+          (backgroundPlayer.getDuration?.() || resumeAt + 1) - resumeAt,
+          1,
+        );
+        backgroundPlayer.seekTo?.(resumeAt, true);
+        backgroundPlayer.mute?.();
+        backgroundPlayer.playVideo?.();
+        setVideoProgress({
+          key: videoKey,
+          duration: remainingDuration,
+          running: true,
+        });
+        setProgressRevision((previous) => previous + 1);
+      }
+
+      setCinemaMode({ open: false, startAt: 0 });
+    },
+    [cinemaMode.startAt, items.length, videoKey],
+  );
 
   useEffect(() => () => {
     window.clearTimeout(videoRevealTimeoutRef.current);
@@ -128,6 +171,53 @@ export default function Hero({ items = [] }) {
     };
   }, [items.length, videoKey]);
 
+  useEffect(() => {
+    if (!cinemaMode.open || !videoKey || !cinemaIframeRef.current) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    loadYoutubeApi().then((YT) => {
+      if (cancelled || !cinemaIframeRef.current) return;
+
+      cinemaPlayerRef.current = new YT.Player(cinemaIframeRef.current, {
+        events: {
+          onReady: (event) => {
+            event.target.unMute();
+            event.target.setVolume(100);
+            event.target.playVideo();
+          },
+          onStateChange: (event) => {
+            if (event.data === YT.PlayerState.ENDED) closeCinemaMode(true);
+          },
+        },
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      cinemaPlayerRef.current?.destroy?.();
+      cinemaPlayerRef.current = null;
+    };
+  }, [cinemaMode.open, closeCinemaMode, videoKey]);
+
+  useEffect(() => {
+    if (!cinemaMode.open) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") closeCinemaMode(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [cinemaMode.open, closeCinemaMode]);
+
   if (items.length === 0) return null;
 
   const name = item.title || item.name;
@@ -141,6 +231,12 @@ export default function Hero({ items = [] }) {
       if (direction === "next") return (previous + 1) % items.length;
       return (previous - 1 + items.length) % items.length;
     });
+  };
+
+  const openCinemaMode = () => {
+    const startAt = youtubePlayerRef.current?.getCurrentTime?.() || 0;
+    youtubePlayerRef.current?.pauseVideo?.();
+    setCinemaMode({ open: true, startAt });
   };
 
   return (
@@ -231,6 +327,21 @@ export default function Hero({ items = [] }) {
               />
             </Link>
 
+            {videoKey && (
+              <button
+                type="button"
+                onClick={openCinemaMode}
+                className="group/trailer inline-flex h-11 md:h-12 items-center gap-2.5 rounded-full border border-white/15 bg-black/30 px-4 md:px-5 text-xs md:text-sm font-bold text-white backdrop-blur-md transition-all hover:border-violet-300/40 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+              >
+                <Volume2 size={17} className="text-violet-300" />
+                <span className="hidden sm:inline">Assistir trailer</span>
+                <Maximize2
+                  size={15}
+                  className="opacity-60 transition-transform group-hover/trailer:scale-110"
+                />
+              </button>
+            )}
+
             {items.length > 1 && (
               <div className="flex items-center gap-1.5">
                 <button
@@ -288,7 +399,7 @@ export default function Hero({ items = [] }) {
                   </span>
                   {isActive && (
                     <span
-                      key={`progress-${currentIndex}`}
+                      key={`progress-${currentIndex}-${progressRevision}`}
                       className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-violet-400 hero-progress"
                       style={{
                         animationDuration: videoKey
@@ -332,6 +443,45 @@ export default function Hero({ items = [] }) {
           </span>
         </div>
       )}
+
+      {cinemaMode.open &&
+        videoKey &&
+        createPortal(
+          <div
+          className="fixed inset-0 z-[100] bg-black trailer-cinema-enter"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Trailer de ${name}`}
+        >
+          <iframe
+            ref={cinemaIframeRef}
+            src={`https://www.youtube.com/embed/${videoKey}?enablejsapi=1&autoplay=1&mute=0&controls=1&disablekb=0&fs=1&modestbranding=1&playsinline=1&rel=0&iv_load_policy=3&start=${Math.floor(cinemaMode.startAt)}`}
+            title={`Trailer de ${name} em tela cheia`}
+            className="absolute inset-0 h-full w-full trailer-cinema-video-enter"
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowFullScreen
+          />
+
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-28 bg-gradient-to-b from-black/80 to-transparent" />
+          <div className="absolute left-5 md:left-8 top-5 md:top-7 z-20 max-w-[70%]">
+            <span className="block text-[9px] md:text-[10px] font-black uppercase tracking-[0.24em] text-violet-300">
+              Modo cinema
+            </span>
+            <span className="mt-1 block truncate text-sm md:text-base font-bold text-white/90">
+              {name}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => closeCinemaMode(false)}
+            aria-label="Fechar trailer"
+            className="absolute right-5 md:right-8 top-5 md:top-7 z-30 grid h-11 w-11 md:h-12 md:w-12 place-items-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-xl transition-all hover:scale-105 hover:bg-white hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+          >
+            <X size={22} />
+          </button>
+          </div>,
+          document.body,
+        )}
     </section>
   );
 }

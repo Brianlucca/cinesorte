@@ -72,6 +72,16 @@ body {
   to { transform: scaleX(1); }
 }
 
+@keyframes trailer-cinema-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes trailer-cinema-video-enter {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 .hero-ken-burns {
   animation: hero-ken-burns 14s ease-out both;
 }
@@ -88,11 +98,21 @@ body {
   animation: hero-progress 14s linear both;
 }
 
+.trailer-cinema-enter {
+  animation: trailer-cinema-enter 350ms ease-out both;
+}
+
+.trailer-cinema-video-enter {
+  animation: trailer-cinema-video-enter 500ms ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-ken-burns,
   .hero-slide-reveal,
   .hero-copy-reveal,
-  .hero-progress {
+  .hero-progress,
+  .trailer-cinema-enter,
+  .trailer-cinema-video-enter {
     animation: none;
   }
 }
