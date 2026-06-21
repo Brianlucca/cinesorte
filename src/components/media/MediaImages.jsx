@@ -1,106 +1,182 @@
-import { useState, useEffect } from 'react';
-import { X, Maximize2 } from 'lucide-react';
-import { createPortal } from 'react-dom';
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
 
-export default function MediaImages({ images }) {
-    const [selectedImage, setSelectedImage] = useState(null);
+function GalleryRail({ title, count, images, variant, onSelect }) {
+  const rowRef = useRef(null);
+  const [hasOverflow, setHasOverflow] = useState(false);
+  const isPoster = variant === "poster";
 
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') setSelectedImage(null);
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
+  useEffect(() => {
+    const row = rowRef.current;
+    if (!row) return undefined;
 
-    if (!images || (images.backdrops.length === 0 && images.posters.length === 0)) return null;
+    const checkOverflow = () => {
+      setHasOverflow(row.scrollWidth > row.clientWidth + 1);
+    };
 
-    const backdrops = images.backdrops?.slice(0, 25) || [];
-    const posters = images.posters?.slice(0, 25) || [];
+    checkOverflow();
+    const resizeObserver = new ResizeObserver(checkOverflow);
+    resizeObserver.observe(row);
+    window.addEventListener("resize", checkOverflow);
 
-    return (
-        <section className="w-full">
-            <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
-                <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
-                Galeria
-            </h2>
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", checkOverflow);
+    };
+  }, [images.length, variant]);
 
-            <div className="space-y-10">
-                {backdrops.length > 0 && (
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-4">Ambiente & Cenas</h3>
-                        <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                            {backdrops.map((img, idx) => (
-                                <button 
-                                    key={idx} 
-                                    onClick={() => setSelectedImage(img.file_path)}
-                                    className="relative flex-none w-72 md:w-96 aspect-video rounded-2xl overflow-hidden group border border-white/5 bg-zinc-900/50 shadow-lg hover:-translate-y-1 transition-all duration-300"
-                                >
-                                    <img 
-                                        src={`https://image.tmdb.org/t/p/w780${img.file_path}`} 
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                        alt={`Backdrop ${idx}`}
-                                        loading="lazy"
-                                    />
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
-                                        <Maximize2 className="text-white/80 drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" size={32} />
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
+  const slide = (direction) => {
+    if (!rowRef.current) return;
+    const amount = rowRef.current.clientWidth * 0.75;
+    rowRef.current.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
+  };
 
-                {posters.length > 0 && (
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-                        <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-4">Posters Oficiais</h3>
-                        <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                            {posters.map((img, idx) => (
-                                <button 
-                                    key={idx} 
-                                    onClick={() => setSelectedImage(img.file_path)}
-                                    className="relative flex-none w-32 md:w-48 aspect-[2/3] rounded-2xl overflow-hidden group border border-white/5 bg-zinc-900/50 shadow-lg hover:-translate-y-1 transition-all duration-300"
-                                >
-                                    <img 
-                                        src={`https://image.tmdb.org/t/p/w500${img.file_path}`} 
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                        alt={`Poster ${idx}`}
-                                        loading="lazy"
-                                    />
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
-                                        <Maximize2 className="text-white/80 drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" size={28} />
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <h3 className="text-sm font-black text-white md:text-base">{title}</h3>
+          <span className="rounded-full border border-white/[0.07] bg-white/[0.035] px-2 py-0.5 text-[10px] font-bold text-zinc-500">
+            {count}
+          </span>
+        </div>
 
-            {selectedImage && createPortal(
-                <div 
-                    className="fixed inset-0 z-[100000] bg-zinc-950/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300"
-                    onClick={() => setSelectedImage(null)}
-                >
-                    <button 
-                        className="absolute top-6 right-6 md:top-8 md:right-8 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 p-3 rounded-full transition-all shadow-lg z-[100001]"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedImage(null);
-                        }}
-                    >
-                        <X size={24} />
-                    </button>
-                    
-                    <img 
-                        src={`https://image.tmdb.org/t/p/original${selectedImage}`} 
-                        className="max-w-full max-h-[90vh] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-300 object-contain border border-white/5 select-none"
-                        alt="Zoom"
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                </div>,
-                document.body
-            )}
-        </section>
-    );
+        {hasOverflow && (
+          <div className="hidden gap-2 md:flex">
+            <button
+              type="button"
+              onClick={() => slide("left")}
+              aria-label={`Voltar em ${title}`}
+              className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/5 text-white transition-all hover:bg-white/10"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => slide("right")}
+              aria-label={`Avançar em ${title}`}
+              className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/5 text-white transition-all hover:bg-white/10"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div
+        ref={rowRef}
+        className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-1 scrollbar-hide md:snap-none md:gap-4"
+      >
+        {images.map((image, index) => (
+          <button
+            type="button"
+            key={image.file_path}
+            onClick={() => onSelect(image.file_path)}
+            aria-label={`Ampliar ${title.toLowerCase()} ${index + 1}`}
+            className={`group relative shrink-0 snap-start overflow-hidden rounded-2xl border border-white/[0.07] bg-zinc-900 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-300/30 ${
+              isPoster
+                ? "aspect-[2/3] w-28 sm:w-36 md:w-44"
+                : "aspect-video w-[78vw] max-w-[310px] sm:w-[360px] sm:max-w-none md:w-[420px]"
+            }`}
+          >
+            <img
+              src={`https://image.tmdb.org/t/p/${isPoster ? "w500" : "w780"}${image.file_path}`}
+              alt=""
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+              loading="lazy"
+            />
+            <span className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-40 transition-opacity group-hover:opacity-100" />
+            <span className="absolute bottom-3 right-3 grid h-9 w-9 translate-y-2 place-items-center rounded-full border border-white/15 bg-black/40 text-white opacity-0 backdrop-blur-md transition-all group-hover:translate-y-0 group-hover:opacity-100">
+              <Maximize2 size={15} />
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function MediaImages({ images, title = "Galeria" }) {
+  const [selectedImage, setSelectedImage] = useState(null);
+  const backdrops = images?.backdrops?.slice(0, 16) || [];
+  const posters = images?.posters?.slice(0, 16) || [];
+
+  useEffect(() => {
+    if (!selectedImage) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setSelectedImage(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedImage]);
+
+  if (backdrops.length === 0 && posters.length === 0) return null;
+
+  return (
+    <section>
+      <div className="mb-7">
+        <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
+          Arquivo visual
+        </span>
+        <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">Galeria</h2>
+      </div>
+
+      <div className="space-y-9 md:space-y-11">
+        {backdrops.length > 0 && (
+          <GalleryRail
+            title="Cenas"
+            count={backdrops.length}
+            images={backdrops}
+            variant="backdrop"
+            onSelect={setSelectedImage}
+          />
+        )}
+        {posters.length > 0 && (
+          <GalleryRail
+            title="Pôsteres oficiais"
+            count={posters.length}
+            images={posters}
+            variant="poster"
+            onSelect={setSelectedImage}
+          />
+        )}
+      </div>
+
+      {selectedImage &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[100000] flex items-center justify-center bg-zinc-950/95 p-4 backdrop-blur-xl md:p-8"
+            onClick={() => setSelectedImage(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Imagem ampliada de ${title}`}
+          >
+            <button
+              type="button"
+              aria-label="Fechar imagem"
+              className="absolute right-5 top-5 z-10 grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-black/40 text-zinc-300 backdrop-blur-xl transition-all hover:bg-white hover:text-black md:right-8 md:top-8"
+              onClick={() => setSelectedImage(null)}
+            >
+              <X size={22} />
+            </button>
+            <img
+              src={`https://image.tmdb.org/t/p/original${selectedImage}`}
+              className="max-h-[90vh] max-w-full select-none rounded-2xl border border-white/5 object-contain shadow-2xl trailer-cinema-video-enter"
+              alt={`Imagem de ${title}`}
+              onClick={(event) => event.stopPropagation()}
+            />
+          </div>,
+          document.body,
+        )}
+    </section>
+  );
 }

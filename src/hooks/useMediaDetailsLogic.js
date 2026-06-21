@@ -103,7 +103,9 @@ export function useMediaDetailsLogic() {
         const recommendations = mediaData.recommendations?.results || [];
         const similarItems = mediaData.similar?.results || [];
         let relatedContent = recommendations.length > 0 ? recommendations : similarItems;
-        relatedContent = relatedContent.filter((item) => item.id !== Number(id) && item.poster_path).slice(0, 6);
+        relatedContent = relatedContent
+          .filter((item) => item.id !== Number(id) && item.poster_path)
+          .slice(0, 16);
         setSimilar(relatedContent);
 
         if (user && user.uid) {

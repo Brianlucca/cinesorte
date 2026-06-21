@@ -1,83 +1,187 @@
-import { useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { useRef } from "react";
+import { Link } from "react-router-dom";
+import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 
-export default function MovieRow({ title, items }) {
+const variants = {
+  poster: {
+    section: "",
+    background: undefined,
+    rail: "gap-4 md:gap-5",
+    card: "w-[150px] sm:w-[170px] md:w-[210px] xl:w-[226px] 2xl:w-[238px]",
+    frame: "aspect-[2/3]",
+    imageSize: "w500",
+  },
+  landscape: {
+    section: "py-10 md:py-14",
+    background:
+      "linear-gradient(to bottom, transparent 0%, rgba(8, 47, 73, 0.10) 16%, rgba(8, 47, 73, 0.18) 38%, rgba(46, 16, 101, 0.14) 68%, transparent 100%)",
+    rail: "gap-4 md:gap-6",
+    card: "w-[78vw] max-w-[310px] sm:w-[320px] sm:max-w-none md:w-[390px] xl:w-[430px] 2xl:w-[460px]",
+    frame: "aspect-video",
+    imageSize: "w780",
+  },
+  spotlight: {
+    section: "py-10 md:py-14",
+    background:
+      "radial-gradient(ellipse at 12% 50%, rgba(124, 58, 237, 0.14), transparent 58%), linear-gradient(to bottom, transparent 0%, rgba(76, 29, 149, 0.05) 24%, rgba(24, 24, 27, 0.16) 72%, transparent 100%)",
+    rail: "gap-4 md:gap-6",
+    card: "w-[185px] sm:w-[215px] md:w-[270px] xl:w-[292px] 2xl:w-[310px]",
+    frame: "aspect-[4/5]",
+    imageSize: "w500",
+  },
+};
+
+const getMediaType = (item) =>
+  item.media_type || (item.first_air_date ? "tv" : "movie");
+
+const getYear = (item) =>
+  (item.release_date || item.first_air_date || "").slice(0, 4);
+
+export default function MovieRow({ title, items, variant = "poster" }) {
   const rowRef = useRef(null);
+  const layout = variants[variant] || variants.poster;
+  const isPoster = variant === "poster";
+  const isLandscape = variant === "landscape";
+  const visibleItems = (items || []).filter(
+    (item) => item?.id && (item.poster_path || item.backdrop_path),
+  );
 
   const slide = (direction) => {
-    if (rowRef.current) {
-      const { clientWidth } = rowRef.current;
-      const scrollAmount = direction === 'left' ? -(clientWidth * 0.7) : clientWidth * 0.7;
-      rowRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
+    if (!rowRef.current) return;
+    const { clientWidth } = rowRef.current;
+    const amount = clientWidth * 0.75;
+    rowRef.current.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
   };
 
-  if (!items || items.length === 0) return null;
+  if (visibleItems.length === 0) return null;
 
   return (
-    <div className="relative w-full group/row z-10">
-      
-      <div className="flex justify-between items-center px-6 md:px-10 xl:px-14 2xl:px-16 mb-0">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-            <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
+    <section
+      className={`relative w-full group/row z-10 ${layout.section}`}
+      style={{ background: layout.background }}
+    >
+      <div className="flex justify-between items-end px-5 sm:px-6 md:px-10 xl:px-14 2xl:px-16">
+        <div>
+          {variant !== "poster" && (
+            <span className="mb-2 block text-[10px] md:text-xs font-black uppercase tracking-[0.24em] text-violet-300/70">
+              {isLandscape ? "Seleção panorâmica" : "Em destaque"}
+            </span>
+          )}
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+            <span
+              className={`w-1.5 rounded-full bg-gradient-to-b from-violet-400 to-violet-700 ${
+                variant === "spotlight" ? "h-8" : "h-6"
+              }`}
+            />
             {title}
           </h2>
+        </div>
 
-          <div className="flex gap-2 opacity-0 group-hover/row:opacity-100 transition-opacity duration-300">
-              <button 
-                onClick={() => slide('left')} 
-                className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all shadow-lg"
-              >
-                  <ChevronLeft size={20} />
-              </button>
-              <button 
-                onClick={() => slide('right')} 
-                className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all shadow-lg"
-              >
-                  <ChevronRight size={20} />
-              </button>
-          </div>
+        <div className="hidden md:flex gap-2 opacity-40 group-hover/row:opacity-100 transition-opacity duration-300">
+          <button
+            type="button"
+            aria-label={`Voltar na seção ${title}`}
+            onClick={() => slide("left")}
+            className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all shadow-lg"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <button
+            type="button"
+            aria-label={`Avançar na seção ${title}`}
+            onClick={() => slide("right")}
+            className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all shadow-lg"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
       </div>
-      
-      <div 
-        ref={rowRef} 
-        className="flex gap-4 md:gap-5 overflow-x-auto scroll-smooth pt-6 pb-8 px-6 md:px-10 xl:px-14 2xl:px-16 scrollbar-hide w-full"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+
+      <div
+        ref={rowRef}
+        className={`flex ${layout.rail} overflow-x-auto scroll-smooth snap-x snap-mandatory md:snap-none pt-5 md:pt-6 pb-4 md:pb-6 px-5 sm:px-6 md:px-10 xl:px-14 2xl:px-16 scrollbar-hide w-full`}
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
-        {items.map((item, index) => (
-            <Link 
-                key={`${item.id}-${index}`}
-                to={`/app/${item.media_type || (item.first_air_date ? 'tv' : 'movie')}/${item.id}`} 
-                className="flex-none w-[160px] md:w-[220px] xl:w-[236px] 2xl:w-[248px] group/card transition-all duration-300 hover:-translate-y-1.5"
-            >
-                <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-white/[0.02] border border-white/5 relative shadow-2xl group-hover/card:border-white/20 transition-all duration-300">
-                    <img 
-                        src={`https://image.tmdb.org/t/p/w500${item.poster_path}`} 
-                        alt={item.title || item.name} 
-                        className="w-full h-full object-cover transition-transform duration-350 group-hover/card:scale-[1.03]" 
-                        loading="lazy"
-                    />
-                    
-                    <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-xl px-2 py-1 rounded-lg flex items-center gap-1.5 border border-white/10 shadow-lg">
-                        <Star size={10} className="text-yellow-500 fill-yellow-500" />
-                        <span className="text-[10px] font-black text-white">{item.vote_average?.toFixed(1)}</span>
-                    </div>
+        {visibleItems.map((item, index) => {
+          const imagePath = isLandscape
+            ? item.backdrop_path || item.poster_path
+            : item.poster_path || item.backdrop_path;
+          const name = item.title || item.name;
+          const year = getYear(item);
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5">
-                        <span className="font-bold text-white text-sm mb-3 line-clamp-2 leading-tight">
-                            {item.title || item.name}
-                        </span>
-                        
-                        <div className="w-full py-2 bg-white text-black text-[10px] font-black uppercase tracking-widest text-center rounded-lg shadow-lg">
-                            Ver Detalhes
-                        </div>
-                    </div>
+          return (
+            <Link
+              key={`${item.id}-${index}`}
+              to={`/app/${getMediaType(item)}/${item.id}`}
+              className={`flex-none snap-start ${layout.card} group/card transition-transform duration-300 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 rounded-2xl`}
+            >
+              <article
+                className={`${layout.frame} rounded-2xl md:rounded-[1.25rem] overflow-hidden bg-white/[0.03] border border-white/[0.07] relative shadow-2xl group-hover/card:border-violet-300/30 transition-all duration-300`}
+              >
+                <img
+                  src={`https://image.tmdb.org/t/p/${layout.imageSize}${imagePath}`}
+                  alt={name}
+                  className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover/card:scale-[1.045]"
+                  loading="lazy"
+                />
+
+                <div
+                  className={`absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent ${
+                    isPoster
+                      ? "opacity-40 md:opacity-0 md:group-hover/card:opacity-100"
+                      : "opacity-100"
+                  } transition-opacity duration-300`}
+                />
+
+                <div className="absolute top-2.5 right-2.5 md:top-3 md:right-3 bg-black/55 backdrop-blur-xl px-2 py-1 rounded-lg flex items-center gap-1.5 border border-white/10 shadow-lg">
+                  <Star size={10} className="text-yellow-400 fill-yellow-400" />
+                  <span className="text-[10px] font-black text-white">
+                    {Number(item.vote_average || 0).toFixed(1)}
+                  </span>
                 </div>
+
+                {!isPoster && (
+                  <div className="absolute inset-x-0 bottom-0 p-4 md:p-5">
+                    <div className="mb-1.5 flex items-center gap-2 text-[9px] md:text-[10px] uppercase tracking-[0.16em] font-bold text-zinc-300">
+                      {year && <span>{year}</span>}
+                      {year && <span className="h-1 w-1 rounded-full bg-violet-400" />}
+                      <span>{getMediaType(item) === "tv" ? "Série" : "Filme"}</span>
+                    </div>
+                    <h3 className="text-base md:text-xl font-bold text-white line-clamp-2 leading-tight drop-shadow-lg">
+                      {name}
+                    </h3>
+                    <span className="mt-3 hidden md:inline-flex translate-y-2 opacity-0 group-hover/card:translate-y-0 group-hover/card:opacity-100 transition-all duration-300 text-[10px] font-black uppercase tracking-widest text-white border-b border-violet-400 pb-1">
+                      Ver detalhes
+                    </span>
+                  </div>
+                )}
+
+                {isPoster && (
+                  <div className="absolute inset-0 hidden md:flex flex-col justify-end p-5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300">
+                    <span className="font-bold text-white text-sm mb-3 line-clamp-2 leading-tight">
+                      {name}
+                    </span>
+                    <div className="w-full py-2 bg-white text-black text-[10px] font-black uppercase tracking-widest text-center rounded-lg shadow-lg">
+                      Ver detalhes
+                    </div>
+                  </div>
+                )}
+              </article>
+
+              {isPoster && (
+                <div className="md:hidden pt-2.5 px-0.5">
+                  <h3 className="text-sm font-semibold text-zinc-100 truncate">{name}</h3>
+                  {year && <span className="text-xs text-zinc-500">{year}</span>}
+                </div>
+              )}
             </Link>
-        ))}
-        <div className="w-6 md:w-10 flex-none"></div>
+          );
+        })}
+        <div className="w-1 md:w-6 flex-none" aria-hidden="true" />
       </div>
-    </div>
+    </section>
   );
 }

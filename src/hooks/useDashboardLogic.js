@@ -82,6 +82,29 @@ export function useDashboardLogic() {
     });
   }, []);
 
+  const buildCompleteSection = useCallback(
+    (items, blockedItems, minimumSize = 10) => {
+      const uniqueItems = uniqueById(items);
+      const preferredItems = excludeExisting(uniqueItems, blockedItems);
+
+      if (preferredItems.length >= minimumSize) return preferredItems;
+
+      const preferredKeys = new Set(
+        preferredItems.map(
+          (item) =>
+            `${item.media_type || (item.first_air_date ? "tv" : "movie")}:${item.id}`,
+        ),
+      );
+      const fallbackItems = uniqueItems.filter((item) => {
+        const key = `${item.media_type || (item.first_air_date ? "tv" : "movie")}:${item.id}`;
+        return !preferredKeys.has(key);
+      });
+
+      return [...preferredItems, ...fallbackItems];
+    },
+    [excludeExisting, uniqueById],
+  );
+
   const getPreferredGenreString = useCallback((genreCounts) => {
     const positiveGenres = Object.entries(genreCounts || {})
       .filter(([, score]) => Number(score) > 0)
@@ -230,6 +253,8 @@ export function useDashboardLogic() {
           getNowPlaying(),
           getDiscover({ with_genres: topGenresIdsString, sort_by: 'popularity.desc', 'vote_count.gte': 50 }),
           getDiscover({ media_type: "tv", with_genres: topGenresIdsString, sort_by: 'popularity.desc', 'vote_count.gte': 50 }),
+          getDiscover({ media_type: "movie", sort_by: "popularity.desc", page: 2 }),
+          getDiscover({ media_type: "tv", sort_by: "popularity.desc", page: 2 }),
         ]);
 
         if (!isMounted.current) return;
@@ -245,6 +270,8 @@ export function useDashboardLogic() {
         const inTheaters = uniqueById(results[8].status === "fulfilled" ? results[8].value : []);
         const fallbackGenreMovies = uniqueById(results[9].status === "fulfilled" ? results[9].value : []);
         const fallbackGenreSeries = uniqueById(results[10].status === "fulfilled" ? results[10].value : []);
+        const popularMovies = uniqueById(results[11].status === "fulfilled" ? results[11].value : []);
+        const popularSeries = uniqueById(results[12].status === "fulfilled" ? results[12].value : []);
 
         const sortedDay = uniqueById(prioritizeContent(finalDay, userGenres));
         const sortedWeek = uniqueById(prioritizeContent(finalWeek, userGenres));
@@ -295,12 +322,20 @@ export function useDashboardLogic() {
         setData({
           trendingDay: sortedDay,
           trendingWeek: sortedWeek,
-          movies: excludeExisting(
-            sortedWeek.filter((i) => i.media_type === "movie" || !i.media_type),
+          movies: buildCompleteSection(
+            [
+              ...popularMovies,
+              ...fallbackGenreMovies,
+              ...sortedWeek.filter((i) => i.media_type === "movie" || !i.media_type),
+            ],
             [...smartRecMovies, ...streaming, ...inTheaters],
           ),
-          series: excludeExisting(
-            sortedWeek.filter((i) => i.media_type === "tv"),
+          series: buildCompleteSection(
+            [
+              ...popularSeries,
+              ...fallbackGenreSeries,
+              ...sortedWeek.filter((i) => i.media_type === "tv"),
+            ],
             [...smartRecSeries, ...onTv],
           ),
           trailers,
@@ -322,7 +357,7 @@ export function useDashboardLogic() {
     return () => {
       isMounted.current = false;
     };
-  }, [excludeExisting, getPreferredGenreString, prioritizeContent, uniqueById]);
+  }, [buildCompleteSection, excludeExisting, getPreferredGenreString, prioritizeContent, uniqueById]);
 
   return { data, currentHero, loading };
 }

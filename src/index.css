@@ -31,6 +31,38 @@ body {
   background: #555;
 }
 
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.content-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.45) rgba(255, 255, 255, 0.04);
+}
+
+.content-scrollbar::-webkit-scrollbar {
+  height: 5px;
+}
+
+.content-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+}
+
+.content-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.45);
+  border-radius: 999px;
+}
+
+.content-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.7);
+}
+
 /* Animação do Texto Gradiente (Cores passando) */
 @keyframes gradient {
   0% { background-position: 0% 50%; }
@@ -50,4 +82,69 @@ body {
 /* Girar devagar */
 .animate-spin-slow {
   animation: spin 3s linear infinite;
+}
+
+@keyframes hero-ken-burns {
+  from { transform: scale(1.02); }
+  to { transform: scale(1.09); }
+}
+
+@keyframes hero-slide-reveal {
+  from { opacity: 0; transform: scale(1.015); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes hero-copy-reveal {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hero-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes trailer-cinema-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes trailer-cinema-video-enter {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.hero-ken-burns {
+  animation: hero-ken-burns 14s ease-out both;
+}
+
+.hero-slide-reveal {
+  animation: hero-slide-reveal 700ms ease-out both;
+}
+
+.hero-copy-reveal {
+  animation: hero-copy-reveal 600ms 100ms ease-out both;
+}
+
+.hero-progress {
+  animation: hero-progress 14s linear both;
+}
+
+.trailer-cinema-enter {
+  animation: trailer-cinema-enter 350ms ease-out both;
+}
+
+.trailer-cinema-video-enter {
+  animation: trailer-cinema-video-enter 500ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-ken-burns,
+  .hero-slide-reveal,
+  .hero-copy-reveal,
+  .hero-progress,
+  .trailer-cinema-enter,
+  .trailer-cinema-video-enter {
+    animation: none;
+  }
 }
