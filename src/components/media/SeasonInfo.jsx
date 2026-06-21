@@ -95,7 +95,7 @@ export default function SeasonInfo({ tvId, seasons }) {
         </div>
       </div>
 
-      <div className="mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 scrollbar-hide">
+      <div className="content-scrollbar mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4">
         {availableSeasons.map((season) => {
           const selected = season.season_number === selectedSeason.season_number;
           return (

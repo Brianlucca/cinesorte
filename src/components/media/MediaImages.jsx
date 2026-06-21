@@ -1,9 +1,89 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Maximize2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
+
+function GalleryRail({ title, count, images, variant, onSelect }) {
+  const rowRef = useRef(null);
+  const isPoster = variant === "poster";
+
+  const slide = (direction) => {
+    if (!rowRef.current) return;
+    const amount = rowRef.current.clientWidth * 0.75;
+    rowRef.current.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
+  };
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <h3 className="text-sm font-black text-white md:text-base">{title}</h3>
+          <span className="rounded-full border border-white/[0.07] bg-white/[0.035] px-2 py-0.5 text-[10px] font-bold text-zinc-500">
+            {count}
+          </span>
+        </div>
+
+        {images.length > 1 && (
+          <div className="hidden gap-2 md:flex">
+            <button
+              type="button"
+              onClick={() => slide("left")}
+              aria-label={`Voltar em ${title}`}
+              className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/5 text-white transition-all hover:bg-white/10"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => slide("right")}
+              aria-label={`Avançar em ${title}`}
+              className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/5 text-white transition-all hover:bg-white/10"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div
+        ref={rowRef}
+        className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-1 scrollbar-hide md:snap-none md:gap-4"
+      >
+        {images.map((image, index) => (
+          <button
+            type="button"
+            key={image.file_path}
+            onClick={() => onSelect(image.file_path)}
+            aria-label={`Ampliar ${title.toLowerCase()} ${index + 1}`}
+            className={`group relative shrink-0 snap-start overflow-hidden rounded-2xl border border-white/[0.07] bg-zinc-900 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-300/30 ${
+              isPoster
+                ? "aspect-[2/3] w-28 sm:w-36 md:w-44"
+                : "aspect-video w-[78vw] max-w-[310px] sm:w-[360px] sm:max-w-none md:w-[420px]"
+            }`}
+          >
+            <img
+              src={`https://image.tmdb.org/t/p/${isPoster ? "w500" : "w780"}${image.file_path}`}
+              alt=""
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+              loading="lazy"
+            />
+            <span className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-40 transition-opacity group-hover:opacity-100" />
+            <span className="absolute bottom-3 right-3 grid h-9 w-9 translate-y-2 place-items-center rounded-full border border-white/15 bg-black/40 text-white opacity-0 backdrop-blur-md transition-all group-hover:translate-y-0 group-hover:opacity-100">
+              <Maximize2 size={15} />
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function MediaImages({ images, title = "Galeria" }) {
   const [selectedImage, setSelectedImage] = useState(null);
+  const backdrops = images?.backdrops?.slice(0, 16) || [];
+  const posters = images?.posters?.slice(0, 16) || [];
 
   useEffect(() => {
     if (!selectedImage) return undefined;
@@ -19,82 +99,37 @@ export default function MediaImages({ images, title = "Galeria" }) {
     };
   }, [selectedImage]);
 
-  const backdrops = images?.backdrops?.slice(0, 5) || [];
-  const posters = images?.posters?.slice(0, 12) || [];
-
   if (backdrops.length === 0 && posters.length === 0) return null;
-
-  const ImageButton = ({ image, className, label }) => (
-    <button
-      type="button"
-      onClick={() => setSelectedImage(image.file_path)}
-      className={`group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-zinc-900 text-left shadow-xl transition-all hover:-translate-y-1 hover:border-violet-300/30 ${className}`}
-      aria-label={label}
-    >
-      <img
-        src={`https://image.tmdb.org/t/p/w780${image.file_path}`}
-        alt=""
-        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-        loading="lazy"
-      />
-      <span className="absolute inset-0 grid place-items-center bg-black/0 opacity-0 transition-all group-hover:bg-black/35 group-hover:opacity-100">
-        <Maximize2 className="text-white drop-shadow-xl" size={28} />
-      </span>
-    </button>
-  );
 
   return (
     <section>
-      <div className="mb-6">
+      <div className="mb-7">
         <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
-          Bastidores visuais
+          Arquivo visual
         </span>
         <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">Galeria</h2>
       </div>
 
-      {backdrops.length > 0 && (
-        <div className="grid h-[360px] grid-cols-2 grid-rows-2 gap-2.5 md:h-[520px] md:grid-cols-4 md:gap-3">
-          <ImageButton
-            image={backdrops[0]}
-            label="Ampliar imagem principal"
-            className="col-span-2 row-span-2"
+      <div className="space-y-9 md:space-y-11">
+        {backdrops.length > 0 && (
+          <GalleryRail
+            title="Cenas"
+            count={backdrops.length}
+            images={backdrops}
+            variant="backdrop"
+            onSelect={setSelectedImage}
           />
-          {backdrops.slice(1, 5).map((image) => (
-            <ImageButton
-              key={image.file_path}
-              image={image}
-              label="Ampliar cena"
-              className="hidden md:block"
-            />
-          ))}
-        </div>
-      )}
-
-      {posters.length > 0 && (
-        <div className="mt-8">
-          <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
-            Pôsteres oficiais
-          </h3>
-          <div className="flex snap-x snap-mandatory gap-3.5 overflow-x-auto pb-3 scrollbar-hide md:gap-4">
-            {posters.map((image, index) => (
-              <button
-                type="button"
-                key={image.file_path}
-                onClick={() => setSelectedImage(image.file_path)}
-                className="group relative aspect-[2/3] w-28 shrink-0 snap-start overflow-hidden rounded-2xl border border-white/[0.07] bg-zinc-900 transition-all hover:-translate-y-1 hover:border-violet-300/30 md:w-40"
-                aria-label={`Ampliar pôster ${index + 1}`}
-              >
-                <img
-                  src={`https://image.tmdb.org/t/p/w500${image.file_path}`}
-                  alt=""
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  loading="lazy"
-                />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+        )}
+        {posters.length > 0 && (
+          <GalleryRail
+            title="Pôsteres oficiais"
+            count={posters.length}
+            images={posters}
+            variant="poster"
+            onSelect={setSelectedImage}
+          />
+        )}
+      </div>
 
       {selectedImage &&
         createPortal(

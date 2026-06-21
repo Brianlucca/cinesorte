@@ -23,7 +23,7 @@ import MediaImages from "../../components/media/MediaImages";
 import ReviewsSection from "../../components/media/reviews/ReviewsSection";
 import SeasonInfo from "../../components/media/SeasonInfo";
 import TrailerModal from "../../components/media/TrailerModal";
-import MovieRow from "../../components/dashboard/MovieRow";
+import MediaRecommendations from "../../components/media/MediaRecommendations";
 
 const SectionHeading = ({ eyebrow, children, aside }) => (
   <div className="mb-6 flex items-end justify-between gap-4">
@@ -302,7 +302,7 @@ export default function MediaDetails() {
               >
                 Elenco principal
               </SectionHeading>
-              <div className="flex snap-x snap-mandatory gap-3.5 overflow-x-auto pb-3 scrollbar-hide md:gap-4">
+              <div className="content-scrollbar flex snap-x snap-mandatory gap-3.5 overflow-x-auto pb-4 md:gap-4">
                 {media.credits.cast.slice(0, 15).map((person) => (
                   <Link
                     to={`/app/person/${person.id}`}
@@ -582,8 +582,8 @@ export default function MediaDetails() {
       </div>
 
       {similar.length > 0 && (
-        <div className="mt-16 border-t border-white/[0.04] pt-12 md:mt-24 md:pt-16">
-          <MovieRow title="Você também pode gostar" items={similar} variant="poster" />
+        <div className="mt-16 md:mt-24">
+          <MediaRecommendations items={similar} />
         </div>
       )}
 
