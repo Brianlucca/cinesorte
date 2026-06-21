@@ -49,17 +49,17 @@ export default function Dashboard() {
     );
 
   const sections = [
-    { id: 'recommendedMovies', title: "Escolhidos para Você", type: 'movie' },
-    { id: 'streaming', title: "Populares no Streaming", type: 'movie' },
-    { id: 'trendingDay', title: "Tendências de Hoje", type: 'movie' },
-    { id: 'recommendedSeries', title: "Séries que Você Pode Gostar", type: 'movie' },
-    { id: 'onTv', title: "Populares na TV", type: 'movie' },
+    { id: 'recommendedMovies', title: "Escolhidos para Você", type: 'movie', variant: 'spotlight' },
+    { id: 'streaming', title: "Populares no Streaming", type: 'movie', variant: 'landscape' },
+    { id: 'trendingDay', title: "Tendências de Hoje", type: 'movie', variant: 'poster' },
+    { id: 'recommendedSeries', title: "Séries que Você Pode Gostar", type: 'movie', variant: 'spotlight' },
+    { id: 'onTv', title: "Populares na TV", type: 'movie', variant: 'landscape' },
     { id: 'trailers', title: "Últimos Trailers", type: 'trailer' },
-    { id: 'series', title: "Séries Populares", type: 'movie' },
-    { id: 'animes', title: "Lançamentos de Animes", type: 'movie' },
-    { id: 'inTheaters', title: "Nos Cinemas", type: 'movie' },
-    { id: 'trendingWeek', title: "Top da Semana", type: 'movie' },
-    { id: 'movies', title: "Filmes Populares", type: 'movie' },
+    { id: 'series', title: "Séries Populares", type: 'movie', variant: 'poster' },
+    { id: 'animes', title: "Lançamentos de Animes", type: 'movie', variant: 'landscape' },
+    { id: 'inTheaters', title: "Nos Cinemas", type: 'movie', variant: 'spotlight' },
+    { id: 'trendingWeek', title: "Top da Semana", type: 'movie', variant: 'landscape' },
+    { id: 'movies', title: "Filmes Populares", type: 'movie', variant: 'poster' },
   ];
 
   return (
@@ -67,7 +67,7 @@ export default function Dashboard() {
 
       <Hero items={heroItems} />
 
-      <div className="flex flex-col gap-12 relative z-20 -mt-12 md:-mt-32 pt-20 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent">
+      <div className="flex flex-col gap-6 md:gap-8 relative z-20 -mt-12 md:-mt-32 pt-20 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent">
         {sections.map((section) => {
           const items = data[section.id];
           if (!items || items.length === 0) return null;
@@ -77,7 +77,7 @@ export default function Dashboard() {
               {section.type === 'trailer' ? (
                 <TrailerRow title={section.title} items={items} />
               ) : (
-                <MovieRow title={section.title} items={items} />
+                <MovieRow title={section.title} items={items} variant={section.variant} />
               )}
             </RowWrapper>
           );
