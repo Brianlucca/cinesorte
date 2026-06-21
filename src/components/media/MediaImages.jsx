@@ -4,7 +4,27 @@ import { ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
 
 function GalleryRail({ title, count, images, variant, onSelect }) {
   const rowRef = useRef(null);
+  const [hasOverflow, setHasOverflow] = useState(false);
   const isPoster = variant === "poster";
+
+  useEffect(() => {
+    const row = rowRef.current;
+    if (!row) return undefined;
+
+    const checkOverflow = () => {
+      setHasOverflow(row.scrollWidth > row.clientWidth + 1);
+    };
+
+    checkOverflow();
+    const resizeObserver = new ResizeObserver(checkOverflow);
+    resizeObserver.observe(row);
+    window.addEventListener("resize", checkOverflow);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", checkOverflow);
+    };
+  }, [images.length, variant]);
 
   const slide = (direction) => {
     if (!rowRef.current) return;
@@ -25,7 +45,7 @@ function GalleryRail({ title, count, images, variant, onSelect }) {
           </span>
         </div>
 
-        {images.length > 1 && (
+        {hasOverflow && (
           <div className="hidden gap-2 md:flex">
             <button
               type="button"
