@@ -1,28 +1,31 @@
-import { Users, User, Layers } from "lucide-react";
+import { Layers, User, Users } from "lucide-react";
+
+const tabs = [
+  { id: "following", label: "Meu círculo", compactLabel: "Círculo", icon: Users },
+  { id: "collections", label: "Coleções", compactLabel: "Coleções", icon: Layers },
+  { id: "mine", label: "Minhas", compactLabel: "Minhas", icon: User },
+];
 
 export default function FeedTabs({ activeTab, onChange }) {
-  const tabs = [
-    { id: 'following', label: 'Feed', icon: Users },
-    { id: 'collections', label: 'Coleções', icon: Layers },
-    { id: 'mine', label: 'Minhas', icon: User },
-  ];
-
   return (
-    <div className="flex items-center p-1.5 bg-white/[0.02] border border-white/10 rounded-2xl w-max shadow-lg backdrop-blur-xl">
+    <div className="flex w-full items-center gap-1 rounded-2xl border border-white/[0.08] bg-black/20 p-1.5 backdrop-blur-xl sm:w-max">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
+
         return (
           <button
             key={tab.id}
+            type="button"
             onClick={() => onChange(tab.id)}
-            className={`flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
-              isActive 
-                ? 'bg-violet-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)]' 
-                : 'text-zinc-500 hover:text-white hover:bg-white/5'
+            className={`flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] transition-all sm:flex-none sm:px-4 ${
+              isActive
+                ? "bg-white text-zinc-950 shadow-lg"
+                : "text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-200"
             }`}
           >
-            <tab.icon size={16} />
-            {tab.label}
+            <tab.icon size={14} strokeWidth={2.4} />
+            <span className="sm:hidden">{tab.compactLabel}</span>
+            <span className="hidden sm:inline">{tab.label}</span>
           </button>
         );
       })}
