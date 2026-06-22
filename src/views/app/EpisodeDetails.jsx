@@ -1,23 +1,69 @@
 import {
-  Clock,
+  ArrowLeft,
+  ArrowRight,
   Calendar,
-  Star,
-  Play,
   ChevronLeft,
+  ChevronRight,
+  Clock,
+  Play,
+  Star,
+  Tag,
   User,
-  ImageIcon,
-} from 'lucide-react';
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { createPortal } from 'react-dom';
-import { useEpisodeDetailsLogic } from '../../hooks/useEpisodeDetailsLogic';
-import ReviewsSection from '../../components/media/reviews/ReviewsSection';
-import TrailerModal from '../../components/media/TrailerModal';
+  Users,
+} from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import MediaImages from "../../components/media/MediaImages";
+import ReviewsSection from "../../components/media/reviews/ReviewsSection";
+import TrailerModal from "../../components/media/TrailerModal";
+import { useEpisodeDetailsLogic } from "../../hooks/useEpisodeDetailsLogic";
+
+const formatDate = (date) => {
+  if (!date) return "Data a confirmar";
+  return new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+};
+
+function EpisodeNavigationCard({ episode, direction, tvId, seasonNumber }) {
+  if (!episode) return <div className="hidden md:block" />;
+  const isPrevious = direction === "previous";
+  return (
+    <Link
+      to={`/app/tv/${tvId}/season/${seasonNumber}/episode/${episode.episode_number}`}
+      className={`group flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3 transition-all hover:border-violet-300/25 hover:bg-white/[0.05] ${
+        isPrevious ? "text-left" : "justify-end text-right"
+      }`}
+    >
+      {isPrevious && (
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/[0.04] text-zinc-500 transition-all group-hover:bg-white group-hover:text-black">
+          <ChevronLeft size={17} />
+        </span>
+      )}
+      <div className="min-w-0">
+        <span className="block text-[9px] font-black uppercase tracking-[0.18em] text-violet-400/75">
+          {isPrevious ? "Episódio anterior" : "Próximo episódio"}
+        </span>
+        <span className="mt-1 block truncate text-xs font-bold text-zinc-200">
+          E{String(episode.episode_number).padStart(2, "0")} · {episode.name}
+        </span>
+      </div>
+      {!isPrevious && (
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/[0.04] text-zinc-500 transition-all group-hover:bg-white group-hover:text-black">
+          <ChevronRight size={17} />
+        </span>
+      )}
+    </Link>
+  );
+}
 
 export default function EpisodeDetails() {
   const {
     episode,
     tvShow,
+    seasonData,
     reviews,
     followingList,
     loading,
@@ -25,204 +71,224 @@ export default function EpisodeDetails() {
     seasonNumber,
     actions,
   } = useEpisodeDetailsLogic();
-
-  const navigate = useNavigate();
   const [trailerOpen, setTrailerOpen] = useState(false);
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-zinc-950">
-        <div className="w-12 h-12 border-4 border-violet-600 border-t-transparent rounded-full animate-spin" />
+      <div className="grid h-screen place-items-center bg-zinc-950">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-violet-600 border-t-transparent" />
       </div>
     );
+  }
 
-  if (!episode)
+  if (!episode) {
     return (
-      <div className="h-screen flex items-center justify-center text-white">
+      <div className="grid h-screen place-items-center bg-zinc-950 text-white">
         Episódio não encontrado.
       </div>
     );
+  }
 
-  const banner = episode.still_path
-    ? `https://image.tmdb.org/t/p/original${episode.still_path}`
+  const title = episode.name;
+  const bannerPath = episode.still_path || tvShow?.backdrop_path;
+  const banner = bannerPath
+    ? `https://image.tmdb.org/t/p/original${bannerPath}`
     : null;
-
   const trailerKey = episode.videos?.results?.find(
-    (v) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
+    (video) =>
+      video.site === "YouTube" && ["Trailer", "Teaser", "Clip"].includes(video.type),
   )?.key;
+  const seasonEpisodes = seasonData?.episodes || [];
+  const currentIndex = seasonEpisodes.findIndex(
+    (item) => item.episode_number === episode.episode_number,
+  );
+  const previousEpisode = currentIndex > 0 ? seasonEpisodes[currentIndex - 1] : null;
+  const nextEpisode =
+    currentIndex >= 0 && currentIndex < seasonEpisodes.length - 1
+      ? seasonEpisodes[currentIndex + 1]
+      : null;
+  const mainCrew = (episode.crew || [])
+    .filter((person) => ["Director", "Writer", "Screenplay"].includes(person.job))
+    .slice(0, 6);
+  const galleryImages = {
+    backdrops: episode.images?.stills || [],
+    posters: [],
+  };
 
   return (
-    <div className="-mt-24 md:-mt-8 pb-20 w-full overflow-x-hidden bg-zinc-950 animate-in fade-in duration-700">
-      {trailerKey &&
-        trailerOpen &&
-        createPortal(
-          <div className="fixed inset-0 z-[100000] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm">
-            <TrailerModal
-              isOpen={trailerOpen}
-              onClose={() => setTrailerOpen(false)}
-              videoKey={trailerKey}
-            />
-          </div>,
-          document.body
-        )}
+    <div className="relative isolate -mt-24 min-h-screen overflow-x-hidden bg-zinc-950 pb-24 text-white md:-mt-8">
+      <TrailerModal
+        isOpen={trailerOpen}
+        onClose={() => setTrailerOpen(false)}
+        videoKey={trailerKey}
+        title={`${tvShow?.name || "Série"} — ${title}`}
+      />
 
-      <div className="relative w-full h-[70vh] mb-12 group">
-        <div className="absolute inset-0">
-          {banner ? (
-            <img
-              src={banner}
-              alt={episode.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-zinc-900" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/10 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
-        </div>
-
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-28 left-6 md:left-12 z-50 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl text-white hover:bg-white/10 transition-all shadow-lg"
+      <header className="relative h-[78svh] min-h-[650px] max-h-[820px]">
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 -bottom-52"
+          style={{
+            WebkitMaskImage:
+              "linear-gradient(to bottom, black 0%, black 60%, rgba(0,0,0,0.8) 78%, rgba(0,0,0,0.24) 92%, transparent 100%)",
+            maskImage:
+              "linear-gradient(to bottom, black 0%, black 60%, rgba(0,0,0,0.8) 78%, rgba(0,0,0,0.24) 92%, transparent 100%)",
+          }}
         >
-          <ChevronLeft size={24} />
-        </button>
+          {banner ? (
+            <img src={banner} alt="" className="h-full w-full object-cover object-center" />
+          ) : (
+            <div className="h-full w-full bg-gradient-to-br from-violet-950/30 to-zinc-950" />
+          )}
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,9,11,0.98)_0%,rgba(9,9,11,0.8)_40%,rgba(9,9,11,0.2)_78%,rgba(9,9,11,0.08)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(0deg,#09090b_0%,rgba(9,9,11,0.86)_12%,transparent_56%,rgba(9,9,11,0.34)_100%)]" />
+          <div className="absolute -bottom-16 left-[18%] h-80 w-[38rem] rounded-full bg-violet-700/10 blur-[125px]" />
+        </div>
+        <div className="pointer-events-none absolute inset-x-0 -bottom-48 z-[1] h-80 bg-gradient-to-b from-transparent via-zinc-950/75 to-zinc-950" />
 
-        <div className="absolute bottom-0 top-0 left-0 w-full flex flex-col justify-end px-6 md:px-12 pb-16 max-w-6xl z-20">
-          <div className="flex flex-wrap gap-3 mb-5 animate-in slide-in-from-bottom-2 fade-in duration-1000">
-            {tvShow && (
-              <Link
-                to={`/app/tv/${tvId}`}
-                className="bg-white/10 hover:bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-md text-xs font-bold text-white uppercase tracking-wider border border-white/10 transition-colors shadow-lg"
-              >
-                {tvShow.name}
-              </Link>
-            )}
-            <span className="bg-violet-600 px-4 py-1.5 rounded-md text-xs font-bold text-white uppercase tracking-wider shadow-lg">
-              Temporada {seasonNumber}
-            </span>
-            <span className="bg-white/5 backdrop-blur-md px-4 py-1.5 rounded-md text-xs font-bold text-white uppercase tracking-wider border border-white/10 shadow-lg">
-              Episódio {episode.episode_number}
-            </span>
+        <div className="relative z-10 mx-auto flex h-full max-w-[1600px] flex-col px-5 pb-20 pt-28 sm:px-8 md:px-12 md:pb-24 xl:px-16">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link
+              to={`/app/tv/${tvId}/season/${seasonNumber}`}
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/25 px-4 py-2.5 text-xs font-bold text-zinc-200 backdrop-blur-xl transition-all hover:bg-white hover:text-black"
+            >
+              <ArrowLeft size={16} /> Voltar à temporada
+            </Link>
+            <Link
+              to={`/app/tv/${tvId}`}
+              className="rounded-full border border-white/10 bg-black/20 px-4 py-2.5 text-xs font-bold text-zinc-400 backdrop-blur-xl transition-colors hover:text-white"
+            >
+              {tvShow?.name || "Ver série"}
+            </Link>
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight drop-shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-1000">
-            {episode.name}
-          </h1>
+          <div className="mt-auto max-w-4xl">
+            <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-300">
+              Temporada {seasonNumber} · Episódio {episode.episode_number}
+            </span>
+            <h1 className="mt-3 max-w-4xl text-4xl font-black leading-[0.95] tracking-[-0.04em] text-white sm:text-5xl md:text-6xl xl:text-7xl">
+              {title}
+            </h1>
 
-          <div className="flex flex-wrap items-center gap-6 text-sm md:text-base font-medium text-zinc-200 mb-8 animate-in slide-in-from-bottom-6 fade-in duration-1000">
-            <span className="flex items-center gap-2 bg-yellow-500/10 text-yellow-500 px-3 py-1 rounded-md border border-yellow-500/20 font-bold">
-              <Star size={18} fill="currentColor" /> {episode.vote_average?.toFixed(1) || '0.0'}
-            </span>
-            <div className="h-5 w-px bg-white/20" />
-            <span className="flex items-center gap-2">
-              <Calendar size={18} className="text-zinc-400" />{' '}
-              {episode.air_date
-                ? new Date(episode.air_date).toLocaleDateString()
-                : 'TBA'}
-            </span>
-            {episode.runtime && (
-              <>
-                <div className="h-5 w-px bg-white/20" />
-                <span className="flex items-center gap-2">
-                  <Clock size={18} className="text-zinc-400" /> {episode.runtime} min
+            <div className="mt-6 flex flex-wrap gap-2.5 text-xs font-semibold text-zinc-300">
+              {episode.vote_average > 0 && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-yellow-300/15 bg-yellow-300/[0.08] px-3 py-2 text-yellow-200 backdrop-blur-xl">
+                  <Star size={14} className="fill-yellow-300" /> {episode.vote_average.toFixed(1)}
                 </span>
-              </>
-            )}
-          </div>
+              )}
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+                <Calendar size={14} /> {formatDate(episode.air_date)}
+              </span>
+              {episode.runtime && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+                  <Clock size={14} /> {episode.runtime} min
+                </span>
+              )}
+            </div>
 
-          <div className="flex flex-wrap gap-4 animate-in slide-in-from-bottom-8 fade-in duration-1000">
             {trailerKey && (
               <button
+                type="button"
                 onClick={() => setTrailerOpen(true)}
-                className="flex items-center gap-3 px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                className="mt-7 inline-flex items-center gap-2.5 rounded-full bg-white px-6 py-3.5 text-sm font-black text-zinc-950 transition-all hover:scale-[1.02] hover:bg-violet-100"
               >
-                <Play size={20} fill="currentColor" /> Assistir Trailer
+                <Play size={17} className="fill-current" /> Assistir vídeo
               </button>
             )}
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-[1600px] mx-auto px-6 md:px-12 relative z-20">
-        <div className="lg:col-span-8 space-y-8">
-          <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
-              Sinopse
-            </h2>
-            <p className="text-zinc-300 leading-relaxed text-lg text-justify font-light">
-              {episode.overview || 'Nenhuma descrição disponível para este episódio.'}
+      <div className="relative z-20 mx-auto -mt-8 grid max-w-[1600px] grid-cols-1 gap-10 px-5 sm:px-8 md:-mt-12 md:px-12 lg:grid-cols-12 lg:gap-12 xl:px-16">
+        <main className="space-y-14 lg:col-span-8 md:space-y-16">
+          {(previousEpisode || nextEpisode) && (
+            <nav className="grid gap-3 md:grid-cols-2" aria-label="Navegação entre episódios">
+              <EpisodeNavigationCard
+                episode={previousEpisode}
+                direction="previous"
+                tvId={tvId}
+                seasonNumber={seasonNumber}
+              />
+              <EpisodeNavigationCard
+                episode={nextEpisode}
+                direction="next"
+                tvId={tvId}
+                seasonNumber={seasonNumber}
+              />
+            </nav>
+          )}
+
+          <section className="relative pl-5 md:pl-8">
+            <span className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-violet-400 via-violet-500/35 to-transparent" />
+            <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
+              Neste episódio
+            </span>
+            <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">Sinopse</h2>
+            <p className="mt-5 text-base font-light leading-8 text-zinc-300 md:text-lg md:leading-9">
+              {episode.overview || "Nenhuma descrição disponível para este episódio."}
             </p>
           </section>
 
           {episode.guest_stars?.length > 0 && (
-            <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
-              <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
-                <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
-                Atores Convidados
-              </h2>
-              <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            <section>
+              <div className="mb-6 flex items-end justify-between gap-4">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
+                    Participações especiais
+                  </span>
+                  <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">Elenco convidado</h2>
+                </div>
+                <span className="text-xs font-semibold text-zinc-500">
+                  {episode.guest_stars.length} integrantes
+                </span>
+              </div>
+              <div className="content-scrollbar flex snap-x snap-mandatory gap-3.5 overflow-x-auto pb-4 md:gap-4">
                 {episode.guest_stars.map((person) => (
                   <Link
                     to={`/app/person/${person.id}`}
                     key={person.id}
-                    className="min-w-[130px] w-[130px] group block"
+                    className="group flex w-[250px] shrink-0 snap-start items-center gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3 transition-all hover:-translate-y-1 hover:border-violet-300/25 hover:bg-white/[0.05] md:w-[285px]"
                   >
-                    <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-zinc-800 mb-4 shadow-lg group-hover:-translate-y-2 transition-transform duration-300 border border-white/5">
+                    <div className="h-24 w-20 shrink-0 overflow-hidden rounded-xl bg-zinc-800">
                       {person.profile_path ? (
                         <img
                           src={`https://image.tmdb.org/t/p/w185${person.profile_path}`}
-                          className="w-full h-full object-cover"
                           alt={person.name}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          loading="lazy"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-zinc-600">
-                          <User size={40} />
+                        <div className="grid h-full place-items-center text-zinc-600">
+                          <User size={28} />
                         </div>
                       )}
                     </div>
-                    <p className="text-sm font-bold text-white truncate group-hover:text-violet-400 transition-colors">
-                      {person.name}
-                    </p>
-                    <p className="text-xs text-zinc-500 truncate mt-0.5">{person.character}</p>
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-bold text-white group-hover:text-violet-300">
+                        {person.name}
+                      </h3>
+                      <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-500">
+                        {person.character || "Participação especial"}
+                      </p>
+                    </div>
                   </Link>
                 ))}
               </div>
             </section>
           )}
 
-          {episode.images?.stills?.length > 0 && (
-            <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
-              <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
-                <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
-                Galeria
-              </h2>
-              <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                {episode.images.stills.slice(0, 8).map((img, idx) => (
-                  <div
-                    key={idx}
-                    className="min-w-[300px] aspect-video rounded-2xl overflow-hidden border border-white/5 shadow-lg relative group"
-                  >
-                    <img
-                      src={`https://image.tmdb.org/t/p/w500${img.file_path}`}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      alt=""
-                    />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                      <ImageIcon size={32} className="text-white/70" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+          {galleryImages.backdrops.length > 0 && (
+            <MediaImages images={galleryImages} title={title} />
           )}
 
-          <section className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-10">
-            <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
-              Avaliações do Episódio
-            </h2>
+          <section className="relative overflow-visible rounded-[2rem] border border-white/[0.07] bg-[radial-gradient(ellipse_at_top_left,rgba(124,58,237,0.08),transparent_38%)] p-5 sm:p-7 md:p-9">
+            <div className="mb-7">
+              <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
+                Conversa da comunidade
+              </span>
+              <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">
+                Avaliações do episódio
+              </h2>
+            </div>
             <ReviewsSection
               reviews={reviews}
               onPostReview={actions.handlePostReview}
@@ -236,66 +302,93 @@ export default function EpisodeDetails() {
               followingList={followingList}
             />
           </section>
-        </div>
+        </main>
 
-        <div className="lg:col-span-4 space-y-8">
-          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 p-8 rounded-3xl sticky top-24 self-start space-y-8">
-            <div>
-              <h3 className="font-bold text-white text-sm uppercase tracking-widest text-zinc-400 mb-6">
-                Ficha Técnica
-              </h3>
-
-              <div className="space-y-4">
-                <div className="flex flex-col gap-1 border-b border-white/5 pb-4">
-                  <span className="text-zinc-500 text-xs font-semibold uppercase tracking-widest">Série</span>
-                  <span className="text-white text-sm font-medium">{tvShow?.name || 'N/A'}</span>
-                </div>
-                <div className="flex flex-col gap-1 border-b border-white/5 pb-4">
-                  <span className="text-zinc-500 text-xs font-semibold uppercase tracking-widest">Temporada</span>
-                  <span className="text-white text-sm font-medium">{seasonNumber}</span>
-                </div>
-                <div className="flex flex-col gap-1 border-b border-white/5 pb-4">
-                  <span className="text-zinc-500 text-xs font-semibold uppercase tracking-widest">Episódio</span>
-                  <span className="text-white text-sm font-medium">{episode.episode_number}</span>
-                </div>
+        <aside className="space-y-5 lg:col-span-4">
+          <section className="rounded-[2rem] border border-white/[0.07] bg-gradient-to-br from-white/[0.04] to-transparent p-5 sm:p-7 lg:sticky lg:top-24">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-violet-500/10 text-violet-300">
+                <Tag size={17} />
+              </span>
+              <div>
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
+                  Informações
+                </span>
+                <h2 className="text-lg font-black text-white">Ficha do episódio</h2>
               </div>
             </div>
 
-            {episode.crew && (
-              <div className="pt-2">
-                <h3 className="font-bold text-white text-sm uppercase tracking-widest text-zinc-400 mb-6">
-                  Equipe Principal
-                </h3>
-                <div className="space-y-5">
-                  {episode.crew
-                    .filter((c) => c.job === 'Director' || c.job === 'Writer')
-                    .slice(0, 5)
-                    .map((c) => (
-                      <div key={`${c.id}-${c.job}`} className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden shrink-0 border border-white/10">
-                          {c.profile_path ? (
-                            <img
-                              src={`https://image.tmdb.org/t/p/w185${c.profile_path}`}
-                              className="w-full h-full object-cover"
-                              alt={c.name}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-zinc-500">
-                              <User size={16} />
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-white">{c.name}</p>
-                          <p className="text-xs text-zinc-500 font-medium">{c.job}</p>
-                        </div>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-white/[0.05] bg-black/10 p-3.5">
+                <span className="text-[9px] font-black uppercase tracking-wider text-zinc-600">Temporada</span>
+                <span className="mt-1.5 block text-sm font-black text-white">{seasonNumber}</span>
+              </div>
+              <div className="rounded-2xl border border-white/[0.05] bg-black/10 p-3.5">
+                <span className="text-[9px] font-black uppercase tracking-wider text-zinc-600">Episódio</span>
+                <span className="mt-1.5 block text-sm font-black text-white">
+                  {episode.episode_number}
+                </span>
+              </div>
+              <div className="col-span-2 rounded-2xl border border-white/[0.05] bg-black/10 p-3.5">
+                <span className="text-[9px] font-black uppercase tracking-wider text-zinc-600">Série</span>
+                <Link
+                  to={`/app/tv/${tvId}`}
+                  className="mt-1.5 block text-sm font-bold text-zinc-200 transition-colors hover:text-violet-300"
+                >
+                  {tvShow?.name || "Não informada"}
+                </Link>
+              </div>
+            </div>
+
+            {mainCrew.length > 0 && (
+              <div className="mt-7 border-t border-white/[0.06] pt-7">
+                <div className="flex items-center gap-2">
+                  <Users size={15} className="text-zinc-500" />
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+                    Direção e roteiro
+                  </h3>
+                </div>
+                <div className="mt-4 space-y-2.5">
+                  {mainCrew.map((person) => (
+                    <Link
+                      to={`/app/person/${person.id}`}
+                      key={`${person.id}-${person.job}`}
+                      className="group flex items-center gap-3 rounded-2xl border border-transparent p-2 transition-all hover:border-white/[0.06] hover:bg-white/[0.025]"
+                    >
+                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-zinc-800">
+                        {person.profile_path ? (
+                          <img
+                            src={`https://image.tmdb.org/t/p/w185${person.profile_path}`}
+                            alt={person.name}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="grid h-full place-items-center text-zinc-600">
+                            <User size={16} />
+                          </div>
+                        )}
                       </div>
-                    ))}
+                      <div className="min-w-0">
+                        <span className="block truncate text-xs font-bold text-zinc-200 group-hover:text-violet-300">
+                          {person.name}
+                        </span>
+                        <span className="mt-0.5 block text-[10px] text-zinc-600">{person.job}</span>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               </div>
             )}
-          </div>
-        </div>
+
+            <Link
+              to={`/app/tv/${tvId}/season/${seasonNumber}`}
+              className="mt-7 flex items-center justify-between rounded-2xl border border-violet-400/15 bg-violet-500/[0.07] px-4 py-3 text-xs font-black text-violet-200 transition-all hover:bg-violet-500/15"
+            >
+              Ver todos os episódios <ArrowRight size={16} />
+            </Link>
+          </section>
+        </aside>
       </div>
     </div>
   );

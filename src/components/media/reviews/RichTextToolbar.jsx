@@ -125,7 +125,7 @@ export default function RichTextToolbar({
 
   return (
     <div ref={containerRef} className="relative">
-      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/5 bg-black/30 p-2">
+      <div className="scrollbar-hide flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/[0.06] bg-black/20 p-1.5 sm:flex-wrap">
         {visibleTools.map((tool) => {
           const Icon = tool.icon;
           return (
@@ -133,10 +133,10 @@ export default function RichTextToolbar({
               key={tool.id}
               type="button"
               onClick={() => applyTool(tool)}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-xs font-black uppercase tracking-wider text-zinc-300 transition-all hover:bg-white/10 hover:text-white"
+              className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/[0.05] bg-white/[0.035] p-2 text-[10px] font-black uppercase tracking-wider text-zinc-400 transition-all hover:bg-white/[0.08] hover:text-white sm:px-3"
             >
               <Icon size={14} />
-              {tool.label}
+              <span className="hidden sm:inline">{tool.label}</span>
             </button>
           );
         })}
@@ -148,10 +148,10 @@ export default function RichTextToolbar({
               setShowEmojiPicker((current) => !current);
               setShowTemplatePicker(false);
             }}
-            className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-xs font-black uppercase tracking-wider text-zinc-300 transition-all hover:bg-white/10 hover:text-white"
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/[0.05] bg-white/[0.035] p-2 text-[10px] font-black uppercase tracking-wider text-zinc-400 transition-all hover:bg-white/[0.08] hover:text-white sm:px-3"
           >
             <Smile size={14} />
-            Emoji
+            <span className="hidden sm:inline">Emoji</span>
           </button>
         )}
 
@@ -162,16 +162,16 @@ export default function RichTextToolbar({
               setShowTemplatePicker((current) => !current);
               setShowEmojiPicker(false);
             }}
-            className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-xs font-black uppercase tracking-wider text-zinc-300 transition-all hover:bg-white/10 hover:text-white"
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/[0.05] bg-white/[0.035] p-2 text-[10px] font-black uppercase tracking-wider text-zinc-400 transition-all hover:bg-white/[0.08] hover:text-white sm:px-3"
           >
             <MessageSquareQuote size={14} />
-            Templates
+            <span className="hidden sm:inline">Templates</span>
           </button>
         )}
       </div>
 
       {allowEmoji && showEmojiPicker && (
-        <div className="absolute left-0 top-[calc(100%+12px)] z-[100] w-full max-w-sm rounded-3xl border border-white/10 bg-zinc-950/98 p-4 shadow-[0_25px_60px_rgba(0,0,0,0.72)] backdrop-blur-xl">
+        <div className="absolute left-0 top-[calc(100%+10px)] z-[100] w-full max-w-sm rounded-2xl border border-white/10 bg-zinc-950/95 p-4 shadow-[0_25px_60px_rgba(0,0,0,0.72)] backdrop-blur-2xl">
           <div className="mb-3 text-[11px] font-black uppercase tracking-[0.22em] text-zinc-500">Emojis rapidos</div>
           <div className="grid grid-cols-6 gap-2">
             {QUICK_EMOJIS.map((emoji) => (
@@ -192,7 +192,7 @@ export default function RichTextToolbar({
       )}
 
       {allowTemplates && showTemplatePicker && (
-        <div className="absolute left-0 top-[calc(100%+12px)] z-[100] w-full max-w-md rounded-3xl border border-white/10 bg-zinc-950/98 p-4 shadow-[0_25px_60px_rgba(0,0,0,0.72)] backdrop-blur-xl">
+        <div className="absolute left-0 top-[calc(100%+10px)] z-[100] w-full max-w-md rounded-2xl border border-white/10 bg-zinc-950/95 p-4 shadow-[0_25px_60px_rgba(0,0,0,0.72)] backdrop-blur-2xl">
           <div className="mb-3 text-[11px] font-black uppercase tracking-[0.22em] text-zinc-500">Templates curtos</div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {QUICK_TEMPLATES.map((template) => (

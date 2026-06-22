@@ -120,7 +120,7 @@ export default function MediaDetails() {
     setModals((previous) => ({ ...previous, addToList: true }));
 
   return (
-    <div className="-mt-24 w-full overflow-x-hidden bg-zinc-950 pb-32 text-white md:-mt-8 md:pb-20">
+    <div className="relative isolate -mt-24 w-full overflow-x-hidden bg-zinc-950 pb-32 text-white md:-mt-8 md:pb-20">
       <TrailerModal
         isOpen={modals.trailer}
         onClose={() => setModals((previous) => ({ ...previous, trailer: false }))}
@@ -138,8 +138,16 @@ export default function MediaDetails() {
         addingToListId={addingToListId}
       />
 
-      <header className="relative min-h-[760px] h-[92svh] max-h-[980px] overflow-hidden">
-        <div className="absolute inset-0">
+      <header className="relative min-h-[760px] h-[92svh] max-h-[980px]">
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 -bottom-48 md:-bottom-64"
+          style={{
+            WebkitMaskImage:
+              "linear-gradient(to bottom, black 0%, black 66%, rgba(0,0,0,0.82) 80%, rgba(0,0,0,0.28) 91%, transparent 100%)",
+            maskImage:
+              "linear-gradient(to bottom, black 0%, black 66%, rgba(0,0,0,0.82) 80%, rgba(0,0,0,0.28) 91%, transparent 100%)",
+          }}
+        >
           {banner ? (
             <img src={banner} alt="" className="h-full w-full object-cover object-top" />
           ) : (
@@ -147,8 +155,11 @@ export default function MediaDetails() {
           )}
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,9,11,0.98)_0%,rgba(9,9,11,0.78)_42%,rgba(9,9,11,0.18)_78%,rgba(9,9,11,0.08)_100%)]" />
           <div className="absolute inset-0 bg-[linear-gradient(0deg,#09090b_0%,rgba(9,9,11,0.88)_10%,transparent_52%,rgba(9,9,11,0.38)_100%)]" />
-          <div className="absolute -bottom-24 left-1/3 h-80 w-80 rounded-full bg-violet-700/10 blur-[110px]" />
+          <div className="absolute -bottom-16 left-[18%] h-96 w-[36rem] rounded-full bg-violet-700/10 blur-[130px]" />
+          <div className="absolute -bottom-24 right-[8%] h-80 w-80 rounded-full bg-sky-900/10 blur-[120px]" />
         </div>
+
+        <div className="pointer-events-none absolute inset-x-0 -bottom-48 z-[1] h-80 bg-[linear-gradient(to_bottom,transparent_0%,rgba(9,9,11,0.42)_34%,rgba(9,9,11,0.88)_70%,#09090b_100%)]" />
 
         <div className="relative z-10 mx-auto flex h-full w-full max-w-[1600px] items-end px-5 pb-20 pt-28 sm:px-8 md:px-12 md:pb-24 xl:px-16">
           <div className="flex w-full items-end gap-8 xl:gap-12">
@@ -273,7 +284,7 @@ export default function MediaDetails() {
         </div>
       </header>
 
-      <div className="relative z-20 mx-auto grid max-w-[1600px] grid-cols-1 gap-10 px-5 sm:px-8 md:px-12 lg:grid-cols-12 lg:gap-12 xl:px-16">
+      <div className="relative z-20 mx-auto -mt-8 grid max-w-[1600px] grid-cols-1 gap-10 px-5 sm:px-8 md:-mt-12 md:px-12 lg:grid-cols-12 lg:gap-12 xl:px-16">
         <main className="space-y-14 lg:col-span-8 md:space-y-16">
           <section className="relative pl-5 md:pl-8">
             <span className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-violet-400 via-violet-500/40 to-transparent" />
@@ -379,7 +390,7 @@ export default function MediaDetails() {
 
           {media.images && <MediaImages images={media.images} title={title} />}
 
-          <section className="rounded-[2rem] border border-white/[0.07] bg-gradient-to-br from-white/[0.035] to-transparent p-5 sm:p-7 md:p-9">
+          <section className="relative overflow-visible rounded-[2rem] border border-white/[0.07] bg-[radial-gradient(ellipse_at_top_left,rgba(124,58,237,0.08),transparent_38%)] p-5 sm:p-7 md:p-9">
             <SectionHeading eyebrow="Sua voz importa">Avaliações da comunidade</SectionHeading>
             <ReviewsSection
               reviews={reviews}

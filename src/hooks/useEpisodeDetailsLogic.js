@@ -13,6 +13,7 @@ import {
   updateComment,
   getUserFollowing,
   getMovieDetails,
+  getSeasonDetails,
 } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
@@ -24,6 +25,7 @@ export function useEpisodeDetailsLogic() {
 
   const [episode, setEpisode] = useState(null);
   const [tvShow, setTvShow] = useState(null);
+  const [seasonData, setSeasonData] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [followingList, setFollowingList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,15 +42,17 @@ export function useEpisodeDetailsLogic() {
         const basePromises = [
           getEpisodeDetails(tvId, seasonNumber, episodeNumber),
           getMediaReviews(uniqueMediaId),
-          getMovieDetails('tv', tvId)
+          getMovieDetails('tv', tvId),
+          getSeasonDetails(tvId, seasonNumber),
         ];
 
         const userPromise = user?.uid ? getUserFollowing(user.uid) : Promise.resolve(null);
 
-        const [episodeData, reviewsData, tvShowData, followingData] = await Promise.all([...basePromises, userPromise]);
+        const [episodeData, reviewsData, tvShowData, loadedSeason, followingData] = await Promise.all([...basePromises, userPromise]);
 
         setEpisode(episodeData);
         setTvShow(tvShowData);
+        setSeasonData(loadedSeason);
         
         setReviews(
           Array.isArray(reviewsData)
@@ -71,7 +75,7 @@ export function useEpisodeDetailsLogic() {
       }
     }
     loadData();
-  }, [tvId, seasonNumber, episodeNumber]);
+  }, [tvId, seasonNumber, episodeNumber, toast, uniqueMediaId, user?.uid]);
 
   const handlePostReview = async (rating, text) => {
     if (!user) return toast.error('Login necessário', 'Entre para avaliar.');
@@ -194,7 +198,11 @@ export function useEpisodeDetailsLogic() {
     likeTimeouts.current[reviewId] = setTimeout(async () => {
       const clicks = likeClickCounts.current[reviewId] || 0;
       if (clicks % 2 !== 0) {
-        try { await toggleLikeReview(reviewId); } catch {}
+        try {
+          await toggleLikeReview(reviewId);
+        } catch {
+          return;
+        }
       }
       delete likeClickCounts.current[reviewId];
       delete likeTimeouts.current[reviewId];
@@ -215,6 +223,7 @@ export function useEpisodeDetailsLogic() {
   return {
     episode,
     tvShow,
+    seasonData,
     reviews,
     followingList,
     loading,
