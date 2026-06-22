@@ -1,47 +1,45 @@
-import { useState, useEffect, useCallback } from 'react';
-import { 
-  getMovieDetails, 
-  getMediaReviews, 
-  postReview, 
-  postComment, 
-  deleteReview, 
-  recordInteraction,
-  updateReview,
-  updateComment,
+import { useCallback, useEffect, useState } from 'react';
+import {
   deleteComment,
-  getComments
+  deleteReview,
+  getComments,
+  getMediaReviews,
+  getMovieDetails,
+  postComment,
+  postReview,
+  updateComment,
+  updateReview,
 } from '../services/api';
-import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
+import { useToast } from '../context/ToastContext';
 
 export const usePersonDetails = (id) => {
   const [details, setDetails] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isLiked, setIsLiked] = useState(false);
 
   const { user } = useAuth();
   const toast = useToast();
-  
+
   const uniquePersonId = `person-${id}`;
 
   const fetchDetails = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const [personData, reviewsData] = await Promise.all([
         getMovieDetails('person', id),
-        getMediaReviews(uniquePersonId)
+        getMediaReviews(uniquePersonId),
       ]);
 
       let externalIds = {};
       try {
-          const extResponse = await api.get(`/tmdb/details/person/${id}/external_ids`);
-          externalIds = extResponse.data;
-      } catch (e) {}
+        externalIds = await getMovieDetails('person', `${id}/external_ids`);
+      } catch {
+        externalIds = {};
+      }
 
       setDetails({ ...personData, external_ids: externalIds });
       setReviews(reviewsData);
@@ -60,22 +58,25 @@ export const usePersonDetails = (id) => {
 
   const handlePostReview = async (rating, text) => {
     if (!user) return toast.error('Login necessário', 'Entre para comentar.');
-    
+
     try {
-        await postReview({
-            mediaId: uniquePersonId, 
-            mediaType: 'person',
-            mediaTitle: details.name || "Artista",
-            posterPath: details.profile_path || "", 
-            backdropPath: details.profile_path || "", 
-            rating: rating,
-            text: text
-        });
-        toast.success('Publicado', 'Seu comentário foi enviado!');
-        const updatedReviews = await getMediaReviews(uniquePersonId);
-        setReviews(updatedReviews);
-    } catch (error) {
-        toast.error('Erro', error.response?.data?.message || 'Não foi possível publicar.');
+      await postReview({
+        mediaId: uniquePersonId,
+        mediaType: 'person',
+        mediaTitle: details.name || 'Artista',
+        posterPath: details.profile_path || '',
+        backdropPath: details.profile_path || '',
+        rating,
+        text,
+      });
+      toast.success('Publicado', 'Seu comentário foi enviado!');
+      const updatedReviews = await getMediaReviews(uniquePersonId);
+      setReviews(updatedReviews);
+    } catch (requestError) {
+      toast.error(
+        'Erro',
+        requestError.response?.data?.message || 'Não foi possível publicar.',
+      );
     }
   };
 
@@ -86,29 +87,43 @@ export const usePersonDetails = (id) => {
         rating: newRating !== null ? Number(newRating) : null,
       });
       setReviews((prev) =>
-        prev.map((r) =>
-          r.id === reviewId
-            ? { ...r, text: newText, rating: newRating !== null ? Number(newRating) : null, isEdited: true }
-            : r
-        )
+        prev.map((review) =>
+          review.id === reviewId
+            ? {
+                ...review,
+                text: newText,
+                rating: newRating !== null ? Number(newRating) : null,
+                isEdited: true,
+              }
+            : review,
+        ),
       );
       toast.success('Editado', 'Seu comentário foi atualizado.');
-    } catch (error) {
+    } catch {
       toast.error('Erro', 'Não foi possível editar.');
     }
   };
 
   const handlePostReply = async (reviewId, text) => {
     if (!user) return toast.error('Login necessário');
+
     try {
-        await postComment({ reviewId, text });
-        toast.success('Respondido', 'Resposta enviada.');
-        const comments = await getComments(reviewId);
-        setReviews((prev) =>
-          prev.map((r) => (r.id === reviewId ? { ...r, replies: comments, commentsCount: (r.commentsCount || 0) + 1 } : r))
-        );
-    } catch (error) {
-        toast.error('Erro', 'Falha ao responder.');
+      await postComment({ reviewId, text });
+      toast.success('Respondido', 'Resposta enviada.');
+      const comments = await getComments(reviewId);
+      setReviews((prev) =>
+        prev.map((review) =>
+          review.id === reviewId
+            ? {
+                ...review,
+                replies: comments,
+                commentsCount: (review.commentsCount || 0) + 1,
+              }
+            : review,
+        ),
+      );
+    } catch {
+      toast.error('Erro', 'Falha ao responder.');
     }
   };
 
@@ -117,21 +132,23 @@ export const usePersonDetails = (id) => {
       await updateComment(commentId, { text: newText });
       const comments = await getComments(reviewId);
       setReviews((prev) =>
-        prev.map((r) => (r.id === reviewId ? { ...r, replies: comments } : r))
+        prev.map((review) =>
+          review.id === reviewId ? { ...review, replies: comments } : review,
+        ),
       );
       toast.success('Editado', 'Resposta atualizada.');
-    } catch (error) {
+    } catch {
       toast.error('Erro', 'Não foi possível editar a resposta.');
     }
   };
 
   const handleDeleteReview = async (reviewId) => {
     try {
-        await deleteReview(reviewId);
-        setReviews(prev => prev.filter(r => r.id !== reviewId));
-        toast.success('Apagado', 'Comentário removido.');
-    } catch (error) {
-        toast.error('Erro', 'Não foi possível apagar.');
+      await deleteReview(reviewId);
+      setReviews((prev) => prev.filter((review) => review.id !== reviewId));
+      toast.success('Apagado', 'Comentário removido.');
+    } catch {
+      toast.error('Erro', 'Não foi possível apagar.');
     }
   };
 
@@ -139,53 +156,35 @@ export const usePersonDetails = (id) => {
     try {
       await deleteComment(commentId);
       setReviews((prev) =>
-        prev.map((r) => {
-          const has = r.replies?.some((c) => c.id === commentId);
-          if (!has) return r;
+        prev.map((review) => {
+          const hasComment = review.replies?.some((comment) => comment.id === commentId);
+          if (!hasComment) return review;
+
           return {
-            ...r,
-            replies: r.replies.filter((c) => c.id !== commentId),
-            commentsCount: Math.max(0, (r.commentsCount || 0) - 1),
+            ...review,
+            replies: review.replies.filter((comment) => comment.id !== commentId),
+            commentsCount: Math.max(0, (review.commentsCount || 0) - 1),
           };
-        })
+        }),
       );
       toast.success('Apagado', 'Resposta removida.');
-    } catch (error) {
+    } catch {
       toast.error('Erro', 'Não foi possível apagar a resposta.');
     }
   };
 
-  const toggleFollowPerson = async () => {
-      if(!user) return toast.error('Login necessário');
-      try {
-          await recordInteraction({ 
-              mediaId: uniquePersonId, 
-              mediaType: 'person', 
-              action: 'like',
-              mediaTitle: details.name,
-              posterPath: details.profile_path || ""
-          });
-          setIsLiked(!isLiked);
-          toast.success(isLiked ? 'Deixou de seguir' : 'Seguindo artista');
-      } catch (error) {
-          toast.error('Erro ao processar');
-      }
-  };
-
-  return { 
-      details, 
-      reviews, 
-      loading, 
-      error, 
-      isLiked,
-      actions: {
-          handlePostReview,
-          handleEditReview,
-          handlePostReply,
-          handleEditReply,
-          handleDeleteReview,
-          handleDeleteComment,
-          toggleFollowPerson
-      }
+  return {
+    details,
+    reviews,
+    loading,
+    error,
+    actions: {
+      handlePostReview,
+      handleEditReview,
+      handlePostReply,
+      handleEditReply,
+      handleDeleteReview,
+      handleDeleteComment,
+    },
   };
 };

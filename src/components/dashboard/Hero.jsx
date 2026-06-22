@@ -290,7 +290,7 @@ export default function Hero({ items = [] }) {
             </span>
           </div>
 
-          <h1 className="max-w-3xl text-4xl sm:text-5xl md:text-6xl xl:text-7xl 2xl:text-8xl font-black text-white leading-[0.94] tracking-[-0.04em] drop-shadow-2xl text-balance">
+          <h1 className="max-w-3xl text-4xl sm:text-5xl md:text-[3rem] xl:text-[3.45rem] 2xl:text-[4rem] font-black text-white leading-[0.94] tracking-[-0.04em] drop-shadow-2xl text-balance">
             {name}
           </h1>
 

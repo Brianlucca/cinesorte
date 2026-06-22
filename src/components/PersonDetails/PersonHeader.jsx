@@ -1,81 +1,100 @@
-import React from 'react';
-import { Share2, TrendingUp, MapPin } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { MapPin, Share2, TrendingUp } from "lucide-react";
+import { useToast } from "../../context/ToastContext";
 
-const PersonHeader = ({ details }) => {
+export default function PersonHeader({ details }) {
   const toast = useToast();
-
-  const handleShare = () => {
-    const shareUrl = `${window.location.origin}/share/person/${details.id}`;
-    navigator.clipboard.writeText(shareUrl);
-    toast.success("Copiado", "Link público copiado!");
-  };
-
-  const backdrop = details.profile_path 
+  const image = details.profile_path
     ? `https://image.tmdb.org/t/p/original${details.profile_path}`
     : null;
 
+  const handleShare = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/share/person/${details.id}`);
+    toast.success("Copiado", "Link público copiado!");
+  };
+
   return (
-    <div className="relative w-full h-[60vh] md:h-[70vh] group overflow-hidden">
-      <div className="absolute inset-0">
-        {backdrop ? (
+    <header className="relative h-[82svh] min-h-[690px] max-h-[880px]">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 -bottom-52"
+        style={{
+          WebkitMaskImage:
+            "linear-gradient(to bottom, black 0%, black 60%, rgba(0,0,0,0.78) 78%, rgba(0,0,0,0.22) 92%, transparent 100%)",
+          maskImage:
+            "linear-gradient(to bottom, black 0%, black 60%, rgba(0,0,0,0.78) 78%, rgba(0,0,0,0.22) 92%, transparent 100%)",
+        }}
+      >
+        {image ? (
           <img
-            src={backdrop}
-            alt={details.name}
-            className="w-full h-full object-cover object-top transition-transform duration-[20s] group-hover:scale-105"
+            src={image}
+            alt=""
+            className="h-full w-full scale-110 object-cover object-top opacity-55 blur-[2px]"
           />
         ) : (
-          <div className="w-full h-full bg-zinc-900" />
+          <div className="h-full w-full bg-gradient-to-br from-violet-950/30 to-zinc-950" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/10 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,9,11,0.98)_0%,rgba(9,9,11,0.8)_42%,rgba(9,9,11,0.22)_78%,rgba(9,9,11,0.1)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(0deg,#09090b_0%,rgba(9,9,11,0.86)_12%,transparent_56%,rgba(9,9,11,0.36)_100%)]" />
+        <div className="absolute -bottom-12 left-[20%] h-80 w-[38rem] rounded-full bg-violet-700/12 blur-[125px]" />
       </div>
+      <div className="pointer-events-none absolute inset-x-0 -bottom-48 z-[1] h-80 bg-gradient-to-b from-transparent via-zinc-950/75 to-zinc-950" />
 
-      <div className="absolute bottom-0 left-0 w-full px-6 md:px-12 pb-12 z-20 flex flex-col md:flex-row md:items-end justify-between gap-6 max-w-[1600px] mx-auto right-0">
-        <div className="max-w-3xl">
-            <div className="flex flex-wrap gap-3 mb-5 animate-in slide-in-from-bottom-2 fade-in duration-1000">
-                <span className="bg-violet-600 px-4 py-1.5 rounded-md text-xs font-bold text-white uppercase tracking-wider shadow-lg">
-                    {details.known_for_department === 'Acting' ? 'Atuação' : details.known_for_department}
-                </span>
-                {details.deathday && (
-                    <span className="bg-white/5 backdrop-blur-md px-4 py-1.5 rounded-md text-xs font-bold text-white uppercase tracking-wider border border-white/10 shadow-lg">
-                        In Memoriam
-                    </span>
-                )}
+      <div className="relative z-10 mx-auto flex h-full max-w-[1600px] items-end px-5 pb-20 pt-28 sm:px-8 md:px-12 md:pb-24 xl:px-16">
+        <div className="flex w-full items-end gap-8 xl:gap-12">
+          {image && (
+            <div className="hidden w-[210px] shrink-0 overflow-hidden rounded-[1.75rem] border border-white/15 bg-zinc-900 shadow-[0_30px_80px_rgba(0,0,0,0.7)] md:block xl:w-[250px]">
+              <img
+                src={image}
+                alt={details.name}
+                className="aspect-[2/3] w-full object-cover object-top"
+              />
             </div>
-            
-            <h1 className="text-5xl md:text-7xl font-black text-white mb-6 leading-tight tracking-tight drop-shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-1000">
-                {details.name}
+          )}
+
+          <div className="max-w-4xl pb-1">
+            <div className="flex flex-wrap gap-2">
+              <span className="rounded-full border border-violet-300/20 bg-violet-500/15 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-violet-200 backdrop-blur-xl">
+                {details.known_for_department === "Acting"
+                  ? "Atuação"
+                  : details.known_for_department || "Cinema"}
+              </span>
+              {details.deathday && (
+                <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-300 backdrop-blur-xl">
+                  In memoriam
+                </span>
+              )}
+            </div>
+
+            <h1 className="mt-4 max-w-4xl text-3xl font-black leading-[0.98] tracking-[-0.03em] text-white/95 sm:text-4xl md:text-[3rem] xl:text-[3.6rem]">
+              {details.name}
             </h1>
 
-            <div className="flex flex-wrap items-center gap-6 text-zinc-200 font-medium text-sm md:text-base animate-in slide-in-from-bottom-6 fade-in duration-1000">
-                <div className="flex items-center gap-2 bg-green-500/10 text-green-400 px-3 py-1.5 rounded-md border border-green-500/20 font-bold">
-                    <TrendingUp size={18} />
-                    <span>Popularidade: {details.popularity?.toFixed(0)}</span>
-                </div>
-                {details.place_of_birth && (
-                    <>
-                        <div className="h-5 w-px bg-white/20 hidden md:block" />
-                        <span className="hidden md:flex items-center gap-2">
-                            <MapPin size={18} className="text-zinc-400" /> {details.place_of_birth}
-                        </span>
-                    </>
-                )}
+            <div className="mt-6 flex flex-wrap gap-2.5 text-xs font-semibold text-zinc-300">
+              {details.popularity > 0 && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-500/[0.08] px-3 py-2 text-emerald-300 backdrop-blur-xl">
+                  <TrendingUp size={14} /> Popularidade {details.popularity.toFixed(0)}
+                </span>
+              )}
+              {details.place_of_birth && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+                  <MapPin size={14} /> {details.place_of_birth}
+                </span>
+              )}
             </div>
-        </div>
 
-        <div className="flex gap-4 animate-in slide-in-from-bottom-8 fade-in duration-1000">
-             <button
+            <div className="mt-7 flex flex-wrap gap-2.5">
+              <button
+                type="button"
                 onClick={handleShare}
-                className="p-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl backdrop-blur-xl border border-white/10 transition-all shadow-lg"
-                title="Copiar Link"
-             >
-                <Share2 size={24} />
-             </button>
+                aria-label="Compartilhar pessoa"
+                className="inline-flex h-11 items-center gap-2.5 rounded-full border border-white/15 bg-black/25 px-4 text-sm font-semibold text-white backdrop-blur-xl transition-all hover:bg-white hover:text-black"
+              >
+                <Share2 size={17} />
+                Compartilhar
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </header>
   );
-};
-
-export default PersonHeader;
+}

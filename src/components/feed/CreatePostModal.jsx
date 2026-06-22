@@ -1,94 +1,165 @@
-import { useState, useEffect } from 'react';
-import { X, Search, Star, Loader2, Film, ChevronLeft, Calendar } from 'lucide-react';
+import { useEffect, useRef, useState } from "react";
+import {
+  ArrowRight,
+  Calendar,
+  Check,
+  ChevronLeft,
+  Film,
+  Loader2,
+  Search,
+  Sparkles,
+  Star,
+  X,
+} from "lucide-react";
+import RichTextToolbar from "../media/reviews/RichTextToolbar";
 
-export default function CreatePostModal({ isOpen, onClose, form, actions }) {
+const PRIVILEGED_LEVELS = new Set([
+  "mestre da critica",
+  "oraculo da setima arte",
+  "entidade cinematografica",
+  "divindade do cinema",
+]);
+
+const normalizeLevelTitle = (title) =>
+  (title || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+export default function CreatePostModal({ isOpen, onClose, form, actions, user }) {
   const [animateShow, setAnimateShow] = useState(false);
+  const textareaRef = useRef(null);
+  const canUseRichFormatting = PRIVILEGED_LEVELS.has(normalizeLevelTitle(user?.levelTitle));
 
   useEffect(() => {
-    if (isOpen) setTimeout(() => setAnimateShow(true), 10);
-    else setAnimateShow(false);
+    if (!isOpen) {
+      setAnimateShow(false);
+      return undefined;
+    }
+
+    const timeout = window.setTimeout(() => setAnimateShow(true), 10);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      window.clearTimeout(timeout);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [isOpen]);
 
   if (!isOpen) return null;
 
+  const updateText = (value) => actions.setPostText(value.slice(0, 500));
+  const mediaTitle = form.media?.title || form.media?.name;
+  const releaseYear = (form.media?.release_date || form.media?.first_air_date || "").split("-")[0];
   const backdropUrl = form.media?.backdrop_path
     ? `https://image.tmdb.org/t/p/w1280${form.media.backdrop_path}`
     : null;
 
   return (
-    <div className={`fixed inset-0 z-[9999] flex items-end sm:items-center justify-center transition-all duration-300 ${animateShow ? 'opacity-100' : 'opacity-0'}`}>
-      <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={onClose} />
+    <div className={`fixed inset-0 z-[9999] flex items-end justify-center p-0 transition-opacity duration-300 sm:items-center sm:p-5 ${animateShow ? "opacity-100" : "opacity-0"}`}>
+      <button type="button" aria-label="Fechar" className="absolute inset-0 cursor-default bg-black/85 backdrop-blur-xl" onClick={onClose} />
 
-      <div className={`relative w-full sm:max-w-xl bg-zinc-950/90 backdrop-blur-2xl sm:rounded-[2.5rem] rounded-t-[2.5rem] border border-white/10 overflow-hidden flex flex-col transition-all duration-500 ease-out transform ${animateShow ? 'translate-y-0' : 'translate-y-12'} shadow-[0_0_50px_rgba(0,0,0,0.5)]`}
-        style={{ maxHeight: '92vh' }}>
+      <div
+        className={`relative flex max-h-[94svh] w-full max-w-4xl flex-col overflow-hidden rounded-t-[2rem] border border-white/10 bg-[#0b0b0e]/98 shadow-[0_40px_120px_rgba(0,0,0,0.75)] transition-all duration-500 sm:rounded-[2rem] ${animateShow ? "translate-y-0 scale-100" : "translate-y-10 scale-[0.98]"}`}
+      >
+        <header className="relative z-30 flex shrink-0 items-center justify-between border-b border-white/[0.07] bg-[#0b0b0e]/90 px-5 py-4 backdrop-blur-xl sm:px-7">
+          <div className="flex items-center gap-4">
+            <div className="grid h-10 w-10 place-items-center rounded-2xl border border-violet-400/20 bg-violet-500/10 text-violet-300">
+              <Film size={18} />
+            </div>
+            <div>
+              <h2 className="text-base font-black tracking-tight text-white sm:text-lg">Nova avaliação</h2>
+              <div className="mt-1 flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.16em]">
+                <span className={form.step === 1 ? "text-violet-300" : "text-emerald-400"}>{form.step === 1 ? "1. Escolha a obra" : <><Check size={10} className="mr-1 inline" /> Obra escolhida</>}</span>
+                <span className="text-zinc-700">/</span>
+                <span className={form.step === 2 ? "text-violet-300" : "text-zinc-600"}>2. Escreva sua review</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center rounded-full border border-white/[0.08] bg-white/[0.035] text-zinc-500 transition-colors hover:bg-white/[0.08] hover:text-white">
+            <X size={18} />
+          </button>
+        </header>
 
         {form.step === 1 && (
-          <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between px-8 pt-8 pb-6 shrink-0">
-              <div>
-                <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">
-                  <span className="w-1.5 h-6 bg-violet-500 rounded-full"></span>
-                  Nova Avaliação
-                </h2>
-                <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1 ml-4.5">O que você assistiu?</p>
-              </div>
-              <button onClick={onClose} className="p-3 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/5">
-                <X size={20} />
-              </button>
-            </div>
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="shrink-0 px-5 pb-5 pt-6 sm:px-7 sm:pt-7">
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-violet-400">Comece pelo título</span>
+              <h3 className="mt-2 text-2xl font-black tracking-[-0.035em] text-white sm:text-3xl">O que passou pela sua tela?</h3>
+              <p className="mt-2 text-sm text-zinc-500">Busque um filme ou uma série para compartilhar sua experiência.</p>
 
-            <div className="px-8 pb-4 shrink-0">
-              <div className="relative group">
-                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-violet-400 transition-colors" />
+              <div className="group relative mt-6">
+                <Search size={19} className="absolute left-4 top-1/2 z-10 -translate-y-1/2 text-zinc-500 transition-colors group-focus-within:text-violet-400" />
                 <input
                   type="text"
                   autoFocus
-                  placeholder="Pesquisar filme ou série..."
-                  className="w-full bg-white/5 border border-white/10 focus:border-violet-500/50 text-white text-base rounded-2xl pl-12 pr-4 py-4 focus:outline-none transition-all placeholder:text-zinc-600 shadow-inner"
+                  placeholder="Digite o nome de um filme ou série..."
                   value={form.query}
-                  onChange={(e) => actions.setSearchQuery(e.target.value)}
+                  onChange={(event) => actions.setSearchQuery(event.target.value)}
+                  className="w-full rounded-2xl border border-white/[0.09] bg-white/[0.035] py-4 pl-12 pr-12 text-sm text-white outline-none transition-all placeholder:text-zinc-600 focus:border-violet-400/35 focus:bg-white/[0.05] sm:text-base"
                 />
+                {form.query && (
+                  <button type="button" onClick={() => actions.setSearchQuery("")} className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-zinc-600 hover:bg-white/[0.05] hover:text-white">
+                    <X size={14} />
+                  </button>
+                )}
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            <div className="content-scrollbar min-h-[280px] flex-1 overflow-y-auto border-t border-white/[0.06] px-4 py-4 sm:px-7 sm:py-5">
               {form.results.length > 0 ? (
-                <div className="space-y-2">
-                  {form.results.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => actions.handleSelectMedia(item)}
-                      className="flex items-center gap-4 p-3 w-full rounded-2xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group text-left"
-                    >
-                      <div className="w-12 h-16 bg-zinc-800 rounded-xl overflow-hidden shrink-0 shadow-lg border border-white/5">
-                        {item.poster_path ? (
-                          <img src={`https://image.tmdb.org/t/p/w154${item.poster_path}`} className="w-full h-full object-cover" alt="" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-zinc-600"><Film size={20} /></div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {form.results.map((item) => {
+                    const itemYear = (item.release_date || item.first_air_date || "").split("-")[0];
+                    return (
+                      <button
+                        key={`${item.media_type}-${item.id}`}
+                        type="button"
+                        onClick={() => actions.handleSelectMedia(item)}
+                        className="group relative flex min-h-[128px] overflow-hidden rounded-[1.4rem] border border-white/[0.07] bg-white/[0.025] p-3 text-left transition-all hover:border-violet-400/25 hover:bg-white/[0.045]"
+                      >
+                        {item.backdrop_path && (
+                          <>
+                            <img src={`https://image.tmdb.org/t/p/w500${item.backdrop_path}`} className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.08]" alt="" />
+                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#101014]/90 to-[#101014]/70" />
+                          </>
                         )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-zinc-100 text-base truncate group-hover:text-violet-400 transition-colors">{item.title || item.name}</h4>
-                        <div className="flex items-center gap-2 text-[10px] font-black text-zinc-500 uppercase tracking-wider mt-1">
-                          <span className="bg-white/5 px-2 py-0.5 rounded border border-white/5">{item.media_type === 'tv' ? 'Série' : 'Filme'}</span>
-                          <span>·</span>
-                          <span className="text-zinc-400">{(item.release_date || item.first_air_date)?.split('-')[0] || '—'}</span>
+                        <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-zinc-900 shadow-xl">
+                          {item.poster_path || item.profile_path ? (
+                            <img src={`https://image.tmdb.org/t/p/w154${item.poster_path || item.profile_path}`} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" alt="" />
+                          ) : (
+                            <Film size={19} className="m-auto h-full text-zinc-700" />
+                          )}
                         </div>
-                      </div>
-                    </button>
-                  ))}
+                        <div className="relative flex min-w-0 flex-1 flex-col justify-center px-4">
+                          <span className="text-[8px] font-black uppercase tracking-[0.16em] text-violet-400">{item.media_type === "tv" ? "Série" : "Filme"}</span>
+                          <h4 className="mt-1.5 line-clamp-2 text-sm font-black leading-5 text-zinc-100 transition-colors group-hover:text-violet-200 sm:text-base">{item.title || item.name}</h4>
+                          <div className="mt-2 flex items-center gap-3 text-[10px] font-bold text-zinc-600">
+                            <span>{itemYear || "Ano não informado"}</span>
+                            {item.vote_average > 0 && <span className="inline-flex items-center gap-1 text-yellow-400"><Star size={10} className="fill-current" /> {Number(item.vote_average).toFixed(1)}</span>}
+                          </div>
+                        </div>
+                        <span className="relative self-center text-zinc-700 transition-all group-hover:translate-x-1 group-hover:text-violet-400"><ArrowRight size={16} /></span>
+                      </button>
+                    );
+                  })}
                 </div>
               ) : form.query.length > 2 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-zinc-600 animate-in fade-in zoom-in-95">
-                  <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                    <Film size={32} className="opacity-20" />
+                <div className="grid min-h-[260px] place-items-center text-center">
+                  <div>
+                    <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-white/[0.035] text-zinc-700"><Film size={24} /></div>
+                    <h4 className="mt-4 text-sm font-black text-zinc-400">Nenhum título encontrado</h4>
+                    <p className="mt-2 text-xs text-zinc-600">Tente buscar pelo título original ou por menos palavras.</p>
                   </div>
-                  <p className="text-sm font-bold uppercase tracking-widest opacity-40">Nenhum título encontrado</p>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-20 text-zinc-700 animate-in fade-in">
-                  <Search size={40} className="mb-4 opacity-10" />
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-30 text-center px-10">Busque por títulos, franquias ou personagens</p>
+                <div className="grid min-h-[260px] place-items-center text-center">
+                  <div className="max-w-xs">
+                    <Search size={30} className="mx-auto text-zinc-800" />
+                    <p className="mt-4 text-xs font-bold uppercase leading-5 tracking-[0.16em] text-zinc-700">Os resultados aparecerão aqui enquanto você digita</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -96,103 +167,97 @@ export default function CreatePostModal({ isOpen, onClose, form, actions }) {
         )}
 
         {form.step === 2 && (
-          <div className="flex flex-col">
-            <div className="relative h-48 shrink-0 overflow-hidden">
+          <div className="content-scrollbar min-h-0 flex-1 overflow-y-auto">
+            <div className="relative h-44 overflow-hidden sm:h-52">
               {backdropUrl ? (
-                <>
-                  <img 
-                    src={backdropUrl} 
-                    className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-30" 
-                    alt="" 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-zinc-950/50 to-zinc-950" />
-                </>
+                <img src={backdropUrl} className="absolute inset-0 h-full w-full object-cover" alt="" />
               ) : (
-                <div className="absolute inset-0 bg-zinc-900" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(139,92,246,0.2),transparent_55%)]" />
               )}
-
-              <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-20">
-                <button
-                  onClick={() => actions.setPostStep(1)}
-                  className="flex items-center gap-2 text-white/70 hover:text-white bg-black/40 hover:bg-black/60 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] transition-all backdrop-blur-xl border border-white/10"
-                >
-                  <ChevronLeft size={14} /> Alterar
-                </button>
-
-                <button onClick={onClose} className="p-2.5 text-white/70 hover:text-white bg-black/40 rounded-2xl transition-all border border-white/10 backdrop-blur-xl">
-                  <X size={18} />
-                </button>
-              </div>
-
-              <div className="absolute bottom-0 left-8 right-8 flex items-end gap-6">
-                <div
-                  className="w-24 h-36 rounded-[1.5rem] shadow-2xl overflow-hidden border-2 border-white/10 shrink-0 -mb-10 relative group"
-                >
-                  {form.media?.poster_path ? (
-                    <img src={`https://image.tmdb.org/t/p/w342${form.media.poster_path}`} className="w-full h-full object-cover" alt="" />
-                  ) : (
-                    <div className="w-full h-full bg-zinc-800 flex items-center justify-center"><Film size={24} className="text-zinc-600" /></div>
-                  )}
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,11,14,0.92),rgba(11,11,14,0.28)_70%)]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0b0b0e] via-transparent to-transparent" />
+              <button type="button" onClick={() => actions.setPostStep(1)} className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/35 px-3.5 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-zinc-200 backdrop-blur-xl transition-colors hover:bg-black/55 sm:left-7">
+                <ChevronLeft size={13} /> Alterar título
+              </button>
+              <div className="absolute inset-x-0 bottom-0 flex items-end gap-4 px-5 pb-4 sm:gap-5 sm:px-7 sm:pb-5">
+                <div className="h-24 w-16 shrink-0 overflow-hidden rounded-xl border border-white/15 bg-zinc-900 shadow-2xl sm:h-28 sm:w-[74px]">
+                  {form.media?.poster_path ? <img src={`https://image.tmdb.org/t/p/w342${form.media.poster_path}`} className="h-full w-full object-cover" alt="" /> : <Film size={20} className="m-auto h-full text-zinc-700" />}
                 </div>
-                <div className="pb-4 min-w-0 flex-1">
-                  <h3 className="font-black text-white text-2xl leading-tight truncate drop-shadow-2xl">{form.media?.title || form.media?.name}</h3>
-                  {(form.media?.release_date || form.media?.first_air_date) && (
-                    <div className="flex items-center gap-2 text-zinc-400 text-xs font-bold uppercase tracking-widest mt-1">
-                      <Calendar size={12} className="text-violet-500" />
-                      <span>{(form.media.release_date || form.media.first_air_date)?.split('-')[0]}</span>
-                      <span className="text-zinc-700">·</span>
-                      <span className="text-violet-400">{form.media.media_type === 'tv' ? 'Série' : 'Filme'}</span>
-                    </div>
-                  )}
+                <div className="min-w-0 pb-1">
+                  <span className="text-[9px] font-black uppercase tracking-[0.18em] text-violet-300">Sua próxima publicação</span>
+                  <h3 className="mt-1 line-clamp-2 text-xl font-black leading-tight tracking-[-0.025em] text-white sm:text-3xl">{mediaTitle}</h3>
+                  <div className="mt-2 flex items-center gap-3 text-[9px] font-bold uppercase tracking-wider text-zinc-400">
+                    <span>{form.media?.media_type === "tv" ? "Série" : "Filme"}</span>
+                    {releaseYear && <span className="inline-flex items-center gap-1.5"><Calendar size={11} /> {releaseYear}</span>}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex-1 flex flex-col px-8 pt-16 pb-8">
-              <div className="flex flex-col items-center mb-8">
-                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-3">Sua Nota</span>
-                <div className="flex gap-3">
+            <div className="grid gap-6 px-5 pb-6 pt-6 sm:px-7 lg:grid-cols-[minmax(0,1fr)_210px] lg:gap-7">
+              <div className="min-w-0">
+                <div className="mb-3 flex items-center justify-between gap-4">
+                  <div>
+                    <span className="text-[9px] font-black uppercase tracking-[0.18em] text-violet-400">Escreva sua experiência</span>
+                    <h4 className="mt-1 text-lg font-black">O que essa obra deixou em você?</h4>
+                  </div>
+                  {canUseRichFormatting && <span className="hidden items-center gap-1.5 rounded-full border border-violet-400/20 bg-violet-500/10 px-3 py-1.5 text-[8px] font-black uppercase tracking-wider text-violet-300 sm:inline-flex"><Sparkles size={10} /> Formatação elite</span>}
+                </div>
+
+                <RichTextToolbar
+                  inputRef={textareaRef}
+                  onChange={updateText}
+                  allowFormatting={canUseRichFormatting}
+                  allowSpoiler
+                  allowEmoji
+                  allowTemplates
+                />
+
+                <div className="mt-3 overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-black/20 transition-colors focus-within:border-violet-400/30">
+                  <textarea
+                    ref={textareaRef}
+                    value={form.text}
+                    onChange={(event) => updateText(event.target.value)}
+                    placeholder="Fale sobre a história, as atuações, o que funcionou — ou simplesmente sobre como você se sentiu..."
+                    maxLength={500}
+                    className="min-h-[190px] w-full resize-none bg-transparent p-5 text-sm leading-7 text-zinc-100 outline-none placeholder:text-zinc-600 sm:min-h-[220px] sm:text-[15px]"
+                    autoFocus
+                  />
+                  <div className="flex items-center justify-between border-t border-white/[0.06] px-4 py-3">
+                    <span className="text-[9px] leading-4 text-zinc-600">Use <strong className="text-zinc-500">||texto||</strong> para esconder spoilers</span>
+                    <span className={`text-[10px] font-black ${form.text.length > 450 ? "text-amber-400" : "text-zinc-600"}`}>{form.text.length}/500</span>
+                  </div>
+                </div>
+              </div>
+
+              <aside className="rounded-[1.5rem] border border-white/[0.07] bg-white/[0.025] p-5 lg:self-start">
+                <span className="text-[9px] font-black uppercase tracking-[0.18em] text-zinc-500">Sua nota</span>
+                <div className="mt-2 flex items-end gap-1">
+                  <strong className="text-4xl font-black tracking-[-0.05em] text-white">{form.rating}</strong>
+                  <span className="mb-1 text-xs font-bold text-zinc-600">/ 5</span>
+                </div>
+                <div className="mt-4 flex gap-1.5 lg:flex-wrap">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => actions.setRating(star)}
-                      className="focus:outline-none transition-all hover:scale-125 active:scale-90"
-                    >
-                      <Star
-                        size={32}
-                        className={`transition-all duration-300 ${star <= form.rating ? 'fill-yellow-400 text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.3)]' : 'fill-white/5 text-zinc-800 hover:text-zinc-600'}`}
-                        strokeWidth={1.5}
-                      />
+                    <button key={star} type="button" onClick={() => actions.setRating(star)} className="transition-transform hover:scale-110 active:scale-90" aria-label={`${star} estrelas`}>
+                      <Star size={23} className={star <= form.rating ? "fill-yellow-300 text-yellow-300" : "fill-white/[0.035] text-zinc-700"} />
                     </button>
                   ))}
                 </div>
-              </div>
-
-              <div className="relative">
-                <textarea
-                  value={form.text}
-                  onChange={(e) => actions.setPostText(e.target.value)}
-                  placeholder="O que você achou dessa obra?"
-                  className="w-full bg-white/[0.03] border border-white/10 focus:border-violet-500/50 text-white text-base rounded-[1.5rem] p-6 resize-none placeholder:text-zinc-600 focus:outline-none transition-all leading-relaxed shadow-inner min-h-[160px]"
-                  autoFocus
-                />
-              </div>
-
-              <div className="flex items-center justify-between mt-6">
-                <div className="flex flex-col">
-                  <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${form.text.length > 450 ? 'text-yellow-500' : 'text-zinc-600'}`}>
-                    {form.text.length} / 500
-                  </span>
-                </div>
-                <button
-                  onClick={actions.handlePostSubmit}
-                  disabled={form.isSubmitting || !form.text.trim()}
-                  className="px-10 py-4 bg-violet-600 hover:bg-violet-500 disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl flex items-center gap-3 transition-all active:scale-95 shadow-[0_0_25px_rgba(139,92,246,0.3)]"
-                >
-                  {form.isSubmitting ? <Loader2 className="animate-spin" size={16} /> : 'Publicar'}
-                </button>
-              </div>
+                <p className="mt-5 border-t border-white/[0.06] pt-4 text-[10px] leading-5 text-zinc-600">Sua nota e seu texto aparecerão juntos no Feed Social.</p>
+              </aside>
             </div>
+
+            <footer className="sticky bottom-0 flex items-center justify-between gap-4 border-t border-white/[0.07] bg-[#0b0b0e]/95 px-5 py-4 backdrop-blur-xl sm:px-7">
+              <button type="button" onClick={onClose} className="px-3 py-2 text-xs font-bold text-zinc-500 transition-colors hover:text-white">Cancelar</button>
+              <button
+                type="button"
+                onClick={actions.handlePostSubmit}
+                disabled={form.isSubmitting || !form.text.trim()}
+                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-xs font-black text-zinc-950 transition-all hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                {form.isSubmitting ? <Loader2 className="animate-spin" size={15} /> : <><span>Publicar review</span><ArrowRight size={15} /></>}
+              </button>
+            </footer>
           </div>
         )}
       </div>

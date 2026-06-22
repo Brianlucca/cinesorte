@@ -103,7 +103,7 @@ export default function SeasonDetails() {
               <span className="text-[10px] font-black uppercase tracking-[0.25em] text-violet-300">
                 {tvShow?.name || "Série"}
               </span>
-              <h1 className="mt-3 text-4xl font-black leading-[0.95] tracking-[-0.04em] text-white sm:text-5xl md:text-6xl xl:text-7xl">
+              <h1 className="mt-3 text-4xl font-black leading-[0.95] tracking-[-0.04em] text-white sm:text-5xl md:text-[3rem] xl:text-[3.45rem]">
                 {seasonData.name}
               </h1>
               {seasonData.overview && (

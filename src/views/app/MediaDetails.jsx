@@ -181,7 +181,7 @@ export default function MediaDetails() {
                 ))}
               </div>
 
-              <h1 className="max-w-4xl text-4xl font-black leading-[0.95] tracking-[-0.04em] text-white drop-shadow-2xl sm:text-5xl md:text-6xl xl:text-7xl">
+              <h1 className="max-w-4xl text-4xl font-black leading-[0.95] tracking-[-0.04em] text-white drop-shadow-2xl sm:text-5xl md:text-[3rem] xl:text-[3.55rem]">
                 {title}
               </h1>
 

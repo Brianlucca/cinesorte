@@ -165,7 +165,7 @@ export default function EpisodeDetails() {
             <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-300">
               Temporada {seasonNumber} · Episódio {episode.episode_number}
             </span>
-            <h1 className="mt-3 max-w-4xl text-4xl font-black leading-[0.95] tracking-[-0.04em] text-white sm:text-5xl md:text-6xl xl:text-7xl">
+            <h1 className="mt-3 max-w-4xl text-4xl font-black leading-[0.95] tracking-[-0.04em] text-white sm:text-5xl md:text-[3rem] xl:text-[3.45rem]">
               {title}
             </h1>
 
