@@ -92,11 +92,11 @@ export default function Feed() {
         <header className="border-b border-white/[0.07] pb-8 md:pb-10">
           <div className="flex flex-col justify-between gap-7 lg:flex-row lg:items-end">
             <div className="max-w-2xl">
-              <div className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
+              <div className="mb-3 flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.24em] text-violet-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-violet-400 shadow-[0_0_12px_rgba(167,139,250,0.8)]" />
                 Comunidade CineSorte
               </div>
-              <h1 className="text-3xl font-black tracking-[-0.045em] sm:text-4xl md:text-5xl">Feed Social</h1>
+              <h1 className="text-3xl font-black leading-tight tracking-[-0.04em] sm:text-4xl">Feed Social</h1>
               <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400 sm:text-base">
                 Reviews, coleções e descobertas das pessoas que fazem parte do seu universo cinéfilo.
               </p>
