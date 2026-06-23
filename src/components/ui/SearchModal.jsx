@@ -344,23 +344,22 @@ export default function SearchModal({ isOpen, onClose }) {
       />
 
       <section
-        className={`relative flex max-h-[94svh] min-h-[72svh] w-full max-w-6xl flex-col overflow-hidden rounded-t-[2rem] border border-white/10 bg-[#0a0a0d]/95 shadow-[0_45px_120px_rgba(0,0,0,0.8)] transition-all duration-500 sm:rounded-[2rem] ${
+        className={`relative flex max-h-[94svh] min-h-[72svh] w-full max-w-6xl flex-col overflow-hidden rounded-t-[2rem] border border-white/10 bg-[#0b0b0e]/98 shadow-[0_40px_120px_rgba(0,0,0,0.75)] backdrop-blur-2xl transition-all duration-500 sm:rounded-[2rem] ${
           isActive ? "translate-y-0 scale-100" : "translate-y-8 scale-[0.985]"
         }`}
       >
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.015),rgba(255,255,255,0.008)_18%,rgba(0,0,0,0.05)_46%,rgba(0,0,0,0.14)_100%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.018)_0%,rgba(255,255,255,0.006)_28%,transparent_55%,rgba(0,0,0,0.18)_100%)]" />
 
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           {atmosphere && (
             <img
               src={`https://image.tmdb.org/t/p/w1280${atmosphere}`}
-              className="h-full w-full scale-110 object-cover opacity-[0.08] blur-2xl"
+              className="h-full w-full scale-110 object-cover opacity-[0.02] grayscale blur-2xl"
               alt=""
             />
           )}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,32,88,0.22),transparent_30%),linear-gradient(180deg,rgba(23,16,36,0.72),rgba(14,12,19,0.56)_42%,rgba(10,10,13,0.18)_78%,rgba(10,10,13,0.08)_100%)]" />
-          <div className="absolute inset-x-0 top-0 h-72 bg-[linear-gradient(180deg,rgba(46,26,74,0.16),transparent)]" />
-          <div className="absolute left-[20%] top-0 h-48 w-64 rounded-full bg-violet-700/8 blur-[90px]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,15,19,0.20),rgba(10,10,13,0.12)_45%,rgba(5,5,7,0.06)_100%)]" />
+          <div className="absolute inset-x-0 top-0 h-72 bg-[linear-gradient(180deg,rgba(255,255,255,0.01),transparent)]" />
           <div className="absolute bottom-0 left-0 right-0 h-80 bg-[linear-gradient(180deg,transparent,rgba(8,8,11,0.1))]" />
         </div>
 
