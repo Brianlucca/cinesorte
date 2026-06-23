@@ -103,13 +103,13 @@ export default function ListDetails() {
             <img
               src={`https://image.tmdb.org/t/p/original${heroImage}`}
               alt=""
-              className="h-full w-full object-cover opacity-35"
+              className="h-full w-full object-cover"
             />
           )}
         </div>
         <div className="absolute inset-0 bg-[linear-gradient(90deg,#08080b_0%,rgba(8,8,11,0.92)_38%,rgba(8,8,11,0.28)_100%)]" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#08080b] via-transparent to-black/35" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(139,92,246,0.12),transparent_32%)]" />
+        <div className="absolute inset-0" />
 
         <div className="relative z-10 mx-auto flex min-h-[480px] max-w-[1600px] flex-col justify-between px-4 py-6 sm:px-6 md:min-h-[520px] md:px-10 md:py-8 xl:px-14">
           <Link
