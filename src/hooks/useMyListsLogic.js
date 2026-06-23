@@ -88,7 +88,7 @@ export function useMyListsLogic() {
       await api.delete(`/users/lists/${listId}`);
       setLists(prev => prev.filter(l => l.id !== listId));
       toast.success('Lista Excluída', 'A lista foi removida com sucesso.');
-    } catch (error) {
+    } catch {
       toast.error('Erro', 'Não foi possível excluir a lista.');
       loadLists();
     } finally {
@@ -124,7 +124,7 @@ export function useMyListsLogic() {
 
       toast.success('Itens Removidos', `${selectedItems.length} itens foram removidos.`);
       cancelSelectionMode();
-    } catch (error) {
+    } catch {
       toast.error('Erro', 'Falha ao remover alguns itens.');
       loadLists();
     } finally {
@@ -158,7 +158,7 @@ export function useMyListsLogic() {
       setLists(prev => [newList, ...prev]);
       toast.success('Lista Criada', `A lista "${listName}" foi criada.`);
       closeModals();
-    } catch (error) {
+    } catch {
       toast.error('Erro', 'Não foi possível criar a lista.');
     }
   }, [modals.createList, toast, closeModals]);
@@ -196,7 +196,7 @@ export function useMyListsLogic() {
 
       toast.success('Lista Atualizada', 'As alterações foram salvas.');
       closeModals();
-    } catch (error) {
+    } catch {
       toast.error('Erro', 'Não foi possível editar a lista.');
     }
   }, [modals.editList, toast, closeModals]);
@@ -210,7 +210,7 @@ export function useMyListsLogic() {
         content: `Confira minha nova coleção: ${list.name}`
       });
       toast.success('Compartilhado', 'A coleção foi publicada no seu feed!');
-    } catch (error) {
+    } catch {
       toast.error('Erro', 'Falha ao compartilhar a coleção.');
     }
   }, [toast]);
