@@ -324,7 +324,7 @@ export default function FeedCard({ item, onDelete, onLike, onLoadComments }) {
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.05)_18%,rgba(9,9,11,0.2)_44%,rgba(9,9,11,0.96)_100%)]" />
               <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/40 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-zinc-200 backdrop-blur-xl">
                 <Layers size={12} className="text-violet-300" />
-                Curadoria
+                Coleção
               </div>
 
               <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
@@ -334,10 +334,8 @@ export default function FeedCard({ item, onDelete, onLike, onLoadComments }) {
                     <h3 className="mt-2 line-clamp-2 text-2xl font-black leading-[1.02] tracking-[-0.03em] text-white drop-shadow-xl sm:text-3xl">
                       {item.listName || "Minha seleção"}
                     </h3>
-                    {item.content && <p className="mt-2 line-clamp-2 max-w-xl text-xs leading-5 text-zinc-300 sm:text-sm">{item.content}</p>}
                     <div className="mt-3 flex items-center gap-3 text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-400">
                       <span>{item.listCount || listItems.length} títulos</span>
-                      {Number(item.listCount || 0) > listItems.length && <span>+{Number(item.listCount) - listItems.length} na coleção</span>}
                     </div>
                   </div>
                   <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-zinc-950 shadow-xl transition-transform group-hover/list:scale-105">
