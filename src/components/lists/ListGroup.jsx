@@ -82,7 +82,7 @@ export default function ListGroup({
           <img
             src={`https://image.tmdb.org/t/p/w1280${backdrop}`}
             alt=""
-            className="h-full w-full scale-105 object-cover opacity-[0.16] blur-[1px] transition-transform duration-[1200ms] group-hover/list:scale-110"
+            className="h-full w-full scale-105 object-cover blur-[1px] transition-transform duration-[1200ms] group-hover/list:scale-110"
           />
         )}
         <div className="absolute inset-0 bg-[linear-gradient(90deg,#0d0d11_0%,rgba(13,13,17,0.82)_52%,rgba(13,13,17,0.35)_100%)]" />
