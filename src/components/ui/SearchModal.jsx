@@ -551,12 +551,12 @@ export default function SearchModal({ isOpen, onClose }) {
                         <img
                           src={`https://image.tmdb.org/t/p/w780${activeGenreArtwork[genre.id].image}`}
                           alt=""
-                          className="absolute inset-0 h-full w-full object-cover opacity-45 transition-transform duration-700 group-hover:scale-[1.06]"
+                          className="absolute inset-0 h-full w-full object-cover opacity-60 transition-[transform,opacity] duration-700 group-hover:scale-[1.06] group-hover:opacity-70"
                           loading="lazy"
                         />
                       )}
-                      <div className={`absolute inset-0 bg-gradient-to-br ${genre.tone} to-black/80`} />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/35 to-black/75" />
+                      <div className={`absolute inset-0 bg-gradient-to-br ${genre.tone} to-black/65`} />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/20 to-black/55" />
                       <div className="relative pr-10">
                         <span className="text-sm font-black text-zinc-100 transition-colors group-hover:text-white">
                           {genre.name}
