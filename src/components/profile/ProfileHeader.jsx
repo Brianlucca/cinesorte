@@ -74,9 +74,6 @@ export default function ProfileHeader({ user, onEditAvatar, onEditBackground, on
 
             <div className="min-w-0 flex-1 text-center md:text-left">
               <div className="mb-3 flex flex-wrap items-center justify-center gap-2 md:justify-start">
-                <span className="rounded-full border border-violet-300/20 bg-violet-500/15 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-violet-200 backdrop-blur-xl">
-                  Meu espaço
-                </span>
                 {createdYear && (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-300 backdrop-blur-xl">
                     <Calendar size={13} /> Desde {createdYear}
