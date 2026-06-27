@@ -84,7 +84,8 @@ export function useEpisodeDetailsLogic() {
         mediaId: uniqueMediaId,
         mediaType: 'episode',
         mediaTitle: `${episode.name} (S${seasonNumber}E${episodeNumber})`,
-        posterPath: episode.still_path,
+        posterPath: episode.still_path || seasonData?.poster_path || tvShow?.poster_path,
+        backdropPath: episode.still_path || tvShow?.backdrop_path || seasonData?.poster_path || '',
         rating,
         text,
       });

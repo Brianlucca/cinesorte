@@ -157,6 +157,7 @@ export function useMediaDetailsLogic() {
         action,
         mediaTitle: media.title || media.name,
         posterPath: media.poster_path,
+        backdropPath: media.backdrop_path || '',
       });
     } catch (error) {
       setInteractions(prev => ({
