@@ -216,7 +216,7 @@ export default function Profile() {
             <p className="mb-6 rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-xs font-medium leading-relaxed text-zinc-500">
               {ui.activeTab === 'likes'
                 ? 'Somente os títulos curtidos aparecem aqui, ordenados pelo momento em que você curtiu.'
-                : 'O diário mostra seus assistidos em uma lista visual com backdrops e páginas.'}
+                : 'A data informada é a data do dia que você marcou o filme/série como assistido.'}
             </p>
           )}
 
