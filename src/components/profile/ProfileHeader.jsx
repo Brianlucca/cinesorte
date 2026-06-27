@@ -1,128 +1,144 @@
-import { Camera, Image as ImageIcon, Settings, Edit3, Calendar, Users, UserPlus } from 'lucide-react';
+import { Calendar, Camera, Edit3, Image as ImageIcon, Settings, UserPlus, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import LevelBadge from '../ui/LevelBadge';
 
+const getCreatedYear = (value) => {
+  if (!value) return null;
+  const date = value._seconds ? new Date(value._seconds * 1000) : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.getFullYear();
+};
+
 export default function ProfileHeader({ user, onEditAvatar, onEditBackground, onShowFollowers, onShowFollowing }) {
+  const createdYear = getCreatedYear(user?.createdAt);
+
   return (
-    <div className="relative w-full group/header mb-12">
-        
-        <div className="relative w-full h-[50vh] min-h-[400px] overflow-hidden rounded-[2.5rem] shadow-2xl bg-black border border-white/5">
-            {user?.backgroundURL ? (
-                <img 
-                    key={user.backgroundURL}
-                    src={user.backgroundURL} 
-                    alt="Cover" 
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover/header:scale-105 opacity-90" 
-                />
-            ) : (
-                <div className="w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/40 via-zinc-950 to-black" />
-            )}
-            
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent" />
-            
-            <div className="absolute top-6 right-6 opacity-0 group-hover/header:opacity-100 transition-all duration-500 transform translate-y-[-10px] group-hover/header:translate-y-0">
-                <button 
-                    onClick={onEditBackground}
-                    className="flex items-center gap-2 bg-black/50 hover:bg-black/80 backdrop-blur-xl text-white px-5 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-white/10 shadow-lg hover:border-white/20 active:scale-95"
+    <section className="group/header relative overflow-hidden rounded-[2rem] border border-white/[0.07] bg-[#0d0d11] shadow-[0_30px_100px_rgba(0,0,0,0.36)]">
+      <div className="relative min-h-[500px] overflow-hidden md:min-h-[460px]">
+        {user?.backgroundURL ? (
+          <img
+            key={user.backgroundURL}
+            src={user.backgroundURL}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-center opacity-90 transition-transform duration-[1400ms] group-hover/header:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(124,58,237,0.32),transparent_34%),linear-gradient(135deg,#18111f_0%,#09090b_58%,#050507_100%)]" />
+        )}
+
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,11,0.98)_0%,rgba(8,8,11,0.72)_42%,rgba(8,8,11,0.25)_76%,rgba(8,8,11,0.12)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(0deg,#0d0d11_0%,rgba(13,13,17,0.88)_16%,transparent_58%,rgba(13,13,17,0.36)_100%)]" />
+        <div className="pointer-events-none absolute -bottom-20 left-[18%] h-80 w-[36rem] rounded-full bg-violet-700/10 blur-[120px]" />
+
+        <button
+          type="button"
+          onClick={onEditBackground}
+          className="absolute right-4 top-4 z-20 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/35 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-200 opacity-100 backdrop-blur-xl transition-all hover:bg-white hover:text-black md:right-6 md:top-6 md:opacity-0 md:group-hover/header:opacity-100"
+        >
+          <ImageIcon size={15} />
+          Alterar capa
+        </button>
+
+        <div className="relative z-10 flex min-h-[500px] flex-col justify-end px-5 pb-8 pt-24 sm:px-7 md:min-h-[460px] md:px-10 md:pb-9 xl:px-12">
+          <div className="flex flex-col gap-6 md:flex-row md:items-end">
+            <div className="relative mx-auto shrink-0 md:mx-0">
+              <div className="relative h-36 w-36 overflow-hidden rounded-[1.5rem] border border-white/15 bg-zinc-900 p-1.5 shadow-[0_24px_62px_rgba(0,0,0,0.58)] md:h-44 md:w-44">
+                <div className="group/avatar relative h-full w-full overflow-hidden rounded-[1.55rem] bg-zinc-900">
+                  {user?.photoURL ? (
+                    <img src={user.photoURL} className="h-full w-full object-cover transition-transform duration-700 group-hover/avatar:scale-105" alt={user.name || 'Avatar'} />
+                  ) : (
+                    <div className="grid h-full w-full place-items-center bg-violet-600/20 text-6xl font-black uppercase text-violet-300">
+                      {user?.name?.charAt(0) || 'U'}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={onEditAvatar}
+                    className="absolute inset-0 grid place-items-center bg-black/60 text-white opacity-0 backdrop-blur-sm transition-opacity duration-300 group-hover/avatar:opacity-100"
+                  >
+                    <span className="flex flex-col items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em]">
+                      <span className="grid h-12 w-12 place-items-center rounded-full bg-white/10">
+                        <Camera size={23} />
+                      </span>
+                      Alterar
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {user?.levelTitle && (
+                <div className="absolute -bottom-4 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap drop-shadow-xl">
+                  <LevelBadge title={user.levelTitle} size="md" />
+                </div>
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1 text-center md:text-left">
+              <div className="mb-3 flex flex-wrap items-center justify-center gap-2 md:justify-start">
+                <span className="rounded-full border border-violet-300/20 bg-violet-500/15 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-violet-200 backdrop-blur-xl">
+                  Meu espaço
+                </span>
+                {createdYear && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-300 backdrop-blur-xl">
+                    <Calendar size={13} /> Desde {createdYear}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+                <div className="min-w-0">
+                  <h2 className="break-words text-2xl font-black leading-[1.02] tracking-[-0.035em] text-white drop-shadow-2xl sm:text-3xl md:text-4xl">
+                    {user?.name || 'Usuario'}
+                  </h2>
+                  <p className="mt-2 text-sm font-black tracking-tight text-violet-300 md:text-base">@{user?.username}</p>
+                </div>
+
+                <Link
+                  to="/app/settings"
+                  className="inline-flex items-center justify-center gap-2.5 rounded-full bg-white px-5 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-zinc-950 shadow-xl shadow-black/20 transition-all hover:scale-[1.02] hover:bg-violet-100 active:scale-[0.98]"
                 >
-                    <ImageIcon size={16} />
-                    <span>Alterar Capa</span>
+                  <Settings size={17} />
+                  Editar perfil
+                </Link>
+              </div>
+
+              <div className="mt-6">
+                {user?.bio ? (
+                  <p className="mx-auto max-w-3xl text-sm font-medium leading-7 text-zinc-300 drop-shadow-sm md:mx-0">
+                    {user.bio}
+                  </p>
+                ) : (
+                  <div className="mx-auto inline-flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-black/25 px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500 md:mx-0">
+                    <Edit3 size={15} />
+                    Adicione uma biografia
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5 md:justify-start">
+                <button
+                  type="button"
+                  onClick={onShowFollowers}
+                  className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2.5 text-xs font-bold text-zinc-400 backdrop-blur-xl transition-all hover:border-violet-300/25 hover:bg-white/10 hover:text-white"
+                >
+                  <Users size={15} className="text-violet-300" />
+                  <strong className="text-white">{user?.followersCount || 0}</strong>
+                  seguidores
                 </button>
+
+                <button
+                  type="button"
+                  onClick={onShowFollowing}
+                  className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2.5 text-xs font-bold text-zinc-400 backdrop-blur-xl transition-all hover:border-violet-300/25 hover:bg-white/10 hover:text-white"
+                >
+                  <UserPlus size={15} className="text-violet-300" />
+                  <strong className="text-white">{user?.followingCount || 0}</strong>
+                  seguindo
+                </button>
+              </div>
             </div>
+          </div>
         </div>
-
-        <div className="relative px-6 md:px-10 -mt-32 z-10">
-            <div className="flex flex-col md:flex-row items-end gap-8">
-                
-                <div className="relative group/avatar shrink-0 mx-auto md:mx-0">
-                    <div className="w-48 h-48 rounded-full p-2 bg-zinc-950 shadow-2xl relative z-10 border border-white/5">
-                        <div className="w-full h-full rounded-full bg-zinc-900 overflow-hidden relative border border-white/10 shadow-inner">
-                            {user?.photoURL ? (
-                                <img src={user.photoURL} className="w-full h-full object-cover" alt={user.name} />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-violet-600/20 text-violet-400 text-6xl font-black">
-                                    {user?.name?.charAt(0) || 'U'}
-                                </div>
-                            )}
-                            
-                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-all duration-300 backdrop-blur-sm rounded-full">
-                                <button onClick={onEditAvatar} className="text-white flex flex-col items-center gap-2 transform scale-90 group-hover/avatar:scale-100 transition-transform">
-                                    <div className="p-3 bg-white/10 rounded-full">
-                                        <Camera size={24} />
-                                    </div>
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Alterar</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    {user?.levelTitle && (
-                        <div className="absolute -bottom-3 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap drop-shadow-xl">
-                            <LevelBadge title={user.levelTitle} size="md" />
-                        </div>
-                    )}
-                </div>
-
-                <div className="flex-1 text-center md:text-left pb-2 w-full">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight drop-shadow-2xl capitalize">
-                                {user?.name}
-                            </h1>
-                            <p className="text-violet-400 font-bold text-lg md:text-xl tracking-tight mt-1">@{user?.username}</p>
-                        </div>
-
-                        <Link 
-                            to="/app/settings"
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white text-black hover:bg-zinc-200 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-95 whitespace-nowrap"
-                        >
-                            <Settings size={18} />
-                            <span>Editar Perfil</span>
-                        </Link>
-                    </div>
-
-                    <div className="mt-6 flex flex-col gap-6">
-                        {user?.bio ? (
-                            <div className="flex items-start gap-3 justify-center md:justify-start">
-                                <span className="w-1.5 h-5 bg-violet-500 rounded-full mt-1 shrink-0 hidden md:block"></span>
-                                <p className="text-base leading-relaxed max-w-2xl font-medium text-zinc-300 text-justify md:text-left drop-shadow-sm">
-                                    {user.bio}
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="flex items-center justify-center md:justify-start gap-3 text-zinc-500 font-bold text-xs uppercase tracking-widest bg-white/[0.02] px-5 py-3 rounded-2xl border border-white/5 w-fit shadow-inner mx-auto md:mx-0">
-                                <Edit3 size={16} className="text-zinc-600" />
-                                <span>Adicione uma biografia</span>
-                            </div>
-                        )}
-                        
-                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                            <button 
-                                onClick={onShowFollowers}
-                                className="flex items-center gap-3 text-xs font-black uppercase tracking-widest bg-black/40 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/5 hover:bg-white/5 hover:border-violet-500/30 transition-all cursor-pointer shadow-inner text-zinc-400 group"
-                            >
-                                <Users size={16} className="text-violet-500 group-hover:text-violet-400 transition-colors" />
-                                <span><strong className="text-white text-sm group-hover:text-violet-100">{user?.followersCount || 0}</strong> Seg.</span>
-                            </button>
-
-                            <button 
-                                onClick={onShowFollowing}
-                                className="flex items-center gap-3 text-xs font-black uppercase tracking-widest bg-black/40 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/5 hover:bg-white/5 hover:border-violet-500/30 transition-all cursor-pointer shadow-inner text-zinc-400 group"
-                            >
-                                <UserPlus size={16} className="text-violet-500 group-hover:text-violet-400 transition-colors" />
-                                <span><strong className="text-white text-sm group-hover:text-violet-100">{user?.followingCount || 0}</strong> Seg.</span>
-                            </button>
-
-                            {user?.createdAt && (
-                                <div className="hidden md:flex items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.2em] bg-black/40 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/5 text-zinc-500 shadow-inner">
-                                    <Calendar size={14} />
-                                    <span>Desde {user.createdAt._seconds ? new Date(user.createdAt._seconds * 1000).getFullYear() : new Date(user.createdAt).getFullYear()}</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+      </div>
+    </section>
   );
 }

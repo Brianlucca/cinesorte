@@ -9,7 +9,8 @@ import {
     getUserFollowing, 
     getUserLists, 
     updateProfile,
-    getMe 
+    getMe,
+    getMovieDetails
 } from '../services/api';
 
 const ITEMS_PER_PAGE = 10;
@@ -22,6 +23,49 @@ const parseInteractionDate = (value) => {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 };
+
+const getMediaType = (item) => item.mediaType || item.media_type || (item.first_air_date ? 'tv' : 'movie');
+const getMediaId = (item) => String(item.mediaId || item.id || '').replace(/^(movie-|tv-|person-)/, '');
+
+async function hydrateInteractionArtwork(items) {
+  const missingArtwork = items
+    .filter((item) => !item.backdropPath && !item.backdrop_path && getMediaId(item))
+    .filter((item) => ['movie', 'tv'].includes(getMediaType(item)))
+    .slice(0, 80);
+
+  const uniqueKeys = [...new Set(missingArtwork.map((item) => `${getMediaType(item)}:${getMediaId(item)}`))];
+  if (uniqueKeys.length === 0) return items;
+
+  const detailsEntries = await Promise.all(
+    uniqueKeys.map(async (key) => {
+      const [type, id] = key.split(':');
+      try {
+        const details = await getMovieDetails(type, id);
+        return [key, details];
+      } catch {
+        return [key, null];
+      }
+    }),
+  );
+
+  const detailsMap = new Map(detailsEntries);
+  return items.map((item) => {
+    const key = `${getMediaType(item)}:${getMediaId(item)}`;
+    const details = detailsMap.get(key);
+    if (!details) return item;
+
+    return {
+      ...item,
+      mediaType: getMediaType(item),
+      mediaId: getMediaId(item),
+      backdropPath: item.backdropPath || item.backdrop_path || details.backdrop_path || '',
+      posterPath: item.posterPath || item.poster_path || details.poster_path || '',
+      vote_average: item.vote_average || details.vote_average,
+      mediaTitle: item.mediaTitle || item.title || item.name || details.title || details.name,
+      genres: item.genres || details.genres || [],
+    };
+  });
+}
 
 export function useProfileLogic() {
   const { user: authUser, updateProfile: updateAuthProfile } = useAuth();
@@ -45,9 +89,8 @@ export function useProfileLogic() {
   });
   const [localUpdates, setLocalUpdates] = useState({});
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('activity'); 
-  const [activityFilter, setActivityFilter] = useState('all'); 
-  const [activityOrder, setActivityOrder] = useState('desc');
+  const [activeTab, setActiveTab] = useState('likes'); 
+  const [activityFilter, setActivityFilter] = useState('like'); 
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   const [reviewsCursor, setReviewsCursor] = useState(null);
@@ -109,7 +152,7 @@ export function useProfileLogic() {
         });
       }
       processedInteractions.sort((a, b) => (b.sortDate?.getTime() || 0) - (a.sortDate?.getTime() || 0));
-      setAllInteractions(processedInteractions);
+      setAllInteractions(await hydrateInteractionArtwork(processedInteractions));
 
     } catch {
       toast.error('Erro', 'Nao foi possivel carregar seu perfil.');
@@ -191,20 +234,24 @@ export function useProfileLogic() {
     }
   };
 
+  const likedInteractions = useMemo(() => {
+    return allInteractions.filter(item => item.action === 'like');
+  }, [allInteractions]);
+
   const filteredInteractions = useMemo(() => {
     const filtered = activityFilter === 'all'
-      ? allInteractions
-      : allInteractions.filter(item => item.action === activityFilter);
+      ? likedInteractions
+      : likedInteractions.filter(item => item.action === activityFilter);
 
     return [...filtered].sort((a, b) => {
       const dateA = a.sortDate?.getTime?.() || a.timestamp?._seconds || 0;
       const dateB = b.sortDate?.getTime?.() || b.timestamp?._seconds || 0;
-      return activityOrder === 'asc' ? dateA - dateB : dateB - dateA;
+      return dateB - dateA;
     });
-  }, [allInteractions, activityFilter, activityOrder]);
+  }, [likedInteractions, activityFilter]);
 
   const displayData = useMemo(() => {
-    if (activeTab === 'activity') return filteredInteractions.slice(0, visibleCount);
+    if (activeTab === 'likes') return filteredInteractions;
     if (activeTab === 'reviews') return allReviews.slice(0, visibleCount);
     return [];
   }, [activeTab, filteredInteractions, allReviews, visibleCount]);
@@ -214,10 +261,10 @@ export function useProfileLogic() {
   }, [allInteractions]);
 
   const hasMore = useMemo(() => {
-    if (activeTab === 'activity') return visibleCount < filteredInteractions.length;
+    if (activeTab === 'likes') return false;
     if (activeTab === 'reviews') return visibleCount < allReviews.length || hasMoreReviews;
     return false;
-  }, [activeTab, filteredInteractions.length, allReviews.length, visibleCount, hasMoreReviews]);
+  }, [activeTab, allReviews.length, visibleCount, hasMoreReviews]);
 
   const handleLoadMore = () => {
     if (activeTab === 'reviews') {
@@ -234,8 +281,7 @@ export function useProfileLogic() {
   };
 
   const handleTabChange = (tab) => { setActiveTab(tab); setVisibleCount(ITEMS_PER_PAGE); };
-  const handleFilterChange = (filter) => { setActivityFilter(filter); setVisibleCount(ITEMS_PER_PAGE); };
-  const handleActivityOrderChange = (order) => { setActivityOrder(order); setVisibleCount(ITEMS_PER_PAGE); };
+  const handleFilterChange = (filter) => { setActivityFilter(filter === 'watched' ? 'like' : filter); setVisibleCount(ITEMS_PER_PAGE); };
   const openModal = (name) => setModals(prev => ({ ...prev, [name]: true }));
   const closeModal = (name) => setModals(prev => ({ ...prev, [name]: false }));
 
@@ -261,12 +307,11 @@ export function useProfileLogic() {
       followingList,
       year: new Date().getFullYear()
     },
-    ui: { loading, activeTab, activityFilter, activityOrder, hasMore, loadingLists, loadingMoreReviews },
+    ui: { loading, activeTab, activityFilter, hasMore, loadingLists, loadingMoreReviews },
     modals,
     actions: {
       setActiveTab: handleTabChange,
       setActivityFilter: handleFilterChange,
-      setActivityOrder: handleActivityOrderChange,
       loadMore: handleLoadMore,
       openModal,
       closeModal,
