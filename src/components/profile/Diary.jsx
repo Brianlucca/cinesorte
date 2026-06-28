@@ -137,14 +137,14 @@ export default function Diary({ items }) {
                 <div className="absolute inset-0" style={{ background: fallbackBackground }} />
                 {backdrop ? (
                   <img
-                    src={tmdbImage(backdrop, 'w780')}
+                    src={tmdbImage(backdrop, 'w1280')}
                     alt=""
                     className="absolute inset-0 h-full w-full object-cover opacity-52 transition-transform duration-700 group-hover:scale-[1.035]"
                     loading="lazy"
                   />
                 ) : poster ? (
                   <img
-                    src={tmdbImage(poster, 'w500')}
+                    src={tmdbImage(poster, 'w780')}
                     alt=""
                     className="absolute inset-0 h-full w-full scale-110 object-cover opacity-22 blur-sm transition-transform duration-700 group-hover:scale-[1.14]"
                     loading="lazy"

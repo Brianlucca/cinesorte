@@ -165,7 +165,7 @@ export async function createDiaryShareImageBlob(items) {
     const backdropPath = getDiaryBackdropPath(item);
     const posterPath = getDiaryPosterPath(item);
     const imagePath = backdropPath || posterPath;
-    const imageSrc = tmdbImage(imagePath, backdropPath ? 'w780' : 'w500');
+    const imageSrc = tmdbImage(imagePath, backdropPath ? 'w1280' : 'w780');
 
     ctx.save();
     ctx.beginPath();
