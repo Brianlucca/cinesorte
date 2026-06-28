@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Search, Image as ImageIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Image as ImageIcon, Loader2, Search, X } from 'lucide-react';
 import { getTmdbSearch } from '../../services/api';
-import Modal from './Modal';
 
 export default function BackgroundSelectorModal({ isOpen, onClose, onSelect }) {
   const [query, setQuery] = useState('');
@@ -9,14 +9,32 @@ export default function BackgroundSelectorModal({ isOpen, onClose, onSelect }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const handleEsc = (event) => {
+      if (event.key === 'Escape') onClose();
+    };
+    const previousOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
     const delayDebounceFn = setTimeout(async () => {
       if (query.trim().length > 2) {
         setLoading(true);
         try {
           const data = await getTmdbSearch(query);
           const list = Array.isArray(data) ? data : (data.results || []);
-          setResults(list.filter((i) => i.backdrop_path).slice(0, 8));
-        } catch (error) {
+          setResults(list.filter((item) => item.backdrop_path).slice(0, 10));
+        } catch {
           setResults([]);
         } finally {
           setLoading(false);
@@ -25,8 +43,9 @@ export default function BackgroundSelectorModal({ isOpen, onClose, onSelect }) {
         setResults([]);
       }
     }, 500);
+
     return () => clearTimeout(delayDebounceFn);
-  }, [query]);
+  }, [isOpen, query]);
 
   const handleSelectImage = (item) => {
     const fullUrl = `https://image.tmdb.org/t/p/original${item.backdrop_path}`;
@@ -34,63 +53,109 @@ export default function BackgroundSelectorModal({ isOpen, onClose, onSelect }) {
     onClose();
   };
 
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Alterar Capa do Perfil" size="lg">
-      <div className="space-y-8 pt-2">
-        <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-100">
-          Imagens fornecidas pela TMDB. Este produto usa a API da TMDB, mas não é endossado nem certificado pela TMDB.
-        </div>
+  if (!isOpen) return null;
 
-        <div className="relative flex items-center">
-          <Search className="absolute left-5 text-zinc-500" size={20} />
-          <input
-            type="text"
-            autoFocus
-            className="w-full bg-black/40 border border-white/5 rounded-2xl pl-14 pr-5 py-4 text-white font-medium outline-none shadow-inner transition-all placeholder:text-zinc-600 focus:border-violet-500/50"
-            placeholder="Pesquise um filme ou série para usar de capa..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[10000] overflow-y-auto bg-black/[0.84] px-3 py-5 backdrop-blur-xl animate-in fade-in duration-200 sm:px-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="background-modal-title"
+    >
+      <button type="button" className="absolute inset-0 cursor-default" aria-label="Fechar capa" onClick={onClose} />
 
-        <div className="min-h-[300px]">
-          {loading ? (
-            <div className="flex h-64 animate-in fade-in flex-col items-center justify-center gap-4 duration-300">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-violet-600/30 border-t-violet-500 shadow-[0_0_30px_rgba(139,92,246,0.3)]"></div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Buscando capas...</p>
+      <div className="relative z-10 mx-auto flex min-h-full w-full max-w-4xl items-center justify-center">
+        <div className="flex max-h-[86vh] w-full flex-col overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-[#0d0d11]/95 shadow-[0_30px_90px_rgba(0,0,0,0.65)] backdrop-blur-3xl animate-in zoom-in-95 duration-200">
+          <div className="flex items-center justify-between gap-4 border-b border-white/[0.06] px-5 py-4 sm:px-6">
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.22em] text-violet-300">Capa do perfil</p>
+              <h2 id="background-modal-title" className="mt-1 truncate text-xl font-black tracking-[-0.03em] text-white">
+                Alterar capa
+              </h2>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-5 animate-in fade-in duration-500 sm:grid-cols-2">
-              {results.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleSelectImage(item)}
-                  className="group relative aspect-video overflow-hidden rounded-2xl border border-white/5 shadow-lg transition-all duration-300 hover:scale-105 hover:border-violet-500/50 hover:shadow-[0_15px_30px_rgba(0,0,0,0.5)]"
-                >
-                  <img
-                    src={`https://image.tmdb.org/t/p/w780${item.backdrop_path}`}
-                    className="h-full w-full object-cover"
-                    alt={item.title || item.name}
-                  />
-                  <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/90 via-black/30 to-transparent p-4 text-center opacity-0 transition-all duration-300 group-hover:opacity-100">
-                    <span className="line-clamp-2 text-sm font-black uppercase tracking-wider text-white drop-shadow-lg">
-                      {item.title || item.name}
-                    </span>
+            <button
+              type="button"
+              onClick={onClose}
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.05] text-zinc-300 transition-colors hover:bg-white/[0.1] hover:text-white"
+              aria-label="Fechar modal"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="content-scrollbar min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+            <div className="mb-4 rounded-xl border border-cyan-300/15 bg-cyan-400/[0.08] px-4 py-3 text-xs font-semibold leading-relaxed text-cyan-100">
+              Imagens fornecidas pela TMDB. Este produto usa a API da TMDB, mas não é endossado nem certificado pela TMDB.
+            </div>
+
+            <div className="relative mb-5">
+              <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+              <input
+                type="text"
+                autoFocus
+                className="h-12 w-full rounded-xl border border-white/[0.08] bg-black/30 pl-12 pr-4 text-sm font-semibold text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-violet-300/35 focus:bg-black/40"
+                placeholder="Pesquise um filme ou série para usar de capa..."
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </div>
+
+            <div className="min-h-[340px]">
+              {loading ? (
+                <div className="grid min-h-[340px] place-items-center text-violet-200">
+                  <Loader2 size={30} className="animate-spin" />
+                </div>
+              ) : query.trim().length <= 2 ? (
+                <div className="grid min-h-[340px] place-items-center text-center">
+                  <div>
+                    <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-xl border border-white/[0.07] bg-white/[0.04] text-zinc-500">
+                      <Search size={24} />
+                    </div>
+                    <p className="text-sm font-bold text-zinc-500">Busque por um filme ou série.</p>
                   </div>
-                </button>
-              ))}
-              {!loading && query.length > 2 && results.length === 0 && (
-                <div className="col-span-full flex animate-in zoom-in-95 flex-col items-center justify-center gap-3 py-16 duration-300">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/5 bg-white/5 shadow-inner">
-                    <ImageIcon className="text-zinc-600" size={20} />
+                </div>
+              ) : results.length === 0 ? (
+                <div className="grid min-h-[340px] place-items-center text-center">
+                  <div>
+                    <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-xl border border-white/[0.07] bg-white/[0.04] text-zinc-500">
+                      <ImageIcon size={24} />
+                    </div>
+                    <p className="text-sm font-bold text-zinc-500">Nenhuma capa encontrada.</p>
                   </div>
-                  <span className="text-sm font-bold text-zinc-500">Nenhum resultado encontrado.</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 animate-in fade-in duration-300 sm:grid-cols-2">
+                  {results.map((item) => {
+                    const title = item.title || item.name || 'Capa';
+
+                    return (
+                      <button
+                        key={`${item.media_type || 'item'}-${item.id}-${item.backdrop_path}`}
+                        type="button"
+                        onClick={() => handleSelectImage(item)}
+                        className="group relative aspect-video overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.025] transition-all hover:-translate-y-0.5 hover:border-violet-300/35 hover:bg-white/[0.045]"
+                        title={title}
+                      >
+                        <img
+                          src={`https://image.tmdb.org/t/p/w780${item.backdrop_path}`}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          alt={title}
+                        />
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100">
+                          <span className="line-clamp-2 text-left text-xs font-black uppercase tracking-[0.08em] text-white sm:text-sm">
+                            {title}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
-          )}
+          </div>
         </div>
       </div>
-    </Modal>
+    </div>,
+    document.body
   );
 }

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Loader2, Search, User, X } from 'lucide-react';
 import { getTmdbSearch } from '../../services/api';
-import Modal from './Modal';
 
 export default function AvatarSelectorModal({ isOpen, onClose, onSelect }) {
   const [query, setQuery] = useState('');
@@ -9,14 +9,32 @@ export default function AvatarSelectorModal({ isOpen, onClose, onSelect }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const handleEsc = (event) => {
+      if (event.key === 'Escape') onClose();
+    };
+    const previousOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
     const delayDebounceFn = setTimeout(async () => {
       if (query.trim().length > 2) {
         setLoading(true);
         try {
           const data = await getTmdbSearch(query);
           const list = Array.isArray(data) ? data : (data.results || []);
-          setResults(list.filter((i) => i.poster_path || i.profile_path).slice(0, 12));
-        } catch (error) {
+          setResults(list.filter((item) => item.poster_path || item.profile_path).slice(0, 15));
+        } catch {
           setResults([]);
         } finally {
           setLoading(false);
@@ -25,73 +43,121 @@ export default function AvatarSelectorModal({ isOpen, onClose, onSelect }) {
         setResults([]);
       }
     }, 500);
+
     return () => clearTimeout(delayDebounceFn);
-  }, [query]);
+  }, [isOpen, query]);
 
   const handleSelectImage = (item) => {
     const path = item.profile_path || item.poster_path;
-    const fullUrl = `https://image.tmdb.org/t/p/w185${path}`;
+    const fullUrl = `https://image.tmdb.org/t/p/w500${path}`;
     onSelect(fullUrl);
     onClose();
   };
 
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Escolher Avatar" size="lg">
-      <div className="space-y-8 pt-2">
-        <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-100">
-          Imagens fornecidas pela TMDB. Este produto usa a API da TMDB, mas não é endossado nem certificado pela TMDB.
-        </div>
+  if (!isOpen) return null;
 
-        <div className="relative flex items-center">
-          <Search className="absolute left-5 text-zinc-500" size={20} />
-          <input
-            type="text"
-            autoFocus
-            className="w-full bg-black/40 border border-white/5 rounded-2xl pl-14 pr-5 py-4 text-white font-medium outline-none shadow-inner transition-all placeholder:text-zinc-600 focus:border-violet-500/50"
-            placeholder="Pesquise um personagem, ator ou filme..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[10000] overflow-y-auto bg-black/[0.84] px-3 py-5 backdrop-blur-xl animate-in fade-in duration-200 sm:px-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="avatar-modal-title"
+    >
+      <button type="button" className="absolute inset-0 cursor-default" aria-label="Fechar avatar" onClick={onClose} />
 
-        <div className="min-h-[300px]">
-          {loading ? (
-            <div className="flex h-64 animate-in fade-in flex-col items-center justify-center gap-4 duration-300">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-violet-600/30 border-t-violet-500 shadow-[0_0_30px_rgba(139,92,246,0.3)]"></div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Buscando imagens...</p>
+      <div className="relative z-10 mx-auto flex min-h-full w-full max-w-3xl items-center justify-center">
+        <div className="flex max-h-[86vh] w-full flex-col overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-[#0d0d11]/95 shadow-[0_30px_90px_rgba(0,0,0,0.65)] backdrop-blur-3xl animate-in zoom-in-95 duration-200">
+          <div className="flex items-center justify-between gap-4 border-b border-white/[0.06] px-5 py-4 sm:px-6">
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.22em] text-violet-300">Avatar</p>
+              <h2 id="avatar-modal-title" className="mt-1 truncate text-xl font-black tracking-[-0.03em] text-white">
+                Escolher avatar
+              </h2>
             </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-4 animate-in fade-in duration-500 sm:grid-cols-4 md:grid-cols-5">
-              {results.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleSelectImage(item)}
-                  className="group relative aspect-square overflow-hidden rounded-2xl border border-white/5 shadow-lg transition-all duration-300 hover:scale-105 hover:border-violet-500/50 hover:shadow-[0_10px_20px_rgba(0,0,0,0.5)]"
-                >
-                  <img
-                    src={`https://image.tmdb.org/t/p/w185${item.profile_path || item.poster_path}`}
-                    className="h-full w-full object-cover"
-                    alt={item.name || item.title}
-                  />
-                  <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 text-center opacity-0 transition-all duration-300 group-hover:opacity-100">
-                    <span className="line-clamp-2 text-[10px] font-black uppercase tracking-wider text-white drop-shadow-md">
-                      {item.name || item.title}
-                    </span>
+            <button
+              type="button"
+              onClick={onClose}
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.05] text-zinc-300 transition-colors hover:bg-white/[0.1] hover:text-white"
+              aria-label="Fechar modal"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="content-scrollbar min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+            <div className="mb-4 rounded-xl border border-cyan-300/15 bg-cyan-400/[0.08] px-4 py-3 text-xs font-semibold leading-relaxed text-cyan-100">
+              Imagens fornecidas pela TMDB. Este produto usa a API da TMDB, mas não é endossado nem certificado pela TMDB.
+            </div>
+
+            <div className="relative mb-5">
+              <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+              <input
+                type="text"
+                autoFocus
+                className="h-12 w-full rounded-xl border border-white/[0.08] bg-black/30 pl-12 pr-4 text-sm font-semibold text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-violet-300/35 focus:bg-black/40"
+                placeholder="Pesquise personagem, ator ou filme..."
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </div>
+
+            <div className="min-h-[320px]">
+              {loading ? (
+                <div className="grid min-h-[320px] place-items-center text-violet-200">
+                  <Loader2 size={30} className="animate-spin" />
+                </div>
+              ) : query.trim().length <= 2 ? (
+                <div className="grid min-h-[320px] place-items-center text-center">
+                  <div>
+                    <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-xl border border-white/[0.07] bg-white/[0.04] text-zinc-500">
+                      <Search size={24} />
+                    </div>
+                    <p className="text-sm font-bold text-zinc-500">Busque por uma pessoa, personagem ou título.</p>
                   </div>
-                </button>
-              ))}
-              {!loading && query.length > 2 && results.length === 0 && (
-                <div className="col-span-full flex animate-in zoom-in-95 flex-col items-center justify-center gap-3 py-16 duration-300">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/5 bg-white/5 shadow-inner">
-                    <Search className="text-zinc-600" size={20} />
+                </div>
+              ) : results.length === 0 ? (
+                <div className="grid min-h-[320px] place-items-center text-center">
+                  <div>
+                    <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-xl border border-white/[0.07] bg-white/[0.04] text-zinc-500">
+                      <User size={24} />
+                    </div>
+                    <p className="text-sm font-bold text-zinc-500">Nenhum resultado encontrado.</p>
                   </div>
-                  <span className="text-sm font-bold text-zinc-500">Nenhum resultado encontrado.</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-3 animate-in fade-in duration-300 sm:grid-cols-4 md:grid-cols-5">
+                  {results.map((item) => {
+                    const path = item.profile_path || item.poster_path;
+                    const title = item.name || item.title || 'Imagem';
+
+                    return (
+                      <button
+                        key={`${item.media_type || 'item'}-${item.id}-${path}`}
+                        type="button"
+                        onClick={() => handleSelectImage(item)}
+                        className="group relative aspect-square overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.025] transition-all hover:-translate-y-0.5 hover:border-violet-300/35 hover:bg-white/[0.045]"
+                        title={title}
+                      >
+                        <img
+                          src={`https://image.tmdb.org/t/p/w342${path}`}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          alt={title}
+                        />
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/55 to-transparent p-2 text-center opacity-0 transition-opacity group-hover:opacity-100">
+                          <span className="line-clamp-2 text-[10px] font-black uppercase tracking-[0.08em] text-white">
+                            {title}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
-          )}
+          </div>
         </div>
       </div>
-    </Modal>
+    </div>,
+    document.body
   );
 }
