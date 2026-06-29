@@ -37,7 +37,10 @@ export function useRouletteLogic() {
         if (listsRes.status === 'fulfilled') {
           setUserLists(Array.isArray(listsRes.value) ? listsRes.value : []);
         }
-      } catch (error) {}
+      } catch {
+        setGenres([]);
+        setUserLists([]);
+      }
     };
     fetchData();
   }, [user]);

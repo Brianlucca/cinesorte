@@ -63,8 +63,6 @@ function KnownForCarousel({ credits, user, encodedCurrentRoute }) {
     )
     .slice(0, 20);
 
-  if (unique.length === 0) return null;
-
   const checkScroll = () => {
     const el = scrollRef.current;
     if (!el) return;
@@ -90,6 +88,8 @@ function KnownForCarousel({ credits, user, encodedCurrentRoute }) {
       ro.disconnect();
     };
   }, [unique.length]);
+
+  if (unique.length === 0) return null;
 
   return (
     <div className="mt-10">

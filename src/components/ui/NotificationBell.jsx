@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Bell, Heart, UserPlus, TrendingUp, Layers, Info, CheckCheck, AtSign, X } from "lucide-react";
 import { getNotifications, getUnreadCount, markNotificationRead } from "../../services/api";
 
-export default function NotificationBell({ isMobile }) {
+export default function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
   const [badgeCount, setBadgeCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -34,14 +34,18 @@ export default function NotificationBell({ isMobile }) {
         lastSeenId.current = newest.id;
       }
       isInitialLoad.current = false;
-    } catch (e) {}
+    } catch {
+      setNotifications([]);
+    }
   };
 
   const loadUnreadCount = async () => {
     try {
       const response = await getUnreadCount();
       setBadgeCount(Number(response?.count) || 0);
-    } catch (e) {}
+    } catch {
+      setBadgeCount(0);
+    }
   };
 
   useEffect(() => {
@@ -101,7 +105,9 @@ export default function NotificationBell({ isMobile }) {
         await markNotificationRead(notif.id);
         setNotifications((prev) => prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n)));
         setBadgeCount((prev) => Math.max(0, prev - 1));
-      } catch (e) {}
+      } catch {
+        setBadgeCount((prev) => prev);
+      }
     }
 
     setIsOpen(false);
@@ -141,7 +147,9 @@ export default function NotificationBell({ isMobile }) {
 
     try {
       await Promise.all(unread.map((n) => markNotificationRead(n.id)));
-    } catch (e) {}
+    } catch {
+      setBadgeCount((prev) => prev);
+    }
   };
 
   const getIcon = (type) => {

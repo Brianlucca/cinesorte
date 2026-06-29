@@ -58,7 +58,11 @@ export function usePublicProfileLogic(username) {
                 setFollowsYou(followStatus.followsYou);
                 setCompatibility(matchData.percentage || 0);
               }
-            } catch {}
+            } catch {
+              setIsFollowing(false);
+              setFollowsYou(false);
+              setCompatibility(0);
+            }
           }
 
           setProfile(formattedProfile);
@@ -68,7 +72,7 @@ export function usePublicProfileLogic(username) {
           setHasMoreReviews(reviewsResponse?.hasMore || false);
           setReviewsCursor(reviewsResponse?.nextCursor || null);
         }
-      } catch (error) {
+      } catch {
         if (isMounted) {
           toast.error('Erro', 'Perfil não encontrado ou erro de conexão.');
         }
@@ -80,7 +84,7 @@ export function usePublicProfileLogic(username) {
     if (username) loadData();
 
     return () => { isMounted = false; };
-  }, [username, user?.username]);
+  }, [username, user, toast]);
 
   const loadMoreReviews = useCallback(async () => {
     if (!username || !reviewsCursor || loadingMoreReviews) return;
@@ -99,7 +103,7 @@ export function usePublicProfileLogic(username) {
     } finally {
       setLoadingMoreReviews(false);
     }
-  }, [username, reviewsCursor, loadingMoreReviews]);
+  }, [username, reviewsCursor, loadingMoreReviews, toast]);
 
   const handleFollow = async () => {
     if (!username || !user) return;

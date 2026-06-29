@@ -188,7 +188,9 @@ export function useDashboardLogic() {
           userGenres = userProfile.genreCounts || {};
           
           topGenresIdsString = getPreferredGenreString(userGenres);
-        } catch (e) {}
+        } catch {
+          topGenresIdsString = "";
+        }
 
         const cachedDay = localStorage.getItem(CACHE_DAY_KEY);
         const cachedWeek = localStorage.getItem(CACHE_WEEK_KEY);
@@ -206,7 +208,9 @@ export function useDashboardLogic() {
             ) {
               dayData = parsed.data;
             }
-          } catch (e) {}
+          } catch {
+            localStorage.removeItem(CACHE_DAY_KEY);
+          }
         }
         if (cachedWeek) {
           try {
@@ -219,7 +223,9 @@ export function useDashboardLogic() {
             ) {
               weekData = parsed.data;
             }
-          } catch (e) {}
+          } catch {
+            localStorage.removeItem(CACHE_WEEK_KEY);
+          }
         }
 
         const [resDay, resWeek] = await Promise.all([
@@ -348,7 +354,9 @@ export function useDashboardLogic() {
           forRent,
           inTheaters,
         });
-      } catch (error) {
+      } catch {
+        setHeroQueue([]);
+        setCurrentHero(null);
       } finally {
         if (isMounted.current) setLoading(false);
       }

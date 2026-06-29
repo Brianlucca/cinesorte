@@ -131,7 +131,11 @@ export function useMediaDetailsLogic() {
             setInteractions({ liked: false, watched: false });
           }
         }
-      } catch (error) {
+      } catch {
+        setMedia(null);
+        setReviews([]);
+        setProviders([]);
+        setSimilar([]);
       } finally {
         setLoading(false);
       }
@@ -159,7 +163,7 @@ export function useMediaDetailsLogic() {
         posterPath: media.poster_path,
         backdropPath: media.backdrop_path || '',
       });
-    } catch (error) {
+    } catch {
       setInteractions(prev => ({
         ...prev,
         [key]: previousState
@@ -203,7 +207,7 @@ export function useMediaDetailsLogic() {
           : r
       ));
       toast.success("Editado", "Sua publicação foi atualizada.");
-    } catch (error) {
+    } catch {
       toast.error("Erro", "Não foi possível editar.");
     }
   };
@@ -238,7 +242,7 @@ export function useMediaDetailsLogic() {
             return r;
         }));
         toast.success("Editado", "Resposta atualizada.");
-    } catch (error) {
+    } catch {
         toast.error("Erro", "Não foi possível editar resposta.");
     }
   };
@@ -248,7 +252,7 @@ export function useMediaDetailsLogic() {
       await deleteReview(reviewId);
       setReviews((prev) => prev.filter((r) => r.id !== reviewId));
       toast.success("Apagado", "Publicação removida.");
-    } catch (error) {
+    } catch {
       toast.error("Erro", "Não foi possível apagar.");
     }
   };
@@ -268,7 +272,7 @@ export function useMediaDetailsLogic() {
           return r;
       }));
       toast.success("Apagado", "Resposta removida.");
-    } catch (error) {
+    } catch {
       toast.error("Erro", "Não foi possível apagar a resposta.");
     }
   };
@@ -306,7 +310,7 @@ export function useMediaDetailsLogic() {
         isPublic: true,
       });
       await handleAddToList(listRes.listId);
-    } catch (error) {
+    } catch {
       toast.error("Erro", "Falha ao criar lista.");
     }
   };
@@ -329,7 +333,11 @@ export function useMediaDetailsLogic() {
     likeTimeouts.current[reviewId] = setTimeout(async () => {
         const clicks = likeClickCounts.current[reviewId] || 0;
         if (clicks % 2 !== 0) {
-            try { await toggleLikeReview(reviewId); } catch (error) {}
+            try {
+              await toggleLikeReview(reviewId);
+            } catch {
+              setReviews((prev) => prev);
+            }
         }
         delete likeClickCounts.current[reviewId];
         delete likeTimeouts.current[reviewId];
@@ -343,7 +351,7 @@ export function useMediaDetailsLogic() {
               if (r.id === reviewId) { return { ...r, replies: comments }; }
               return r;
           }));
-      } catch (error) {
+      } catch {
           toast.error("Erro", "Não foi possível carregar as respostas.");
       }
   };
