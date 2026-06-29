@@ -244,7 +244,7 @@ export default function AppLayout() {
 
       <div className="fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-white/[0.06] bg-zinc-950/85 px-4 py-3 backdrop-blur-xl md:hidden">
         <span className="flex items-center gap-2 text-lg font-black tracking-tight"><Film className="h-5 w-5 text-violet-500" /> CineSorte</span>
-        <div className="flex items-center gap-2"><NotificationBell isMobile /><button type="button" onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-zinc-400"><Menu /></button></div>
+        <button type="button" onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-zinc-400"><Menu /></button>
       </div>
 
       {isMobileMenuOpen && (
@@ -265,10 +265,10 @@ export default function AppLayout() {
       )}
 
       <main className="relative h-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-zinc-950">
-        <div className="absolute right-8 top-5 z-40 hidden md:flex"><NotificationBell isMobile /></div>
         <div className="h-full w-full pt-16 md:pt-0"><Outlet /></div>
       </main>
 
+      <NotificationBell />
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       {showTermsModal && <TermsModal />}
     </div>

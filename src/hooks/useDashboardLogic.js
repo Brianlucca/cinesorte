@@ -235,6 +235,8 @@ export function useDashboardLogic() {
 
         const finalDay = Array.isArray(resDay) ? resDay : resDay.results || [];
         const finalWeek = Array.isArray(resWeek) ? resWeek : resWeek.results || [];
+        const sortedDay = uniqueById(prioritizeContent(finalDay, userGenres));
+        const sortedWeek = uniqueById(prioritizeContent(finalWeek, userGenres));
 
         if (!dayData && finalDay.length > 0)
           localStorage.setItem(
@@ -246,6 +248,26 @@ export function useDashboardLogic() {
             CACHE_WEEK_KEY,
             JSON.stringify({ timestamp: Date.now(), data: finalWeek }),
           );
+
+        const initialHeroes = sortedDay
+          .filter((i) => i.backdrop_path && !i.trailerKey)
+          .slice(0, 20);
+        const fallbackHeroes = sortedWeek
+          .filter((i) => i.backdrop_path && !i.trailerKey)
+          .slice(0, 20);
+        const firstHeroPool = initialHeroes.length > 0 ? initialHeroes : fallbackHeroes;
+
+        if (firstHeroPool.length > 0) {
+          setHeroQueue(firstHeroPool);
+          setCurrentHero(firstHeroPool[Math.floor(Math.random() * firstHeroPool.length)]);
+        }
+
+        setData((previous) => ({
+          ...previous,
+          trendingDay: sortedDay,
+          trendingWeek: sortedWeek,
+        }));
+        if (isMounted.current) setLoading(false);
 
         const results = await Promise.allSettled([
           getLatestTrailers(),
@@ -278,9 +300,6 @@ export function useDashboardLogic() {
         const fallbackGenreSeries = uniqueById(results[10].status === "fulfilled" ? results[10].value : []);
         const popularMovies = uniqueById(results[11].status === "fulfilled" ? results[11].value : []);
         const popularSeries = uniqueById(results[12].status === "fulfilled" ? results[12].value : []);
-
-        const sortedDay = uniqueById(prioritizeContent(finalDay, userGenres));
-        const sortedWeek = uniqueById(prioritizeContent(finalWeek, userGenres));
 
         const potentialHeroes = [...recMovies, ...sortedDay].filter(
           (i) => i.backdrop_path && !i.trailerKey,
