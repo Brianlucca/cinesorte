@@ -104,10 +104,10 @@ const PersonInfo = ({ details }) => {
   );
 };
 
-const InfoItem = ({ icon: Icon, label, value, highlight }) => (
+const InfoItem = ({ icon, label, value, highlight }) => (
     <div className="flex justify-between items-center border-b border-white/5 pb-4">
         <span className="text-zinc-500 text-xs font-semibold uppercase tracking-widest flex gap-2 items-center">
-            <Icon size={14} /> {label}
+            {React.createElement(icon, { size: 14 })} {label}
         </span>
         <span className={`text-sm font-medium text-right max-w-[60%] ${highlight ? 'text-red-400' : 'text-white'}`}>
             {value}

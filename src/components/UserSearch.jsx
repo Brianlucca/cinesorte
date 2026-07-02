@@ -31,7 +31,7 @@ const UserSearch = () => {
         try {
           const data = await searchUsers(query);
           setResults(data);
-        } catch (error) {
+        } catch {
           setResults([]);
         } finally {
           setLoading(false);

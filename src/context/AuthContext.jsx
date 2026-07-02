@@ -58,7 +58,9 @@ export function AuthProvider({ children }) {
       const userDetails = await getMe();
       setUser(userDetails);
       if (userDetails.termsVersion !== CURRENT_TERMS_VERSION) setShowTermsModal(true);
-    } catch {}
+    } catch {
+      setShowTermsModal(false);
+    }
     return data;
   }
 
@@ -72,7 +74,9 @@ export function AuthProvider({ children }) {
       const userDetails = await getMe();
       setUser(userDetails);
       if (userDetails.termsVersion !== CURRENT_TERMS_VERSION) setShowTermsModal(true);
-    } catch {}
+    } catch {
+      setShowTermsModal(false);
+    }
     return data;
   }
 
@@ -84,7 +88,9 @@ export function AuthProvider({ children }) {
   async function logout() {
     try {
       await apiLogout();
-    } catch {}
+    } catch {
+      setShowTermsModal(false);
+    }
     finally {
       setUser(null);
       setShowTermsModal(false);
@@ -102,7 +108,9 @@ export function AuthProvider({ children }) {
       await apiAcceptTerms(CURRENT_TERMS_VERSION);
       setShowTermsModal(false);
       setUser((prev) => ({ ...prev, termsVersion: CURRENT_TERMS_VERSION }));
-    } catch {}
+    } catch {
+      setShowTermsModal(true);
+    }
   }
 
   async function deleteAccount(confirmText) {

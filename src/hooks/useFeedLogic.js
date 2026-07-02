@@ -209,7 +209,6 @@ export function useFeedLogic() {
 
       setHasNewPosts(hasNewer);
     } catch {
-      // Polling is best-effort; the current feed stays visible on failure.
     }
   }, [feedType, reviews, loading, loadingMore]);
 

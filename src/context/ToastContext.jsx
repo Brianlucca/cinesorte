@@ -5,7 +5,11 @@ const ToastContext = createContext();
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
-  const [levelUpData, setLevelUpData] = useState(null);
+  const [, setLevelUpData] = useState(null);
+
+  const removeToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }, []);
 
   const addToast = useCallback(({ type, title, description }) => {
     const id = Math.random().toString(36).substr(2, 9);
@@ -14,18 +18,10 @@ export function ToastProvider({ children }) {
     setTimeout(() => {
       removeToast(id);
     }, 4000);
-  }, []);
-
-  const removeToast = useCallback((id) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  }, []);
+  }, [removeToast]);
 
   const triggerLevelUp = useCallback((levelTitle) => {
     setLevelUpData(levelTitle);
-  }, []);
-
-  const closeLevelUp = useCallback(() => {
-    setLevelUpData(null);
   }, []);
 
   const toast = {

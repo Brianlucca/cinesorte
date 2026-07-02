@@ -4,12 +4,21 @@ import { useNavigate } from "react-router-dom";
 import { Bell, Heart, UserPlus, TrendingUp, Layers, Info, CheckCheck, AtSign, X } from "lucide-react";
 import { getNotifications, getUnreadCount, markNotificationRead } from "../../services/api";
 
-export default function NotificationBell({ isMobile }) {
+const NOTIFICATION_CACHE_TTL = 30000;
+const notificationCache = {
+  items: [],
+  badgeCount: 0,
+  fetchedAt: 0,
+};
+
+export default function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
   const [badgeCount, setBadgeCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [popupNotif, setPopupNotif] = useState(null);
   const [anchorRect, setAnchorRect] = useState(null);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsLoaded, setNotificationsLoaded] = useState(false);
 
   const buttonRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -18,30 +27,62 @@ export default function NotificationBell({ isMobile }) {
   const lastSeenId = useRef(null);
   const navigate = useNavigate();
 
-  const loadNotifications = async () => {
+  const applyNotifications = (list, { allowPopup = true } = {}) => {
+    const unreadCount = list.filter((item) => !item.read).length;
+
+    setNotifications(list);
+    setNotificationsLoaded(true);
+    setBadgeCount(unreadCount);
+    notificationCache.items = list;
+    notificationCache.badgeCount = unreadCount;
+    notificationCache.fetchedAt = Date.now();
+
+    if (list.length > 0) {
+      const newest = list[0];
+      if (allowPopup && !isInitialLoad.current && lastSeenId.current !== newest.id && !newest.read) {
+        setPopupNotif(newest);
+        setTimeout(() => setPopupNotif(null), 6000);
+      }
+      lastSeenId.current = newest.id;
+    }
+    isInitialLoad.current = false;
+  };
+
+  const loadNotifications = async ({ force = false, allowPopup = true } = {}) => {
+    const hasFreshCache = Date.now() - notificationCache.fetchedAt < NOTIFICATION_CACHE_TTL;
+    if (!force && hasFreshCache) {
+      applyNotifications(notificationCache.items, { allowPopup: false });
+      return;
+    }
+
+    setNotificationsLoading(true);
     try {
       const data = await getNotifications();
       const list = Array.isArray(data) ? data : [];
-      setNotifications(list);
-      setBadgeCount(list.filter((item) => !item.read).length);
-
-      if (list.length > 0) {
-        const newest = list[0];
-        if (!isInitialLoad.current && lastSeenId.current !== newest.id && !newest.read) {
-          setPopupNotif(newest);
-          setTimeout(() => setPopupNotif(null), 6000);
-        }
-        lastSeenId.current = newest.id;
-      }
-      isInitialLoad.current = false;
-    } catch (e) {}
+      applyNotifications(list, { allowPopup });
+    } catch {
+      setNotifications([]);
+      setNotificationsLoaded(true);
+    } finally {
+      setNotificationsLoading(false);
+    }
   };
 
-  const loadUnreadCount = async () => {
+  const loadUnreadCount = async ({ force = false } = {}) => {
+    const hasFreshCache = Date.now() - notificationCache.fetchedAt < NOTIFICATION_CACHE_TTL;
+    if (!force && hasFreshCache) {
+      setBadgeCount(notificationCache.badgeCount);
+      return;
+    }
+
     try {
       const response = await getUnreadCount();
-      setBadgeCount(Number(response?.count) || 0);
-    } catch (e) {}
+      const count = Number(response?.count) || 0;
+      setBadgeCount(count);
+      notificationCache.badgeCount = count;
+    } catch {
+      setBadgeCount(0);
+    }
   };
 
   useEffect(() => {
@@ -73,12 +114,18 @@ export default function NotificationBell({ isMobile }) {
   }, [isOpen, popupNotif]);
 
   const handleOpen = () => {
-    setIsOpen(!isOpen);
-    if (!isOpen) {
-      loadNotifications();
+    const nextOpen = !isOpen;
+    if (buttonRef.current) {
+      setAnchorRect(buttonRef.current.getBoundingClientRect());
+    }
+
+    setIsOpen(nextOpen);
+
+    if (nextOpen) {
       setPopupNotif(null);
+      loadNotifications({ force: true, allowPopup: false });
     } else {
-      loadUnreadCount();
+      loadUnreadCount({ force: true });
     }
   };
 
@@ -101,7 +148,9 @@ export default function NotificationBell({ isMobile }) {
         await markNotificationRead(notif.id);
         setNotifications((prev) => prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n)));
         setBadgeCount((prev) => Math.max(0, prev - 1));
-      } catch (e) {}
+      } catch {
+        setBadgeCount((prev) => prev);
+      }
     }
 
     setIsOpen(false);
@@ -141,7 +190,9 @@ export default function NotificationBell({ isMobile }) {
 
     try {
       await Promise.all(unread.map((n) => markNotificationRead(n.id)));
-    } catch (e) {}
+    } catch {
+      setBadgeCount((prev) => prev);
+    }
   };
 
   const getIcon = (type) => {
@@ -195,7 +246,7 @@ export default function NotificationBell({ isMobile }) {
 
   return (
     <>
-      <div className="relative z-[100060] md:fixed md:right-8 md:top-6 md:z-[100060]">
+      <div className="fixed right-16 top-3 z-[100060] md:right-8 md:top-6">
         <button
           ref={buttonRef}
           onClick={handleOpen}
@@ -261,6 +312,13 @@ export default function NotificationBell({ isMobile }) {
             </div>
 
             <div className="max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
+              {notificationsLoading && (
+                <div className="flex items-center gap-3 border-b border-white/5 p-4 text-sm text-zinc-400">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-violet-500/30 border-t-violet-400" />
+                  Carregando notificações
+                </div>
+              )}
+
               {notifications.length > 0 ? (
                 notifications.map((notif) => (
                   <div
@@ -276,9 +334,9 @@ export default function NotificationBell({ isMobile }) {
                     {!notif.read && <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />}
                   </div>
                 ))
-              ) : (
+              ) : !notificationsLoading && notificationsLoaded ? (
                 <div className="p-8 text-center text-sm text-zinc-500">Nenhuma notificação.</div>
-              )}
+              ) : null}
             </div>
           </div>,
           document.body

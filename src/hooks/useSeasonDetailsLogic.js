@@ -21,7 +21,7 @@ export function useSeasonDetailsLogic() {
         ]);
         setSeasonData(season);
         setTvShow(show);
-      } catch (error) {
+      } catch {
         toast.error('Erro', 'Não foi possível carregar os episódios.');
       } finally {
         setLoading(false);

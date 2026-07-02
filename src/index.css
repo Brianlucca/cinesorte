@@ -12,11 +12,10 @@ body {
   padding: 0;
   width: 100vw;
   height: 100vh;
-  overflow-x: hidden; /* Previne rolagem lateral */
-  background-color: #000000; /* Garante fundo preto base */
+  overflow-x: hidden;
+  background-color: #000000;
 }
 
-/* Remove scrollbar padrão para dar sensação de App */
 ::-webkit-scrollbar {
   width: 8px;
 }

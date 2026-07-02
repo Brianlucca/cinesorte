@@ -10,330 +10,286 @@ import BackgroundSelectorModal from '../../components/ui/BackgroundSelectorModal
 import UserListModal from '../../components/ui/UserListModal';
 import UserSearch from '../../components/UserSearch';
 import Modal from '../../components/ui/Modal';
-import { 
-  Activity, 
-  MessageSquare, 
-  ArrowDownCircle, 
-  BookOpen, 
-  Trophy, 
-  Star, 
-  Info, 
-  Award, 
-  Zap, 
-  Crown, 
-  ShieldCheck, 
-  Flame, 
-  Play, 
-  PenTool, 
-  Mic2, 
-  Feather, 
-  Eye, 
-  Sparkles, 
-  CheckCircle, 
-  Heart 
+import {
+  Award,
+  BookOpen,
+  CheckCircle,
+  Crown,
+  Eye,
+  Feather,
+  Flame,
+  Heart,
+  Info,
+  MessageSquare,
+  Mic2,
+  PenTool,
+  Play,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Trophy,
+  Zap,
 } from 'lucide-react';
 
-const TROPHY_ICONS = { Award, Zap, Crown, ShieldCheck, Flame, Play, Star, PenTool, Mic2, Feather, Eye };
+const TROPHY_ICONS = {
+  Award,
+  Zap,
+  Crown,
+  ShieldCheck,
+  Flame,
+  Play,
+  Star,
+  PenTool,
+  Mic2,
+  Feather,
+  Eye,
+};
+
+const getXPNeeded = (level) => 100 + (level - 1) * 75;
+
+function getLevelStyle(title) {
+  switch (title) {
+    case 'Divindade do Cinema':
+      return { text: 'text-cyan-300', bar: 'bg-cyan-400', border: 'border-cyan-400/25', glow: 'shadow-cyan-500/10' };
+    case 'Entidade Cinematografica':
+    case 'Entidade Cinematográfica':
+      return { text: 'text-purple-300', bar: 'bg-purple-400', border: 'border-purple-400/25', glow: 'shadow-purple-500/10' };
+    case 'Oraculo da Setima Arte':
+    case 'Oráculo da Sétima Arte':
+      return { text: 'text-emerald-300', bar: 'bg-emerald-400', border: 'border-emerald-400/25', glow: 'shadow-emerald-500/10' };
+    case 'Mestre da Critica':
+    case 'Mestre da Crítica':
+      return { text: 'text-amber-300', bar: 'bg-amber-400', border: 'border-amber-400/25', glow: 'shadow-amber-500/10' };
+    case 'Cinefilo Experiente':
+    case 'Cinéfilo Experiente':
+      return { text: 'text-blue-300', bar: 'bg-blue-400', border: 'border-blue-400/25', glow: 'shadow-blue-500/10' };
+    case 'Cinefilo':
+    case 'Cinéfilo':
+      return { text: 'text-indigo-300', bar: 'bg-indigo-400', border: 'border-indigo-400/25', glow: 'shadow-indigo-500/10' };
+    case 'Critico Iniciante':
+    case 'Crítico Iniciante':
+      return { text: 'text-zinc-200', bar: 'bg-zinc-400', border: 'border-white/[0.08]', glow: 'shadow-black/20' };
+    default:
+      return { text: 'text-violet-300', bar: 'bg-violet-400', border: 'border-violet-400/20', glow: 'shadow-violet-500/10' };
+  }
+}
 
 export default function Profile() {
   const { user, data, ui, modals, actions } = useProfileLogic();
   const [isXpInfoOpen, setIsXpInfoOpen] = useState(false);
 
-  if (ui.loading) return (
-    <div className="h-screen flex flex-col items-center justify-center bg-zinc-950 gap-4 animate-in fade-in duration-500">
-        <div className="w-12 h-12 border-4 border-violet-600/30 border-t-violet-500 rounded-full animate-spin"></div>
-        <p className="text-zinc-500 font-bold text-sm uppercase tracking-widest">Carregando perfil...</p>
-    </div>
-  );
+  if (ui.loading) {
+    return (
+      <div className="grid h-screen place-items-center bg-zinc-950">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-violet-600/30 border-t-violet-400" />
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-600">Carregando perfil</p>
+        </div>
+      </div>
+    );
+  }
 
-  const getXPNeeded = (level) => 100 + (level - 1) * 75;
   const xpRequired = getXPNeeded(user.level || 1);
   const progressPercent = Math.min(Math.round(((user.xp || 0) / xpRequired) * 100), 100);
-
-  const getLevelStyle = (title) => {
-    switch (title) {
-      case "Divindade do Cinema": return { text: "text-cyan-400", bar: "bg-cyan-500", border: "border-cyan-500/30", shadow: "shadow-[0_0_20px_rgba(6,182,212,0.15)]" };
-      case "Entidade Cinematográfica": return { text: "text-purple-400", bar: "bg-purple-500", border: "border-purple-500/30", shadow: "shadow-[0_0_20px_rgba(168,85,247,0.15)]" };
-      case "Oráculo da Sétima Arte": return { text: "text-emerald-400", bar: "bg-emerald-500", border: "border-emerald-500/30", shadow: "shadow-[0_0_20px_rgba(16,185,129,0.15)]" };
-      case "Mestre da Crítica": return { text: "text-amber-500", bar: "bg-amber-500", border: "border-amber-500/20", shadow: "shadow-[0_0_15px_rgba(245,158,11,0.1)]" };
-      case "Cinéfilo Experiente": return { text: "text-blue-400", bar: "bg-blue-500", border: "border-blue-500/20", shadow: "shadow-[0_0_15px_rgba(59,130,246,0.1)]" };
-      case "Cinéfilo": return { text: "text-indigo-400", bar: "bg-indigo-500", border: "border-indigo-500/20", shadow: "shadow-lg" };
-      case "Crítico Iniciante": return { text: "text-zinc-300", bar: "bg-zinc-500", border: "border-zinc-500/20", shadow: "shadow-md" };
-      default: return { text: "text-zinc-100", bar: "bg-violet-600", border: "border-white/5", shadow: "shadow-sm" };
-    }
-  };
-
-  const style = getLevelStyle(user.levelTitle);
+  const levelStyle = getLevelStyle(user.levelTitle);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500 pt-8 px-4 md:px-8 pb-20 relative">
-        
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-6">
-            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight flex items-center gap-3">
-              <span className="w-1.5 h-8 bg-violet-500 rounded-full"></span>
-              Meu Perfil
-            </h1>
-            <div className="w-full md:w-auto">
-                <UserSearch />
-            </div>
-        </div>
+    <div className="relative min-h-screen overflow-hidden bg-[#08080b] pb-24 text-white animate-in fade-in duration-700">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(124,58,237,0.10),transparent_30%),radial-gradient(circle_at_88%_18%,rgba(14,165,233,0.055),transparent_28%)]" />
 
-        <ProfileHeader 
-            user={user} 
-            onEditAvatar={() => actions.openModal('avatar')}
-            onEditBackground={() => actions.openModal('background')}
-            onShowFollowers={actions.openFollowersModal}
-            onShowFollowing={actions.openFollowingModal}
+      <div className="relative mx-auto w-full max-w-[1600px] space-y-7 px-4 pt-8 sm:px-6 md:px-10 md:pt-10 xl:px-14">
+        <header className="flex flex-col justify-between gap-6 border-b border-white/[0.07] pb-6 md:flex-row md:items-end md:pb-8">
+          <div>
+            <div className="mb-3 flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.24em] text-violet-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-violet-400 shadow-[0_0_12px_rgba(167,139,250,0.8)]" />
+              Central pessoal
+            </div>
+            <h1 className="text-3xl font-black leading-tight tracking-[-0.04em] text-white sm:text-4xl">Meu Perfil</h1>
+          </div>
+          <div className="w-full md:w-[360px]">
+            <UserSearch />
+          </div>
+        </header>
+
+        <ProfileHeader
+          user={user}
+          onEditAvatar={() => actions.openModal('avatar')}
+          onEditBackground={() => actions.openModal('background')}
+          onShowFollowers={actions.openFollowersModal}
+          onShowFollowing={actions.openFollowingModal}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-stretch">
-            <div className={`bg-zinc-950/80 backdrop-blur-md p-6 rounded-3xl border flex flex-col justify-between relative overflow-hidden group transition-all duration-300 min-h-[200px] min-w-0 ${style.border} ${style.shadow}`}>
-                <div className="relative z-10 min-w-0">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className={`w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/5 ${style.text}`}>
-                            <Trophy size={24} />
-                        </div>
-                        <button onClick={() => setIsXpInfoOpen(true)} className="p-2 rounded-lg bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 transition-colors border border-white/5">
-                            <Info size={18} />
-                        </button>
-                    </div>
-                    <p className="text-sm font-black text-zinc-500 tracking-widest mb-1">Nível {user.level || 1}</p>
-                    <h3 className={`text-xl font-black leading-tight break-words pr-4 tracking-tight ${style.text}`}>
-                        {user.levelTitle || 'Espectador'}
-                    </h3>
+        <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-4">
+          <section className={`group relative min-h-[180px] overflow-hidden rounded-[1.5rem] border bg-[#0d0d11]/95 p-4 shadow-2xl md:p-5 ${levelStyle.border}`}>
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(139,92,246,0.16),transparent_45%)]" />
+            <div className="relative flex h-full flex-col justify-between">
+              <div>
+                <div className="mb-4 flex items-center justify-between">
+                  <span className={`grid h-10 w-10 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.045] ${levelStyle.text}`}>
+                    <Trophy size={19} />
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsXpInfoOpen(true)}
+                    className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-zinc-500 transition-colors hover:bg-white/[0.08] hover:text-white"
+                    aria-label="Ver sistema de XP"
+                  >
+                    <Info size={16} />
+                  </button>
                 </div>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">Nível {user.level || 1}</span>
+                <h2 className={`mt-1 break-words pr-5 text-base font-black leading-tight tracking-[-0.015em] sm:text-lg ${levelStyle.text}`}>
+                  {user.levelTitle || 'Espectador'}
+                </h2>
+              </div>
 
-                <div className="relative z-10 space-y-2 mt-6">
-                    <div className="flex justify-between text-sm font-bold">
-                        <span className="text-zinc-500 tracking-wider text-xs">Progresso</span>
-                        <span className="text-zinc-300 text-xs tracking-wider">{user.xp || 0} / {xpRequired} XP</span>
-                    </div>
-                    <div className="w-full h-2 bg-zinc-900 rounded-full overflow-hidden border border-white/5">
-                        <div className={`h-full ${style.bar} rounded-full transition-all duration-1000 relative`} style={{ width: `${progressPercent}%` }}>
-                          <div className="absolute inset-0 bg-white/10" />
-                        </div>
-                    </div>
+              <div className="mt-5">
+                <div className="mb-2 flex justify-between text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">
+                  <span>Progresso</span>
+                  <span className="text-zinc-300">{user.xp || 0} / {xpRequired} XP</span>
                 </div>
-                <Star className={`absolute -right-4 -bottom-4 w-28 h-28 -rotate-12 opacity-5 transition-transform duration-500 group-hover:scale-110 ${style.text}`} />
+                <div className="h-2 overflow-hidden rounded-full border border-white/[0.06] bg-black/35">
+                  <div className={`relative h-full rounded-full ${levelStyle.bar} transition-all duration-1000`} style={{ width: `${progressPercent}%` }}>
+                    <span className="absolute inset-0 bg-white/15" />
+                  </div>
+                </div>
+              </div>
             </div>
+            <Star className={`absolute -bottom-5 -right-5 h-24 w-24 -rotate-12 opacity-5 transition-transform duration-700 group-hover:scale-110 ${levelStyle.text}`} />
+          </section>
 
-            <div className="lg:col-span-3">
-                <StatsOverview 
-                    totalXp={user.totalXp}
-                    watchedCount={user.watchedCount || data.watchedCount}
-                    likesCount={user.likesCount || data.likesCount}
-                    reviewsCount={user.reviewsCount || data.reviewsCount}
-                />
-            </div>
+          <div className="lg:col-span-3">
+            <StatsOverview
+              totalXp={user.totalXp}
+              watchedCount={user.watchedCount || data.watchedCount}
+              likesCount={user.likesCount || data.likesCount}
+              reviewsCount={user.reviewsCount || data.reviewsCount}
+            />
+          </div>
         </div>
 
-        {user.trophies && user.trophies.length > 0 && (
-            <div className="bg-zinc-950/50 backdrop-blur-md border border-white/5 rounded-3xl p-6 shadow-xl">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-violet-500/10 rounded-lg border border-violet-500/20">
-                      <Award className="text-violet-400" size={20} />
-                    </div>
-                    <h2 className="text-xl font-bold text-white tracking-tight">Estante de Troféus</h2>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    {user.trophies.map((trophy) => {
-                        const Icon = TROPHY_ICONS[trophy.icon] || Trophy;
-                        return (
-                            <div key={trophy.id} className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl flex flex-col items-center text-center group hover:border-violet-500/30 transition-all duration-300 cursor-default">
-                                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400 mb-3 group-hover:text-violet-400 group-hover:bg-violet-500/10 group-hover:scale-110 transition-all duration-300 border border-white/5">
-                                    <Icon size={24} />
-                                </div>
-                                <span className="text-xs font-bold text-zinc-300 leading-tight">{trophy.title}</span>
-                            </div>
-                        );
-                    })}
-                </div>
+        {user.trophies?.length > 0 && (
+          <section className="relative overflow-hidden rounded-[1.5rem] border border-white/[0.07] bg-[#0d0d11]/90 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.20)] backdrop-blur-xl md:p-5">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(245,158,11,0.08),transparent_36%)]" />
+            <div className="relative mb-4 flex items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center rounded-xl border border-violet-400/15 bg-violet-500/10 text-violet-300">
+                <Award size={17} />
+              </span>
+              <div>
+                <span className="text-[9px] font-black uppercase tracking-[0.22em] text-zinc-500">Conquistas</span>
+                <h2 className="text-base font-black text-white sm:text-lg">Estante de Troféus</h2>
+              </div>
             </div>
+            <div className="relative grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+              {user.trophies.map((trophy) => {
+                const Icon = TROPHY_ICONS[trophy.icon] || Trophy;
+                return (
+                  <div key={trophy.id} className="group flex min-h-[116px] cursor-default flex-col items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.025] p-3 text-center transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-400/30 hover:bg-white/[0.045]">
+                    <div className="mb-2.5 grid h-10 w-10 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.04] text-zinc-400 transition-all duration-300 group-hover:scale-105 group-hover:bg-violet-500/10 group-hover:text-violet-300">
+                      <Icon size={18} />
+                    </div>
+                    <span className="line-clamp-2 text-[11px] font-bold leading-snug text-zinc-300">{trophy.title}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         )}
 
-        <div className="bg-zinc-950/50 backdrop-blur-md rounded-3xl p-6 border border-white/5 shadow-xl min-h-[500px]">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-2 mb-6">
-                <div className="flex gap-6 overflow-x-auto scrollbar-hide">
-                    <button onClick={() => actions.setActiveTab('activity')} className={`flex items-center gap-2 pb-4 text-base font-bold transition-all border-b-2 whitespace-nowrap ${ui.activeTab === 'activity' ? 'text-white border-violet-500' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}>
-                        <Activity size={18} /> Atividade
-                    </button>
-                    <button onClick={() => actions.setActiveTab('reviews')} className={`flex items-center gap-2 pb-4 text-base font-bold transition-all border-b-2 whitespace-nowrap ${ui.activeTab === 'reviews' ? 'text-white border-violet-500' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}>
-                        <MessageSquare size={18} /> Reviews
-                    </button>
-                    <button onClick={() => actions.setActiveTab('diary')} className={`flex items-center gap-2 pb-4 text-base font-bold transition-all border-b-2 whitespace-nowrap ${ui.activeTab === 'diary' ? 'text-white border-violet-500' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}>
-                        <BookOpen size={18} /> Diário
-                    </button>
-                </div>
-                {ui.activeTab === 'activity' && (
-                    <div className="flex flex-wrap gap-2 pb-4 md:pb-0">
-                        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-                            <button onClick={() => actions.setActivityFilter('all')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${ui.activityFilter === 'all' ? 'bg-white text-black border-transparent' : 'bg-black/40 text-zinc-500 border-white/5 hover:text-white'}`}>Tudo</button>
-                            <button onClick={() => actions.setActivityFilter('watched')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${ui.activityFilter === 'watched' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-black/40 text-zinc-500 border-white/5 hover:text-white'}`}>Assistidos</button>
-                            <button onClick={() => actions.setActivityFilter('like')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${ui.activityFilter === 'like' ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-black/40 text-zinc-500 border-white/5 hover:text-white'}`}>Curtidas</button>
-                        </div>
-                        <div className="flex gap-2 overflow-x-auto scrollbar-hide border-l border-white/10 pl-2">
-                            <button onClick={() => actions.setActivityOrder('desc')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${ui.activityOrder === 'desc' ? 'bg-violet-500/20 text-violet-300 border-violet-500/30' : 'bg-black/40 text-zinc-500 border-white/5 hover:text-white'}`}>Recentes</button>
-                            <button onClick={() => actions.setActivityOrder('asc')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${ui.activityOrder === 'asc' ? 'bg-violet-500/20 text-violet-300 border-violet-500/30' : 'bg-black/40 text-zinc-500 border-white/5 hover:text-white'}`}>Antigos</button>
-                        </div>
-                    </div>
-                )}
-            </div>
-            {(ui.activeTab === 'activity' || ui.activeTab === 'diary') && (
-                <p className="mb-6 rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 text-xs font-medium leading-relaxed text-zinc-500">
-                    As datas mostram o dia em que o conteúdo foi marcado como assistido ou curtido.
-                </p>
-            )}
-            
-            <div className="animate-in fade-in duration-300">
-              {ui.activeTab === 'activity' && <ActivityFeed interactions={data.displayItems} />}
-              {ui.activeTab === 'reviews' && <ReviewsList reviews={data.displayItems} />}
-              {ui.activeTab === 'diary' && <Diary items={data.diaryItems} />}
+        <section className="min-h-[500px] overflow-hidden rounded-[1.5rem] border border-white/[0.07] bg-[#0d0d11]/90 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.22)] backdrop-blur-xl md:p-5">
+          <div className="mb-5 flex flex-col justify-between gap-4 border-b border-white/[0.06] pb-3 md:flex-row md:items-center">
+            <div className="scrollbar-hide flex gap-5 overflow-x-auto">
+              <button onClick={() => actions.setActiveTab('likes')} className={`flex items-center gap-2 whitespace-nowrap border-b-2 pb-3 text-sm font-bold transition-all ${ui.activeTab === 'likes' ? 'border-red-400 text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}>
+                <Heart size={18} className={ui.activeTab === 'likes' ? 'fill-red-400 text-red-400' : ''} /> Curtidas
+              </button>
+              <button onClick={() => actions.setActiveTab('reviews')} className={`flex items-center gap-2 whitespace-nowrap border-b-2 pb-3 text-sm font-bold transition-all ${ui.activeTab === 'reviews' ? 'border-violet-500 text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}>
+                <MessageSquare size={18} /> Reviews
+              </button>
+              <button onClick={() => actions.setActiveTab('diary')} className={`flex items-center gap-2 whitespace-nowrap border-b-2 pb-3 text-sm font-bold transition-all ${ui.activeTab === 'diary' ? 'border-violet-500 text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}>
+                <BookOpen size={18} /> Diário
+              </button>
             </div>
 
-            {ui.hasMore && ui.activeTab !== 'diary' && (
-                <div className="flex justify-center pt-8">
-                    <button onClick={actions.loadMore} className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold text-sm transition-all border border-white/10 shadow-sm active:scale-95">
-                        <ArrowDownCircle size={18} /> Carregar Mais
-                    </button>
+          </div>
+
+          {(ui.activeTab === 'likes' || ui.activeTab === 'diary') && (
+            <p className="mb-6 rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-xs font-medium leading-relaxed text-zinc-500">
+              {ui.activeTab === 'likes'
+                ? 'Somente os títulos curtidos aparecem aqui, ordenados pelo momento em que você curtiu.'
+                : 'A data informada é a data do dia que você marcou o filme/série como assistido.'}
+            </p>
+          )}
+
+          <div className="animate-in fade-in duration-300">
+            {ui.activeTab === 'likes' && <ActivityFeed interactions={data.displayItems} />}
+            {ui.activeTab === 'reviews' && <ReviewsList reviews={data.displayItems} />}
+            {ui.activeTab === 'diary' && <Diary items={data.diaryItems} />}
+          </div>
+
+        </section>
+      </div>
+
+      <AvatarSelectorModal isOpen={modals.avatar} onClose={() => actions.closeModal('avatar')} onSelect={actions.updateAvatar} />
+      <BackgroundSelectorModal isOpen={modals.background} onClose={() => actions.closeModal('background')} onSelect={actions.updateBackground} />
+      <UserListModal isOpen={modals.followers} onClose={() => actions.closeModal('followers')} title="Seguidores" users={data.followersList} loading={ui.loadingLists} />
+      <UserListModal isOpen={modals.following} onClose={() => actions.closeModal('following')} title="Seguindo" users={data.followingList} loading={ui.loadingLists} />
+
+      <Modal isOpen={isXpInfoOpen} onClose={() => setIsXpInfoOpen(false)} title="Sistema de Progressão" size="md">
+        <div className="space-y-8 p-1">
+          <section>
+            <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Como ganhar XP</h3>
+            <div className="grid gap-3">
+              {[
+                { label: 'Escrever review', xp: '+20 XP', icon: MessageSquare, tone: 'text-violet-300 bg-violet-500/10 border-violet-400/15' },
+                { label: 'Marcar assistido', xp: '+10 XP', icon: CheckCircle, tone: 'text-emerald-300 bg-emerald-500/10 border-emerald-400/15' },
+                { label: 'Dar curtida', xp: '+5 XP', icon: Heart, tone: 'text-red-300 bg-red-500/10 border-red-400/15' },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.025] p-4">
+                  <div className="flex items-center gap-3">
+                    <span className={`grid h-10 w-10 place-items-center rounded-xl border ${item.tone}`}>
+                      <item.icon size={17} />
+                    </span>
+                    <span className="text-sm font-bold text-zinc-200">{item.label}</span>
+                  </div>
+                  <span className="rounded-lg border border-white/[0.06] bg-black/25 px-3 py-1 text-xs font-black text-zinc-200">{item.xp}</span>
                 </div>
-            )}
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Títulos por avaliações</h3>
+              <span className="rounded-lg border border-white/[0.06] bg-white/[0.04] px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-zinc-500">Reviews</span>
+            </div>
+            <div className="content-scrollbar max-h-[320px] space-y-3 overflow-y-auto pr-2">
+              {[
+                { title: 'Divindade do Cinema', subtitle: '500+ reviews', icon: Crown, tone: 'text-cyan-300 bg-cyan-500/10 border-cyan-400/15' },
+                { title: 'Entidade Cinematográfica', subtitle: '250+ reviews', icon: Zap, tone: 'text-purple-300 bg-purple-500/10 border-purple-400/15' },
+                { title: 'Oráculo da Sétima Arte', subtitle: '100+ reviews', icon: Sparkles, tone: 'text-emerald-300 bg-emerald-500/10 border-emerald-400/15' },
+                { title: 'Mestre da Crítica', subtitle: '50+ reviews', icon: Award, tone: 'text-amber-300 bg-amber-500/10 border-amber-400/15' },
+                { title: 'Cinéfilo Experiente', subtitle: '20+ reviews', icon: Star, tone: 'text-blue-300 bg-blue-500/10 border-blue-400/15' },
+                { title: 'Cinéfilo', subtitle: '10+ reviews', icon: MessageSquare, tone: 'text-indigo-300 bg-indigo-500/10 border-indigo-400/15' },
+                { title: 'Crítico Iniciante', subtitle: '5+ reviews', icon: PenTool, tone: 'text-zinc-300 bg-white/[0.04] border-white/[0.06]' },
+                { title: 'Espectador', subtitle: 'Menos de 5 reviews', icon: Eye, tone: 'text-zinc-500 bg-black/25 border-white/[0.05]' },
+              ].map((level) => {
+                const LevelIcon = level.icon;
+                return (
+                  <div key={level.title} className="flex items-center gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.025] p-4">
+                    <span className={`grid h-11 w-11 place-items-center rounded-xl border ${level.tone}`}>
+                      <LevelIcon size={18} />
+                    </span>
+                    <div>
+                      <span className="block text-sm font-bold text-zinc-100">{level.title}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">{level.subtitle}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         </div>
-
-        <AvatarSelectorModal isOpen={modals.avatar} onClose={() => actions.closeModal('avatar')} onSelect={actions.updateAvatar} />
-        <BackgroundSelectorModal isOpen={modals.background} onClose={() => actions.closeModal('background')} onSelect={actions.updateBackground} />
-        <UserListModal isOpen={modals.followers} onClose={() => actions.closeModal('followers')} title="Seguidores" users={data.followersList} loading={ui.loadingLists} />
-        <UserListModal isOpen={modals.following} onClose={() => actions.closeModal('following')} title="Seguindo" users={data.followingList} loading={ui.loadingLists} />
-        
-        <Modal 
-            isOpen={isXpInfoOpen} 
-            onClose={() => setIsXpInfoOpen(false)} 
-            title="Sistema de Progressão" 
-            size="md"
-        >
-            <div className="space-y-8 p-1">
-                <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-zinc-500 tracking-widest">Como ganhar XP</h3>
-                    <div className="grid gap-3">
-                        <div className="flex items-center justify-between p-4 bg-zinc-900/50 rounded-2xl border border-white/5 hover:border-violet-500/20 transition-all">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-violet-500/10 rounded-lg text-violet-400">
-                                    <MessageSquare size={18} />
-                                </div>
-                                <span className="font-bold text-zinc-200 text-sm">Escrever Review</span>
-                            </div>
-                            <span className="font-black text-violet-400 text-xs bg-violet-500/10 px-3 py-1 rounded-lg border border-violet-500/20">+20 XP</span>
-                        </div>
-                        <div className="flex items-center justify-between p-4 bg-zinc-900/50 rounded-2xl border border-white/5 hover:border-emerald-500/20 transition-all">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
-                                    <CheckCircle size={18} />
-                                </div>
-                                <span className="font-bold text-zinc-200 text-sm">Marcar Assistido</span>
-                            </div>
-                            <span className="font-black text-emerald-400 text-xs bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20">+10 XP</span>
-                        </div>
-                        <div className="flex items-center justify-between p-4 bg-zinc-900/50 rounded-2xl border border-white/5 hover:border-red-500/20 transition-all">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-red-500/10 rounded-lg text-red-400">
-                                    <Heart size={18} />
-                                </div>
-                                <span className="font-bold text-zinc-200 text-sm">Dar Curtida (Like)</span>
-                            </div>
-                            <span className="font-black text-red-400 text-xs bg-red-500/10 px-3 py-1 rounded-lg border border-red-500/20">+5 XP</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-zinc-500 tracking-widest">Títulos por Avaliações</h3>
-                        <span className="text-[10px] font-bold text-zinc-500 bg-white/5 px-2 py-1 rounded border border-white/5">Baseado em Reviews</span>
-                    </div>
-                    
-                    <div className="space-y-3 max-h-[320px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10">
-                        <div className="p-4 rounded-2xl bg-cyan-950/20 border border-cyan-500/20 flex items-center gap-4">
-                            <div className="p-3 bg-cyan-500/10 rounded-xl text-cyan-400">
-                                <Crown size={20} />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="font-bold text-cyan-400 text-sm">Divindade do Cinema</span>
-                                <span className="text-[10px] font-medium text-cyan-500/70">500+ Reviews</span>
-                            </div>
-                        </div>
-
-                        <div className="p-4 rounded-2xl bg-purple-950/20 border border-purple-500/20 flex items-center gap-4">
-                            <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400">
-                                <Zap size={20} />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="font-bold text-purple-400 text-sm">Entidade Cinematográfica</span>
-                                <span className="text-[10px] font-medium text-purple-500/70">250+ Reviews</span>
-                            </div>
-                        </div>
-
-                        <div className="p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/20 flex items-center gap-4">
-                            <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400">
-                                <Sparkles size={20} />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="font-bold text-emerald-400 text-sm">Oráculo da Sétima Arte</span>
-                                <span className="text-[10px] font-medium text-emerald-500/70">100+ Reviews</span>
-                            </div>
-                        </div>
-
-                        <div className="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/10 flex items-center gap-4">
-                            <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500">
-                                <Award size={18} />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="font-bold text-amber-500 text-sm">Mestre da Crítica</span>
-                                <span className="text-[10px] font-medium text-amber-500/60">50+ Reviews</span>
-                            </div>
-                        </div>
-
-                        <div className="p-4 rounded-2xl bg-blue-950/20 border border-blue-500/10 flex items-center gap-4">
-                            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
-                                <Star size={18} />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="font-bold text-blue-500 text-sm">Cinéfilo Experiente</span>
-                                <span className="text-[10px] font-medium text-blue-500/60">20+ Reviews</span>
-                            </div>
-                        </div>
-
-                        <div className="p-4 rounded-2xl bg-indigo-950/20 border border-indigo-500/10 flex items-center gap-4">
-                            <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-500">
-                                <MessageSquare size={18} />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="font-bold text-indigo-500 text-sm">Cinéfilo</span>
-                                <span className="text-[10px] font-medium text-indigo-500/60">10+ Reviews</span>
-                            </div>
-                        </div>
-
-                        <div className="p-4 rounded-2xl bg-zinc-900/50 border border-white/5 flex items-center gap-4">
-                            <div className="p-2 bg-white/5 rounded-lg text-zinc-400">
-                                <PenTool size={18} />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="font-bold text-zinc-300 text-sm">Crítico Iniciante</span>
-                                <span className="text-[10px] font-medium text-zinc-500">5+ Reviews</span>
-                            </div>
-                        </div>
-
-                        <div className="p-4 rounded-2xl bg-black/40 border border-white/5 flex items-center gap-4 opacity-70">
-                            <div className="p-2 bg-white/5 rounded-lg text-zinc-600">
-                                <Eye size={18} />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="font-bold text-zinc-500 text-sm">Espectador</span>
-                                <span className="text-[10px] font-medium text-zinc-600">Menos de 5 Reviews</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </Modal>
+      </Modal>
     </div>
   );
 }
