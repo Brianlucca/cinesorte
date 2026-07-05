@@ -16,8 +16,10 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
     sm: 'max-w-md',
     md: 'max-w-xl',
     lg: 'max-w-3xl',
+    xl: 'max-w-5xl',
     video: 'max-w-5xl aspect-video bg-black',
   };
+  const isFrameless = size === 'xl' && !title;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
@@ -26,7 +28,13 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
         onClick={onClose}
       ></div>
 
-      <div className={`relative w-full ${sizes[size]} bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]`}>
+      <div
+        className={`relative w-full ${sizes[size]} animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh] ${
+          isFrameless
+            ? 'overflow-visible bg-transparent shadow-none'
+            : 'overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 shadow-2xl'
+        }`}
+      >
         
         {title && (
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-zinc-900/50">
@@ -42,14 +50,15 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
 
         {!title && (
             <button 
+                type="button"
                 onClick={onClose}
-                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/50 text-white hover:bg-white hover:text-black transition-colors backdrop-blur-md"
+                className="absolute right-4 top-4 z-[80] rounded-full bg-black/60 p-2 text-zinc-200 backdrop-blur-md transition-colors hover:bg-white hover:text-black"
             >
                 <X size={20} />
             </button>
         )}
 
-        <div className={`overflow-y-auto ${size === 'video' ? 'h-full p-0' : 'p-6'}`}>
+        <div className={`overflow-y-auto ${size === 'video' || isFrameless ? 'h-full p-0' : 'p-6'}`}>
             {children}
         </div>
       </div>

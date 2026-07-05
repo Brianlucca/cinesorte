@@ -1,172 +1,286 @@
-import { RefreshCw, Sparkles, Star, Globe, Library, ChevronDown } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useRouletteLogic } from '../../hooks/useRouletteLogic';
-import GenreSelector from '../../components/roulette/GenreSelector';
-import RouletteHeader from '../../components/roulette/RouletteHeader';
-import Modal from '../../components/ui/Modal';
+import { Calendar, ChevronDown, Clapperboard, Globe, Library, RefreshCw, Sparkles, Star } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useRouletteLogic } from "../../hooks/useRouletteLogic";
+import GenreSelector from "../../components/roulette/GenreSelector";
+import RouletteHeader from "../../components/roulette/RouletteHeader";
+import Modal from "../../components/ui/Modal";
+
+const getImageUrl = (path, size = "w780") => (path ? `https://image.tmdb.org/t/p/${size}${path}` : null);
+
+function SourceButton({ active, disabled, icon: Icon, label, description, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`group flex min-h-[74px] flex-1 items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${
+        active
+          ? "border-violet-400/20 bg-violet-500/12 text-white"
+          : "border-white/[0.07] bg-white/[0.025] text-zinc-400 hover:border-white/[0.11] hover:bg-white/[0.045] hover:text-zinc-100"
+      }`}
+    >
+      <span
+        className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border transition-colors ${
+          active
+            ? "border-violet-400/20 bg-violet-500/15 text-violet-200"
+            : "border-white/[0.06] bg-black/20 text-zinc-500 group-hover:text-violet-300"
+        }`}
+      >
+        <Icon size={18} />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold">{label}</span>
+        <span className="mt-1 block text-xs leading-4 text-zinc-600">{description}</span>
+      </span>
+    </button>
+  );
+}
+
+function PreviewCard({ previewMedia, isSpinning }) {
+  const posterUrl = getImageUrl(previewMedia?.poster_path);
+
+  return (
+    <section className="relative mx-auto w-full max-w-[380px]">
+      <div className="relative overflow-hidden rounded-[1.75rem] border border-white/[0.08] bg-[#0d0d11] shadow-[0_30px_90px_rgba(0,0,0,0.42)]">
+        <div className="aspect-[2/3]">
+          {posterUrl ? (
+            <div className="relative h-full w-full animate-in fade-in zoom-in-95 duration-500">
+              <img src={posterUrl} className="h-full w-full object-cover" alt={previewMedia?.title || previewMedia?.name || "Preview"} />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d11] via-transparent to-transparent" />
+            </div>
+          ) : (
+            <div className="grid h-full place-items-center bg-[radial-gradient(circle_at_50%_20%,rgba(124,58,237,0.20),transparent_35%),linear-gradient(145deg,#111116,#08080b)] p-8 text-center">
+              <div>
+                <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-violet-400/15 bg-violet-500/10 text-violet-300">
+                  <Sparkles size={28} className={isSpinning ? "animate-pulse" : ""} />
+                </span>
+                <h2 className="mt-6 text-2xl font-black tracking-normal text-zinc-100">Gire a sorte</h2>
+                <p className="mt-2 text-sm leading-6 text-zinc-500">O pôster sorteado aparece aqui durante a roleta.</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="absolute inset-x-0 bottom-0 p-5">
+          {previewMedia ? (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-violet-200">
+                {isSpinning ? "Sorteando agora" : "Último preview"}
+              </p>
+              <h3 className="mt-1 line-clamp-2 text-lg font-semibold leading-tight text-white">
+                {previewMedia.title || previewMedia.name}
+              </h3>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ResultModal({ winner, isOpen, onClose, onTryAnother }) {
+  const backdropUrl = getImageUrl(winner?.backdrop_path || winner?.poster_path, "w1280");
+  const posterUrl = getImageUrl(winner?.poster_path, "w500");
+  const title = winner?.title || winner?.name;
+  const year = winner?.release_date?.split("-")[0] || winner?.first_air_date?.split("-")[0];
+  const mediaType = winner?.media_type === "tv" ? "Série" : "Filme";
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+      {winner && (
+        <div className="relative min-h-[560px] overflow-hidden rounded-[1.75rem] border border-white/[0.08] bg-[#0d0d11] shadow-2xl">
+          {backdropUrl && (
+            <img
+              src={backdropUrl}
+              className="absolute inset-0 h-full w-full object-cover opacity-25 blur-sm"
+              alt={title}
+            />
+          )}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(139,92,246,0.18),transparent_34%),linear-gradient(90deg,#0d0d11_0%,rgba(13,13,17,0.94)_48%,rgba(13,13,17,0.82)_100%)]" />
+
+          <div className="relative z-10 grid min-h-[560px] grid-cols-1 md:grid-cols-[300px_minmax(0,1fr)]">
+            <div className="border-b border-white/[0.07] bg-black/20 p-5 md:border-b-0 md:border-r md:p-6">
+              <div className="mx-auto max-w-[240px] md:max-w-none">
+                <div className="overflow-hidden rounded-[1.25rem] border border-white/[0.10] bg-zinc-900 shadow-[0_24px_70px_rgba(0,0,0,0.42)]">
+                  <div className="aspect-[2/3]">
+                    {posterUrl ? (
+                      <img src={posterUrl} alt={title} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="grid h-full place-items-center bg-white/[0.035] text-zinc-600">
+                        <Clapperboard size={34} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col justify-between p-5 md:p-8">
+              <div>
+                <div className="mb-5 flex flex-wrap items-center gap-2.5">
+                  <span className="inline-flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-500/15 px-3.5 py-2 text-[9px] font-semibold uppercase tracking-[0.1em] text-violet-200">
+                    <Sparkles size={13} />
+                    Resultado da roleta
+                  </span>
+                  <span className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2 text-[9px] font-semibold uppercase tracking-[0.1em] text-zinc-500">
+                    Escolha sorteada
+                  </span>
+                </div>
+
+                <h2 className="max-w-3xl text-3xl font-black leading-[1.02] tracking-[-0.035em] text-white sm:text-4xl md:text-5xl">
+                  {title}
+                </h2>
+
+                <div className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                  <span className="inline-flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-black/25 px-4 py-3 text-sm font-medium text-zinc-300 backdrop-blur-xl">
+                    <Star size={16} className="fill-yellow-400 text-yellow-400" />
+                    {winner.vote_average?.toFixed(1) || "N/A"}
+                  </span>
+                  {year && (
+                    <span className="inline-flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-black/25 px-4 py-3 text-sm font-medium text-zinc-300 backdrop-blur-xl">
+                      <Calendar size={16} className="text-violet-300" />
+                      {year}
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-black/25 px-4 py-3 text-sm font-medium text-zinc-300 backdrop-blur-xl">
+                    <Clapperboard size={16} className="text-cyan-300" />
+                    {mediaType}
+                  </span>
+                </div>
+
+                <div className="mt-6 rounded-2xl border border-white/[0.07] bg-black/20 p-4 md:p-5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-600">Sinopse</p>
+                  <p className="mt-3 line-clamp-6 text-sm font-medium leading-7 text-zinc-300 md:text-base">
+                    {winner.overview || "Nenhuma sinopse disponível para este título no momento."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Link
+                  to={`/app/${winner.media_type || "movie"}/${winner.id}`}
+                  className="rounded-xl bg-white px-5 py-3.5 text-center text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-950 transition-colors hover:bg-violet-100"
+                >
+                  Ver detalhes
+                </Link>
+                <button
+                  type="button"
+                  onClick={onTryAnother}
+                  className="rounded-xl border border-white/[0.09] bg-white/[0.045] px-5 py-3.5 text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-100 transition-colors hover:bg-white/[0.08]"
+                >
+                  Tentar outro
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+}
 
 export default function MovieRoulette() {
   const { state, actions } = useRouletteLogic();
 
   return (
-    <div className="flex flex-col items-center min-h-screen px-4 md:px-8 py-10 md:py-16 relative overflow-x-hidden bg-zinc-950 animate-in fade-in duration-700">
-      
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-violet-600/10 blur-[150px] rounded-full pointer-events-none -z-10" />
+    <div className="relative min-h-screen overflow-hidden bg-[#08080b] pb-24 text-white animate-in fade-in duration-700">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(124,58,237,0.10),transparent_30%),radial-gradient(circle_at_88%_18%,rgba(14,165,233,0.055),transparent_28%)]" />
 
-      <div className="w-full max-w-6xl mx-auto space-y-12">
+      <div className="relative mx-auto w-full max-w-[1600px] px-4 pt-8 sm:px-6 md:px-10 md:pt-10 xl:px-14">
         <RouletteHeader isSpinning={state.loading} />
 
-        <div className="flex flex-col items-center gap-6">
-          <div className="flex flex-col md:flex-row items-center gap-4 bg-white/[0.02] backdrop-blur-xl border border-white/5 p-2 rounded-[1.5rem] shadow-2xl relative z-10">
-            <div className="flex p-1.5 bg-black/50 rounded-2xl border border-white/5 shadow-inner">
-              <button
-                onClick={() => actions.setSource('global')}
-                className={`flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${state.source === 'global' ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
-              >
-                <Globe size={16} /> Global
-              </button>
-              <button
-                onClick={() => actions.setSource('user')}
-                disabled={state.userLists.length === 0}
-                className={`flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed ${state.source === 'user' ? 'bg-violet-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.4)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
-              >
-                <Library size={16} /> Minhas Listas
-              </button>
-            </div>
-
-            {state.source === 'user' && (
-              <div className="relative w-full md:w-auto md:mr-2">
-                <select
-                  value={state.selectedListId}
-                  onChange={(e) => actions.setSelectedListId(e.target.value)}
-                  className="w-full appearance-none bg-white/[0.05] text-white pl-5 pr-12 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider border border-white/10 focus:outline-none focus:border-violet-500/50 transition-all cursor-pointer shadow-inner"
-                >
-                  <option value="all" className="bg-zinc-900">Todas as Listas</option>
-                  {state.userLists.map(list => (
-                    <option key={list.id} value={list.id} className="bg-zinc-900">{list.name}</option>
-                  ))}
-                </select>
-                <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-violet-400 pointer-events-none" />
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center pt-8">
-          
-          <div className="lg:col-span-5 w-full max-w-[360px] mx-auto relative group">
-            <div className={`absolute -inset-10 bg-violet-600/30 blur-[100px] rounded-[3rem] transition-opacity duration-1000 ${state.loading ? 'opacity-100 animate-pulse' : 'opacity-0 group-hover:opacity-50'}`} />
-            
-            <div className={`relative aspect-[2/3] bg-zinc-950/80 backdrop-blur-2xl rounded-[2.5rem] border border-white/10 shadow-[0_40px_80px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col items-center justify-center transition-transform duration-700 ${state.loading ? 'scale-[0.98]' : 'scale-100 group-hover:scale-[1.02] group-hover:-translate-y-2'}`}>
-              
-              <div className="absolute inset-0 border border-white/5 rounded-[2.5rem] pointer-events-none z-20" />
-
-              {state.previewMedia ? (
-                <div className="w-full h-full animate-in fade-in zoom-in-95 duration-500 relative">
-                  <img src={`https://image.tmdb.org/t/p/w780${state.previewMedia.poster_path}`} className="w-full h-full object-cover" alt="Preview" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-90" />
+        <div className="mt-8 grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_420px] xl:gap-10">
+          <main className="min-w-0 space-y-5">
+            <section className="rounded-[1.5rem] border border-white/[0.07] bg-[#0d0d11]/92 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.22)] backdrop-blur-xl md:p-5">
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Origem do sorteio</p>
+                  <h2 className="mt-1 text-lg font-black text-zinc-100">Escolha o catálogo</h2>
                 </div>
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center p-10 text-center bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] bg-white/[0.01]">
-                   <div className="w-24 h-24 rounded-full bg-violet-500/10 flex items-center justify-center mb-8 border border-violet-500/20 shadow-[0_0_30px_rgba(139,92,246,0.2)]">
-                      <Sparkles size={40} className="text-violet-400 animate-pulse" />
-                   </div>
-                   <h3 className="text-3xl font-black text-white tracking-tighter uppercase">Gire a Sorte</h3>
-                   <p className="text-violet-400/60 text-xs font-bold uppercase tracking-[0.25em] mt-4">Deixe o destino decidir</p>
+                {state.source === "user" && (
+                  <span className="hidden rounded-xl border border-violet-400/15 bg-violet-500/10 px-3 py-2 text-[9px] font-bold uppercase tracking-[0.1em] text-violet-200 sm:inline-flex">
+                    {state.userLists.length} listas
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <SourceButton
+                  active={state.source === "global"}
+                  icon={Globe}
+                  label="Global"
+                  description="Filmes e séries populares do catálogo geral."
+                  onClick={() => actions.setSource("global")}
+                />
+                <SourceButton
+                  active={state.source === "user"}
+                  disabled={state.userLists.length === 0}
+                  icon={Library}
+                  label="Minhas listas"
+                  description="Sorteie apenas títulos salvos na sua biblioteca."
+                  onClick={() => actions.setSource("user")}
+                />
+              </div>
+
+              {state.source === "user" && (
+                <div className="mt-4 max-w-md">
+                  <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                    Lista
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={state.selectedListId}
+                      onChange={(event) => actions.setSelectedListId(event.target.value)}
+                      className="w-full cursor-pointer appearance-none rounded-2xl border border-white/[0.08] bg-black/20 px-4 py-3.5 pr-11 text-sm font-medium text-white outline-none transition-colors focus:border-violet-400/50 focus:bg-white/[0.035]"
+                    >
+                      <option value="all" className="bg-zinc-900">Todas as listas</option>
+                      {state.userLists.map((list) => (
+                        <option key={list.id} value={list.id} className="bg-zinc-900">{list.name}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={17} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+                  </div>
                 </div>
               )}
-            </div>
-          </div>
+            </section>
 
-          <div className="lg:col-span-7 space-y-12">
             <GenreSelector genres={state.genres} selectedGenre={state.selectedGenre} onSelect={actions.setSelectedGenre} />
-            
-            <button 
+
+            <button
+              type="button"
               onClick={actions.spinRoulette}
               disabled={state.loading}
-              className="w-full relative h-24 active:scale-95 transition-all duration-300 group disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+              className="group flex min-h-[86px] w-full items-center justify-between gap-4 rounded-[1.5rem] border border-violet-400/20 bg-[linear-gradient(145deg,rgba(139,92,246,0.20),rgba(255,255,255,0.035)_48%)] p-4 text-left shadow-[0_24px_80px_rgba(0,0,0,0.22)] transition-colors hover:bg-violet-500/15 disabled:cursor-not-allowed disabled:opacity-55 sm:px-5"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-[2rem] blur-2xl opacity-40 group-hover:opacity-70 transition-opacity duration-500" />
-              
-              <div className="relative h-full w-full bg-zinc-950 rounded-[2rem] p-1.5 shadow-2xl">
-                <div className="w-full h-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-[1.6rem] flex items-center justify-center gap-5 border border-white/20 transition-colors shadow-inner overflow-hidden relative">
-                  
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-50" />
-
-                  <span className="text-xl md:text-2xl font-black uppercase tracking-[0.2em] relative z-10 drop-shadow-md">
-                    {state.loading ? 'Sorteando...' : 'Girar Roleta'}
-                  </span>
-                  <RefreshCw size={28} className={`relative z-10 drop-shadow-md ${state.loading ? 'animate-spin text-white/80' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
-                </div>
-              </div>
+              <span>
+                <span className="block text-[10px] font-bold uppercase tracking-[0.1em] text-violet-200">
+                  {state.loading ? "Sorteando" : "Pronto para girar"}
+                </span>
+                <span className="mt-1 block text-xl font-black text-white sm:text-2xl">
+                  {state.loading ? "Misturando opções..." : "Girar roleta"}
+                </span>
+              </span>
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-zinc-950 transition-transform group-hover:scale-105">
+                <RefreshCw size={20} className={state.loading ? "animate-spin" : "transition-transform duration-700 group-hover:rotate-180"} />
+              </span>
             </button>
-          </div>
+          </main>
+
+          <aside className="xl:sticky xl:top-6 xl:self-start">
+            <PreviewCard previewMedia={state.previewMedia} isSpinning={state.loading} />
+          </aside>
         </div>
       </div>
 
-      <Modal isOpen={state.isModalOpen} onClose={actions.closeModal} size="lg">
-        {state.winner && (
-          <div className="relative flex flex-col justify-end w-full min-h-[500px] md:min-h-[600px] animate-in fade-in zoom-in-95 duration-500 bg-zinc-950 rounded-[2rem] overflow-hidden shadow-2xl border border-white/10 group">
-            
-            <img 
-              src={`https://image.tmdb.org/t/p/w1280${state.winner.backdrop_path}`} 
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
-              alt={state.winner.title || state.winner.name} 
-            />
-            
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent" />
-            
-            <div className="relative z-10 p-6 md:p-10 flex flex-col gap-4 mt-auto">
-              
-              <div className="flex items-center gap-2 bg-violet-600/30 backdrop-blur-md border border-violet-500/30 px-4 py-1.5 rounded-full w-fit shadow-[0_0_20px_rgba(139,92,246,0.3)]">
-                  <Sparkles size={14} className="text-violet-400" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white drop-shadow-md">Sorteado com sucesso</span>
-              </div>
-              
-              <h2 className="text-3xl md:text-5xl font-black text-white tracking-tighter leading-tight drop-shadow-2xl line-clamp-3 pb-2">
-                {state.winner.title || state.winner.name}
-              </h2>
-
-              <div className="flex flex-wrap gap-3 my-2">
-                <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 shadow-inner">
-                    <Star size={16} className="text-yellow-500 fill-yellow-500 drop-shadow-md" />
-                    <span className="font-black text-white text-sm">{state.winner.vote_average?.toFixed(1)}</span>
-                </div>
-                <div className="flex items-center bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 shadow-inner">
-                    <span className="font-bold text-white text-sm">
-                      {state.winner.release_date?.split('-')[0] || state.winner.first_air_date?.split('-')[0]}
-                    </span>
-                </div>
-                <div className="flex items-center bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 shadow-inner">
-                    <span className="font-bold text-white text-sm uppercase tracking-wider">
-                      {state.winner.media_type === 'tv' ? 'Série' : 'Filme'}
-                    </span>
-                </div>
-              </div>
-              
-              <p className="text-zinc-200 text-sm md:text-base leading-relaxed mb-2 line-clamp-3 md:line-clamp-4 font-medium drop-shadow-lg">
-                {state.winner.overview || "Nenhuma sinopse disponível para este título no momento."}
-              </p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-                <Link 
-                  to={`/app/${state.winner.media_type || 'movie'}/${state.winner.id}`} 
-                  className="py-4 bg-white text-black text-center rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-zinc-200 transition-all active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
-                > 
-                  Ver Detalhes 
-                </Link>
-                <button 
-                  onClick={() => { actions.closeModal(); actions.spinRoulette(); }} 
-                  className="py-4 bg-black/50 backdrop-blur-xl text-white text-center rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-black/70 transition-all border border-white/10 active:scale-95 shadow-md"
-                > 
-                  Tentar Outro 
-                </button>
-              </div>
-            </div>
-
-          </div>
-        )}
-      </Modal>
+      <ResultModal
+        winner={state.winner}
+        isOpen={state.isModalOpen}
+        onClose={actions.closeModal}
+        onTryAnother={() => {
+          actions.closeModal();
+          actions.spinRoulette();
+        }}
+      />
     </div>
   );
 }
