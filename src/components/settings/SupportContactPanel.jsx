@@ -2,10 +2,10 @@ import { ChevronDown, Lock, Mail, Send } from "lucide-react";
 
 const SUBJECT_OPTIONS = [
   { value: "SUGESTAO", label: "Feedback / Sugestão" },
-  { value: "BUG_REPORT", label: "Relatar um Erro (Bug)" },
-  { value: "PROBLEMA_CONTA", label: "Problemas com a Conta" },
+  { value: "BUG_REPORT", label: "Relatar um erro" },
+  { value: "PROBLEMA_CONTA", label: "Problemas com a conta" },
   { value: "DENUNCIA", label: "Denunciar" },
-  { value: "OUTRO_ASSUNTO", label: "Outros Assuntos" },
+  { value: "OUTRO_ASSUNTO", label: "Outros assuntos" },
 ];
 
 export default function SupportContactPanel({
@@ -19,32 +19,32 @@ export default function SupportContactPanel({
 }) {
   return (
     <form onSubmit={onSubmit} className="space-y-6">
-      <div className="space-y-3">
-        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
-          Seu Email (Para Resposta)
+      <div>
+        <label className="mb-2.5 block text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
+          Seu email
         </label>
         <div className="relative flex items-center">
-          <Mail size={18} className="absolute left-5 text-zinc-600 z-10" />
+          <Mail size={17} className="absolute left-4 text-zinc-600" />
           <input
             type="email"
             value={email || ""}
             readOnly
-            className="w-full bg-black/40 border border-white/5 rounded-2xl pl-14 pr-5 py-4 text-zinc-500 font-medium cursor-not-allowed outline-none shadow-inner"
+            className="w-full cursor-not-allowed rounded-2xl border border-white/[0.08] bg-black/20 py-3.5 pl-11 pr-11 text-sm font-medium text-zinc-500 outline-none"
           />
-          <Lock size={16} className="absolute right-5 text-zinc-600" />
+          <Lock size={15} className="absolute right-4 text-zinc-600" />
         </div>
       </div>
 
-      <div className="space-y-3">
-        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+      <div>
+        <label className="mb-2.5 block text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
           Assunto
         </label>
         <div className="relative flex items-center">
           <select
             value={subject}
-            onChange={(e) => onSubjectChange(e.target.value)}
+            onChange={(event) => onSubjectChange(event.target.value)}
             required
-            className="w-full bg-black/40 border border-white/5 rounded-2xl pl-5 pr-12 py-4 text-white font-medium focus:border-violet-500/50 outline-none transition-all appearance-none cursor-pointer shadow-inner"
+            className="w-full cursor-pointer appearance-none rounded-2xl border border-white/[0.08] bg-black/20 px-4 py-3.5 pr-11 text-sm font-medium text-white outline-none transition-colors focus:border-violet-400/50 focus:bg-white/[0.035]"
           >
             {SUBJECT_OPTIONS.map((option) => (
               <option key={option.value} value={option.value} className="bg-zinc-900">
@@ -52,37 +52,37 @@ export default function SupportContactPanel({
               </option>
             ))}
           </select>
-          <ChevronDown size={18} className="absolute right-5 text-zinc-500 pointer-events-none" />
+          <ChevronDown size={17} className="pointer-events-none absolute right-4 text-zinc-500" />
         </div>
       </div>
 
-      <div className="space-y-3">
-        <label className="flex items-center justify-between text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
-          Sua Mensagem
-          <span className="font-medium normal-case tracking-normal">({message.length}/1000)</span>
+      <div>
+        <label className="mb-2.5 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
+          Mensagem
+          <span className="font-bold normal-case tracking-normal text-zinc-600">({message.length}/1000)</span>
         </label>
         <textarea
           required
           rows={8}
           maxLength={1000}
           value={message}
-          onChange={(e) => onMessageChange(e.target.value)}
-          placeholder="Descreva detalhadamente como podemos ajudar..."
-          className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 text-white font-medium focus:border-violet-500/50 focus:bg-black/60 outline-none transition-all resize-none shadow-inner placeholder:text-zinc-600"
+          onChange={(event) => onMessageChange(event.target.value)}
+          placeholder="Descreva como podemos ajudar..."
+          className="w-full resize-none rounded-2xl border border-white/[0.08] bg-black/20 px-4 py-3.5 text-sm font-medium leading-6 text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-violet-400/50 focus:bg-white/[0.035]"
         />
       </div>
 
-      <div className="rounded-[1.75rem] border border-violet-500/10 bg-violet-500/5 px-5 py-4 text-sm text-zinc-300">
+      <div className="rounded-2xl border border-violet-400/15 bg-violet-500/10 px-4 py-3 text-sm leading-6 text-violet-100/90">
         O protocolo é gerado automaticamente quando você envia. Também mandamos uma confirmação para o seu email.
       </div>
 
       <button
         type="submit"
         disabled={isSubmitting || message.trim().length < 10}
-        className="w-full flex items-center justify-center gap-3 py-4 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-2xl font-black text-sm transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] active:scale-95"
+        className="inline-flex w-full items-center justify-center gap-2.5 rounded-xl bg-white px-5 py-3.5 text-[10px] font-black uppercase tracking-[0.13em] text-black transition-colors hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {isSubmitting ? "Enviando..." : "Enviar Chamado"}
-        <Send size={18} />
+        <Send size={16} />
+        {isSubmitting ? "Enviando" : "Enviar chamado"}
       </button>
     </form>
   );

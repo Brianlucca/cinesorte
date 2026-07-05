@@ -8,9 +8,9 @@ const STATUS_LABELS = {
 };
 
 const STATUS_STYLES = {
-  open: "border-emerald-500/20 bg-emerald-500/10 text-emerald-400",
-  answered: "border-amber-500/20 bg-amber-500/10 text-amber-300",
-  closed: "border-red-500/20 bg-red-500/10 text-red-400",
+  open: "border-emerald-400/15 bg-emerald-500/10 text-emerald-300",
+  answered: "border-amber-400/15 bg-amber-500/10 text-amber-300",
+  closed: "border-red-400/15 bg-red-500/10 text-red-300",
 };
 
 function formatTicketDate(value) {
@@ -89,7 +89,7 @@ function getConversation(ticket) {
   }
 
   const hasUserOpeningMessage = conversation.some(
-    (entry) => entry.role === "user" && String(entry.message || "").trim() === String(ticket.message || "").trim()
+    (entry) => entry.role === "user" && String(entry.message || "").trim() === String(ticket.message || "").trim(),
   );
 
   if (!hasUserOpeningMessage && ticket.message) {
@@ -140,29 +140,30 @@ export default function SupportTicketTable({ tickets, isLoading, onRefresh }) {
         preview: truncateMessage(ticket.message),
         conversation: getConversation(ticket),
       })),
-    [tickets]
+    [tickets],
   );
 
   return (
     <>
-      <section className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-6 md:p-8 shadow-xl min-h-[560px]">
-        <div className="flex items-center justify-between gap-4 mb-6">
+      <section className="min-h-[520px] rounded-[1.5rem] border border-white/[0.07] bg-[#0d0d11]/92 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.24)] backdrop-blur-xl md:p-5 lg:p-6">
+        <div className="mb-6 flex flex-col justify-between gap-4 border-b border-white/[0.06] pb-5 sm:flex-row sm:items-center">
           <div>
-            <h4 className="text-xl font-black text-white tracking-tight">Meus Protocolos</h4>
-            <p className="text-zinc-500 font-medium mt-1">Visualização rápida dos chamados já enviados.</p>
+            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-zinc-500">Histórico de suporte</p>
+            <h4 className="mt-1 text-xl font-black tracking-[-0.025em] text-white">Meus protocolos</h4>
+            <p className="mt-2 text-sm leading-6 text-zinc-500">Visualização rápida dos chamados já enviados.</p>
           </div>
           <button
             type="button"
             onClick={onRefresh}
             disabled={isLoading}
-            className="px-5 py-3 bg-white/5 hover:bg-white/10 disabled:opacity-50 border border-white/5 rounded-2xl text-xs font-black uppercase tracking-widest text-white transition-all"
+            className="inline-flex w-full items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.035] px-5 py-3 text-[10px] font-black uppercase tracking-[0.13em] text-zinc-200 transition-colors hover:bg-white hover:text-black disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
-            {isLoading ? "Atualizando..." : "Atualizar"}
+            {isLoading ? "Atualizando" : "Atualizar"}
           </button>
         </div>
 
-        <div className="hidden md:block rounded-[1.75rem] overflow-hidden border border-white/5 bg-black/30">
-          <div className="grid grid-cols-[1.1fr_1.3fr_0.75fr_0.9fr_0.9fr] gap-4 px-5 py-4 text-[11px] font-black uppercase tracking-[0.22em] text-zinc-500 border-b border-white/5 bg-white/[0.02]">
+        <div className="hidden overflow-hidden rounded-2xl border border-white/[0.07] bg-black/20 md:block">
+          <div className="grid grid-cols-[1.1fr_1.3fr_0.75fr_0.9fr_0.9fr] gap-4 border-b border-white/[0.06] bg-white/[0.025] px-5 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
             <span>Protocolo</span>
             <span>Assunto</span>
             <span>Status</span>
@@ -176,29 +177,27 @@ export default function SupportTicketTable({ tickets, isLoading, onRefresh }) {
             <div className="px-5 py-8 text-sm font-medium text-zinc-500">Você ainda não abriu nenhum chamado por aqui.</div>
           ) : (
             rows.map((ticket) => (
-              <div key={ticket.id || ticket.protocol} className="border-b last:border-b-0 border-white/5">
-                <div className="grid grid-cols-[1.1fr_1.3fr_0.75fr_0.9fr_0.9fr] gap-4 px-5 py-4 items-center">
+              <div key={ticket.id || ticket.protocol} className="border-b border-white/[0.06] last:border-b-0">
+                <div className="grid grid-cols-[1.1fr_1.3fr_0.75fr_0.9fr_0.9fr] items-center gap-4 px-5 py-4">
                   <button
                     type="button"
                     onClick={() => setSelectedTicket(ticket)}
-                    className="text-left text-sm font-black text-violet-400 hover:text-violet-300 transition-colors"
+                    className="text-left text-sm font-black text-violet-300 transition-colors hover:text-violet-200"
                   >
                     {ticket.protocol}
                   </button>
                   <div>
                     <p className="text-sm font-bold text-white">{ticket.subjectLabel || ticket.subject}</p>
-                    <p className="text-xs text-zinc-500 mt-1 line-clamp-2">{ticket.preview}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-zinc-500">{ticket.preview}</p>
                   </div>
-                  <span
-                    className={`w-fit px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest ${STATUS_STYLES[ticket.status] || STATUS_STYLES.open}`}
-                  >
+                  <span className={`w-fit rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.13em] ${STATUS_STYLES[ticket.status] || STATUS_STYLES.open}`}>
                     {STATUS_LABELS[ticket.status] || ticket.status || "Aberto"}
                   </span>
                   <span className="text-xs font-medium text-zinc-500">{formatTicketDate(ticket.createdAt)}</span>
                   <button
                     type="button"
                     onClick={() => setSelectedTicket(ticket)}
-                    className="w-fit px-4 py-2 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 text-xs font-black uppercase tracking-widest text-white transition-all"
+                    className="w-fit rounded-xl border border-white/[0.08] bg-white/[0.035] px-4 py-2 text-[10px] font-black uppercase tracking-[0.13em] text-zinc-200 transition-colors hover:bg-white hover:text-black"
                   >
                     Ver mais
                   </button>
@@ -208,11 +207,11 @@ export default function SupportTicketTable({ tickets, isLoading, onRefresh }) {
           )}
         </div>
 
-        <div className="md:hidden space-y-4">
+        <div className="space-y-4 md:hidden">
           {isLoading ? (
             <div className="text-sm font-medium text-zinc-500">Carregando protocolos...</div>
           ) : rows.length === 0 ? (
-            <div className="bg-black/30 border border-white/5 rounded-3xl px-6 py-8 text-center text-zinc-500 font-medium">
+            <div className="rounded-2xl border border-white/[0.07] bg-black/20 px-6 py-8 text-center font-medium text-zinc-500">
               Você ainda não abriu nenhum chamado por aqui.
             </div>
           ) : (
@@ -221,22 +220,20 @@ export default function SupportTicketTable({ tickets, isLoading, onRefresh }) {
                 key={ticket.id || ticket.protocol}
                 type="button"
                 onClick={() => setSelectedTicket(ticket)}
-                className="w-full text-left bg-black/40 border border-white/5 rounded-[1.75rem] p-5 shadow-inner"
+                className="w-full rounded-2xl border border-white/[0.07] bg-black/20 p-5 text-left transition-colors hover:bg-white/[0.035]"
               >
-                <div className="flex flex-col gap-3 mb-3">
-                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-violet-400">{ticket.protocol}</p>
+                <div className="mb-3 flex flex-col gap-3">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-violet-300">{ticket.protocol}</p>
                   <h5 className="text-lg font-black text-white">{ticket.subjectLabel || ticket.subject}</h5>
                   <div className="flex flex-wrap items-center gap-3">
-                    <span
-                      className={`px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest ${STATUS_STYLES[ticket.status] || STATUS_STYLES.open}`}
-                    >
+                    <span className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.13em] ${STATUS_STYLES[ticket.status] || STATUS_STYLES.open}`}>
                       {STATUS_LABELS[ticket.status] || ticket.status || "Aberto"}
                     </span>
                     <span className="text-xs font-medium text-zinc-500">{formatTicketDate(ticket.createdAt)}</span>
                   </div>
                 </div>
-                <p className="text-sm leading-relaxed text-zinc-300 font-medium break-words">{ticket.preview}</p>
-                <span className="inline-flex mt-4 text-xs font-black uppercase tracking-widest text-white/80">Toque para ver detalhes</span>
+                <p className="break-words text-sm font-medium leading-relaxed text-zinc-300">{ticket.preview}</p>
+                <span className="mt-4 inline-flex text-[10px] font-black uppercase tracking-[0.13em] text-white/80">Toque para ver detalhes</span>
               </button>
             ))
           )}
@@ -252,12 +249,12 @@ export default function SupportTicketTable({ tickets, isLoading, onRefresh }) {
         {selectedTicket && (
           <div className="space-y-8">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div className="border-b border-white/8 pb-3 md:pb-0 md:border-b-0">
-                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-zinc-500 mb-2">Assunto</p>
+              <div className="border-b border-white/8 pb-3 md:border-b-0 md:pb-0">
+                <p className="mb-2 text-[11px] font-black uppercase tracking-[0.24em] text-zinc-500">Assunto</p>
                 <p className="text-base font-bold text-white">{selectedTicket.subjectLabel || selectedTicket.subject}</p>
               </div>
-              <div className="border-b border-white/8 pb-3 md:pb-0 md:border-b-0">
-                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-zinc-500 mb-2">Status</p>
+              <div className="border-b border-white/8 pb-3 md:border-b-0 md:pb-0">
+                <p className="mb-2 text-[11px] font-black uppercase tracking-[0.24em] text-zinc-500">Status</p>
                 <p
                   className={`text-base font-bold ${
                     selectedTicket.status === "closed"
@@ -271,7 +268,7 @@ export default function SupportTicketTable({ tickets, isLoading, onRefresh }) {
                 </p>
               </div>
               <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-zinc-500 mb-2">Abertura</p>
+                <p className="mb-2 text-[11px] font-black uppercase tracking-[0.24em] text-zinc-500">Abertura</p>
                 <p className="text-base font-bold text-white">{formatTicketDate(selectedTicket.createdAt)}</p>
               </div>
             </div>
@@ -279,7 +276,7 @@ export default function SupportTicketTable({ tickets, isLoading, onRefresh }) {
             <div className="space-y-5">
               <p className="text-[11px] font-black uppercase tracking-[0.24em] text-zinc-500">Histórico</p>
 
-              <div className="relative pl-7 before:absolute before:left-0 before:top-1 before:bottom-2 before:w-px before:bg-gradient-to-b before:from-white/10 before:via-white/6 before:to-transparent">
+              <div className="relative pl-7 before:absolute before:bottom-2 before:left-0 before:top-1 before:w-px before:bg-gradient-to-b before:from-white/10 before:via-white/6 before:to-transparent">
                 <div className="space-y-7">
                   {buildTimelineEntries(selectedTicket.conversation).map((item) => {
                     if (item.type === "day") {
@@ -317,7 +314,7 @@ export default function SupportTicketTable({ tickets, isLoading, onRefresh }) {
 
                           <div className="max-w-[720px]">
                             <p
-                              className={`text-[15px] leading-7 font-medium whitespace-pre-wrap break-words ${
+                              className={`whitespace-pre-wrap break-words text-[15px] font-medium leading-7 ${
                                 isResolution
                                   ? "text-red-50/95"
                                   : isAdmin

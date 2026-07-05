@@ -2,34 +2,55 @@ import { ChevronRight, LogOut } from "lucide-react";
 
 export default function SettingsSidebar({ menuItems, activeTab, onTabChange, onLogout }) {
   return (
-    <aside className="space-y-4">
-      <div className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2rem] p-3 shadow-xl">
-        {menuItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => onTabChange(item.id)}
-            className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-sm font-bold transition-all mb-1 last:mb-0 ${
-              activeTab === item.id
-                ? "bg-white/10 text-white shadow-inner border border-white/5"
-                : "text-zinc-500 hover:text-white hover:bg-white/[0.02] border border-transparent"
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              <item.icon size={18} className={activeTab === item.id ? "text-violet-400" : ""} />
-              {item.label}
-            </div>
-            {activeTab === item.id && <ChevronRight size={16} className="text-zinc-400" />}
-          </button>
-        ))}
-      </div>
+    <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
+      <nav className="rounded-[1.5rem] border border-white/[0.07] bg-[#0d0d11]/90 p-2 shadow-[0_24px_80px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+        {menuItems.map((item) => {
+          const isActive = activeTab === item.id;
 
-      <div className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2rem] p-3 shadow-xl">
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onTabChange(item.id)}
+              className={`group flex w-full items-center justify-between gap-3 rounded-[1.15rem] px-3.5 py-3.5 text-left transition-all ${
+                isActive
+                  ? "border border-violet-400/15 bg-violet-500/10 text-white"
+                  : "border border-transparent text-zinc-500 hover:bg-white/[0.035] hover:text-zinc-200"
+              }`}
+            >
+              <span className="flex min-w-0 items-center gap-3">
+                <span
+                  className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border transition-colors ${
+                    isActive
+                      ? "border-violet-400/20 bg-violet-500/10 text-violet-300"
+                      : "border-white/[0.06] bg-white/[0.025] text-zinc-500 group-hover:text-violet-300"
+                  }`}
+                >
+                  <item.icon size={17} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-black">{item.label}</span>
+                  {item.description && (
+                    <span className="mt-0.5 block truncate text-[10px] font-medium text-zinc-600">{item.description}</span>
+                  )}
+                </span>
+              </span>
+              {isActive && <ChevronRight size={16} className="shrink-0 text-violet-300" />}
+            </button>
+          );
+        })}
+      </nav>
+
+      <div className="rounded-[1.5rem] border border-white/[0.07] bg-[#0d0d11]/90 p-2 shadow-[0_24px_80px_rgba(0,0,0,0.18)] backdrop-blur-xl">
         <button
+          type="button"
           onClick={onLogout}
-          className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold text-red-500 hover:bg-red-500/10 hover:text-red-400 transition-colors border border-transparent hover:border-red-500/20"
+          className="flex w-full items-center gap-3 rounded-[1.15rem] border border-transparent px-3.5 py-3.5 text-sm font-black text-red-300 transition-colors hover:border-red-400/20 hover:bg-red-500/10"
         >
-          <LogOut size={18} />
-          Sair da Conta
+          <span className="grid h-10 w-10 place-items-center rounded-xl border border-red-400/15 bg-red-500/10">
+            <LogOut size={17} />
+          </span>
+          Sair da conta
         </button>
       </div>
     </aside>

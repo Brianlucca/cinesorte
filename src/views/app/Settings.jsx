@@ -1,5 +1,20 @@
-﻿import { useEffect, useState } from "react";
-import { User, Shield, Trash2, Save, Mail, Key, Info, Camera, Lock, Headset } from "lucide-react";
+import { createElement, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  AlertTriangle,
+  Camera,
+  CheckCircle,
+  Headset,
+  Info,
+  Key,
+  Lock,
+  Mail,
+  Save,
+  Shield,
+  ShieldCheck,
+  Sparkles,
+  Trash2,
+  User,
+} from "lucide-react";
 import { useSettingsLogic } from "../../hooks/useSettingsLogic";
 import Modal from "../../components/ui/Modal";
 import AvatarSelectorModal from "../../components/ui/AvatarSelectorModal";
@@ -8,6 +23,98 @@ import { getMySupportTickets } from "../../services/api";
 import SettingsSidebar from "../../components/settings/SettingsSidebar";
 import SupportTicketTable from "../../components/settings/SupportTicketTable";
 
+function SettingPanel({ eyebrow, title, description, icon: Icon, children, tone = "violet" }) {
+  const toneClasses = {
+    violet: "text-violet-300 bg-violet-500/10 border-violet-400/15",
+    emerald: "text-emerald-300 bg-emerald-500/10 border-emerald-400/15",
+    amber: "text-amber-300 bg-amber-500/10 border-amber-400/15",
+    cyan: "text-cyan-300 bg-cyan-500/10 border-cyan-400/15",
+    red: "text-red-300 bg-red-500/10 border-red-400/15",
+  };
+  const iconNode = createElement(Icon, { size: 19 });
+
+  return (
+    <section className="relative overflow-hidden rounded-[1.5rem] border border-white/[0.07] bg-[#0d0d11]/92 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.24)] backdrop-blur-xl md:p-5 lg:p-6">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(139,92,246,0.10),transparent_38%)]" />
+      <div className="relative">
+        <div className="mb-6 flex flex-col justify-between gap-4 border-b border-white/[0.06] pb-5 sm:flex-row sm:items-start">
+          <div className="flex gap-3">
+            <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border ${toneClasses[tone]}`}>
+              {iconNode}
+            </span>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.22em] text-zinc-500">{eyebrow}</p>
+              <h2 className="mt-1 text-xl font-black leading-tight tracking-[-0.025em] text-white sm:text-2xl">{title}</h2>
+              {description && <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">{description}</p>}
+            </div>
+          </div>
+        </div>
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function FieldLabel({ children, aside }) {
+  return (
+    <label className="mb-2.5 flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
+      <span>{children}</span>
+      {aside && <span className="text-[10px] font-bold normal-case tracking-normal text-zinc-600">{aside}</span>}
+    </label>
+  );
+}
+
+function TextInput({ className = "", ...props }) {
+  return (
+    <input
+      {...props}
+      className={`w-full rounded-2xl border border-white/[0.08] bg-black/20 px-4 py-3.5 text-sm font-medium text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-violet-400/50 focus:bg-white/[0.035] disabled:cursor-not-allowed disabled:opacity-55 ${className}`}
+    />
+  );
+}
+
+function ProfileAvatar({ user, onEdit }) {
+  return (
+    <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+      <div className="relative shrink-0">
+        <div className="relative h-28 w-28 overflow-hidden rounded-[1.35rem] border border-white/10 bg-zinc-900 p-1.5 shadow-[0_20px_52px_rgba(0,0,0,0.38)]">
+          <div className="group relative h-full w-full overflow-hidden rounded-[1.1rem] bg-zinc-900">
+            {user?.photoURL ? (
+              <img src={user.photoURL} alt={user.name || "Avatar"} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            ) : (
+              <div className="grid h-full w-full place-items-center bg-violet-600/20 text-4xl font-black uppercase text-violet-300">
+                {user?.name?.charAt(0) || "U"}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={onEdit}
+              className="absolute inset-0 grid place-items-center bg-black/60 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
+              aria-label="Alterar foto de perfil"
+            >
+              <Camera size={24} />
+            </button>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onEdit}
+          className="absolute -bottom-2 -right-2 grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white text-zinc-950 shadow-xl transition-transform hover:scale-105 active:scale-95"
+          aria-label="Escolher avatar"
+        >
+          <Camera size={17} />
+        </button>
+      </div>
+
+      <div className="min-w-0">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-300">Identidade pública</p>
+        <h3 className="mt-1 break-words text-2xl font-black tracking-[-0.035em] text-white sm:text-3xl">{user?.name || "Seu perfil"}</h3>
+        <p className="mt-2 text-sm leading-6 text-zinc-500">Ajuste como seu perfil aparece para a comunidade CineSorte.</p>
+      </div>
+    </div>
+  );
+}
+
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("profile");
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
@@ -15,14 +122,19 @@ export default function Settings() {
   const { user, form, deleteConfirmText, ui, modals, actions } = useSettingsLogic();
   const toast = useToast();
 
-  const menuItems = [
-    { id: "profile", label: "Meu Perfil", icon: User },
-    { id: "security", label: "Segurança & Login", icon: Shield },
-    { id: "support", label: "Suporte & Contato", icon: Headset },
-    { id: "about", label: "Sobre o Sistema", icon: Info },
-  ];
+  const menuItems = useMemo(
+    () => [
+      { id: "profile", label: "Meu Perfil", description: "Avatar, username e biografia", icon: User },
+      { id: "security", label: "Segurança", description: "Login, senha e exclusão", icon: Shield },
+      { id: "support", label: "Suporte", description: "Contato e protocolos", icon: Headset },
+      { id: "about", label: "Sistema", description: "Dados, versão e créditos", icon: Info },
+    ],
+    [],
+  );
 
-  const loadSupportTickets = async () => {
+  const activeMenuItem = menuItems.find((item) => item.id === activeTab) || menuItems[0];
+
+  const loadSupportTickets = useCallback(async () => {
     if (!user) return;
 
     setIsLoadingTickets(true);
@@ -34,271 +146,271 @@ export default function Settings() {
     } finally {
       setIsLoadingTickets(false);
     }
-  };
+  }, [toast, user]);
 
   useEffect(() => {
     if (activeTab === "support" && user) {
       loadSupportTickets();
     }
-  }, [activeTab, user]);
+  }, [activeTab, loadSupportTickets, user]);
 
   return (
-    <div className="max-w-[1320px] mx-auto pt-8 pb-20 px-4 md:px-6 xl:px-8 animate-in fade-in duration-500 relative">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-violet-600/5 blur-[120px] rounded-full pointer-events-none -z-10" />
+    <div className="relative min-h-screen overflow-hidden bg-[#08080b] pb-24 text-white animate-in fade-in duration-700">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(124,58,237,0.10),transparent_30%),radial-gradient(circle_at_88%_22%,rgba(14,165,233,0.05),transparent_28%)]" />
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-6 mb-8">
-        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight flex items-center gap-3">
-          <span className="w-1.5 h-8 bg-violet-500 rounded-full"></span>
-          Configurações
-        </h1>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-[260px_minmax(0,1fr)] gap-6 xl:gap-8">
-        <SettingsSidebar
-          menuItems={menuItems}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          onLogout={actions.logout}
-        />
-
-        <main className="min-h-[500px] min-w-0">
-          {activeTab === "profile" && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-xl">
-                <div className="flex flex-col md:flex-row items-center gap-8 mb-10 border-b border-white/5 pb-10">
-                  <div className="relative group shrink-0">
-                    <div className="w-28 h-28 rounded-full bg-zinc-900 border border-white/10 shadow-2xl overflow-hidden relative">
-                      {user?.photoURL ? (
-                        <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-4xl font-black text-violet-400 bg-violet-600/20">
-                          {user?.name?.charAt(0)}
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                        <Camera size={28} className="text-white" />
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => actions.openModal("avatarSelector")}
-                      className="absolute bottom-0 right-0 p-3 bg-zinc-900 rounded-full border border-white/10 text-white hover:text-violet-400 transition-colors shadow-lg hover:scale-105 active:scale-95"
-                    >
-                      <Camera size={16} />
-                    </button>
-                  </div>
-                  <div className="text-center md:text-left">
-                    <h2 className="text-3xl font-black text-white tracking-tight">{user?.name}</h2>
-                    <p className="text-zinc-500 font-medium mt-1">Gerencie suas informações pessoais.</p>
-                  </div>
-                </div>
-
-                <form onSubmit={actions.handleUpdateProfile} className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Nome de Exibição</label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value={form.name}
-                          readOnly
-                          className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 text-zinc-500 font-medium cursor-not-allowed select-none outline-none shadow-inner"
-                        />
-                        <Lock size={16} className="absolute right-5 top-4 text-zinc-600" />
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Username</label>
-                      <div className="relative flex items-center">
-                        <span className="absolute left-5 text-zinc-500 font-bold z-10">@</span>
-                        <input
-                          type="text"
-                          value={form.username}
-                          onChange={(e) => !ui.isUsernameLocked && actions.handleInputChange("username", e.target.value)}
-                          readOnly={ui.isUsernameLocked}
-                          className={`w-full bg-black/40 border border-white/5 rounded-2xl pl-10 pr-5 py-4 text-white font-medium outline-none transition-all shadow-inner ${
-                            ui.isUsernameLocked ? "opacity-50 cursor-not-allowed" : "focus:border-violet-500/50 focus:bg-black/60"
-                          }`}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Biografia</label>
-                    <textarea
-                      value={form.bio}
-                      onChange={(e) => actions.handleInputChange("bio", e.target.value)}
-                      maxLength={300}
-                      rows={4}
-                      className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 text-white font-medium focus:border-violet-500/50 focus:bg-black/60 outline-none transition-all resize-none shadow-inner"
-                      placeholder="Conte um pouco sobre você..."
-                    />
-                  </div>
-
-                  <div className="flex justify-end pt-4">
-                    <button
-                      type="submit"
-                      disabled={ui.isLoading}
-                      className="flex items-center justify-center gap-3 px-8 py-4 bg-white text-black hover:bg-zinc-200 rounded-2xl font-black text-sm transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-95 w-full md:w-auto"
-                    >
-                      {ui.isLoading ? "Salvando..." : "Salvar Alterações"}
-                      {!ui.isLoading && <Save size={18} />}
-                    </button>
-                  </div>
-                </form>
+      <div className="relative mx-auto w-full max-w-[1600px] px-4 pt-8 sm:px-6 md:px-10 md:pt-10 xl:px-14">
+        <header className="border-b border-white/[0.07] pb-6 md:pb-8">
+          <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+            <div>
+              <div className="mb-3 flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.24em] text-violet-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-violet-400 shadow-[0_0_12px_rgba(167,139,250,0.8)]" />
+                Central da conta
               </div>
+              <h1 className="text-3xl font-black leading-tight tracking-[-0.04em] text-white sm:text-4xl">Configurações</h1>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-500">
+                Controle seus dados, segurança e canais de suporte sem sair do visual do CineSorte.
+              </p>
             </div>
-          )}
 
-          {activeTab === "security" && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-xl space-y-8">
-                <div>
-                  <h3 className="text-2xl font-black text-white tracking-tight mb-2">Acesso e Segurança</h3>
-                  <p className="text-zinc-500 font-medium">Gerencie o acesso à sua conta.</p>
-                </div>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+              <span className="inline-flex items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3.5 py-2.5 text-[9px] font-black uppercase tracking-[0.13em] text-zinc-400">
+                <activeMenuItem.icon size={13} className="text-violet-300" />
+                {activeMenuItem.label}
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/15 bg-emerald-500/10 px-3.5 py-2.5 text-[9px] font-black uppercase tracking-[0.13em] text-emerald-300">
+                <CheckCircle size={13} />
+                Conta ativa
+              </span>
+            </div>
+          </div>
+        </header>
 
-                <div className="space-y-4">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 bg-black/40 border border-white/5 rounded-2xl shadow-inner">
-                    <div className="flex items-center gap-5">
-                      <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/5 text-zinc-400">
-                        <Mail size={20} />
+        <div className="mt-7 grid grid-cols-1 gap-6 xl:grid-cols-[310px_minmax(0,1fr)] xl:gap-8">
+          <SettingsSidebar
+            menuItems={menuItems}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onLogout={actions.logout}
+          />
+
+          <main className="min-w-0">
+            {activeTab === "profile" && (
+              <div className="animate-in fade-in slide-in-from-bottom-3 duration-500">
+                <SettingPanel
+                  eyebrow="Meu perfil"
+                  title="Informações públicas"
+                  description="Esses dados aparecem no perfil, nas reviews e nas interações sociais."
+                  icon={User}
+                >
+                  <div className="space-y-7">
+                    <ProfileAvatar user={user} onEdit={() => actions.openModal("avatarSelector")} />
+
+                    <form onSubmit={actions.handleUpdateProfile} className="space-y-6 border-t border-white/[0.06] pt-6">
+                      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <div>
+                          <FieldLabel>Nome de exibição</FieldLabel>
+                          <div className="relative">
+                            <TextInput type="text" value={form.name} readOnly className="pr-12 text-zinc-500" />
+                            <Lock size={15} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600" />
+                          </div>
+                        </div>
+
+                        <div>
+                          <FieldLabel aside={ui.isUsernameLocked ? `libera em ${ui.daysToUnlock} dias` : null}>Username</FieldLabel>
+                          <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-zinc-500">@</span>
+                            <TextInput
+                              type="text"
+                              value={form.username}
+                              onChange={(event) => !ui.isUsernameLocked && actions.handleInputChange("username", event.target.value)}
+                              readOnly={ui.isUsernameLocked}
+                              className="pl-9"
+                            />
+                          </div>
+                        </div>
                       </div>
+
                       <div>
-                        <p className="text-sm font-bold text-white mb-0.5">E-mail Cadastrado</p>
-                        <p className="text-sm text-zinc-500">{user?.email}</p>
+                        <FieldLabel aside={`${form.bio.length}/300`}>Biografia</FieldLabel>
+                        <textarea
+                          value={form.bio}
+                          onChange={(event) => actions.handleInputChange("bio", event.target.value)}
+                          maxLength={300}
+                          rows={5}
+                          className="w-full resize-none rounded-2xl border border-white/[0.08] bg-black/20 px-4 py-3.5 text-sm font-medium leading-6 text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-violet-400/50 focus:bg-white/[0.035]"
+                          placeholder="Conte um pouco sobre você..."
+                        />
                       </div>
+
+                      <div className="flex justify-end">
+                        <button
+                          type="submit"
+                          disabled={ui.isLoading}
+                          className="inline-flex w-full items-center justify-center gap-2.5 rounded-xl bg-white px-5 py-3.5 text-[10px] font-black uppercase tracking-[0.13em] text-black transition-all hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98] sm:w-auto"
+                        >
+                          <Save size={16} />
+                          {ui.isLoading ? "Salvando" : "Salvar alterações"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </SettingPanel>
+              </div>
+            )}
+
+            {activeTab === "security" && (
+              <div className="space-y-5 animate-in fade-in slide-in-from-bottom-3 duration-500">
+                <SettingPanel
+                  eyebrow="Segurança"
+                  title="Acesso e login"
+                  description="Confira seus dados de autenticação e solicite uma nova senha quando precisar."
+                  icon={ShieldCheck}
+                  tone="emerald"
+                >
+                  <div className="divide-y divide-white/[0.06]">
+                    <div className="flex flex-col gap-4 py-4 first:pt-0 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="grid h-11 w-11 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.035] text-zinc-400">
+                          <Mail size={18} />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-black text-white">E-mail cadastrado</p>
+                          <p className="mt-1 break-all text-sm text-zinc-500">{user?.email}</p>
+                        </div>
+                      </div>
+                      <span className="w-fit rounded-xl border border-emerald-400/15 bg-emerald-500/10 px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-emerald-300">
+                        Verificado
+                      </span>
                     </div>
-                    <span className="text-[10px] font-black px-4 py-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20 uppercase tracking-widest w-fit">
-                      Verificado
+
+                    <div className="flex flex-col gap-4 py-4 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="grid h-11 w-11 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.035] text-zinc-400">
+                          <Key size={18} />
+                        </span>
+                        <div>
+                          <p className="text-sm font-black text-white">Senha</p>
+                          <p className="mt-1 text-sm font-semibold tracking-[0.18em] text-zinc-600">••••••••••••</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => actions.openModal("resetPassword")}
+                        className="inline-flex w-full items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.035] px-5 py-3 text-[10px] font-black uppercase tracking-[0.13em] text-zinc-200 transition-colors hover:bg-white hover:text-black sm:w-auto"
+                      >
+                        Redefinir
+                      </button>
+                    </div>
+                  </div>
+                </SettingPanel>
+
+                <SettingPanel
+                  eyebrow="Zona de perigo"
+                  title="Excluir conta"
+                  description="Esta ação remove permanentemente seus dados, listas, reviews e histórico."
+                  icon={AlertTriangle}
+                  tone="red"
+                >
+                  <div className="flex flex-col justify-between gap-5 rounded-2xl border border-red-400/15 bg-red-500/[0.04] p-4 sm:flex-row sm:items-center md:p-5">
+                    <div>
+                      <p className="text-sm font-black text-white">Remoção permanente</p>
+                      <p className="mt-1 max-w-xl text-sm leading-6 text-zinc-500">
+                        Para sua proteção, talvez seja necessário fazer login novamente antes de concluir a exclusão.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => actions.openModal("deleteAccount")}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-red-400/20 bg-red-500/10 px-5 py-3.5 text-[10px] font-black uppercase tracking-[0.13em] text-red-300 transition-colors hover:bg-red-500 hover:text-white sm:w-auto"
+                    >
+                      <Trash2 size={15} />
+                      Excluir conta
+                    </button>
+                  </div>
+                </SettingPanel>
+              </div>
+            )}
+
+            {activeTab === "support" && (
+              <div className="space-y-5 animate-in fade-in slide-in-from-bottom-3 duration-500">
+                <SettingPanel
+                  eyebrow="Suporte"
+                  title="Central de chamados"
+                  description="A abertura de chamados pelo site está em manutenção, mas seus protocolos continuam disponíveis para consulta."
+                  icon={Headset}
+                  tone="amber"
+                >
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="max-w-2xl">
+                      <p className="text-sm leading-6 text-zinc-400">
+                        Para falar com o suporte enquanto a central volta ao ar, envie um e-mail para{" "}
+                        <a href="mailto:cinesorte@gmail.com" className="font-bold text-white transition-colors hover:text-violet-300">
+                          cinesorte@gmail.com
+                        </a>
+                        .
+                      </p>
+                    </div>
+                    <span className="inline-flex w-fit items-center gap-2 rounded-xl border border-amber-400/15 bg-amber-500/10 px-3.5 py-2.5 text-[9px] font-black uppercase tracking-[0.16em] text-amber-300">
+                      <Sparkles size={13} />
+                      Em manutenção
                     </span>
                   </div>
+                </SettingPanel>
 
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 bg-black/40 border border-white/5 rounded-2xl shadow-inner">
-                    <div className="flex items-center gap-5">
-                      <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/5 text-zinc-400">
-                        <Key size={20} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-white mb-0.5">Senha</p>
-                        <p className="text-sm text-zinc-500 tracking-[0.2em]">****************</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => actions.openModal("resetPassword")}
-                      className="text-xs font-black px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/5 text-white rounded-xl transition-all active:scale-95 w-fit"
-                    >
-                      Redefinir
-                    </button>
-                  </div>
-                </div>
+                <SupportTicketTable tickets={supportTickets} isLoading={isLoadingTickets} onRefresh={loadSupportTickets} />
               </div>
+            )}
 
-              <div className="bg-red-950/20 border border-red-500/20 rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-xl relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent pointer-events-none" />
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-black text-red-500 tracking-tight mb-2">Zona de Perigo</h3>
-                  <p className="text-red-400/60 font-medium mb-8">Ações irreversíveis e permanentes.</p>
-
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 bg-black/40 border border-red-500/10 rounded-2xl shadow-inner">
-                    <div>
-                      <p className="text-lg font-black text-white">Excluir Conta</p>
-                      <p className="text-sm text-zinc-500 mt-1">Isso apagará todos os seus dados, listas e reviews.</p>
-                    </div>
-                    <button
-                      onClick={() => actions.openModal("deleteAccount")}
-                      className="px-8 py-4 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-2xl text-sm font-black transition-all shadow-inner active:scale-95 w-full md:w-auto"
-                    >
-                      Excluir Conta
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "support" && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-xl">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                  <div className="max-w-2xl">
-                    <p className="text-[11px] font-black uppercase tracking-[0.22em] text-violet-400 mb-3">Suporte & Contato</p>
-                    <h3 className="text-3xl font-black text-white tracking-tight mb-3">Central de Chamados</h3>
-                    <p className="text-zinc-400 font-medium leading-relaxed">
-                      A abertura de chamados está Em manutenção. Você ainda pode consultar abaixo os protocolos já enviados.
+            {activeTab === "about" && (
+              <div className="animate-in fade-in slide-in-from-bottom-3 duration-500">
+                <SettingPanel
+                  eyebrow="Sistema"
+                  title="Sobre o CineSorte"
+                  description="Informações de transparência sobre dados, metadados e versão da plataforma."
+                  icon={Info}
+                  tone="cyan"
+                >
+                  <div className="space-y-6">
+                    <p className="max-w-3xl text-sm leading-7 text-zinc-300">
+                      O CineSorte é uma plataforma de portfólio desenvolvida para demonstrar capacidades avançadas de engenharia de software fullstack.
                     </p>
-                  </div>
-                  <div className="inline-flex items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-4 text-sm font-black uppercase tracking-widest text-amber-300">
-                    Em manutenção
-                  </div>
-                </div>
-                <div className="mt-8 rounded-2xl border border-white/5 bg-black/30 p-5">
-                  <p className="text-sm font-medium leading-relaxed text-zinc-400">
-                    A abertura de chamados pelo site está temporariamente indisponível. Para falar com o suporte, envie um email para{" "}
-                    <a href="mailto:cinesorte@gmail.com" className="text-white transition-colors hover:text-violet-300">
-                      cinesorte@gmail.com
-                    </a>
-                    .
-                  </p>
-                </div>
-              </div>
 
-              <SupportTicketTable tickets={supportTickets} isLoading={isLoadingTickets} onRefresh={loadSupportTickets} />
-            </div>
-          )}
+                    <div className="divide-y divide-white/[0.06] rounded-2xl border border-white/[0.07] bg-white/[0.025]">
+                      {[
+                        "Utilizamos a API da TMDB para metadados, imagens e informações de filmes e séries.",
+                        "Não hospedamos conteúdo pirata ou arquivos de vídeo.",
+                        "Seus dados são protegidos via Firebase.",
+                      ].map((item) => (
+                        <div key={item} className="flex gap-3 px-4 py-4 text-sm font-medium leading-6 text-zinc-400">
+                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" />
+                          <span>{item}</span>
+                        </div>
+                      ))}
+                    </div>
 
-          {activeTab === "about" && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-zinc-950/80 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-xl">
-                <h3 className="text-2xl font-black text-white tracking-tight mb-8">Sobre o CineSorte</h3>
-
-                <div className="space-y-6">
-                  <p className="text-base leading-relaxed font-medium text-zinc-300 bg-white/[0.02] p-6 rounded-2xl border border-white/5 shadow-inner">
-                    O CineSorte é uma plataforma de portfólio desenvolvida para demonstrar
-                    capacidades avançadas de engenharia de software fullstack.
-                  </p>
-
-                  <div className="bg-black/40 p-6 md:p-8 rounded-2xl border border-white/5 shadow-inner">
-                    <h4 className="text-lg font-black text-white mb-4 flex items-center gap-3">
-                      <Shield size={20} className="text-violet-400" /> Transparência de Dados
-                    </h4>
-                    <ul className="space-y-3">
-                      <li className="flex items-center gap-3 text-zinc-400 font-medium">
-                        <span className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
-                        Utilizamos a API da TMDB para metadados, imagens e informações de filmes e séries.
-                      </li>
-                      <li className="flex items-center gap-3 text-zinc-400 font-medium">
-                        <span className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
-                        Não hospedamos conteúdo pirata ou arquivos de vídeo.
-                      </li>
-                      <li className="flex items-center gap-3 text-zinc-400 font-medium">
-                        <span className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
-                        Seus dados são protegidos via Firebase.
-                      </li>
-                    </ul>
-                    <div className="mt-5 rounded-2xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-100">
+                    <div className="rounded-2xl border border-cyan-400/15 bg-cyan-500/10 px-4 py-3 text-sm leading-6 text-cyan-100">
                       Este produto usa a API da TMDB, mas não é endossado nem certificado pela TMDB.
                     </div>
-                  </div>
 
-                  <div className="pt-8 mt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 bg-white/5 px-4 py-2 rounded-lg border border-white/5">
-                      Versão 4.0.0
-                    </span>
-                    <a
-                      href="https://www.linkedin.com/in/brian-lucca-cardozo"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-violet-400 transition-colors"
-                    >
-                      © 2026 CineSorte
-                    </a>
+                    <div className="flex flex-col justify-between gap-4 border-t border-white/[0.06] pt-5 sm:flex-row sm:items-center">
+                      <span className="w-fit rounded-xl border border-white/[0.07] bg-white/[0.025] px-3.5 py-2.5 text-[9px] font-black uppercase tracking-[0.16em] text-zinc-500">
+                        Versão 4.0.0
+                      </span>
+                      <a
+                        href="https://www.linkedin.com/in/brian-lucca-cardozo"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500 transition-colors hover:text-violet-300"
+                      >
+                        © 2026 CineSorte
+                      </a>
+                    </div>
                   </div>
-                </div>
+                </SettingPanel>
               </div>
-            </div>
-          )}
-        </main>
+            )}
+          </main>
+        </div>
       </div>
 
       <AvatarSelectorModal
@@ -307,57 +419,51 @@ export default function Settings() {
         onSelect={actions.handleAvatarUpdate}
       />
 
-      <Modal isOpen={modals.resetPassword} onClose={() => actions.closeModal("resetPassword")} title="Redefinir Senha">
+      <Modal isOpen={modals.resetPassword} onClose={() => actions.closeModal("resetPassword")} title="Redefinir senha">
         <div className="space-y-6 pt-2">
-          <div className="p-5 bg-violet-500/10 rounded-2xl border border-violet-500/20 text-violet-300 text-sm font-medium shadow-inner">
-            Enviaremos um e-mail seguro para <strong className="text-white bg-black/40 px-2 py-0.5 rounded ml-1">{user?.email}</strong> com as instruções.
+          <div className="rounded-2xl border border-violet-400/15 bg-violet-500/10 p-5 text-sm font-medium leading-6 text-violet-200">
+            Enviaremos um e-mail seguro para <strong className="text-white">{user?.email}</strong> com as instruções.
           </div>
-          <div className="flex justify-end gap-4 mt-8">
-            <button onClick={() => actions.closeModal("resetPassword")} className="px-6 py-4 text-zinc-500 hover:text-white font-black text-xs uppercase tracking-widest transition-colors">
+          <div className="flex justify-end gap-3 pt-2">
+            <button onClick={() => actions.closeModal("resetPassword")} className="px-5 py-3 text-xs font-bold text-zinc-500 transition-colors hover:text-white">
               Cancelar
             </button>
             <button
               onClick={actions.confirmResetPassword}
               disabled={ui.isLoading}
-              className="px-8 py-4 bg-white text-black hover:bg-zinc-200 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] active:scale-95"
+              className="rounded-xl bg-white px-6 py-3 text-xs font-black uppercase tracking-[0.13em] text-black transition-colors hover:bg-violet-100 disabled:opacity-50"
             >
-              {ui.isLoading ? "Enviando..." : "Enviar E-mail"}
+              {ui.isLoading ? "Enviando" : "Enviar e-mail"}
             </button>
           </div>
         </div>
       </Modal>
 
-      <Modal isOpen={modals.deleteAccount} onClose={() => actions.closeModal("deleteAccount")} title="Excluir Conta" type="danger">
-        <div className="space-y-8 pt-2">
-          <p className="text-zinc-300 text-sm leading-relaxed font-medium bg-red-500/5 p-5 rounded-2xl border border-red-500/10">
-            Esta ação é irreversível. Para proteger sua conta, a exclusão só funciona quando seu login é recente. Se a sessão estiver antiga, você será desconectado e deverá entrar novamente antes de tentar excluir.
+      <Modal isOpen={modals.deleteAccount} onClose={() => actions.closeModal("deleteAccount")} title="Excluir conta" type="danger">
+        <div className="space-y-7 pt-2">
+          <p className="rounded-2xl border border-red-400/15 bg-red-500/10 p-5 text-sm font-medium leading-6 text-red-100/90">
+            Esta ação é irreversível. Se a sessão estiver antiga, você será desconectado e deverá entrar novamente antes de tentar excluir.
           </p>
-          <div className="rounded-2xl border border-white/5 bg-black/30 p-5">
-            <p className="text-sm font-medium leading-relaxed text-zinc-400">
-              Para confirmar, digite <span className="text-white">DELETAR CONTA</span>. Seus dados, listas, reviews e histórico serão apagados permanentemente.
-            </p>
-          </div>
           <label className="block">
-            <span className="mb-3 block text-xs font-black uppercase tracking-widest text-zinc-500">
-              Confirmação
-            </span>
-            <input
+            <FieldLabel>Digite DELETAR CONTA</FieldLabel>
+            <TextInput
               value={deleteConfirmText}
               onChange={(event) => actions.setDeleteConfirmText(event.target.value)}
               placeholder="DELETAR CONTA"
-              className="w-full rounded-2xl border border-red-500/20 bg-black/40 px-5 py-4 text-sm font-semibold text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-red-500/60"
+              className="border-red-400/20 focus:border-red-400/60"
             />
           </label>
-          <div className="flex justify-end gap-4 mt-8">
-            <button onClick={() => actions.closeModal("deleteAccount")} className="px-6 py-4 text-zinc-500 hover:text-white font-black text-xs uppercase tracking-widest transition-colors">
+          <div className="flex justify-end gap-3 pt-2">
+            <button onClick={() => actions.closeModal("deleteAccount")} className="px-5 py-3 text-xs font-bold text-zinc-500 transition-colors hover:text-white">
               Cancelar
             </button>
             <button
               onClick={actions.confirmDeleteAccount}
               disabled={ui.isLoading}
-              className="px-8 py-4 bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3 transition-all shadow-[0_0_20px_rgba(220,38,38,0.3)] active:scale-95"
+              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-6 py-3 text-xs font-black uppercase tracking-[0.13em] text-white transition-colors hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {ui.isLoading ? "Excluindo..." : <><Trash2 size={16} /> Excluir conta</>}
+              <Trash2 size={15} />
+              {ui.isLoading ? "Excluindo" : "Excluir conta"}
             </button>
           </div>
         </div>
