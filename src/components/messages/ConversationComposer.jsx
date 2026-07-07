@@ -22,7 +22,7 @@ export default function ConversationComposer({ mode, onClose, onCreated }) {
     if (submitting) return;
 
     if (mode === "direct" && selectedUsers.length === 0) {
-      toast.info("Escolha alguem", "Busque pelo @ do usuario para abrir a conversa.");
+      toast.info("Escolha alguém", "Busque pelo @ do usuario para abrir a conversa.");
       return;
     }
 
@@ -43,7 +43,7 @@ export default function ConversationComposer({ mode, onClose, onCreated }) {
       onCreated(conversation);
       onClose();
     } catch (error) {
-      toast.error("Nao foi possivel criar", error.message || "Tente novamente em instantes.");
+      toast.error("Não foi possivel criar", error.message || "Tente novamente em instantes.");
     } finally {
       setSubmitting(false);
     }
