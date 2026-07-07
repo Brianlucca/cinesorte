@@ -1,13 +1,25 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@shared/context/useAuth';
-import { Check, Eye, EyeOff, ArrowRight, HelpCircle } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowRight,
+  AtSign,
+  Check,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Loader2,
+  Mail,
+  User,
+} from 'lucide-react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import TermsModal from '@shared/components/ui/TermsModal';
 import AuthHelpModal from '@shared/components/ui/AuthHelpModal';
+import AuthShell from '@features/auth/components/AuthShell';
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
-const NAME_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/;
+const NAME_REGEX = /^[\p{L}\s]+$/u;
 const NICKNAME_REGEX = /^[a-z0-9_]+$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_SPECIAL_REGEX = /[!@#$&*.,?_~-]/;
@@ -15,7 +27,11 @@ const PASSWORD_UPPER_REGEX = /[A-Z]/;
 
 export default function Register() {
   const [formData, setFormData] = useState({
-    name: '', nickname: '', email: '', password: '', confirmPassword: '',
+    name: '',
+    nickname: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
   });
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTermsPreview, setShowTermsPreview] = useState(false);
@@ -43,31 +59,42 @@ export default function Register() {
     const isNameValid = formData.name.length >= 2 && NAME_REGEX.test(formData.name);
     const isNickValid = formData.nickname.length >= 3 && NICKNAME_REGEX.test(formData.nickname);
     const isEmailValid = EMAIL_REGEX.test(formData.email);
-    const pwd = formData.password;
-    const pwdLength = pwd.length >= 6;
-    const pwdUpper = PASSWORD_UPPER_REGEX.test(pwd);
-    const pwdSpecial = PASSWORD_SPECIAL_REGEX.test(pwd);
+    const password = formData.password;
+    const pwdLength = password.length >= 6;
+    const pwdUpper = PASSWORD_UPPER_REGEX.test(password);
+    const pwdSpecial = PASSWORD_SPECIAL_REGEX.test(password);
     const isPwdValid = pwdLength && pwdUpper && pwdSpecial;
     const isMatch = formData.confirmPassword.length > 0 && formData.password === formData.confirmPassword;
     return { isNameValid, isNickValid, isEmailValid, pwdLength, pwdUpper, pwdSpecial, isPwdValid, isMatch };
   }, [formData]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const canSubmit =
+    validations.isNameValid &&
+    validations.isNickValid &&
+    validations.isEmailValid &&
+    validations.isPwdValid &&
+    validations.isMatch &&
+    termsAccepted &&
+    turnstileToken;
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
     setFormData((prev) => ({
       ...prev,
       [name]: name === 'nickname' ? value.toLowerCase().replace(/\s/g, '') : value,
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validations.isNameValid) return setError('Nome deve conter apenas letras.');
-    if (!validations.isNickValid) return setError('Nickname inválido (apenas letras, números e _).');
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!validations.isNameValid) return setError('Nome deve conter pelo menos 2 letras.');
+    if (!validations.isNickValid) return setError('Nome de usuário inválido. Use letras minúsculas, números ou _.');
+    if (!validations.isEmailValid) return setError('Digite um email válido.');
     if (!validations.isPwdValid) return setError('Senha não atende aos requisitos.');
     if (!validations.isMatch) return setError('As senhas não conferem.');
     if (!termsAccepted) return setError('Você deve aceitar os termos de uso.');
     if (!turnstileToken) return setError('Complete a verificação de segurança.');
+
     setError('');
     setLoading(true);
     try {
@@ -96,167 +123,219 @@ export default function Register() {
   };
 
   const PasswordPill = ({ met, text }) => (
-    <div className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all ${
-      met ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-black/40 border-white/5 text-zinc-500'
-    }`}>
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] transition-all ${
+        met
+          ? 'border-emerald-400/20 bg-emerald-500/10 text-emerald-300'
+          : 'border-white/[0.07] bg-black/25 text-zinc-600'
+      }`}
+    >
+      {met && <Check size={12} />}
       {text}
+    </span>
+  );
+
+  const footer = (
+    <div className="rounded-[1.25rem] border border-white/[0.07] bg-white/[0.025] p-4 text-center">
+      <p className="text-sm font-medium text-zinc-500">
+        Já possui uma conta?{' '}
+        <Link to={`/login${location.search}`} className="font-black text-white transition-colors hover:text-violet-300">
+          Entrar agora
+        </Link>
+      </p>
     </div>
   );
 
   return (
-    <div className="flex min-h-screen bg-zinc-950 overflow-x-hidden">
-      <div className="hidden lg:flex w-1/2 relative bg-zinc-900 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 to-black z-10" />
-        <img
-          src="/logo.png"
-          alt="Cinema Background"
-          className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay"
-        />
-        <div className="relative z-20 p-12 flex flex-col justify-between h-full">
-          <span className="text-3xl font-black text-white tracking-tight">CineSorte</span>
-          <div className="space-y-6 max-w-lg">
-            <h1 className="text-5xl font-black text-white leading-tight tracking-tight">
-              Descubra seu próximo{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
-                filme favorito
-              </span>.
-            </h1>
-            <p className="text-lg text-zinc-400 leading-relaxed font-medium">
-              Junte-se a milhares de cinéfilos. Crie listas, compartilhe reviews e participe de uma comunidade apaixonada por cinema e séries.
-            </p>
+    <>
+      <AuthShell
+        eyebrow="Primeiro acesso"
+        title="Criar sua conta"
+        description="Leva menos de um minuto para começar a salvar filmes, escrever reviews e conversar com outros perfis."
+        sideTitle="Entre no CineSorte."
+        sideDescription="Monte suas listas, acompanhe seu diário de filmes e descubra recomendações com base no seu gosto."
+        footer={footer}
+        onHelp={() => setShowHelpModal(true)}
+      >
+        {error && (
+          <div className="mb-5 flex items-start gap-3 rounded-2xl border border-red-400/15 bg-red-500/10 p-4 text-sm font-medium leading-6 text-red-200">
+            <AlertCircle size={18} className="mt-0.5 shrink-0 text-red-300" />
+            <span>{error}</span>
           </div>
-          <div className="text-xs text-zinc-500 font-bold uppercase tracking-widest">© 2026 CineSorte. Todos os Direitos Reservados.</div>
-        </div>
-      </div>
+        )}
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 overflow-y-auto overflow-x-hidden">
-        <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 py-8">
-          <div className="text-center lg:text-left">
-            <h2 className="text-4xl font-black text-white tracking-tight">Crie sua conta</h2>
-            <p className="mt-2 text-zinc-500 font-medium">Preencha seus dados para começar.</p>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2.5">
+              <label htmlFor="register-name" className="ml-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                Nome
+              </label>
+              <div className="group relative">
+                <User size={17} className="absolute left-4 top-1/2 z-10 -translate-y-1/2 text-zinc-600 transition-colors group-focus-within:text-violet-300" />
+                <input
+                  id="register-name"
+                  name="name"
+                  type="text"
+                  autoComplete="name"
+                  className={`w-full rounded-2xl border bg-black/30 py-4 pl-11 pr-10 text-sm font-semibold text-white outline-none transition-all placeholder:text-zinc-700 focus:bg-black/45 ${
+                    formData.name && !validations.isNameValid ? 'border-red-400/40' : 'border-white/[0.08] focus:border-violet-300/35'
+                  }`}
+                  placeholder="João Silva"
+                  value={formData.name}
+                  onChange={handleChange}
+                />
+                {validations.isNameValid && <CheckCircle2 size={17} className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-300" />}
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              <label htmlFor="register-nickname" className="ml-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                Usuário
+              </label>
+              <div className="group relative">
+                <AtSign size={17} className="absolute left-4 top-1/2 z-10 -translate-y-1/2 text-zinc-600 transition-colors group-focus-within:text-violet-300" />
+                <input
+                  id="register-nickname"
+                  name="nickname"
+                  type="text"
+                  autoComplete="username"
+                  className={`w-full rounded-2xl border bg-black/30 py-4 pl-11 pr-10 text-sm font-semibold lowercase text-white outline-none transition-all placeholder:text-zinc-700 focus:bg-black/45 ${
+                    formData.nickname && !validations.isNickValid ? 'border-red-400/40' : 'border-white/[0.08] focus:border-violet-300/35'
+                  }`}
+                  placeholder="joaosilva"
+                  value={formData.nickname}
+                  onChange={handleChange}
+                />
+                {validations.isNickValid && <CheckCircle2 size={17} className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-300" />}
+              </div>
+            </div>
           </div>
 
-          {error && (
-            <div className="p-5 rounded-2xl bg-red-500/5 border border-red-500/10 text-red-400 text-sm font-medium flex items-center gap-3 shadow-inner">
-              <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="space-y-3">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Nome</label>
-                <div className="relative">
-                  <input name="name" type="text"
-                    className={`w-full bg-black/40 border rounded-2xl px-5 py-4 text-white font-medium outline-none transition-all shadow-inner placeholder:text-zinc-600 ${formData.name && !validations.isNameValid ? 'border-red-500/50 focus:bg-black/60' : 'border-white/5 focus:border-violet-500/50 focus:bg-black/60'}`}
-                    placeholder="João Silva" value={formData.name} onChange={handleChange} />
-                  {validations.isNameValid && <Check size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-emerald-500" />}
-                </div>
-              </div>
-              <div className="space-y-3">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Nickname</label>
-                <div className="relative">
-                  <input name="nickname" type="text"
-                    className={`w-full bg-black/40 border rounded-2xl px-5 py-4 text-white font-medium outline-none transition-all shadow-inner placeholder:text-zinc-600 lowercase ${formData.nickname && !validations.isNickValid ? 'border-red-500/50 focus:bg-black/60' : 'border-white/5 focus:border-violet-500/50 focus:bg-black/60'}`}
-                    placeholder="joaosilva" value={formData.nickname} onChange={handleChange} />
-                  {validations.isNickValid && <Check size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-emerald-500" />}
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Email</label>
-              <div className="relative">
-                <input name="email" type="email"
-                  className={`w-full bg-black/40 border rounded-2xl px-5 py-4 text-white font-medium outline-none transition-all shadow-inner placeholder:text-zinc-600 ${formData.email && !validations.isEmailValid ? 'border-red-500/50 focus:bg-black/60' : 'border-white/5 focus:border-violet-500/50 focus:bg-black/60'}`}
-                  placeholder="exemplo@email.com" value={formData.email} onChange={handleChange} />
-                {validations.isEmailValid && <Check size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-emerald-500" />}
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Senha</label>
-              <div className="relative">
-                <input name="password" type={showPassword ? 'text' : 'password'}
-                  className={`w-full bg-black/40 border rounded-2xl pl-5 pr-14 py-4 text-white font-medium outline-none transition-all shadow-inner placeholder:text-zinc-600 ${formData.password && !validations.isPwdValid ? 'border-amber-500/50 focus:bg-black/60' : 'border-white/5 focus:border-violet-500/50 focus:bg-black/60'}`}
-                  placeholder="••••••••" value={formData.password} onChange={handleChange} />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors">
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-              <div className="flex gap-2 pt-2 flex-wrap">
-                <PasswordPill met={validations.pwdLength} text="6+ Caracteres" />
-                <PasswordPill met={validations.pwdUpper} text="Maiúscula" />
-                <PasswordPill met={validations.pwdSpecial} text="Símbolo (!@#)" />
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Confirmação</label>
-              <div className="relative">
-                <input name="confirmPassword" type="password"
-                  className={`w-full bg-black/40 border rounded-2xl px-5 py-4 text-white font-medium outline-none transition-all shadow-inner placeholder:text-zinc-600 ${formData.confirmPassword && !validations.isMatch ? 'border-red-500/50 focus:bg-black/60' : 'border-white/5 focus:border-violet-500/50 focus:bg-black/60'}`}
-                  placeholder="••••••••" value={formData.confirmPassword} onChange={handleChange} />
-                {formData.confirmPassword && validations.isMatch && <Check size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-emerald-500" />}
-              </div>
-            </div>
-
-            <label className="flex items-start gap-4 p-5 border border-white/5 rounded-2xl bg-black/20 hover:bg-black/40 cursor-pointer transition-all group shadow-inner">
-              <div className="relative flex items-center mt-0.5 shrink-0">
-                <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)}
-                  className="peer appearance-none w-6 h-6 border-2 border-zinc-600 rounded-lg bg-black/50 checked:bg-violet-600 checked:border-violet-600 transition-all outline-none" />
-                <Check size={16} className="absolute left-1 top-1 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
-              </div>
-              <div className="text-sm font-medium text-zinc-400 group-hover:text-zinc-300 transition-colors leading-relaxed">
-                Concordo com os{' '}
-                <button type="button" onClick={(e) => { e.preventDefault(); setShowTermsPreview(true); }} className="text-white font-bold hover:text-violet-400 transition-colors relative z-10">
-                  Termos de Uso
-                </button>{' '}
-                e Política de Privacidade.
-              </div>
+          <div className="space-y-2.5">
+            <label htmlFor="register-email" className="ml-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+              Email
             </label>
-
-            <div className="flex justify-center lg:justify-start w-full overflow-hidden">
-              <Turnstile
-                siteKey={TURNSTILE_SITE_KEY}
-                onSuccess={(token) => setTurnstileToken(token)}
-                onExpire={() => setTurnstileToken(null)}
-                onError={() => setTurnstileToken(null)}
-                options={{ theme: 'dark', language: 'pt-BR' }}
+            <div className="group relative">
+              <Mail size={17} className="absolute left-4 top-1/2 z-10 -translate-y-1/2 text-zinc-600 transition-colors group-focus-within:text-violet-300" />
+              <input
+                id="register-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                className={`w-full rounded-2xl border bg-black/30 py-4 pl-11 pr-10 text-sm font-semibold text-white outline-none transition-all placeholder:text-zinc-700 focus:bg-black/45 ${
+                  formData.email && !validations.isEmailValid ? 'border-red-400/40' : 'border-white/[0.08] focus:border-violet-300/35'
+                }`}
+                placeholder="seu@email.com"
+                value={formData.email}
+                onChange={handleChange}
               />
+              {validations.isEmailValid && <CheckCircle2 size={17} className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-300" />}
             </div>
-
-            <button type="submit" disabled={loading || !turnstileToken}
-              className="w-full flex items-center justify-center gap-3 py-4 bg-white text-black hover:bg-zinc-200 rounded-2xl font-black text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-95 group"
-            >
-              {loading ? 'Processando...' : 'Criar minha conta'}
-              {!loading && <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />}
-            </button>
-          </form>
-
-          <p className="text-center text-zinc-500 font-medium pt-4">
-            Já possui uma conta?{' '}
-            <Link to={`/login${location.search}`} className="text-white font-bold hover:text-violet-400 transition-colors">
-              Entrar agora
-            </Link>
-          </p>
-
-          <div className="flex justify-center">
-            <button
-              type="button"
-              onClick={() => setShowHelpModal(true)}
-              className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-zinc-500 transition-colors hover:text-white"
-            >
-              <HelpCircle size={16} />
-              Preciso de ajuda
-            </button>
           </div>
-        </div>
-      </div>
+
+          <div className="space-y-2.5">
+            <label htmlFor="register-password" className="ml-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+              Senha
+            </label>
+            <div className="group relative">
+              <input
+                id="register-password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                className={`w-full rounded-2xl border bg-black/30 py-4 pl-4 pr-12 text-sm font-semibold text-white outline-none transition-all placeholder:text-zinc-700 focus:bg-black/45 ${
+                  formData.password && !validations.isPwdValid ? 'border-amber-300/40' : 'border-white/[0.08] focus:border-violet-300/35'
+                }`}
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((value) => !value)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 transition-colors hover:text-white"
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <PasswordPill met={validations.pwdLength} text="6+ caracteres" />
+              <PasswordPill met={validations.pwdUpper} text="Maiúscula" />
+              <PasswordPill met={validations.pwdSpecial} text="Símbolo" />
+            </div>
+          </div>
+
+          <div className="space-y-2.5">
+            <label htmlFor="register-confirm-password" className="ml-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+              Confirmar senha
+            </label>
+            <div className="relative">
+              <input
+                id="register-confirm-password"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                className={`w-full rounded-2xl border bg-black/30 py-4 pl-4 pr-10 text-sm font-semibold text-white outline-none transition-all placeholder:text-zinc-700 focus:bg-black/45 ${
+                  formData.confirmPassword && !validations.isMatch ? 'border-red-400/40' : 'border-white/[0.08] focus:border-violet-300/35'
+                }`}
+                placeholder="••••••••"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+              />
+              {formData.confirmPassword && validations.isMatch && <CheckCircle2 size={17} className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-300" />}
+            </div>
+          </div>
+
+          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/[0.08] bg-black/25 p-4 transition-colors hover:bg-white/[0.035]">
+            <span className="relative mt-0.5 flex shrink-0 items-center">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(event) => setTermsAccepted(event.target.checked)}
+                className="peer h-5 w-5 appearance-none rounded-lg border-2 border-zinc-600 bg-black/50 outline-none transition-all checked:border-violet-500 checked:bg-violet-500"
+              />
+              <Check size={13} className="pointer-events-none absolute left-1 top-1 text-white opacity-0 transition-opacity peer-checked:opacity-100" />
+            </span>
+            <span className="text-sm font-medium leading-6 text-zinc-400">
+              Concordo com os{' '}
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.preventDefault();
+                  setShowTermsPreview(true);
+                }}
+                className="font-black text-white transition-colors hover:text-violet-300"
+              >
+                Termos de Uso
+              </button>{' '}
+              e Política de Privacidade.
+            </span>
+          </label>
+
+          <div className="overflow-hidden rounded-2xl border border-white/[0.07] bg-black/20 p-3">
+            <Turnstile
+              siteKey={TURNSTILE_SITE_KEY}
+              onSuccess={(token) => setTurnstileToken(token)}
+              onExpire={() => setTurnstileToken(null)}
+              onError={() => setTurnstileToken(null)}
+              options={{ theme: 'dark', language: 'pt-BR' }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || !canSubmit}
+            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white px-5 py-4 text-sm font-black uppercase tracking-[0.08em] text-zinc-950 shadow-xl shadow-black/20 transition-all hover:scale-[1.01] hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-55 active:scale-[0.99]"
+          >
+            {loading ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
+            {loading ? 'Criando conta' : 'Criar conta'}
+          </button>
+        </form>
+      </AuthShell>
 
       {showTermsPreview && <TermsModal variant="info" onClose={() => setShowTermsPreview(false)} />}
       <AuthHelpModal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} />
-    </div>
+    </>
   );
 }

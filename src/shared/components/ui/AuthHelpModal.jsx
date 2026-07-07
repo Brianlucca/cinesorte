@@ -24,7 +24,7 @@ const faqs = [
   {
     icon: KeyRound,
     question: 'Esqueci minha senha. Como recupero?',
-    answer: 'Na tela de login, clique em "Esqueceu a senha?" e informe seu email para receber um link seguro de redefinição.',
+    answer: 'Na tela de login, clique em "Esqueci minha senha" e informe seu email para receber um link seguro de redefinição.',
   },
   {
     icon: ShieldCheck,
