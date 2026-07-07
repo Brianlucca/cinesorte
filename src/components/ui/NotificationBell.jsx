@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Bell, Heart, UserPlus, TrendingUp, Layers, Info, CheckCheck, AtSign, X } from "lucide-react";
+import { Bell, Heart, UserPlus, TrendingUp, Layers, Info, CheckCheck, AtSign, MessageCircle, X } from "lucide-react";
 import { getNotifications, getUnreadCount, markNotificationRead } from "../../services/api";
 
 const NOTIFICATION_CACHE_TTL = 30000;
@@ -96,6 +96,19 @@ export default function NotificationBell() {
   }, [isOpen]);
 
   useEffect(() => {
+    const refreshNotifications = () => {
+      if (isOpen) {
+        loadNotifications({ force: true, allowPopup: false });
+      } else {
+        loadUnreadCount({ force: true });
+      }
+    };
+
+    window.addEventListener("cinesorte:notifications-refresh", refreshNotifications);
+    return () => window.removeEventListener("cinesorte:notifications-refresh", refreshNotifications);
+  }, [isOpen]);
+
+  useEffect(() => {
     if ((!isOpen && !popupNotif) || !buttonRef.current) return undefined;
 
     const updateAnchor = () => {
@@ -155,6 +168,16 @@ export default function NotificationBell() {
 
     setIsOpen(false);
 
+    if (notif.type === "message") {
+      window.dispatchEvent(
+        new CustomEvent("cinesorte:open-messages", {
+          detail: { conversationId: notif.conversationId },
+        })
+      );
+      loadUnreadCount({ force: true });
+      return;
+    }
+
     if (notif.type === "follow") {
       const targetUser = notif.senderUsername || notif.senderName;
       if (targetUser) {
@@ -207,6 +230,8 @@ export default function NotificationBell() {
         return <Layers size={16} className="text-purple-500" />;
       case "mention":
         return <AtSign size={16} className="text-violet-500" />;
+      case "message":
+        return <MessageCircle size={16} className="text-cyan-400" />;
       default:
         return <Info size={16} className="text-zinc-400" />;
     }

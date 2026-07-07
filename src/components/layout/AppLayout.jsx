@@ -24,6 +24,7 @@ import api from "../../services/api";
 import NotificationBell from "../ui/NotificationBell";
 import SearchModal from "../ui/SearchModal";
 import TermsModal from "../ui/TermsModal";
+import MessagesDock from "../messages/MessagesDock";
 
 function FeedPreview({ user }) {
   return (
@@ -269,6 +270,7 @@ export default function AppLayout() {
       </main>
 
       <NotificationBell />
+      <MessagesDock />
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       {showTermsModal && <TermsModal />}
     </div>

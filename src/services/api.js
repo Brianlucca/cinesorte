@@ -45,7 +45,7 @@ export const requestPasswordReset = (email) => api.post("/users/reset-password",
 export const createSupportTicket = (data) => api.post("/users/support/tickets", data);
 export const getMySupportTickets = () => api.get("/users/support/tickets");
 
-export const searchUsers = (query, signal) => api.get(`/users/search?query=${query}`, { signal });
+export const searchUsers = (query, signal) => api.get("/users/search", { params: { query }, signal });
 
 export const getUserLists = (username) => api.get(`/users/lists/${username}`);
 export const createOrUpdateList = (listData) => api.post("/users/lists", listData);
@@ -111,5 +111,27 @@ export const getAnimations = () => api.get("/tmdb/animations");
 export const getNotifications = () => api.get("/notifications");
 export const getUnreadCount = () => api.get("/notifications/count");
 export const markNotificationRead = (notificationId) => api.put(`/notifications/${notificationId}/read`);
+
+export const getMessageConversations = () => api.get("/messages/conversations");
+export const getHiddenOwnedMessageGroups = () => api.get("/messages/conversations/hidden-owned");
+export const createDirectConversation = (data) => api.post("/messages/conversations/direct", data);
+export const createGroupConversation = (data) => api.post("/messages/conversations/group", data);
+export const getConversationMessages = (conversationId, params = {}) =>
+  api.get(`/messages/conversations/${conversationId}/messages`, { params });
+export const sendConversationMessage = (conversationId, data) =>
+  api.post(`/messages/conversations/${conversationId}/messages`, data);
+export const markConversationRead = (conversationId) => api.post(`/messages/conversations/${conversationId}/read`);
+export const restoreMessageConversation = (conversationId) => api.post(`/messages/conversations/${conversationId}/restore`);
+export const updateGroupConversation = (conversationId, data) =>
+  api.patch(`/messages/conversations/${conversationId}/group`, data);
+export const addGroupMembers = (conversationId, data) =>
+  api.post(`/messages/conversations/${conversationId}/members`, data);
+export const removeGroupMember = (conversationId, memberId) =>
+  api.delete(`/messages/conversations/${conversationId}/members/${memberId}`);
+export const deleteMessageConversation = (conversationId) =>
+  api.delete(`/messages/conversations/${conversationId}`);
+export const deleteMessageGroup = (conversationId) =>
+  api.delete(`/messages/conversations/${conversationId}/group`);
+export const getMessageUnreadCount = () => api.get("/messages/unread-count");
 
 export default api;
