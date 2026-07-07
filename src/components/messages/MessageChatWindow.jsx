@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AtSign, Clapperboard, EyeOff, Film, Loader2, MessageCircle, MoreHorizontal, Send, Trash2, Users, X } from "lucide-react";
 import MessageAvatar from "./MessageAvatar";
 import MediaAttachmentPanel from "./MediaAttachmentPanel";
 import MediaMessageCard from "./MediaMessageCard";
 import { formatMessageTime } from "./messageUtils";
 
-function ConversationDetailsPanel({ thread, messages, onClose, onDeleteConversation, onDeleteGroup }) {
+function ConversationDetailsPanel({ thread, messages, onClose, onDeleteConversation, onDeleteGroup, onOpenProfile }) {
   const sharedMedia = messages
     .filter((message) => message.media)
     .map((message) => ({
@@ -13,6 +14,7 @@ function ConversationDetailsPanel({ thread, messages, onClose, onDeleteConversat
       messageId: message.id,
       sharedAt: message.createdAt,
       sharedBy: message.isMine ? "Voce" : message.senderUsername || "usuario",
+      sharedByUsername: message.isMine ? null : message.senderUsername || null,
     }))
     .reverse();
   const members = thread.members || [];
@@ -41,7 +43,12 @@ function ConversationDetailsPanel({ thread, messages, onClose, onDeleteConversat
 
           <div className="space-y-2">
             {(thread.type === "group" ? members : [privateMember].filter(Boolean)).map((member) => (
-              <div key={member.username || member.name} className="flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.025] p-3">
+              <button
+                key={member.username || member.name}
+                type="button"
+                onClick={() => onOpenProfile(member)}
+                className="flex w-full items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.025] p-3 text-left hover:bg-white/[0.04]"
+              >
                 <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl border border-white/[0.06] bg-violet-500/10 text-sm font-bold text-violet-100">
                   {member.photoURL ? <img src={member.photoURL} alt="" className="h-full w-full object-cover" /> : member.name?.[0] || "U"}
                 </span>
@@ -53,7 +60,7 @@ function ConversationDetailsPanel({ thread, messages, onClose, onDeleteConversat
                     {member.username ? `@${member.username}` : member.levelTitle || "CineSorte"}
                   </span>
                 </span>
-              </div>
+              </button>
             ))}
           </div>
         </section>
@@ -75,7 +82,19 @@ function ConversationDetailsPanel({ thread, messages, onClose, onDeleteConversat
                 <div key={`${media.messageId}-${media.id}`} className="space-y-1.5">
                   <MediaMessageCard media={media} horizontal />
                   <p className="px-1 text-[10px] text-zinc-700">
-                    Compartilhado por {media.sharedBy} {media.sharedAt ? `as ${formatMessageTime(media.sharedAt)}` : ""}
+                    Compartilhado por{" "}
+                    {media.sharedByUsername ? (
+                      <button
+                        type="button"
+                        onClick={() => onOpenProfile({ username: media.sharedByUsername })}
+                        className="font-semibold text-zinc-500 hover:text-violet-200"
+                      >
+                        @{media.sharedByUsername}
+                      </button>
+                    ) : (
+                      media.sharedBy
+                    )}{" "}
+                    {media.sharedAt ? `as ${formatMessageTime(media.sharedAt)}` : ""}
                   </p>
                 </div>
               ))}
@@ -120,6 +139,7 @@ function ConversationDetailsPanel({ thread, messages, onClose, onDeleteConversat
 }
 
 export default function MessageChatWindow({ thread, messages, loading, sending, onClose, onSend, onDeleteConversation, onDeleteGroup }) {
+  const navigate = useNavigate();
   const [showAttachments, setShowAttachments] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -140,17 +160,34 @@ export default function MessageChatWindow({ thread, messages, loading, sending, 
     setShowAttachments(false);
   };
 
+  const openProfile = (memberOrUsername) => {
+    const isSelf = Boolean(memberOrUsername?.isSelf);
+    const username = typeof memberOrUsername === "string" ? memberOrUsername : memberOrUsername?.username;
+    navigate(isSelf || !username ? "/app/profile" : `/app/profile/${username}`);
+  };
+
+  const openThreadProfile = () => {
+    if (thread.type !== "direct") return;
+    const privateMember = (thread.members || []).find((member) => !member.isSelf);
+    openProfile(privateMember || thread.username);
+  };
+
   return (
     <section className="relative flex h-full min-h-0 w-full overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-[#0d0d11] shadow-[0_24px_90px_rgba(0,0,0,0.45)] md:h-[620px] md:w-[460px]">
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-white/[0.06] bg-[#0d0d11]/95 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={openThreadProfile}
+            disabled={thread.type !== "direct"}
+            className="flex min-w-0 items-center gap-3 rounded-xl text-left disabled:cursor-default"
+          >
             <MessageAvatar thread={thread} size="sm" />
             <div className="min-w-0">
               <h3 className="truncate text-sm font-semibold text-zinc-100">{thread.displayName}</h3>
               <p className="mt-0.5 truncate text-xs text-zinc-600">{thread.subtitle}</p>
             </div>
-          </div>
+          </button>
           <div className="flex items-center gap-1">
             <button
               type="button"
@@ -178,7 +215,13 @@ export default function MessageChatWindow({ thread, messages, loading, sending, 
                 <div key={message.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[82%] ${isMine ? "items-end" : "items-start"} flex flex-col gap-2`}>
                     {!isMine && thread.type === "group" && (
-                      <span className="text-[10px] font-semibold text-zinc-600">@{message.senderUsername || "usuario"}</span>
+                      <button
+                        type="button"
+                        onClick={() => message.senderUsername && openProfile(message.senderUsername)}
+                        className="text-[10px] font-semibold text-zinc-600 hover:text-violet-200"
+                      >
+                        @{message.senderUsername || "usuario"}
+                      </button>
                     )}
                     {message.media && <MediaMessageCard media={message.media} />}
                     {message.text && (
@@ -267,6 +310,7 @@ export default function MessageChatWindow({ thread, messages, loading, sending, 
           onClose={() => setShowDetails(false)}
           onDeleteConversation={onDeleteConversation}
           onDeleteGroup={onDeleteGroup}
+          onOpenProfile={openProfile}
         />
       )}
     </section>

@@ -45,7 +45,7 @@ export default function MediaAttachmentPanel({ onPick }) {
   return (
     <div className="border-t border-white/[0.06] bg-[#0a0a0d] p-3">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Enviar filme ou serie</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Enviar filme ou série</span>
         {loading && <Loader2 size={14} className="animate-spin text-zinc-500" />}
       </div>
       <div className="mb-3 flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-black/25 px-3 py-2.5">
@@ -72,7 +72,7 @@ export default function MediaAttachmentPanel({ onPick }) {
         </div>
       ) : (
         <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-4 text-center text-xs text-zinc-600">
-          {query.trim().length < 2 ? "Busque um filme ou serie para anexar ao papo." : "Nenhum titulo encontrado."}
+          {query.trim().length < 2 ? "Busque um filme ou série para anexar ao papo." : "Nenhum título encontrado."}
         </div>
       )}
     </div>

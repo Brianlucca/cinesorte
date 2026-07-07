@@ -33,6 +33,24 @@ export function getPosterUrl(path) {
   return `https://image.tmdb.org/t/p/w342${path}`;
 }
 
+export function getMediaDetailsPath(media = {}) {
+  const rawId = media.mediaId || media.id;
+  if (!rawId) return null;
+
+  const cleanId = String(rawId).replace(/^(movie-|tv-)/, "");
+  const mediaType = media.mediaType || media.media_type || (media.name ? "tv" : "movie");
+
+  if (mediaType === "episode" || (cleanId.includes("-s") && cleanId.includes("-e"))) {
+    const match = cleanId.match(/^(\d+)-s(\d+)-e(\d+)$/);
+    if (!match) return `/app/tv/${cleanId}`;
+    const [, tvId, season, episode] = match;
+    return `/app/tv/${tvId}/season/${season}/episode/${episode}`;
+  }
+
+  if (mediaType === "person") return `/app/person/${cleanId}`;
+  return `/app/${mediaType === "tv" ? "tv" : "movie"}/${cleanId}`;
+}
+
 export function normalizeSearchMedia(item) {
   const mediaType = item.media_type || (item.name ? "tv" : "movie");
   const rating = Number(item.vote_average);
