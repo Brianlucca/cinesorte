@@ -1,142 +1,168 @@
-import { UserPlus, UserCheck, Sparkles, Users, Calendar, Star, MessageSquare } from 'lucide-react';
+import {
+  Calendar,
+  Loader2,
+  MessageCircle,
+  MessageSquare,
+  Sparkles,
+  UserCheck,
+  UserPlus,
+  Users,
+} from 'lucide-react';
 import LevelBadge from '@shared/components/ui/LevelBadge';
 import { useAuth } from '@shared/context/useAuth';
 
-export default function PublicProfileHeader({ user, isFollowing, followsYou, onFollow, compatibility }) {
+const getCreatedYear = (value) => {
+  if (!value) return null;
+  const date = value._seconds ? new Date(value._seconds * 1000) : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.getFullYear();
+};
+
+export default function PublicProfileHeader({
+  user,
+  isFollowing,
+  followsYou,
+  onFollow,
+  onMessage,
+  messaging,
+  compatibility,
+}) {
   const { user: currentUser } = useAuth();
   const isMe = currentUser?.username === user?.username;
+  const createdYear = getCreatedYear(user?.createdAt);
 
   return (
-    <div className="relative w-full group/header mb-12">
-        
-        <div className="relative w-full h-[50vh] min-h-[400px] overflow-hidden rounded-[2.5rem] shadow-2xl bg-black border border-white/5">
-            {user?.backgroundURL ? (
-                <img 
-                    src={user.backgroundURL} 
-                    alt="Cover" 
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover/header:scale-105 opacity-90" 
-                />
-            ) : (
-                <div className="w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/40 via-zinc-950 to-black" />
-            )}
-            
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent" />
-        </div>
+    <section className="group/header relative overflow-hidden rounded-[2rem] border border-white/[0.07] bg-[#0d0d11] shadow-[0_30px_100px_rgba(0,0,0,0.36)]">
+      <div className="relative min-h-[500px] overflow-hidden md:min-h-[460px]">
+        {user?.backgroundURL ? (
+          <img
+            key={user.backgroundURL}
+            src={user.backgroundURL}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-center opacity-90 transition-transform duration-[1400ms] group-hover/header:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(124,58,237,0.32),transparent_34%),linear-gradient(135deg,#18111f_0%,#09090b_58%,#050507_100%)]" />
+        )}
 
-        <div className="relative px-6 md:px-10 -mt-32 z-10">
-            <div className="flex flex-col md:flex-row items-end gap-8">
-                
-                <div className="relative group/avatar shrink-0 mx-auto md:mx-0">
-                    <div className="w-48 h-48 rounded-full p-2 bg-zinc-950 shadow-2xl relative z-10 border border-white/5">
-                        <div className="w-full h-full rounded-full bg-zinc-900 overflow-hidden relative border border-white/10 shadow-inner">
-                            {user?.photoURL ? (
-                                <img src={user.photoURL} className="w-full h-full object-cover" alt={user.name} />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-violet-600/20 text-violet-400 text-6xl font-black">
-                                    {user?.name?.charAt(0) || 'U'}
-                                </div>
-                            )}
-                        </div>
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,11,0.98)_0%,rgba(8,8,11,0.72)_42%,rgba(8,8,11,0.25)_76%,rgba(8,8,11,0.12)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(0deg,#0d0d11_0%,rgba(13,13,17,0.88)_16%,transparent_58%,rgba(13,13,17,0.36)_100%)]" />
+        <div className="pointer-events-none absolute -bottom-20 left-[18%] h-80 w-[36rem] rounded-full bg-violet-700/10 blur-[120px]" />
+
+        <div className="relative z-10 flex min-h-[500px] flex-col justify-end px-5 pb-8 pt-24 sm:px-7 md:min-h-[460px] md:px-10 md:pb-9 xl:px-12">
+          <div className="flex flex-col gap-6 md:flex-row md:items-end">
+            <div className="relative mx-auto shrink-0 md:mx-0">
+              <div className="relative h-36 w-36 overflow-hidden rounded-[1.5rem] border border-white/15 bg-zinc-900 p-1.5 shadow-[0_24px_62px_rgba(0,0,0,0.58)] md:h-44 md:w-44">
+                <div className="relative h-full w-full overflow-hidden rounded-[1.55rem] bg-zinc-900">
+                  {user?.photoURL ? (
+                    <img src={user.photoURL} className="h-full w-full object-cover" alt={user.name || 'Avatar'} />
+                  ) : (
+                    <div className="grid h-full w-full place-items-center bg-violet-600/20 text-6xl font-black uppercase text-violet-300">
+                      {user?.name?.charAt(0) || 'U'}
                     </div>
-                    {user?.levelTitle && (
-                        <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap drop-shadow-xl">
-                            <LevelBadge title={user.levelTitle} size="md" />
-                        </div>
-                    )}
+                  )}
                 </div>
+              </div>
 
-                <div className="flex-1 text-center md:text-left pb-2 w-full">
-                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                        <div>
-                            <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight drop-shadow-2xl capitalize">
-                                {user?.name}
-                            </h1>
-                            <div className="flex items-center justify-center md:justify-start gap-3 flex-wrap mt-2">
-                                <span className="text-violet-400 font-bold text-lg md:text-xl tracking-tight">@{user?.username}</span>
-                                
-                                {followsYou && !isMe && (
-                                    <span className="flex items-center gap-1.5 bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full text-[10px] uppercase tracking-widest font-black border border-zinc-700 animate-in fade-in shadow-inner">
-                                        Te Segue
-                                    </span>
-                                )}
-
-                                {compatibility > 0 && !isMe && (
-                                    <span className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-[10px] uppercase tracking-widest font-black border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.15)]">
-                                        <Sparkles size={12} /> {compatibility}% Compatível
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-
-                        {!isMe && (
-                            <div className="flex flex-col items-center md:items-end gap-3 mt-4 md:mt-0">
-                                <button 
-                                    onClick={onFollow}
-                                    className={`inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg active:scale-95 whitespace-nowrap min-w-[160px] ${
-                                        isFollowing 
-                                        ? 'bg-zinc-900/80 text-zinc-400 hover:bg-red-500/10 hover:text-red-400 border border-white/5 hover:border-red-500/20 shadow-inner' 
-                                        : 'bg-white text-black hover:bg-zinc-200 border border-transparent shadow-[0_0_20px_rgba(255,255,255,0.1)]'
-                                    }`}
-                                >
-                                    {isFollowing ? (
-                                        <>
-                                            <UserCheck size={18} /> 
-                                            Seguindo
-                                        </>
-                                    ) : (
-                                        <>
-                                            <UserPlus size={18} /> 
-                                            Seguir
-                                        </>
-                                    )}
-                                </button>
-                                
-                                {followsYou && (
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 bg-zinc-900/80 px-4 py-2 rounded-xl border border-white/5 animate-in fade-in backdrop-blur-sm shadow-inner">
-                                        Este usuário segue você
-                                    </span>
-                                )}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="mt-8 flex flex-col gap-6">
-                        {user?.bio && (
-                            <div className="flex items-start gap-3 justify-center md:justify-start">
-                                <span className="w-1.5 h-5 bg-violet-500 rounded-full mt-1 shrink-0 hidden md:block"></span>
-                                <p className="text-base leading-relaxed max-w-2xl font-medium text-zinc-300 text-justify md:text-left drop-shadow-sm">
-                                    {user.bio}
-                                </p>
-                            </div>
-                        )}
-                        
-                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                            <div className="flex items-center gap-3 text-xs font-black uppercase tracking-widest bg-black/40 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/5 cursor-default shadow-inner text-zinc-400 group">
-                                <Users size={16} className="text-violet-500 group-hover:text-violet-400 transition-colors" />
-                                <span><strong className="text-white text-sm group-hover:text-violet-100 transition-colors">{user?.followersCount || 0}</strong> Seg.</span>
-                            </div>
-
-                            <div className="flex items-center gap-3 text-xs font-black uppercase tracking-widest bg-black/40 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/5 cursor-default shadow-inner text-zinc-400 group">
-                                <UserPlus size={16} className="text-violet-500 group-hover:text-violet-400 transition-colors" />
-                                <span><strong className="text-white text-sm group-hover:text-violet-100 transition-colors">{user?.followingCount || 0}</strong> Seg.</span>
-                            </div>
-
-                            <div className="flex items-center gap-3 text-xs font-black uppercase tracking-widest bg-black/40 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/5 cursor-default shadow-inner text-zinc-400 group">
-                                <MessageSquare size={16} className="text-violet-500 group-hover:text-violet-400 transition-colors" />
-                                <span><strong className="text-white text-sm group-hover:text-violet-100 transition-colors">{user?.reviewsCount || 0}</strong> Reviews</span>
-                            </div>
-
-                            {user?.createdAt && (
-                                <div className="hidden md:flex items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.2em] bg-black/40 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/5 text-zinc-500 shadow-inner">
-                                    <Calendar size={14} />
-                                    <span>Desde {user.createdAt instanceof Date ? user.createdAt.getFullYear() : new Date(user.createdAt).getFullYear()}</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+              {user?.levelTitle && (
+                <div className="absolute -bottom-4 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap drop-shadow-xl">
+                  <LevelBadge title={user.levelTitle} size="md" />
                 </div>
+              )}
             </div>
+
+            <div className="min-w-0 flex-1 text-center md:text-left">
+              <div className="mb-3 flex flex-wrap items-center justify-center gap-2 md:justify-start">
+                {createdYear && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-300 backdrop-blur-xl">
+                    <Calendar size={13} /> Desde {createdYear}
+                  </span>
+                )}
+
+                {followsYou && !isMe && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-300 backdrop-blur-xl">
+                    <UserCheck size={13} /> Te segue
+                  </span>
+                )}
+
+                {compatibility > 0 && !isMe && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/15 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-300 backdrop-blur-xl">
+                    <Sparkles size={13} /> {compatibility}% compatível
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+                <div className="min-w-0">
+                  <h2 className="break-words text-2xl font-black leading-[1.02] tracking-[-0.035em] text-white drop-shadow-2xl sm:text-3xl md:text-4xl">
+                    {user?.name || 'Usuário'}
+                  </h2>
+                  <p className="mt-2 text-sm font-black tracking-tight text-violet-300 md:text-base">@{user?.username}</p>
+                </div>
+
+                {!isMe && (
+                  <div className="flex flex-col gap-2.5 sm:flex-row lg:justify-end">
+                    <button
+                      type="button"
+                      onClick={onFollow}
+                      className={`inline-flex items-center justify-center gap-2.5 rounded-full px-5 py-3 text-[10px] font-black uppercase tracking-[0.15em] shadow-xl shadow-black/20 transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                        isFollowing
+                          ? 'border border-white/10 bg-black/35 text-zinc-300 hover:border-red-300/25 hover:bg-red-500/10 hover:text-red-300'
+                          : 'bg-white text-zinc-950 hover:bg-violet-100'
+                      }`}
+                    >
+                      {isFollowing ? <UserCheck size={17} /> : <UserPlus size={17} />}
+                      {isFollowing ? 'Seguindo' : 'Seguir'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={onMessage}
+                      disabled={messaging}
+                      className="inline-flex items-center justify-center gap-2.5 rounded-full border border-violet-300/20 bg-violet-500/15 px-5 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-violet-100 shadow-xl shadow-black/20 transition-all hover:scale-[1.02] hover:bg-violet-500/25 disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.98]"
+                    >
+                      {messaging ? <Loader2 size={17} className="animate-spin" /> : <MessageCircle size={17} />}
+                      Mensagem
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6">
+                {user?.bio ? (
+                  <p className="mx-auto max-w-3xl text-sm font-medium leading-7 text-zinc-300 drop-shadow-sm md:mx-0">
+                    {user.bio}
+                  </p>
+                ) : (
+                  <div className="mx-auto inline-flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-black/25 px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500 md:mx-0">
+                    <MessageSquare size={15} />
+                    Sem biografia ainda
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5 md:justify-start">
+                <div className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2.5 text-xs font-bold text-zinc-400 backdrop-blur-xl">
+                  <Users size={15} className="text-violet-300" />
+                  <strong className="text-white">{user?.followersCount || 0}</strong>
+                  seguidores
+                </div>
+
+                <div className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2.5 text-xs font-bold text-zinc-400 backdrop-blur-xl">
+                  <UserPlus size={15} className="text-violet-300" />
+                  <strong className="text-white">{user?.followingCount || 0}</strong>
+                  seguindo
+                </div>
+
+                <div className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2.5 text-xs font-bold text-zinc-400 backdrop-blur-xl">
+                  <MessageSquare size={15} className="text-violet-300" />
+                  <strong className="text-white">{user?.reviewsCount || 0}</strong>
+                  reviews
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-    </div>
+      </div>
+    </section>
   );
 }

@@ -3,7 +3,7 @@ import { Loader2, Search } from "lucide-react";
 import { getUserFollowing } from "@shared/api/api";
 import { useAuth } from "@shared/context/useAuth";
 
-export default function UserSearchBox({ onPick, selected = [], placeholder = "Buscar usuario" }) {
+export default function UserSearchBox({ onPick, selected = [], placeholder = "Buscar usuário" }) {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [following, setFollowing] = useState([]);

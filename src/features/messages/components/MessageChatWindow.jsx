@@ -13,7 +13,7 @@ function ConversationDetailsPanel({ thread, messages, onClose, onDeleteConversat
       ...message.media,
       messageId: message.id,
       sharedAt: message.createdAt,
-      sharedBy: message.isMine ? "Voce" : message.senderUsername || "usuario",
+      sharedBy: message.isMine ? "Você" : message.senderUsername || "usuário",
       sharedByUsername: message.isMine ? null : message.senderUsername || null,
     }))
     .reverse();
@@ -54,7 +54,7 @@ function ConversationDetailsPanel({ thread, messages, onClose, onDeleteConversat
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-semibold text-zinc-100">
-                    {member.isSelf ? "Voce" : member.name || member.username}
+                    {member.isSelf ? "Você" : member.name || member.username}
                   </span>
                   <span className="block truncate text-xs text-zinc-600">
                     {member.username ? `@${member.username}` : member.levelTitle || "CineSorte"}
@@ -69,7 +69,7 @@ function ConversationDetailsPanel({ thread, messages, onClose, onDeleteConversat
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-500">
               <Film size={13} className="text-cyan-300" />
-              Filmes e series
+              Filmes e séries
             </div>
             <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-2 py-1 text-[10px] font-semibold text-zinc-600">
               {sharedMedia.length}
@@ -220,7 +220,7 @@ export default function MessageChatWindow({ thread, messages, loading, sending, 
                         onClick={() => message.senderUsername && openProfile(message.senderUsername)}
                         className="text-[10px] font-semibold text-zinc-600 hover:text-violet-200"
                       >
-                        @{message.senderUsername || "usuario"}
+                        @{message.senderUsername || "usuário"}
                       </button>
                     )}
                     {message.media && <MediaMessageCard media={message.media} />}

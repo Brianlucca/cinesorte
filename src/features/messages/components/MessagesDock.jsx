@@ -99,7 +99,7 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
       setHiddenConversations(hiddenList);
       setUnreadTotal(list.reduce((total, item) => total + (Number(item.unreadCount) || 0), 0));
     } catch (error) {
-      if (!silent) toast.error("Mensagens indisponiveis", error.message || "Nao foi possivel carregar as conversas.");
+      if (!silent) toast.error("Mensagens indisponíveis", error.message || "Não foi possível carregar as conversas.");
     } finally {
       if (!silent) setLoadingConversations(false);
     }
@@ -115,7 +115,7 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
         [conversationId]: Array.isArray(data) ? data : [],
       }));
     } catch (error) {
-      if (!silent) toast.error("Conversa indisponivel", error.message || "Nao foi possivel carregar as mensagens.");
+      if (!silent) toast.error("Conversa indisponível", error.message || "Não foi possível carregar as mensagens.");
     } finally {
       if (!silent) setLoadingMessages(false);
     }
@@ -136,7 +136,7 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
         });
         setFilter("group");
       } catch (error) {
-        toast.error("Nao foi possivel restaurar", error.message || "Tente novamente em instantes.");
+        toast.error("Não foi possível restaurar", error.message || "Tente novamente em instantes.");
         return;
       }
     }
@@ -196,7 +196,7 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
       await loadConversations({ silent: true });
       window.dispatchEvent(new CustomEvent("cinesorte:notifications-refresh"));
     } catch (error) {
-      toast.error("Mensagem nao enviada", error.message || "Tente novamente em instantes.");
+      toast.error("Mensagem não enviada", error.message || "Tente novamente em instantes.");
     } finally {
       setSending(false);
     }
@@ -223,7 +223,7 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
       await loadConversations({ silent: true });
       window.dispatchEvent(new CustomEvent("cinesorte:notifications-refresh"));
     } catch (error) {
-      toast.error(isGroup ? "Nao foi possivel ocultar" : "Nao foi possivel apagar", error.message || "Tente novamente em instantes.");
+      toast.error(isGroup ? "Não foi possível ocultar" : "Não foi possível apagar", error.message || "Tente novamente em instantes.");
     }
   };
 
@@ -244,7 +244,7 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
       await loadConversations({ silent: true });
       window.dispatchEvent(new CustomEvent("cinesorte:notifications-refresh"));
     } catch (error) {
-      toast.error("Nao foi possivel excluir", error.message || "Apenas o criador pode excluir o grupo.");
+      toast.error("Não foi possível excluir", error.message || "Apenas o criador pode excluir o grupo.");
     }
   };
 
@@ -354,7 +354,7 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
                 type="button"
                 onClick={() => setComposerMode((value) => (value === "direct" ? null : "direct"))}
                 className="grid h-9 w-9 place-items-center rounded-xl text-zinc-500 hover:bg-white/[0.06] hover:text-white"
-                title="Buscar usuario"
+                title="Buscar usuário"
               >
                 <UserPlus size={16} />
               </button>

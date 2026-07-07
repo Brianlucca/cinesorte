@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { 
-    getPublicProfile, 
-    getUserReviewsOnly,
-    followUser, 
-    unfollowUser, 
-    checkFollowStatus,
-    getMatchPercentage 
+import {
+  getPublicProfile,
+  getUserReviewsOnly,
+  followUser,
+  unfollowUser,
+  checkFollowStatus,
+  getMatchPercentage,
+  createDirectConversation,
 } from '@shared/api/api';
 import { useToast } from '@shared/context/useToast';
 import { useAuth } from '@shared/context/useAuth';
@@ -16,11 +17,11 @@ export function usePublicProfileLogic(username) {
   const [reviewsCursor, setReviewsCursor] = useState(null);
   const [hasMoreReviews, setHasMoreReviews] = useState(false);
   const [loadingMoreReviews, setLoadingMoreReviews] = useState(false);
-
   const [isFollowing, setIsFollowing] = useState(false);
   const [followsYou, setFollowsYou] = useState(false);
   const [loading, setLoading] = useState(true);
   const [compatibility, setCompatibility] = useState(0);
+  const [messaging, setMessaging] = useState(false);
 
   const { user } = useAuth();
   const toast = useToast();
@@ -33,7 +34,7 @@ export function usePublicProfileLogic(username) {
       try {
         const [profileData, reviewsResponse] = await Promise.all([
           getPublicProfile(username),
-          getUserReviewsOnly(username)
+          getUserReviewsOnly(username),
         ]);
 
         if (!isMounted) return;
@@ -44,14 +45,14 @@ export function usePublicProfileLogic(username) {
             createdAt: profileData.createdAt?._seconds
               ? new Date(profileData.createdAt._seconds * 1000)
               : new Date(profileData.createdAt || Date.now()),
-            trophies: profileData.trophies || []
+            trophies: profileData.trophies || [],
           };
 
           if (user && user.username !== username) {
             try {
               const [followStatus, matchData] = await Promise.all([
                 checkFollowStatus(username),
-                getMatchPercentage(username)
+                getMatchPercentage(username),
               ]);
               if (isMounted) {
                 setIsFollowing(followStatus.isFollowing);
@@ -83,7 +84,9 @@ export function usePublicProfileLogic(username) {
 
     if (username) loadData();
 
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [username, user, toast]);
 
   const loadMoreReviews = useCallback(async () => {
@@ -92,9 +95,9 @@ export function usePublicProfileLogic(username) {
     try {
       const response = await getUserReviewsOnly(username, reviewsCursor);
       const newItems = response?.items || [];
-      setReviews(prev => {
-        const existingIds = new Set(prev.map(r => r.id));
-        return [...prev, ...newItems.filter(r => !existingIds.has(r.id))];
+      setReviews((prev) => {
+        const existingIds = new Set(prev.map((review) => review.id));
+        return [...prev, ...newItems.filter((review) => !existingIds.has(review.id))];
       });
       setHasMoreReviews(response?.hasMore || false);
       setReviewsCursor(response?.nextCursor || null);
@@ -112,9 +115,9 @@ export function usePublicProfileLogic(username) {
 
     const previousState = isFollowing;
     setIsFollowing(!previousState);
-    setProfile(prev => ({
+    setProfile((prev) => ({
       ...prev,
-      followersCount: previousState ? prev.followersCount - 1 : prev.followersCount + 1
+      followersCount: previousState ? prev.followersCount - 1 : prev.followersCount + 1,
     }));
 
     try {
@@ -127,11 +130,29 @@ export function usePublicProfileLogic(username) {
       }
     } catch {
       setIsFollowing(previousState);
-      setProfile(prev => ({
+      setProfile((prev) => ({
         ...prev,
-        followersCount: previousState ? prev.followersCount + 1 : prev.followersCount - 1
+        followersCount: previousState ? prev.followersCount + 1 : prev.followersCount - 1,
       }));
       toast.error('Erro', 'Não foi possível realizar a ação.');
+    }
+  };
+
+  const handleMessage = async () => {
+    if (!username || !user || user.username === username || messaging) return;
+
+    setMessaging(true);
+    try {
+      const conversation = await createDirectConversation({ targetUsername: username });
+      window.dispatchEvent(
+        new CustomEvent('cinesorte:open-messages', {
+          detail: { conversationId: conversation?.id },
+        })
+      );
+    } catch (error) {
+      toast.error('Mensagem indisponível', error.message || 'Não foi possível abrir a conversa.');
+    } finally {
+      setMessaging(false);
     }
   };
 
@@ -141,9 +162,10 @@ export function usePublicProfileLogic(username) {
     isFollowing,
     followsYou,
     loading,
+    messaging,
     compatibility,
     hasMoreReviews,
     loadingMoreReviews,
-    actions: { handleFollow, loadMoreReviews }
+    actions: { handleFollow, handleMessage, loadMoreReviews },
   };
 }

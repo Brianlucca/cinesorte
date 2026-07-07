@@ -160,7 +160,7 @@ export function useProfileLogic() {
       setAllInteractions(await hydrateInteractionArtwork(processedInteractions));
 
     } catch {
-      toast.error('Erro', 'Nao foi possivel carregar seu perfil.');
+      toast.error('Erro', 'Não foi possível carregar seu perfil.');
     } finally {
       setLoading(false);
     }
@@ -225,7 +225,7 @@ export function useProfileLogic() {
       setHasMoreFollowers(response?.hasMore || false);
       setFollowersCursor(response?.nextCursor || null);
     } catch {
-      toast.error('Erro', 'Nao foi possivel carregar seguidores.');
+      toast.error('Erro', 'Não foi possível carregar seguidores.');
     } finally {
       setLoadingLists(false);
     }
@@ -241,7 +241,7 @@ export function useProfileLogic() {
       setHasMoreFollowing(response?.hasMore || false);
       setFollowingCursor(response?.nextCursor || null);
     } catch {
-      toast.error('Erro', 'Nao foi possivel carregar quem voce segue.');
+      toast.error('Erro', 'Não foi possível carregar quem você segue.');
     } finally {
       setLoadingLists(false);
     }
@@ -260,7 +260,7 @@ export function useProfileLogic() {
       setHasMoreFollowers(response?.hasMore || false);
       setFollowersCursor(response?.nextCursor || null);
     } catch {
-      toast.error('Erro', 'Nao foi possivel carregar mais seguidores.');
+      toast.error('Erro', 'Não foi possível carregar mais seguidores.');
     } finally {
       setLoadingMoreUsers(false);
     }
@@ -279,7 +279,7 @@ export function useProfileLogic() {
       setHasMoreFollowing(response?.hasMore || false);
       setFollowingCursor(response?.nextCursor || null);
     } catch {
-      toast.error('Erro', 'Nao foi possivel carregar mais perfis.');
+      toast.error('Erro', 'Não foi possível carregar mais perfis.');
     } finally {
       setLoadingMoreUsers(false);
     }
