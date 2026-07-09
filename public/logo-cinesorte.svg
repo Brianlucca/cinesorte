@@ -1,0 +1,42 @@
+<svg width="386" height="96" viewBox="0 0 386 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cs-mark" x1="12" y1="14" x2="84" y2="84" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A78BFA"/>
+      <stop offset="0.48" stop-color="#7C3AED"/>
+      <stop offset="1" stop-color="#EC4899"/>
+    </linearGradient>
+    <linearGradient id="cs-word" x1="100" y1="18" x2="372" y2="76" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="0.72" stop-color="#EDE9FE"/>
+      <stop offset="1" stop-color="#C4B5FD"/>
+    </linearGradient>
+    <filter id="cs-glow" x="0" y="0" width="96" height="96" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset/>
+      <feGaussianBlur stdDeviation="8"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.486 0 0 0 0 0.227 0 0 0 0 0.929 0 0 0 0.55 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_1" result="shape"/>
+    </filter>
+  </defs>
+  <g filter="url(#cs-glow)">
+    <rect x="12" y="12" width="72" height="72" rx="22" fill="#0D0D11"/>
+    <path d="M24 28C24 23.5817 27.5817 20 32 20H64C68.4183 20 72 23.5817 72 28V68C72 72.4183 68.4183 76 64 76H32C27.5817 76 24 72.4183 24 68V28Z" fill="url(#cs-mark)"/>
+    <path d="M30 36H66" stroke="#0D0D11" stroke-width="5" stroke-linecap="round"/>
+    <path d="M35 22L29 36M49 22L43 36M63 22L57 36" stroke="#0D0D11" stroke-width="4" stroke-linecap="round"/>
+    <path d="M45.5 45.9C45.5 43.5887 48.0251 42.1662 50.0001 43.3669L61.0081 50.0612C62.9053 51.215 62.9053 53.9671 61.0081 55.1209L50.0001 61.8152C48.0251 63.0159 45.5 61.5934 45.5 59.2821V45.9Z" fill="#0D0D11"/>
+    <circle cx="35.5" cy="57.5" r="3.5" fill="#0D0D11"/>
+    <circle cx="69" cy="30" r="4" fill="#FDE68A"/>
+  </g>
+  <text
+    x="100"
+    y="66"
+    fill="url(#cs-word)"
+    font-family="Arial Black, Impact, system-ui, sans-serif"
+    font-size="42"
+    font-weight="900"
+    letter-spacing="0"
+  >CINESORTE</text>
+</svg>
