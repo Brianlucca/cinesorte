@@ -9,6 +9,8 @@ const Landing = lazy(() => import('@features/landing/pages/Landing'));
 const Login = lazy(() => import('@features/auth/pages/Login'));
 const Register = lazy(() => import('@features/auth/pages/Register'));
 const VerifyEmail = lazy(() => import('@features/auth/pages/VerifyEmail'));
+const EmailChangeComplete = lazy(() => import('@features/auth/pages/EmailChangeComplete'));
+const EmailChangePending = lazy(() => import('@features/auth/pages/EmailChangePending'));
 const Dashboard = lazy(() => import('@features/dashboard/pages/Dashboard'));
 const MediaDetails = lazy(() => import('@features/media/pages/MediaDetails'));
 const SeasonDetails = lazy(() => import('@features/media/pages/SeasonDetails'));
@@ -49,6 +51,8 @@ function AppRoutes() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/email-change-pending" element={<EmailChangePending />} />
+          <Route path="/email-change-complete" element={<EmailChangeComplete />} />
         </Route>
 
         <Route path="/app" element={

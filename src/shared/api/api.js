@@ -38,7 +38,9 @@ export const resendVerificationEmail = (email) => api.post("/users/resend-verifi
 export const logout = () => api.post("/users/logout");
 export const getMe = () => api.get("/users/me");
 export const getSecurityOverview = (params = {}) => api.get("/users/security", { params });
+export const verifyCurrentPassword = (data) => api.post("/users/security/verify-password", data);
 export const requestEmailChange = (data) => api.post("/users/security/change-email", data);
+export const confirmEmailChange = (token) => api.post("/users/security/confirm-email-change", { token });
 export const changePassword = (data) => api.post("/users/security/change-password", data);
 export const linkGoogleAccount = (data) => api.post("/users/security/link-google", data);
 export const linkPasswordAccount = (data) => api.post("/users/security/link-password", data);

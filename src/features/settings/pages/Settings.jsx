@@ -1,5 +1,5 @@
 import { createElement, useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
   Camera,
@@ -27,6 +27,7 @@ import {
   linkGoogleAccount,
   linkPasswordAccount,
   requestEmailChange,
+  verifyCurrentPassword,
 } from "@shared/api/api";
 import SettingsSidebar from "@features/settings/components/SettingsSidebar";
 import SupportTicketTable from "@features/settings/components/SupportTicketTable";
@@ -90,6 +91,7 @@ const securityEventLabels = {
   email_change_requested: "Troca de email solicitada",
   google_linked: "Google vinculado",
   password_linked: "Email e senha vinculados",
+  google_unlinked_due_email_change: "Google desvinculado",
 };
 
 function formatDateTime(value) {
@@ -159,6 +161,7 @@ function ProfileAvatar({ user, onEdit }) {
 
 export default function Settings() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("profile");
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
   const [isLoadingSecurity, setIsLoadingSecurity] = useState(false);
@@ -174,6 +177,7 @@ export default function Settings() {
     confirmPassword: "",
     newEmail: "",
   });
+  const [changeEmailStep, setChangeEmailStep] = useState("password");
   const { user, form, deleteConfirmText, ui, modals, actions } = useSettingsLogic();
   const toast = useToast();
 
@@ -199,6 +203,7 @@ export default function Settings() {
       confirmPassword: "",
       newEmail: "",
     });
+    setChangeEmailStep("password");
   }, []);
 
   const openSecurityModal = useCallback((modalName) => {
@@ -283,21 +288,37 @@ export default function Settings() {
   }, [closeSecurityModal, loadSecurityOverview, securityForm, toast]);
 
   const handleRequestEmailChange = useCallback(async () => {
+    const normalizedEmail = securityForm.newEmail.trim().toLowerCase();
+
     setIsSecurityActionLoading(true);
     try {
-      await requestEmailChange({
+      const response = await requestEmailChange({
         currentPassword: securityForm.currentPassword,
-        newEmail: securityForm.newEmail.trim().toLowerCase(),
+        newEmail: normalizedEmail,
       });
       toast.success("Email enviado", "Confirme o link enviado para o novo email para concluir a alteração.");
       closeSecurityModal();
-      loadSecurityOverview();
+      navigate(
+        `/email-change-pending?token=${encodeURIComponent(response.confirmationToken)}&email=${encodeURIComponent(response.pendingEmail || normalizedEmail)}`
+      );
     } catch (error) {
       toast.error("Não foi possível alterar", error.message || "Revise os dados e tente novamente.");
     } finally {
       setIsSecurityActionLoading(false);
     }
-  }, [closeSecurityModal, loadSecurityOverview, securityForm, toast]);
+  }, [closeSecurityModal, navigate, securityForm, toast]);
+
+  const handleVerifyPasswordForEmailChange = useCallback(async () => {
+    setIsSecurityActionLoading(true);
+    try {
+      await verifyCurrentPassword({ currentPassword: securityForm.currentPassword });
+      setChangeEmailStep("email");
+    } catch (error) {
+      toast.error("Senha inválida", error.message || "Digite a senha atual usada no CineSorte.");
+    } finally {
+      setIsSecurityActionLoading(false);
+    }
+  }, [securityForm.currentPassword, toast]);
 
   const handleLinkGoogle = useCallback(async () => {
     setIsSecurityActionLoading(true);
@@ -779,34 +800,62 @@ export default function Settings() {
         <form
           onSubmit={(event) => {
             event.preventDefault();
+            if (changeEmailStep === "password") {
+              handleVerifyPasswordForEmailChange();
+              return;
+            }
+
             handleRequestEmailChange();
           }}
           className="space-y-5 pt-2"
         >
           <div className="rounded-2xl border border-amber-400/15 bg-amber-500/10 p-4 text-sm font-medium leading-6 text-amber-100">
-            O CineSorte enviará um link para o novo email. A alteração só será concluída depois da confirmação.
+            {changeEmailStep === "password"
+              ? "Confirme primeiro a senha atual usada para entrar com email e senha no CineSorte."
+              : "Agora informe o novo email. A alteração só será concluída depois da confirmação enviada para ele."}
+            {hasGoogleProvider && (
+              <span className="mt-3 block text-amber-50">
+                Como sua conta tem Google vinculado, esse vínculo será removido se o novo email for diferente do email do Google.
+                Depois você poderá vincular o Google novamente.
+              </span>
+            )}
           </div>
-          <label className="block">
-            <FieldLabel>Novo email</FieldLabel>
-            <TextInput
-              type="email"
-              value={securityForm.newEmail}
-              onChange={(event) => setSecurityForm((current) => ({ ...current, newEmail: event.target.value }))}
-              placeholder="novo@email.com"
-              required
-            />
-          </label>
-          <label className="block">
-            <FieldLabel>Senha atual</FieldLabel>
-            <TextInput
-              type="password"
-              value={securityForm.currentPassword}
-              onChange={(event) => setSecurityForm((current) => ({ ...current, currentPassword: event.target.value }))}
-              placeholder="Digite sua senha atual"
-              autoComplete="current-password"
-              required
-            />
-          </label>
+
+          {changeEmailStep === "password" ? (
+            <label className="block">
+              <FieldLabel>Senha atual</FieldLabel>
+              <TextInput
+                type="password"
+                value={securityForm.currentPassword}
+                onChange={(event) => setSecurityForm((current) => ({ ...current, currentPassword: event.target.value }))}
+                placeholder="Senha usada para entrar com email e senha"
+                autoComplete="current-password"
+                required
+              />
+            </label>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => setChangeEmailStep("password")}
+                className="text-xs font-bold text-zinc-500 transition-colors hover:text-white"
+              >
+                Trocar senha informada
+              </button>
+              <label className="block">
+                <FieldLabel>Novo email</FieldLabel>
+                <TextInput
+                  type="email"
+                  value={securityForm.newEmail}
+                  onChange={(event) => setSecurityForm((current) => ({ ...current, newEmail: event.target.value }))}
+                  placeholder="novo@email.com"
+                  autoComplete="email"
+                  required
+                />
+              </label>
+            </>
+          )}
+
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={closeSecurityModal} className="px-5 py-3 text-xs font-bold text-zinc-500 transition-colors hover:text-white">
               Cancelar
@@ -816,7 +865,13 @@ export default function Settings() {
               disabled={isSecurityActionLoading}
               className="rounded-xl bg-white px-6 py-3 text-xs font-black uppercase tracking-[0.13em] text-black transition-colors hover:bg-violet-100 disabled:opacity-50"
             >
-              {isSecurityActionLoading ? "Enviando" : "Enviar confirmação"}
+              {isSecurityActionLoading
+                ? changeEmailStep === "password"
+                  ? "Validando"
+                  : "Enviando"
+                : changeEmailStep === "password"
+                  ? "Continuar"
+                  : "Enviar confirmação"}
             </button>
           </div>
         </form>
