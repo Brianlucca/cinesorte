@@ -12,7 +12,7 @@ const variants = {
     imageSize: "w500",
   },
   landscape: {
-    section: "py-10 md:py-14",
+    section: "py-5 md:py-7",
     background:
       "linear-gradient(to bottom, transparent 0%, rgba(8, 47, 73, 0.10) 16%, rgba(8, 47, 73, 0.18) 38%, rgba(46, 16, 101, 0.14) 68%, transparent 100%)",
     rail: "gap-4 md:gap-6",
@@ -21,7 +21,7 @@ const variants = {
     imageSize: "w780",
   },
   spotlight: {
-    section: "py-10 md:py-14",
+    section: "py-5 md:py-7",
     background:
       "radial-gradient(ellipse at 12% 50%, rgba(124, 58, 237, 0.14), transparent 58%), linear-gradient(to bottom, transparent 0%, rgba(76, 29, 149, 0.05) 24%, rgba(24, 24, 27, 0.16) 72%, transparent 100%)",
     rail: "gap-4 md:gap-6",
