@@ -46,7 +46,7 @@ export function useEpisodeDetailsLogic() {
           getSeasonDetails(tvId, seasonNumber),
         ];
 
-        const userPromise = user?.uid ? getUserFollowing(user.uid) : Promise.resolve(null);
+        const userPromise = user?.username ? getUserFollowing(user.username) : Promise.resolve(null);
 
         const [episodeData, reviewsData, tvShowData, loadedSeason, followingData] = await Promise.all([...basePromises, userPromise]);
 
@@ -75,7 +75,7 @@ export function useEpisodeDetailsLogic() {
       }
     }
     loadData();
-  }, [tvId, seasonNumber, episodeNumber, toast, uniqueMediaId, user?.uid]);
+  }, [tvId, seasonNumber, episodeNumber, toast, uniqueMediaId, user?.username]);
 
   const handlePostReview = async (rating, text) => {
     if (!user) return toast.error('Login necessário', 'Entre para avaliar.');

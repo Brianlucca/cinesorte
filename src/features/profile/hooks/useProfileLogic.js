@@ -113,7 +113,7 @@ export function useProfileLogic() {
   });
 
   const loadData = useCallback(async () => {
-    if (!authUser?.uid || !authUser?.username) return;
+    if (!authUser?.username) return;
     setLoading(true);
     try {
       const [interactionsData, reviewsResponse, statsData, listsData, meData] = await Promise.all([
@@ -164,7 +164,7 @@ export function useProfileLogic() {
     } finally {
       setLoading(false);
     }
-  }, [authUser?.uid, authUser?.username, toast]);
+  }, [authUser?.username, toast]);
 
   useEffect(() => {
     loadData();
@@ -219,7 +219,7 @@ export function useProfileLogic() {
     setModals(prev => ({ ...prev, followers: true }));
     setLoadingLists(true);
     try {
-      const response = await getUserFollowersPage(authUser.uid);
+      const response = await getUserFollowersPage(authUser.username);
       const items = response?.items || [];
       setFollowersList(items);
       setHasMoreFollowers(response?.hasMore || false);
@@ -235,7 +235,7 @@ export function useProfileLogic() {
     setModals(prev => ({ ...prev, following: true }));
     setLoadingLists(true);
     try {
-      const response = await getUserFollowingPage(authUser.uid);
+      const response = await getUserFollowingPage(authUser.username);
       const items = response?.items || [];
       setFollowingList(items);
       setHasMoreFollowing(response?.hasMore || false);
@@ -248,10 +248,10 @@ export function useProfileLogic() {
   };
 
   const loadMoreFollowers = async () => {
-    if (!authUser?.uid || !followersCursor || loadingMoreUsers) return;
+    if (!authUser?.username || !followersCursor || loadingMoreUsers) return;
     setLoadingMoreUsers(true);
     try {
-      const response = await getUserFollowersPage(authUser.uid, followersCursor);
+      const response = await getUserFollowersPage(authUser.username, followersCursor);
       const items = response?.items || [];
       setFollowersList(prev => {
         const existing = new Set(prev.map(item => item.id || item.username));
@@ -267,10 +267,10 @@ export function useProfileLogic() {
   };
 
   const loadMoreFollowing = async () => {
-    if (!authUser?.uid || !followingCursor || loadingMoreUsers) return;
+    if (!authUser?.username || !followingCursor || loadingMoreUsers) return;
     setLoadingMoreUsers(true);
     try {
-      const response = await getUserFollowingPage(authUser.uid, followingCursor);
+      const response = await getUserFollowingPage(authUser.username, followingCursor);
       const items = response?.items || [];
       setFollowingList(prev => {
         const existing = new Set(prev.map(item => item.id || item.username));

@@ -61,9 +61,9 @@ export const addMediaToList = (listId, mediaItem) => api.post("/users/lists/add"
 export const removeMediaFromList = (listId, mediaId) => api.delete(`/users/lists/${listId}/media/${mediaId}`);
 export const deleteList = (listId) => api.delete(`/users/lists/${listId}`);
 
-export const followUser = (targetUserId) => api.post("/social/follow", { targetUserId });
-export const unfollowUser = (targetUserId) => api.delete(`/social/unfollow/${targetUserId}`);
-export const checkFollowStatus = (targetUserId) => api.get(`/social/check-follow/${targetUserId}`);
+export const followUser = (targetUsername) => api.post("/social/follow", { targetUserId: targetUsername });
+export const unfollowUser = (targetUsername) => api.delete(`/social/unfollow/${targetUsername}`);
+export const checkFollowStatus = (targetUsername) => api.get(`/social/check-follow/${targetUsername}`);
 export const getUserStats = () => api.get("/social/stats");
 export const getProfileStats = (userId) => api.get(`/social/profile-stats/${userId}`);
 export const getUserFollowers = (userId) => api.get(`/social/followers/${userId}`);
@@ -73,7 +73,7 @@ export const getUserFollowersPage = (userId, cursor = null) =>
 export const getUserFollowingPage = (userId, cursor = null) =>
   api.get(`/social/following/${userId}`, { params: { paged: true, ...(cursor ? { cursor } : {}) } });
 export const getSuggestions = () => api.get("/social/suggestions");
-export const getMatchPercentage = (targetUserId) => api.get(`/social/match/${targetUserId}`);
+export const getMatchPercentage = (targetUsername) => api.get(`/social/match/${targetUsername}`);
 
 export const getGlobalFeed = (cursor = null) => api.get("/social/feed/global", { params: cursor ? { cursor } : {} });
 export const getFollowingFeed = (cursor = null) => api.get("/social/feed/following", { params: cursor ? { cursor } : {} });

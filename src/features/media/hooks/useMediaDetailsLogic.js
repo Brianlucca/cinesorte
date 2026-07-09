@@ -79,10 +79,10 @@ export function useMediaDetailsLogic() {
           getMediaReviews(id),
         ];
 
-        if (user && user.uid) {
+        if (user?.username) {
           promises.push(getUserInteractions());
           promises.push(getUserLists("me"));
-          promises.push(getUserFollowing(user.uid));
+          promises.push(getUserFollowing(user.username));
         }
 
         const results = await Promise.all(promises);
@@ -108,7 +108,7 @@ export function useMediaDetailsLogic() {
           .slice(0, 16);
         setSimilar(relatedContent);
 
-        if (user && user.uid) {
+        if (user?.username) {
           const interactionsRaw = results[3];
           const listsRaw = results[4];
           const followingRaw = results[5];

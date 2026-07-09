@@ -10,9 +10,10 @@ import {
   Star,
   Tv,
   User,
+  Users,
   X,
 } from "lucide-react";
-import { getDiscover } from "@shared/api/api";
+import { getDiscover, searchUsers } from "@shared/api/api";
 import { useSearchLogic } from "@shared/hooks/useSearchLogic";
 
 const ARTWORK_ROTATION_MS = 10 * 60 * 1000;
@@ -67,6 +68,7 @@ const FILTERS = [
   { id: "movie", label: "Filmes" },
   { id: "tv", label: "Séries" },
   { id: "person", label: "Artistas" },
+  { id: "user", label: "Usuários" },
 ];
 
 const QUICK_CATEGORIES = [
@@ -172,6 +174,42 @@ function SearchResultCard({ item, onClose }) {
   );
 }
 
+function UserResultCard({ user, onClose }) {
+  const displayName = user.name || user.displayName || user.username || "Usuário";
+  const username = user.username || "";
+  const avatar = user.photoURL || user.userPhoto || null;
+
+  return (
+    <Link
+      to={username ? `/app/profile/${username}` : "/app/profile"}
+      onClick={onClose}
+      className="group flex min-h-[96px] items-center gap-3 rounded-[1.4rem] border border-white/[0.07] bg-white/[0.025] p-3.5 transition-all duration-500 hover:-translate-y-1 hover:border-violet-400/25 hover:bg-white/[0.045]"
+    >
+      <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl border border-white/[0.08] bg-violet-500/10 text-lg font-black uppercase text-violet-200">
+        {avatar ? (
+          <img src={avatar} alt={displayName} className="h-full w-full object-cover" loading="lazy" />
+        ) : (
+          displayName.charAt(0)
+        )}
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-black leading-5 text-zinc-100 transition-colors group-hover:text-violet-200">
+          {displayName}
+        </span>
+        {username && (
+          <span className="mt-1 block truncate text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-600">
+            @{username.toLowerCase()}
+          </span>
+        )}
+      </span>
+      <ArrowUpRight
+        size={17}
+        className="ml-auto shrink-0 translate-y-2 text-white opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100"
+      />
+    </Link>
+  );
+}
+
 function LoadingState() {
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -207,6 +245,8 @@ export default function SearchModal({ isOpen, onClose }) {
   const [filter, setFilter] = useState("all");
   const [activeGenre, setActiveGenre] = useState("");
   const [genreArtworkPool, setGenreArtworkPool] = useState({});
+  const [userResults, setUserResults] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
   const [rotationBucket, setRotationBucket] = useState(
     Math.floor(Date.now() / ARTWORK_ROTATION_MS),
   );
@@ -225,6 +265,8 @@ export default function SearchModal({ isOpen, onClose }) {
       const timer = window.setTimeout(() => {
         setIsMounted(false);
         clearSearch();
+        setUserResults([]);
+        setUsersLoading(false);
         setFilter("all");
         setActiveGenre("");
       }, 400);
@@ -294,6 +336,33 @@ export default function SearchModal({ isOpen, onClose }) {
     };
   }, [genreArtworkPool, isOpen]);
 
+  useEffect(() => {
+    const trimmedQuery = query.trim();
+    if (!isOpen || trimmedQuery.length < 3) {
+      setUserResults([]);
+      setUsersLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setUsersLoading(true);
+      try {
+        const data = await searchUsers(trimmedQuery, controller.signal);
+        setUserResults(Array.isArray(data) ? data.filter((user) => user?.username) : []);
+      } catch {
+        if (!controller.signal.aborted) setUserResults([]);
+      } finally {
+        if (!controller.signal.aborted) setUsersLoading(false);
+      }
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [isOpen, query]);
+
   const activeGenreArtwork = useMemo(() => {
     return Object.fromEntries(
       Object.entries(genreArtworkPool).map(([genreId, items]) => {
@@ -307,6 +376,13 @@ export default function SearchModal({ isOpen, onClose }) {
     () => results.filter((item) => filter === "all" || getType(item) === filter),
     [filter, results],
   );
+  const filteredUsers = useMemo(
+    () => (filter === "all" || filter === "user" ? userResults : []),
+    [filter, userResults],
+  );
+  const totalResults = results.length + userResults.length;
+  const hasResults = totalResults > 0;
+  const isSearching = loading || usersLoading;
 
   const atmosphere = results.find((item) => item.backdrop_path)?.backdrop_path;
 
@@ -314,17 +390,20 @@ export default function SearchModal({ isOpen, onClose }) {
     setQuery(value);
     setActiveGenre("");
     setFilter("all");
+    if (!value.trim()) setUserResults([]);
   };
 
   const handleGenre = (genre) => {
     setActiveGenre(genre.name);
     setFilter("all");
+    setUserResults([]);
     searchByGenre(genre.id);
   };
 
   const handleCategory = (categoryId) => {
     setActiveGenre("");
     setFilter(categoryId === "person" ? "person" : "all");
+    setUserResults([]);
     searchByCategory(categoryId);
   };
 
@@ -374,7 +453,7 @@ export default function SearchModal({ isOpen, onClose }) {
                   Explorar CineSorte
                 </h2>
                 <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.15em] text-zinc-600">
-                  Filmes, séries e pessoas
+                  Filmes, séries, artistas e usuários
                 </p>
               </div>
             </div>
@@ -397,7 +476,7 @@ export default function SearchModal({ isOpen, onClose }) {
               type="text"
               value={query}
               onChange={(event) => handleQueryChange(event.target.value)}
-              placeholder="Busque uma história, uma série ou alguém do elenco..."
+              placeholder="Busque filmes, séries, artistas ou usuários do CineSorte..."
               className="w-full rounded-[1.25rem] border border-white/[0.09] bg-black/25 py-4 pl-12 pr-12 text-sm font-semibold text-white outline-none transition-all placeholder:font-normal placeholder:text-zinc-600 focus:border-violet-400/30 focus:bg-black/35 sm:py-5 sm:pl-14 sm:text-lg"
             />
             {query && (
@@ -413,9 +492,9 @@ export default function SearchModal({ isOpen, onClose }) {
         </header>
 
         <div className="content-scrollbar relative min-h-0 flex-1 overflow-y-auto bg-transparent px-5 py-6 sm:px-7 sm:py-7">
-          {loading ? (
+          {isSearching ? (
             <LoadingState />
-          ) : results.length > 0 ? (
+          ) : hasResults ? (
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
               <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                 <div>
@@ -425,7 +504,7 @@ export default function SearchModal({ isOpen, onClose }) {
                   <h3 className="mt-1.5 text-xl font-black tracking-tight text-white sm:text-2xl">
                     {activeGenre ||
                       (query
-                        ? `Encontramos ${results.length} resultados`
+                        ? `Encontramos ${totalResults} resultados`
                         : "Descobertas para você")}
                   </h3>
                 </div>
@@ -433,8 +512,10 @@ export default function SearchModal({ isOpen, onClose }) {
                   {FILTERS.map((item) => {
                     const count =
                       item.id === "all"
-                        ? results.length
-                        : results.filter((result) => getType(result) === item.id).length;
+                        ? totalResults
+                        : item.id === "user"
+                          ? userResults.length
+                          : results.filter((result) => getType(result) === item.id).length;
 
                     return (
                       <button
@@ -457,15 +538,43 @@ export default function SearchModal({ isOpen, onClose }) {
                 </div>
               </div>
 
-              {filteredResults.length > 0 ? (
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                  {filteredResults.map((item) => (
-                    <SearchResultCard
-                      key={`${getType(item)}-${item.id}`}
-                      item={item}
-                      onClose={onClose}
-                    />
-                  ))}
+              {filteredUsers.length > 0 || filteredResults.length > 0 ? (
+                <div className="space-y-7">
+                  {filteredUsers.length > 0 && (
+                    <section>
+                      <div className="mb-3 flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.18em] text-violet-300">
+                        <Users size={12} /> Usuários CineSorte
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {filteredUsers.map((user) => (
+                          <UserResultCard
+                            key={user.username}
+                            user={user}
+                            onClose={onClose}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {filteredResults.length > 0 && (
+                    <section>
+                      {filteredUsers.length > 0 && (
+                        <div className="mb-3 flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                          <Clapperboard size={12} /> Filmes, séries e artistas
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                        {filteredResults.map((item) => (
+                          <SearchResultCard
+                            key={`${getType(item)}-${item.id}`}
+                            item={item}
+                            onClose={onClose}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  )}
                 </div>
               ) : (
                 <div className="grid min-h-64 place-items-center rounded-[1.75rem] border border-dashed border-white/[0.08] bg-white/[0.015] text-center">

@@ -91,7 +91,7 @@ const UserSearch = () => {
           <ul className="max-h-[380px] overflow-y-auto p-2 scrollbar-hide">
             {results.length > 0 ? (
               results.map((resultUser) => (
-                <li key={resultUser.uid} onClick={() => handleSelectUser(resultUser.username)} className="flex items-center gap-4 p-3.5 cursor-pointer hover:bg-white/[0.05] rounded-2xl transition-all group">
+                <li key={resultUser.username} onClick={() => handleSelectUser(resultUser.username)} className="flex items-center gap-4 p-3.5 cursor-pointer hover:bg-white/[0.05] rounded-2xl transition-all group">
                   <div className="w-11 h-11 rounded-xl bg-zinc-800 flex items-center justify-center overflow-hidden border border-white/5 shrink-0">
                     {resultUser.photoURL ? <img src={resultUser.photoURL} className="w-full h-full object-cover" alt="" /> : <span className="text-xs font-black text-zinc-500">{resultUser.username?.charAt(0).toUpperCase()}</span>}
                   </div>
