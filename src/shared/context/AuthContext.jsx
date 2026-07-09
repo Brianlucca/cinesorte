@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   login as apiLogin,
+  googleAuth as apiGoogleAuth,
   register as apiRegister,
   logout as apiLogout,
   getMe,
@@ -49,6 +50,48 @@ export function AuthProvider({ children }) {
 
   async function login(email, password, turnstileToken) {
     const data = await apiLogin({ email, password, turnstileToken });
+    setUser({ ...data });
+    try {
+      const userDetails = await getMe();
+      setUser(userDetails);
+      if (userDetails.termsVersion !== CURRENT_TERMS_VERSION) setShowTermsModal(true);
+    } catch {
+      setShowTermsModal(false);
+    }
+    return data;
+  }
+
+  async function loginWithGoogle(profile = {}) {
+    const { signInWithGoogle } = await import('@shared/lib/firebaseAuth');
+    const idToken = await signInWithGoogle();
+    const data = await apiGoogleAuth({ idToken, ...profile });
+
+    if (data.requiresProfile) {
+      return { ...data, idToken };
+    }
+
+    setUser({ ...data });
+    try {
+      const userDetails = await getMe();
+      setUser(userDetails);
+      if (userDetails.termsVersion !== CURRENT_TERMS_VERSION) setShowTermsModal(true);
+    } catch {
+      setShowTermsModal(false);
+    }
+    return data;
+  }
+
+  async function completeGoogleRegistration({ idToken, nickname, termsAccepted }) {
+    const data = await apiGoogleAuth({
+      idToken,
+      nickname: nickname.toLowerCase(),
+      termsAccepted,
+    });
+
+    if (data.requiresProfile) {
+      return { ...data, idToken };
+    }
+
     setUser({ ...data });
     try {
       const userDetails = await getMe();
@@ -119,6 +162,8 @@ export function AuthProvider({ children }) {
         loading,
         showTermsModal,
         login,
+        loginWithGoogle,
+        completeGoogleRegistration,
         register,
         logout,
         updateProfile,

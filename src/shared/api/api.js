@@ -32,10 +32,16 @@ api.interceptors.response.use(
 );
 
 export const login = (credentials) => api.post("/users/login", credentials);
+export const googleAuth = (data) => api.post("/users/auth/google", data);
 export const register = (userData) => api.post("/users/register", userData);
 export const resendVerificationEmail = (email) => api.post("/users/resend-verification-email", { email });
 export const logout = () => api.post("/users/logout");
 export const getMe = () => api.get("/users/me");
+export const getSecurityOverview = (params = {}) => api.get("/users/security", { params });
+export const requestEmailChange = (data) => api.post("/users/security/change-email", data);
+export const changePassword = (data) => api.post("/users/security/change-password", data);
+export const linkGoogleAccount = (data) => api.post("/users/security/link-google", data);
+export const linkPasswordAccount = (data) => api.post("/users/security/link-password", data);
 export const updateProfile = (data) => api.put("/users/me", data);
 export const deleteAccount = (confirmText) => api.delete("/users/me", { data: { confirmText } });
 export const acceptTerms = (version) => api.post("/users/terms", { version });

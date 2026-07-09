@@ -1,4 +1,5 @@
 import { createElement, useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   AlertTriangle,
   Camera,
@@ -19,9 +20,17 @@ import { useSettingsLogic } from "@features/settings/hooks/useSettingsLogic";
 import Modal from "@shared/components/ui/Modal";
 import AvatarSelectorModal from "@shared/components/ui/AvatarSelectorModal";
 import { useToast } from "@shared/context/useToast";
-import { getMySupportTickets } from "@shared/api/api";
+import {
+  changePassword,
+  getMySupportTickets,
+  getSecurityOverview,
+  linkGoogleAccount,
+  linkPasswordAccount,
+  requestEmailChange,
+} from "@shared/api/api";
 import SettingsSidebar from "@features/settings/components/SettingsSidebar";
 import SupportTicketTable from "@features/settings/components/SupportTicketTable";
+import GoogleIcon from "@features/auth/components/GoogleIcon";
 
 function SettingPanel({ eyebrow, title, description, icon: Icon, children, tone = "violet" }) {
   const toneClasses = {
@@ -73,6 +82,39 @@ function TextInput({ className = "", ...props }) {
   );
 }
 
+const securityEventLabels = {
+  register_success: "Cadastro realizado",
+  login_success: "Login realizado",
+  logout: "Logout realizado",
+  password_changed: "Senha alterada",
+  email_change_requested: "Troca de email solicitada",
+  google_linked: "Google vinculado",
+  password_linked: "Email e senha vinculados",
+};
+
+function formatDateTime(value) {
+  if (!value) return "Sem data";
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function AccountProviderBadge({ provider }) {
+  const isGoogle = provider === "google";
+  const isBoth = provider === "email_google";
+
+  return (
+    <span className={`inline-flex w-fit items-center gap-2 rounded-xl border px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] ${
+      isGoogle || isBoth
+        ? "border-sky-400/15 bg-sky-500/10 text-sky-300"
+        : "border-violet-400/15 bg-violet-500/10 text-violet-300"
+    }`}>
+      {isBoth ? "Email e Google" : isGoogle ? "Google" : "Email e senha"}
+    </span>
+  );
+}
+
 function ProfileAvatar({ user, onEdit }) {
   return (
     <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
@@ -116,9 +158,22 @@ function ProfileAvatar({ user, onEdit }) {
 }
 
 export default function Settings() {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("profile");
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
+  const [isLoadingSecurity, setIsLoadingSecurity] = useState(false);
+  const [isLoadingMoreSecurity, setIsLoadingMoreSecurity] = useState(false);
+  const [isSecurityActionLoading, setIsSecurityActionLoading] = useState(false);
   const [supportTickets, setSupportTickets] = useState([]);
+  const [securityOverview, setSecurityOverview] = useState(null);
+  const [securityNextCursor, setSecurityNextCursor] = useState(null);
+  const [securityModal, setSecurityModal] = useState(null);
+  const [securityForm, setSecurityForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+    newEmail: "",
+  });
   const { user, form, deleteConfirmText, ui, modals, actions } = useSettingsLogic();
   const toast = useToast();
 
@@ -133,6 +188,28 @@ export default function Settings() {
   );
 
   const activeMenuItem = menuItems.find((item) => item.id === activeTab) || menuItems[0];
+  const linkedProviders = securityOverview?.account?.providers || (user?.provider === "google" ? ["google"] : ["password"]);
+  const hasPasswordProvider = linkedProviders.includes("password");
+  const hasGoogleProvider = linkedProviders.includes("google");
+
+  const resetSecurityForm = useCallback(() => {
+    setSecurityForm({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+      newEmail: "",
+    });
+  }, []);
+
+  const openSecurityModal = useCallback((modalName) => {
+    resetSecurityForm();
+    setSecurityModal(modalName);
+  }, [resetSecurityForm]);
+
+  const closeSecurityModal = useCallback(() => {
+    setSecurityModal(null);
+    resetSecurityForm();
+  }, [resetSecurityForm]);
 
   const loadSupportTickets = useCallback(async () => {
     if (!user) return;
@@ -148,11 +225,141 @@ export default function Settings() {
     }
   }, [toast, user]);
 
+  const loadSecurityOverview = useCallback(async ({ cursor = null, append = false } = {}) => {
+    if (!user) return;
+
+    if (append) {
+      setIsLoadingMoreSecurity(true);
+    } else {
+      setIsLoadingSecurity(true);
+    }
+
+    try {
+      const overview = await getSecurityOverview({
+        limit: 8,
+        ...(cursor ? { cursor } : {}),
+      });
+
+      setSecurityOverview((current) => {
+        if (!append) return overview;
+
+        return {
+          ...overview,
+          activities: [...(current?.activities || []), ...(overview?.activities || [])],
+        };
+      });
+      setSecurityNextCursor(overview?.nextActivitiesCursor || null);
+    } catch (error) {
+      toast.error("Erro", error.message || "Não foi possível carregar os dados de segurança.");
+    } finally {
+      if (append) {
+        setIsLoadingMoreSecurity(false);
+      } else {
+        setIsLoadingSecurity(false);
+      }
+    }
+  }, [toast, user]);
+
+  const handleChangePassword = useCallback(async () => {
+    if (securityForm.newPassword !== securityForm.confirmPassword) {
+      toast.error("Senhas diferentes", "A confirmação precisa ser igual à nova senha.");
+      return;
+    }
+
+    setIsSecurityActionLoading(true);
+    try {
+      await changePassword({
+        currentPassword: securityForm.currentPassword,
+        newPassword: securityForm.newPassword,
+      });
+      toast.success("Senha alterada", "Sua senha foi atualizada com sucesso.");
+      closeSecurityModal();
+      loadSecurityOverview();
+    } catch (error) {
+      toast.error("Não foi possível alterar", error.message || "Revise sua senha atual e tente novamente.");
+    } finally {
+      setIsSecurityActionLoading(false);
+    }
+  }, [closeSecurityModal, loadSecurityOverview, securityForm, toast]);
+
+  const handleRequestEmailChange = useCallback(async () => {
+    setIsSecurityActionLoading(true);
+    try {
+      await requestEmailChange({
+        currentPassword: securityForm.currentPassword,
+        newEmail: securityForm.newEmail.trim().toLowerCase(),
+      });
+      toast.success("Email enviado", "Confirme o link enviado para o novo email para concluir a alteração.");
+      closeSecurityModal();
+      loadSecurityOverview();
+    } catch (error) {
+      toast.error("Não foi possível alterar", error.message || "Revise os dados e tente novamente.");
+    } finally {
+      setIsSecurityActionLoading(false);
+    }
+  }, [closeSecurityModal, loadSecurityOverview, securityForm, toast]);
+
+  const handleLinkGoogle = useCallback(async () => {
+    setIsSecurityActionLoading(true);
+    try {
+      const { signInWithGoogle } = await import("@shared/lib/firebaseAuth");
+      const idToken = await signInWithGoogle();
+      await linkGoogleAccount({
+        idToken,
+        currentPassword: securityForm.currentPassword,
+      });
+      toast.success("Google vinculado", "Agora você também pode entrar usando o Google.");
+      closeSecurityModal();
+      loadSecurityOverview();
+    } catch (error) {
+      toast.error("Não foi possível vincular", error.message || "Use o Google com o mesmo email da sua conta.");
+    } finally {
+      setIsSecurityActionLoading(false);
+    }
+  }, [closeSecurityModal, loadSecurityOverview, securityForm.currentPassword, toast]);
+
+  const handleLinkPassword = useCallback(async () => {
+    if (securityForm.newPassword !== securityForm.confirmPassword) {
+      toast.error("Senhas diferentes", "A confirmação precisa ser igual à nova senha.");
+      return;
+    }
+
+    setIsSecurityActionLoading(true);
+    try {
+      const { signInWithGoogle } = await import("@shared/lib/firebaseAuth");
+      const idToken = await signInWithGoogle();
+      await linkPasswordAccount({
+        idToken,
+        newPassword: securityForm.newPassword,
+      });
+      toast.success("Email e senha vinculados", "Agora você também pode entrar usando email e senha.");
+      closeSecurityModal();
+      loadSecurityOverview();
+    } catch (error) {
+      toast.error("Não foi possível vincular", error.message || "Confirme seu Google e tente novamente.");
+    } finally {
+      setIsSecurityActionLoading(false);
+    }
+  }, [closeSecurityModal, loadSecurityOverview, securityForm, toast]);
+
+  useEffect(() => {
+    const requestedTab = new URLSearchParams(location.search).get("tab");
+    if (requestedTab && menuItems.some((item) => item.id === requestedTab)) {
+      setActiveTab(requestedTab);
+    }
+  }, [location.search, menuItems]);
+
   useEffect(() => {
     if (activeTab === "support" && user) {
       loadSupportTickets();
     }
   }, [activeTab, loadSupportTickets, user]);
+
+  useEffect(() => {
+    if (activeTab === "security" && user) {
+      loadSecurityOverview();
+    }
+  }, [activeTab, loadSecurityOverview, user]);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#08080b] pb-24 text-white animate-in fade-in duration-700">
@@ -267,39 +474,188 @@ export default function Settings() {
                   icon={ShieldCheck}
                   tone="emerald"
                 >
-                  <div className="divide-y divide-white/[0.06]">
-                    <div className="flex flex-col gap-4 py-4 first:pt-0 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="grid h-11 w-11 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.035] text-zinc-400">
-                          <Mail size={18} />
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-sm font-black text-white">E-mail cadastrado</p>
-                          <p className="mt-1 break-all text-sm text-zinc-500">{user?.email}</p>
+                  <div className="space-y-5">
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                      <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4">
+                        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-zinc-500">Tipo de conta</p>
+                        <div className="mt-3">
+                          <AccountProviderBadge provider={securityOverview?.account?.provider || user?.provider} />
+                        </div>
+                        <p className="mt-3 text-sm leading-6 text-zinc-500">
+                          {securityOverview?.account?.provider === "email_google"
+                            ? "Sua conta aceita entrada por senha e por Google."
+                            : securityOverview?.account?.provider === "google"
+                            ? "Sua entrada é gerenciada pelo Google."
+                            : "Sua entrada usa email e senha do CineSorte."}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 lg:col-span-2">
+                        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-zinc-500">Sessão atual</p>
+                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                          <div>
+                            <p className="text-xs font-bold text-zinc-500">Dispositivo</p>
+                            <p className="mt-1 text-sm font-black text-white">{securityOverview?.currentSession?.device || "Atual"}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-zinc-500">Navegador</p>
+                            <p className="mt-1 text-sm font-black text-white">{securityOverview?.currentSession?.browser || "Navegador"}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-zinc-500">Sistema</p>
+                            <p className="mt-1 text-sm font-black text-white">{securityOverview?.currentSession?.os || "Sistema"}</p>
+                          </div>
                         </div>
                       </div>
-                      <span className="w-fit rounded-xl border border-emerald-400/15 bg-emerald-500/10 px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-emerald-300">
-                        Verificado
-                      </span>
                     </div>
 
-                    <div className="flex flex-col gap-4 py-4 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="grid h-11 w-11 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.035] text-zinc-400">
-                          <Key size={18} />
-                        </span>
-                        <div>
-                          <p className="text-sm font-black text-white">Senha</p>
-                          <p className="mt-1 text-sm font-semibold tracking-[0.18em] text-zinc-600">••••••••••••</p>
+                    <div className="rounded-2xl border border-white/[0.07] bg-black/20">
+                      <div className="border-b border-white/[0.06] p-4">
+                        <p className="text-sm font-black text-white">Métodos de login</p>
+                        <p className="mt-1 text-xs font-medium text-zinc-500">Gerencie como você entra na sua conta.</p>
+                      </div>
+
+                      <div className="divide-y divide-white/[0.06]">
+                        <div className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.035] text-zinc-400">
+                              <Mail size={18} />
+                            </span>
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-sm font-black text-white">Email e senha</p>
+                                <span className={`rounded-xl border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] ${
+                                  hasPasswordProvider
+                                    ? "border-emerald-400/15 bg-emerald-500/10 text-emerald-300"
+                                    : "border-white/[0.08] bg-white/[0.035] text-zinc-500"
+                                }`}>
+                                  {hasPasswordProvider ? "Conectado" : "Não vinculado"}
+                                </span>
+                              </div>
+                              <p className="mt-1 break-all text-sm text-zinc-500">{user?.email}</p>
+                              {securityOverview?.account?.pendingEmailChange && (
+                                <p className="mt-1 text-xs font-medium text-amber-300">
+                                  Aguardando confirmação de {securityOverview.account.pendingEmailChange}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2 sm:flex-row">
+                            {hasPasswordProvider ? (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => openSecurityModal("changeEmail")}
+                                  className="inline-flex w-full items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.035] px-4 py-3 text-[10px] font-black uppercase tracking-[0.13em] text-zinc-200 transition-colors hover:bg-white hover:text-black sm:w-auto"
+                                >
+                                  Alterar email
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => openSecurityModal("changePassword")}
+                                  className="inline-flex w-full items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.035] px-4 py-3 text-[10px] font-black uppercase tracking-[0.13em] text-zinc-200 transition-colors hover:bg-white hover:text-black sm:w-auto"
+                                >
+                                  Alterar senha
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => openSecurityModal("linkPassword")}
+                                disabled={!hasGoogleProvider}
+                                className="inline-flex w-full items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.035] px-4 py-3 text-[10px] font-black uppercase tracking-[0.13em] text-zinc-200 transition-colors hover:bg-white hover:text-black disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto"
+                              >
+                                Vincular email e senha
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-white/[0.08] bg-white text-zinc-950">
+                              <GoogleIcon className="h-5 w-5" />
+                            </span>
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-sm font-black text-white">Google</p>
+                                <span className={`rounded-xl border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] ${
+                                  hasGoogleProvider
+                                    ? "border-emerald-400/15 bg-emerald-500/10 text-emerald-300"
+                                    : "border-white/[0.08] bg-white/[0.035] text-zinc-500"
+                                }`}>
+                                  {hasGoogleProvider ? "Conectado" : "Não vinculado"}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-sm text-zinc-500">
+                                {hasGoogleProvider
+                                  ? "Você pode entrar usando sua conta Google."
+                                  : "Vincule o Google usando o mesmo email da sua conta."}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => openSecurityModal("linkGoogle")}
+                            disabled={!hasPasswordProvider || hasGoogleProvider}
+                            className="inline-flex w-full items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.035] px-4 py-3 text-[10px] font-black uppercase tracking-[0.13em] text-zinc-200 transition-colors hover:bg-white hover:text-black disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto"
+                          >
+                            {hasGoogleProvider ? "Vinculado" : "Vincular Google"}
+                          </button>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => actions.openModal("resetPassword")}
-                        className="inline-flex w-full items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.035] px-5 py-3 text-[10px] font-black uppercase tracking-[0.13em] text-zinc-200 transition-colors hover:bg-white hover:text-black sm:w-auto"
-                      >
-                        Redefinir
-                      </button>
+                    </div>
+
+                    <div className="rounded-2xl border border-white/[0.07] bg-black/20">
+                      <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] p-4">
+                        <div>
+                          <p className="text-sm font-black text-white">Últimas atividades</p>
+                          <p className="mt-1 text-xs font-medium text-zinc-500">Eventos registrados nesta conta.</p>
+                        </div>
+                        {isLoadingSecurity && <span className="text-xs font-bold text-zinc-500">Carregando</span>}
+                      </div>
+
+                      <div className="divide-y divide-white/[0.06]">
+                        {(securityOverview?.activities || []).length > 0 ? (
+                          securityOverview.activities.map((activity) => (
+                            <div key={activity.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                              <div>
+                                <p className="text-sm font-black text-white">
+                                  {securityEventLabels[activity.event] || "Atividade de segurança"}
+                                </p>
+                                <p className="mt-1 text-xs leading-5 text-zinc-500">
+                                  {activity.device} · {activity.browser} · {activity.os}
+                                </p>
+                              </div>
+                              <div className="text-left sm:text-right">
+                                <p className="text-xs font-bold text-zinc-400">{formatDateTime(activity.createdAt)}</p>
+                                {activity.provider && (
+                                  <p className="mt-1 text-[10px] font-black uppercase tracking-[0.14em] text-zinc-600">
+                                    {activity.provider === "google" ? "Google" : "Email"}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="p-4 text-sm leading-6 text-zinc-500">
+                            Ainda não há atividades recentes registradas. Os próximos logins e logouts aparecerão aqui.
+                          </div>
+                        )}
+                      </div>
+
+                      {securityNextCursor && (
+                        <div className="border-t border-white/[0.06] p-4">
+                          <button
+                            type="button"
+                            onClick={() => loadSecurityOverview({ cursor: securityNextCursor, append: true })}
+                            disabled={isLoadingMoreSecurity}
+                            className="inline-flex w-full items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.035] px-5 py-3 text-[10px] font-black uppercase tracking-[0.13em] text-zinc-200 transition-colors hover:bg-white hover:text-black disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto"
+                          >
+                            {isLoadingMoreSecurity ? "Carregando" : "Carregar mais atividades"}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </SettingPanel>
@@ -418,6 +774,196 @@ export default function Settings() {
         onClose={() => actions.closeModal("avatarSelector")}
         onSelect={actions.handleAvatarUpdate}
       />
+
+      <Modal isOpen={securityModal === "changeEmail"} onClose={closeSecurityModal} title="Alterar email">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleRequestEmailChange();
+          }}
+          className="space-y-5 pt-2"
+        >
+          <div className="rounded-2xl border border-amber-400/15 bg-amber-500/10 p-4 text-sm font-medium leading-6 text-amber-100">
+            O CineSorte enviará um link para o novo email. A alteração só será concluída depois da confirmação.
+          </div>
+          <label className="block">
+            <FieldLabel>Novo email</FieldLabel>
+            <TextInput
+              type="email"
+              value={securityForm.newEmail}
+              onChange={(event) => setSecurityForm((current) => ({ ...current, newEmail: event.target.value }))}
+              placeholder="novo@email.com"
+              required
+            />
+          </label>
+          <label className="block">
+            <FieldLabel>Senha atual</FieldLabel>
+            <TextInput
+              type="password"
+              value={securityForm.currentPassword}
+              onChange={(event) => setSecurityForm((current) => ({ ...current, currentPassword: event.target.value }))}
+              placeholder="Digite sua senha atual"
+              autoComplete="current-password"
+              required
+            />
+          </label>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={closeSecurityModal} className="px-5 py-3 text-xs font-bold text-zinc-500 transition-colors hover:text-white">
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={isSecurityActionLoading}
+              className="rounded-xl bg-white px-6 py-3 text-xs font-black uppercase tracking-[0.13em] text-black transition-colors hover:bg-violet-100 disabled:opacity-50"
+            >
+              {isSecurityActionLoading ? "Enviando" : "Enviar confirmação"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={securityModal === "changePassword"} onClose={closeSecurityModal} title="Alterar senha">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleChangePassword();
+          }}
+          className="space-y-5 pt-2"
+        >
+          <label className="block">
+            <FieldLabel>Senha atual</FieldLabel>
+            <TextInput
+              type="password"
+              value={securityForm.currentPassword}
+              onChange={(event) => setSecurityForm((current) => ({ ...current, currentPassword: event.target.value }))}
+              placeholder="Digite sua senha atual"
+              autoComplete="current-password"
+              required
+            />
+          </label>
+          <label className="block">
+            <FieldLabel>Nova senha</FieldLabel>
+            <TextInput
+              type="password"
+              value={securityForm.newPassword}
+              onChange={(event) => setSecurityForm((current) => ({ ...current, newPassword: event.target.value }))}
+              placeholder="Mínimo 6 caracteres, maiúscula e símbolo"
+              autoComplete="new-password"
+              required
+            />
+          </label>
+          <label className="block">
+            <FieldLabel>Confirmar nova senha</FieldLabel>
+            <TextInput
+              type="password"
+              value={securityForm.confirmPassword}
+              onChange={(event) => setSecurityForm((current) => ({ ...current, confirmPassword: event.target.value }))}
+              placeholder="Repita a nova senha"
+              autoComplete="new-password"
+              required
+            />
+          </label>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={closeSecurityModal} className="px-5 py-3 text-xs font-bold text-zinc-500 transition-colors hover:text-white">
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={isSecurityActionLoading}
+              className="rounded-xl bg-white px-6 py-3 text-xs font-black uppercase tracking-[0.13em] text-black transition-colors hover:bg-violet-100 disabled:opacity-50"
+            >
+              {isSecurityActionLoading ? "Salvando" : "Salvar senha"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={securityModal === "linkPassword"} onClose={closeSecurityModal} title="Vincular email e senha">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleLinkPassword();
+          }}
+          className="space-y-5 pt-2"
+        >
+          <div className="rounded-2xl border border-violet-400/15 bg-violet-500/10 p-4 text-sm font-medium leading-6 text-violet-100">
+            Você continuará podendo entrar com Google. Vamos confirmar sua conta Google e criar uma senha para o email atual.
+          </div>
+          <label className="block">
+            <FieldLabel>Nova senha</FieldLabel>
+            <TextInput
+              type="password"
+              value={securityForm.newPassword}
+              onChange={(event) => setSecurityForm((current) => ({ ...current, newPassword: event.target.value }))}
+              placeholder="Mínimo 6 caracteres, maiúscula e símbolo"
+              autoComplete="new-password"
+              required
+            />
+          </label>
+          <label className="block">
+            <FieldLabel>Confirmar nova senha</FieldLabel>
+            <TextInput
+              type="password"
+              value={securityForm.confirmPassword}
+              onChange={(event) => setSecurityForm((current) => ({ ...current, confirmPassword: event.target.value }))}
+              placeholder="Repita a nova senha"
+              autoComplete="new-password"
+              required
+            />
+          </label>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={closeSecurityModal} className="px-5 py-3 text-xs font-bold text-zinc-500 transition-colors hover:text-white">
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={isSecurityActionLoading}
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-xs font-black uppercase tracking-[0.13em] text-black transition-colors hover:bg-violet-100 disabled:opacity-50"
+            >
+              <GoogleIcon className="h-4 w-4" />
+              {isSecurityActionLoading ? "Vinculando" : "Confirmar com Google"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={securityModal === "linkGoogle"} onClose={closeSecurityModal} title="Vincular Google">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleLinkGoogle();
+          }}
+          className="space-y-5 pt-2"
+        >
+          <div className="rounded-2xl border border-sky-400/15 bg-sky-500/10 p-4 text-sm font-medium leading-6 text-sky-100">
+            Use a conta Google com o mesmo email cadastrado no CineSorte. Depois disso, você poderá entrar com senha ou Google.
+          </div>
+          <label className="block">
+            <FieldLabel>Senha atual</FieldLabel>
+            <TextInput
+              type="password"
+              value={securityForm.currentPassword}
+              onChange={(event) => setSecurityForm((current) => ({ ...current, currentPassword: event.target.value }))}
+              placeholder="Confirme sua senha atual"
+              autoComplete="current-password"
+              required
+            />
+          </label>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={closeSecurityModal} className="px-5 py-3 text-xs font-bold text-zinc-500 transition-colors hover:text-white">
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={isSecurityActionLoading}
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-xs font-black uppercase tracking-[0.13em] text-black transition-colors hover:bg-violet-100 disabled:opacity-50"
+            >
+              <GoogleIcon className="h-4 w-4" />
+              {isSecurityActionLoading ? "Vinculando" : "Continuar com Google"}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       <Modal isOpen={modals.resetPassword} onClose={() => actions.closeModal("resetPassword")} title="Redefinir senha">
         <div className="space-y-6 pt-2">
