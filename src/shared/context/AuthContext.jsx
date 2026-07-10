@@ -10,8 +10,10 @@ import {
   deleteAccount as apiDeleteAccount,
   requestPasswordReset as apiResetPassword,
   resendVerificationEmail as apiResendVerificationEmail,
+  reconcileRatedReviews,
 } from '@shared/api/api';
 import { AuthContext } from './AuthContextBase';
+import { endSessionCache } from '@shared/lib/sessionCache';
 
 const CURRENT_TERMS_VERSION = '4.0';
 
@@ -36,7 +38,34 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    if (!user?.uid) return undefined;
+    let cancelled = false;
+    let timerId = null;
+
+    const processNextBatch = async () => {
+      try {
+        const result = await reconcileRatedReviews();
+        if (!cancelled && result?.done) {
+          const refreshedUser = await getMe();
+          if (!cancelled) setUser(refreshedUser);
+        } else if (!cancelled) {
+          timerId = window.setTimeout(processNextBatch, 2500);
+        }
+      } catch {
+        // Reconciliation is maintenance work and must never block the session.
+      }
+    };
+
+    timerId = window.setTimeout(processNextBatch, 3000);
+    return () => {
+      cancelled = true;
+      if (timerId) window.clearTimeout(timerId);
+    };
+  }, [user?.uid]);
+
+  useEffect(() => {
     const handleSessionExpired = () => {
+      endSessionCache();
       setUser(null);
       setShowTermsModal(false);
     };
@@ -115,6 +144,7 @@ export function AuthProvider({ children }) {
       setShowTermsModal(false);
     }
     finally {
+      endSessionCache();
       setUser(null);
       setShowTermsModal(false);
     }
@@ -138,6 +168,7 @@ export function AuthProvider({ children }) {
 
   async function deleteAccount(confirmText) {
     const response = await apiDeleteAccount(confirmText);
+    endSessionCache();
     setUser(null);
     setShowTermsModal(false);
     return response;
@@ -145,6 +176,7 @@ export function AuthProvider({ children }) {
 
   async function resetPassword(email) {
     const response = await apiResetPassword(email);
+    endSessionCache();
     setUser(null);
     setShowTermsModal(false);
     return response;

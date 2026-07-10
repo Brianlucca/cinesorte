@@ -9,7 +9,6 @@ import {
     getUserFollowingPage,
     getUserLists, 
     updateProfile,
-    getMe,
     getMovieDetails
 } from '@shared/api/api';
 
@@ -36,17 +35,22 @@ async function hydrateInteractionArtwork(items) {
   const uniqueKeys = [...new Set(missingArtwork.map((item) => `${getMediaType(item)}:${getMediaId(item)}`))];
   if (uniqueKeys.length === 0) return items;
 
-  const detailsEntries = await Promise.all(
-    uniqueKeys.map(async (key) => {
+  const detailsEntries = [];
+  let nextIndex = 0;
+  const workers = Array.from({ length: Math.min(4, uniqueKeys.length) }, async () => {
+    while (nextIndex < uniqueKeys.length) {
+      const key = uniqueKeys[nextIndex];
+      nextIndex += 1;
       const [type, id] = key.split(':');
       try {
         const details = await getMovieDetails(type, id);
-        return [key, details];
+        detailsEntries.push([key, details]);
       } catch {
-        return [key, null];
+        detailsEntries.push([key, null]);
       }
-    }),
-  );
+    }
+  });
+  await Promise.all(workers);
 
   const detailsMap = new Map(detailsEntries);
   return items.map((item) => {
@@ -74,7 +78,7 @@ export function useProfileLogic() {
   const [allInteractions, setAllInteractions] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
   const [userLists, setUserLists] = useState([]);
-  const [dbProfile, setDbProfile] = useState({});
+  const [dbProfile, setDbProfile] = useState(authUser || {});
   const [userStats, setUserStats] = useState({ 
     followersCount: 0, 
     followingCount: 0, 
@@ -88,7 +92,7 @@ export function useProfileLogic() {
     likesCount: 0
   });
   const [localUpdates, setLocalUpdates] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!authUser?.username);
   const [activeTab, setActiveTab] = useState('likes'); 
   const [activityFilter, setActivityFilter] = useState('like'); 
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
@@ -114,25 +118,26 @@ export function useProfileLogic() {
 
   const loadData = useCallback(async () => {
     if (!authUser?.username) return;
-    setLoading(true);
+    setDbProfile(authUser);
+    setLoading(false);
     try {
-      const [interactionsData, reviewsResponse, statsData, listsData, meData] = await Promise.all([
+      const [interactionsResult, reviewsResult, statsResult, listsResult] = await Promise.allSettled([
           getUserInteractions(),
           getUserReviewsOnly(authUser.username),
           getUserStats(),
-          getUserLists('me'),
-          getMe()
+          getUserLists('me')
       ]);
 
-      setUserStats(statsData);
-      setDbProfile(meData || {});
-      setUserLists(listsData);
+      if (statsResult.status === 'fulfilled') setUserStats(statsResult.value);
+      if (listsResult.status === 'fulfilled') setUserLists(listsResult.value);
 
+      const reviewsResponse = reviewsResult.status === 'fulfilled' ? reviewsResult.value : {};
       const rawReviews = reviewsResponse?.items || [];
       setAllReviews(rawReviews);
       setHasMoreReviews(reviewsResponse?.hasMore || false);
       setReviewsCursor(reviewsResponse?.nextCursor || null);
 
+      const interactionsData = interactionsResult.status === 'fulfilled' ? interactionsResult.value : [];
       const processedInteractions = [];
       if (interactionsData && Array.isArray(interactionsData)) {
         interactionsData.forEach(item => {
@@ -157,14 +162,15 @@ export function useProfileLogic() {
         });
       }
       processedInteractions.sort((a, b) => (b.sortDate?.getTime() || 0) - (a.sortDate?.getTime() || 0));
-      setAllInteractions(await hydrateInteractionArtwork(processedInteractions));
+      setAllInteractions(processedInteractions);
+      hydrateInteractionArtwork(processedInteractions)
+        .then(setAllInteractions)
+        .catch(() => {});
 
     } catch {
       toast.error('Erro', 'Não foi possível carregar seu perfil.');
-    } finally {
-      setLoading(false);
     }
-  }, [authUser?.username, toast]);
+  }, [authUser, toast]);
 
   useEffect(() => {
     loadData();

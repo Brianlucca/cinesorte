@@ -75,6 +75,8 @@ export default function PublicProfile() {
     followsYou,
     loading,
     messaging,
+    isBlocked,
+    blocking,
     compatibility,
     hasMoreReviews,
     loadingMoreReviews,
@@ -137,6 +139,9 @@ export default function PublicProfile() {
           onFollow={actions.handleFollow}
           onMessage={actions.handleMessage}
           messaging={messaging}
+          isBlocked={isBlocked}
+          blocking={blocking}
+          onBlock={actions.handleBlock}
           compatibility={compatibility}
         />
 

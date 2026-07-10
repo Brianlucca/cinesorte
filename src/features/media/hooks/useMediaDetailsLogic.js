@@ -4,7 +4,7 @@ import {
   getMovieDetails,
   getProviders,
   getMediaReviews,
-  getUserInteractions,
+  getMediaInteraction,
   recordInteraction,
   createOrUpdateList,
   getUserLists,
@@ -73,25 +73,34 @@ export function useMediaDetailsLogic() {
       if (!id) return;
       setLoading(true);
       try {
-        const promises = [
-          getMovieDetails(type, id),
-          getProviders(type, id),
-          getMediaReviews(id),
-        ];
+        const mediaPromise = getMovieDetails(type, id);
+        const providersPromise = getProviders(type, id);
+        const reviewsPromise = getMediaReviews(id);
+        const interactionsPromise = user?.username ? getMediaInteraction(id) : Promise.resolve(null);
+        const listsPromise = user?.username ? getUserLists("me") : Promise.resolve([]);
+        const followingPromise = user?.username ? getUserFollowing(user.username) : Promise.resolve([]);
 
-        if (user?.username) {
-          promises.push(getUserInteractions());
-          promises.push(getUserLists("me"));
-          promises.push(getUserFollowing(user.username));
-        }
-
-        const results = await Promise.all(promises);
-        
-        const mediaData = results[0];
+        const mediaData = await mediaPromise;
         setMedia(mediaData);
-        setProviders(results[1]);
-        
-        const safeReviews = Array.isArray(results[2]) ? results[2].map(r => ({
+        const recommendations = mediaData.recommendations?.results || [];
+        const similarItems = mediaData.similar?.results || [];
+        const relatedContent = (recommendations.length > 0 ? recommendations : similarItems)
+          .filter((item) => item.id !== Number(id) && item.poster_path)
+          .slice(0, 16);
+        setSimilar(relatedContent);
+        setLoading(false);
+
+        const results = await Promise.allSettled([
+          providersPromise,
+          reviewsPromise,
+          interactionsPromise,
+          listsPromise,
+          followingPromise,
+        ]);
+        setProviders(results[0].status === "fulfilled" ? results[0].value : []);
+
+        const reviewsRaw = results[1].status === "fulfilled" ? results[1].value : [];
+        const safeReviews = Array.isArray(reviewsRaw) ? reviewsRaw.map(r => ({
             ...r,
             isLikedByCurrentUser: !!r.isLikedByCurrentUser,
             likesCount: Number(r.likesCount) || 0,
@@ -100,27 +109,18 @@ export function useMediaDetailsLogic() {
         })) : [];
         setReviews(safeReviews);
 
-        const recommendations = mediaData.recommendations?.results || [];
-        const similarItems = mediaData.similar?.results || [];
-        let relatedContent = recommendations.length > 0 ? recommendations : similarItems;
-        relatedContent = relatedContent
-          .filter((item) => item.id !== Number(id) && item.poster_path)
-          .slice(0, 16);
-        setSimilar(relatedContent);
-
         if (user?.username) {
-          const interactionsRaw = results[3];
-          const listsRaw = results[4];
-          const followingRaw = results[5];
+          const interactionsRaw = results[2].status === "fulfilled" ? results[2].value : [];
+          const listsRaw = results[3].status === "fulfilled" ? results[3].value : [];
+          const followingRaw = results[4].status === "fulfilled" ? results[4].value : [];
 
-          const interactionList = Array.isArray(interactionsRaw) ? interactionsRaw : [];
           const myLists = Array.isArray(listsRaw) ? listsRaw : [];
           const myFollowing = Array.isArray(followingRaw) ? followingRaw : [];
 
           setUserLists(myLists);
           setFollowingList(myFollowing);
 
-          const myInter = interactionList.find((i) => String(i.mediaId) === String(id));
+          const myInter = interactionsRaw;
           
           if (myInter) {
             setInteractions({
@@ -141,7 +141,7 @@ export function useMediaDetailsLogic() {
       }
     }
     loadData();
-  }, [type, id, user]);
+  }, [type, id, user?.username]);
 
   const handleInteract = async (action) => {
     if (!user) return toast.error("Login necessário", "Entre para interagir.");
@@ -185,6 +185,9 @@ export function useMediaDetailsLogic() {
         text: text,
         isEliteReview: isElite 
       });
+      if (rating !== null && Number(rating) >= 1) {
+        setInteractions((prev) => ({ ...prev, watched: true }));
+      }
       toast.success("Sucesso", "Publicado com sucesso!");
       const updated = await getMediaReviews(id);
       setReviews(updated);
@@ -201,6 +204,9 @@ export function useMediaDetailsLogic() {
         text: newText,
         rating: newRating !== null ? Number(newRating) : null,
       });
+      if (newRating !== null && Number(newRating) >= 1) {
+        setInteractions((prev) => ({ ...prev, watched: true }));
+      }
       setReviews(prev => prev.map(r => 
         r.id === reviewId
           ? { ...r, text: newText, rating: newRating !== null ? Number(newRating) : null, isEdited: true }

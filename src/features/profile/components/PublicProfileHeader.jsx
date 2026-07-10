@@ -7,6 +7,7 @@ import {
   UserCheck,
   UserPlus,
   Users,
+  Ban,
 } from 'lucide-react';
 import LevelBadge from '@shared/components/ui/LevelBadge';
 import { useAuth } from '@shared/context/useAuth';
@@ -25,6 +26,9 @@ export default function PublicProfileHeader({
   onMessage,
   messaging,
   compatibility,
+  isBlocked,
+  blocking,
+  onBlock,
 }) {
   const { user: currentUser } = useAuth();
   const isMe = currentUser?.username === user?.username;
@@ -104,6 +108,7 @@ export default function PublicProfileHeader({
                     <button
                       type="button"
                       onClick={onFollow}
+                      disabled={isBlocked}
                       className={`inline-flex items-center justify-center gap-2.5 rounded-full px-5 py-3 text-[10px] font-black uppercase tracking-[0.15em] shadow-xl shadow-black/20 transition-all hover:scale-[1.02] active:scale-[0.98] ${
                         isFollowing
                           ? 'border border-white/10 bg-black/35 text-zinc-300 hover:border-red-300/25 hover:bg-red-500/10 hover:text-red-300'
@@ -117,11 +122,21 @@ export default function PublicProfileHeader({
                     <button
                       type="button"
                       onClick={onMessage}
-                      disabled={messaging}
+                      disabled={messaging || isBlocked}
                       className="inline-flex items-center justify-center gap-2.5 rounded-full border border-violet-300/20 bg-violet-500/15 px-5 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-violet-100 shadow-xl shadow-black/20 transition-all hover:scale-[1.02] hover:bg-violet-500/25 disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.98]"
                     >
                       {messaging ? <Loader2 size={17} className="animate-spin" /> : <MessageCircle size={17} />}
                       Mensagem
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={onBlock}
+                      disabled={blocking}
+                      className={`inline-flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-[10px] font-black uppercase tracking-[0.12em] transition-colors disabled:opacity-60 ${isBlocked ? 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200' : 'border-red-400/20 bg-red-500/10 text-red-200 hover:bg-red-500/20'}`}
+                    >
+                      {blocking ? <Loader2 size={16} className="animate-spin" /> : <Ban size={16} />}
+                      {isBlocked ? 'Desbloquear' : 'Bloquear'}
                     </button>
                   </div>
                 )}

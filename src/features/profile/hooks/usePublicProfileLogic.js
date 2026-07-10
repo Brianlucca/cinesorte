@@ -7,6 +7,9 @@ import {
   checkFollowStatus,
   getMatchPercentage,
   createDirectConversation,
+  blockUser,
+  unblockUser,
+  getBlockStatus,
 } from '@shared/api/api';
 import { useToast } from '@shared/context/useToast';
 import { useAuth } from '@shared/context/useAuth';
@@ -22,6 +25,8 @@ export function usePublicProfileLogic(username) {
   const [loading, setLoading] = useState(true);
   const [compatibility, setCompatibility] = useState(0);
   const [messaging, setMessaging] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blocking, setBlocking] = useState(false);
 
   const { user } = useAuth();
   const toast = useToast();
@@ -32,10 +37,8 @@ export function usePublicProfileLogic(username) {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [profileData, reviewsResponse] = await Promise.all([
-          getPublicProfile(username),
-          getUserReviewsOnly(username),
-        ]);
+        const reviewsPromise = getUserReviewsOnly(username);
+        const profileData = await getPublicProfile(username);
 
         if (!isMounted) return;
 
@@ -48,26 +51,33 @@ export function usePublicProfileLogic(username) {
             trophies: profileData.trophies || [],
           };
 
-          if (user && user.username !== username) {
-            try {
-              const [followStatus, matchData] = await Promise.all([
+          setProfile(formattedProfile);
+          setLoading(false);
+
+          if (user?.username && user.username !== username) {
+            Promise.all([
                 checkFollowStatus(username),
                 getMatchPercentage(username),
-              ]);
+                getBlockStatus(username),
+              ])
+              .then(([followStatus, matchData, blockStatus]) => {
               if (isMounted) {
                 setIsFollowing(followStatus.isFollowing);
                 setFollowsYou(followStatus.followsYou);
                 setCompatibility(matchData.percentage || 0);
+                setIsBlocked(Boolean(blockStatus?.isBlocked));
               }
-            } catch {
-              setIsFollowing(false);
-              setFollowsYou(false);
-              setCompatibility(0);
-            }
+              })
+              .catch(() => {
+                if (!isMounted) return;
+                setIsFollowing(false);
+                setFollowsYou(false);
+                setCompatibility(0);
+              });
           }
 
-          setProfile(formattedProfile);
-
+          const reviewsResponse = await reviewsPromise.catch(() => ({}));
+          if (!isMounted) return;
           const items = reviewsResponse?.items || [];
           setReviews(items);
           setHasMoreReviews(reviewsResponse?.hasMore || false);
@@ -87,7 +97,7 @@ export function usePublicProfileLogic(username) {
     return () => {
       isMounted = false;
     };
-  }, [username, user, toast]);
+  }, [username, user?.username, toast]);
 
   const loadMoreReviews = useCallback(async () => {
     if (!username || !reviewsCursor || loadingMoreReviews) return 0;
@@ -111,7 +121,7 @@ export function usePublicProfileLogic(username) {
   }, [username, reviewsCursor, loadingMoreReviews, toast]);
 
   const handleFollow = async () => {
-    if (!username || !user) return;
+    if (!username || !user || isBlocked) return;
 
     const previousState = isFollowing;
     setIsFollowing(!previousState);
@@ -138,8 +148,43 @@ export function usePublicProfileLogic(username) {
     }
   };
 
+  const handleBlock = async () => {
+    if (!username || blocking) return;
+    setBlocking(true);
+    try {
+      if (isBlocked) {
+        await unblockUser(username);
+        setIsBlocked(false);
+        window.dispatchEvent(new CustomEvent('cinesorte:user-unblocked', { detail: { username } }));
+        toast.success('Desbloqueado', `@${username} foi desbloqueado.`);
+      } else {
+        await blockUser(username);
+        setIsBlocked(true);
+        setIsFollowing(false);
+        setFollowsYou(false);
+        setProfile((prev) => ({
+          ...prev,
+          followersCount: Math.max(0, (prev?.followersCount || 0) - (isFollowing ? 1 : 0)),
+          followingCount: Math.max(0, (prev?.followingCount || 0) - (followsYou ? 1 : 0)),
+        }));
+        window.dispatchEvent(new CustomEvent('cinesorte:user-blocked', {
+          detail: {
+            username,
+            name: profile?.name || username,
+            photoURL: profile?.photoURL || null,
+          },
+        }));
+        toast.success('Usuário bloqueado', `@${username} não pode mais iniciar conversa com você.`);
+      }
+    } catch (error) {
+      toast.error('Não foi possível alterar o bloqueio', error.message || 'Tente novamente.');
+    } finally {
+      setBlocking(false);
+    }
+  };
+
   const handleMessage = async () => {
-    if (!username || !user || user.username === username || messaging) return;
+    if (!username || !user || user.username === username || messaging || isBlocked) return;
 
     setMessaging(true);
     try {
@@ -163,9 +208,11 @@ export function usePublicProfileLogic(username) {
     followsYou,
     loading,
     messaging,
+    isBlocked,
+    blocking,
     compatibility,
     hasMoreReviews,
     loadingMoreReviews,
-    actions: { handleFollow, handleMessage, loadMoreReviews },
+    actions: { handleFollow, handleMessage, handleBlock, loadMoreReviews },
   };
 }
