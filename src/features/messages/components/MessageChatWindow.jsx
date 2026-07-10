@@ -6,7 +6,7 @@ import MediaAttachmentPanel from "@features/messages/components/MediaAttachmentP
 import MediaMessageCard from "@features/messages/components/MediaMessageCard";
 import { formatMessageTime } from "@features/messages/utils/messageUtils";
 
-function ConversationDetailsPanel({ thread, messages, onClose, onDeleteConversation, onDeleteGroup, onOpenProfile }) {
+function ConversationDetailsPanel({ thread, messages, onClose, onDeleteConversation, onDeleteGroup, onOpenProfile, onBlockUser }) {
   const sharedMedia = messages
     .filter((message) => message.media)
     .map((message) => ({
@@ -109,6 +109,15 @@ function ConversationDetailsPanel({ thread, messages, onClose, onDeleteConversat
         </section>
 
         <section className="mt-6 space-y-2 border-t border-white/[0.06] pt-4">
+          {thread.type === "direct" && privateMember?.username && (
+            <button
+              type="button"
+              onClick={() => onBlockUser(privateMember)}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-400/15 bg-red-500/10 px-4 py-3 text-xs font-bold uppercase tracking-[0.08em] text-red-200 hover:bg-red-500/20"
+            >
+              Bloquear @{privateMember.username}
+            </button>
+          )}
           <button
             type="button"
             onClick={onDeleteConversation}
@@ -138,7 +147,7 @@ function ConversationDetailsPanel({ thread, messages, onClose, onDeleteConversat
   );
 }
 
-export default function MessageChatWindow({ thread, messages, loading, sending, onClose, onSend, onDeleteConversation, onDeleteGroup }) {
+export default function MessageChatWindow({ thread, messages, loading, sending, onClose, onSend, onDeleteConversation, onDeleteGroup, onBlockUser }) {
   const navigate = useNavigate();
   const [showAttachments, setShowAttachments] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -154,10 +163,11 @@ export default function MessageChatWindow({ thread, messages, loading, sending, 
     const text = draft.trim();
     if (!text && !selectedMedia) return;
 
-    await onSend({ text, media: selectedMedia });
+    const media = selectedMedia;
     setDraft("");
     setSelectedMedia(null);
     setShowAttachments(false);
+    await onSend({ text, media });
   };
 
   const openProfile = (memberOrUsername) => {
@@ -311,6 +321,7 @@ export default function MessageChatWindow({ thread, messages, loading, sending, 
           onDeleteConversation={onDeleteConversation}
           onDeleteGroup={onDeleteGroup}
           onOpenProfile={openProfile}
+          onBlockUser={onBlockUser}
         />
       )}
     </section>

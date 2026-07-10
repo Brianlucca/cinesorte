@@ -8,6 +8,38 @@ const api = axios.create({
   },
 });
 
+const responseCache = new Map();
+const pendingGets = new Map();
+
+const stableParams = (params = {}) => JSON.stringify(
+  Object.entries(params)
+    .filter(([, value]) => value !== undefined && value !== null && value !== "")
+    .sort(([left], [right]) => left.localeCompare(right)),
+);
+
+const cachedGet = (url, options = {}, ttl = 60000) => {
+  const key = `${url}:${stableParams(options.params)}`;
+  const cached = responseCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) return Promise.resolve(cached.data);
+  if (pendingGets.has(key)) return pendingGets.get(key);
+
+  const request = api.get(url, options)
+    .then((data) => {
+      responseCache.set(key, { data, expiresAt: Date.now() + ttl });
+      return data;
+    })
+    .finally(() => pendingGets.delete(key));
+
+  pendingGets.set(key, request);
+  return request;
+};
+
+export const clearApiCache = (prefix = "") => {
+  for (const key of responseCache.keys()) {
+    if (!prefix || key.startsWith(prefix)) responseCache.delete(key);
+  }
+};
+
 api.interceptors.response.use(
   (response) => {
     return response.data;
@@ -31,12 +63,18 @@ api.interceptors.response.use(
   }
 );
 
-export const login = (credentials) => api.post("/users/login", credentials);
-export const googleAuth = (data) => api.post("/users/auth/google", data);
+export const login = (credentials) => api.post("/users/login", credentials).then((data) => {
+  clearApiCache();
+  return data;
+});
+export const googleAuth = (data) => api.post("/users/auth/google", data).then((response) => {
+  clearApiCache();
+  return response;
+});
 export const register = (userData) => api.post("/users/register", userData);
 export const resendVerificationEmail = (email) => api.post("/users/resend-verification-email", { email });
-export const logout = () => api.post("/users/logout");
-export const getMe = () => api.get("/users/me");
+export const logout = () => api.post("/users/logout").finally(() => clearApiCache());
+export const getMe = () => cachedGet("/users/me", {}, 10000);
 export const getSecurityOverview = (params = {}) => api.get("/users/security", { params });
 export const verifyCurrentPassword = (data) => api.post("/users/security/verify-password", data);
 export const requestEmailChange = (data) => api.post("/users/security/change-email", data);
@@ -44,8 +82,11 @@ export const confirmEmailChange = (token) => api.post("/users/security/confirm-e
 export const changePassword = (data) => api.post("/users/security/change-password", data);
 export const linkGoogleAccount = (data) => api.post("/users/security/link-google", data);
 export const linkPasswordAccount = (data) => api.post("/users/security/link-password", data);
-export const updateProfile = (data) => api.put("/users/me", data);
-export const deleteAccount = (confirmText) => api.delete("/users/me", { data: { confirmText } });
+export const updateProfile = (data) => api.put("/users/me", data).then((response) => {
+  clearApiCache("/users/me:");
+  return response;
+});
+export const deleteAccount = (confirmText) => api.delete("/users/me", { data: { confirmText } }).finally(() => clearApiCache());
 export const acceptTerms = (version) => api.post("/users/terms", { version });
 export const getPublicProfile = (username) => api.get(`/users/profile/${username}`);
 export const requestPasswordReset = (email) => api.post("/users/reset-password", { email });
@@ -72,12 +113,16 @@ export const getUserFollowersPage = (userId, cursor = null) =>
   api.get(`/social/followers/${userId}`, { params: { paged: true, ...(cursor ? { cursor } : {}) } });
 export const getUserFollowingPage = (userId, cursor = null) =>
   api.get(`/social/following/${userId}`, { params: { paged: true, ...(cursor ? { cursor } : {}) } });
-export const getSuggestions = () => api.get("/social/suggestions");
+export const getSuggestions = () => cachedGet("/social/suggestions", {}, 60000);
 export const getMatchPercentage = (targetUsername) => api.get(`/social/match/${targetUsername}`);
+export const blockUser = (username) => api.post("/social/blocks", { username });
+export const unblockUser = (username) => api.delete(`/social/blocks/${username}`);
+export const getBlockStatus = (username) => api.get(`/social/blocks/${username}/status`);
+export const getBlockedUsers = () => api.get("/social/blocks");
 
-export const getGlobalFeed = (cursor = null) => api.get("/social/feed/global", { params: cursor ? { cursor } : {} });
-export const getFollowingFeed = (cursor = null) => api.get("/social/feed/following", { params: cursor ? { cursor } : {} });
-export const getSharedListsFeed = (cursor = null) => api.get("/social/feed/collections", { params: cursor ? { cursor } : {} });
+export const getGlobalFeed = (cursor = null) => cachedGet("/social/feed/global", { params: cursor ? { cursor } : {} }, 15000);
+export const getFollowingFeed = (cursor = null) => cachedGet("/social/feed/following", { params: cursor ? { cursor } : {} }, 15000);
+export const getSharedListsFeed = (cursor = null) => cachedGet("/social/feed/collections", { params: cursor ? { cursor } : {} }, 15000);
 export const shareList = (data) => api.post("/social/share-list", data);
 export const deleteListShare = (shareId) => api.delete(`/social/share-list/${shareId}`);
 export const getListDetails = (username, listId) => api.get(`/social/lists/${username}/${listId}`);
@@ -101,23 +146,28 @@ export const deleteComment = (commentId) => api.delete(`/social/comments/${comme
 
 export const recordInteraction = (data) => api.post("/users/interact", data);
 export const getUserInteractions = () => api.get("/users/interactions");
+export const getMediaInteraction = (mediaId) => api.get(`/users/interactions/${mediaId}`);
 export const getWatchDiary = (year) => api.get("/users/diary", { params: { year } });
+export const reconcileRatedReviews = () => api.post("/users/interactions/reconcile-rated-reviews").then((response) => {
+  clearApiCache("/users/me:");
+  return response;
+});
 
-export const getMovieDetails = (type, id) => api.get(`/tmdb/details/${type}/${id}`);
+export const getMovieDetails = (type, id) => cachedGet(`/tmdb/details/${type}/${id}`, {}, 10 * 60 * 1000);
 export const getPersonExternalIds = (id) => api.get(`/tmdb/details/person/${id}/external_ids`).catch(() => ({}));
-export const getSeasonDetails = (tvId, seasonNumber) => api.get(`/tmdb/details/tv/${tvId}/season/${seasonNumber}`);
+export const getSeasonDetails = (tvId, seasonNumber) => cachedGet(`/tmdb/details/tv/${tvId}/season/${seasonNumber}`, {}, 10 * 60 * 1000);
 export const getEpisodeDetails = (tvId, seasonNumber, episodeNumber) =>
-  api.get(`/tmdb/details/tv/${tvId}/season/${seasonNumber}/episode/${episodeNumber}`);
-export const getProviders = (type, id) => api.get(`/tmdb/providers/${type}/${id}`);
-export const getTrending = (timeWindow) => api.get(`/tmdb/trending/${timeWindow}`);
-export const getDiscover = (params) => api.get("/tmdb/discover", { params });
-export const getNowPlaying = () => api.get("/tmdb/now-playing");
-export const getTmdbSearch = (query) => api.get(`/tmdb/search?query=${query}`);
-export const getGenres = () => api.get("/tmdb/genres");
-export const getRecommendations = (mediaType) => api.get(`/tmdb/recommendations/${mediaType}`);
-export const getLatestTrailers = () => api.get("/tmdb/latest-trailers");
-export const getAnimeReleases = () => api.get("/tmdb/anime-releases");
-export const getAnimations = () => api.get("/tmdb/animations");
+  cachedGet(`/tmdb/details/tv/${tvId}/season/${seasonNumber}/episode/${episodeNumber}`, {}, 10 * 60 * 1000);
+export const getProviders = (type, id) => cachedGet(`/tmdb/providers/${type}/${id}`, {}, 10 * 60 * 1000);
+export const getTrending = (timeWindow) => cachedGet(`/tmdb/trending/${timeWindow}`, {}, 5 * 60 * 1000);
+export const getDiscover = (params) => cachedGet("/tmdb/discover", { params }, 5 * 60 * 1000);
+export const getNowPlaying = () => cachedGet("/tmdb/now-playing", {}, 5 * 60 * 1000);
+export const getTmdbSearch = (query) => cachedGet("/tmdb/search", { params: { query: query.trim() } }, 2 * 60 * 1000);
+export const getGenres = () => cachedGet("/tmdb/genres", {}, 24 * 60 * 60 * 1000);
+export const getRecommendations = (mediaType) => cachedGet(`/tmdb/recommendations/${mediaType}`, {}, 5 * 60 * 1000);
+export const getLatestTrailers = () => cachedGet("/tmdb/latest-trailers", {}, 10 * 60 * 1000);
+export const getAnimeReleases = () => cachedGet("/tmdb/anime-releases", {}, 10 * 60 * 1000);
+export const getAnimations = () => cachedGet("/tmdb/animations", {}, 10 * 60 * 1000);
 
 export const getNotifications = () => api.get("/notifications");
 export const getUnreadCount = () => api.get("/notifications/count");

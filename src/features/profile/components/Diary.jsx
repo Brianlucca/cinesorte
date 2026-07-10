@@ -1,15 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, ChevronLeft, ChevronRight, Film, Share2, Star } from 'lucide-react';
-import DiaryShareModal from '@features/profile/components/diary/DiaryShareModal';
+import { Calendar, ChevronLeft, ChevronRight, Film, Star } from 'lucide-react';
 import {
-  DIARY_SHARE_ITEMS_LIMIT,
   getDiaryBackdropPath,
   getDiaryMediaTitle,
   getDiaryMediaTypeLabel,
   getDiaryPosterPath,
   tmdbImage,
-} from '@features/profile/components/diary/diaryShareImage';
+} from '@features/profile/components/diary/diaryUtils';
 
 const DIARY_PER_PAGE = 10;
 
@@ -49,7 +47,6 @@ function formatDisplayDate(date) {
 
 export default function Diary({ items }) {
   const [page, setPage] = useState(0);
-  const [shareOpen, setShareOpen] = useState(false);
 
   const normalizedItems = useMemo(() => {
     const safeItems = Array.isArray(items) ? items : [];
@@ -63,6 +60,9 @@ export default function Diary({ items }) {
           posterPath: getDiaryPosterPath(item),
           backdropPath: getDiaryBackdropPath(item),
           displayDate: formatDisplayDate(itemDate),
+          timelineDay: itemDate?.toLocaleDateString('pt-BR', { day: '2-digit' }) || '--',
+          timelineMonth: itemDate?.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '') || 'sem data',
+          timelineYear: itemDate?.getFullYear() || '',
           sortTime: itemDate?.getTime() || 0,
         };
       })
@@ -72,7 +72,6 @@ export default function Diary({ items }) {
   const totalPages = Math.max(1, Math.ceil(normalizedItems.length / DIARY_PER_PAGE));
   const currentPage = Math.min(page, totalPages - 1);
   const pageItems = normalizedItems.slice(currentPage * DIARY_PER_PAGE, (currentPage + 1) * DIARY_PER_PAGE);
-  const shareItems = normalizedItems.slice(0, DIARY_SHARE_ITEMS_LIMIT);
 
   useEffect(() => {
     setPage(0);
@@ -104,86 +103,64 @@ export default function Diary({ items }) {
           <span className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">
             {normalizedItems.length} {normalizedItems.length === 1 ? 'registro' : 'registros'}
           </span>
-          <button
-            type="button"
-            onClick={() => setShareOpen(true)}
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-violet-300/20 bg-violet-400/10 px-3 text-[10px] font-black uppercase tracking-[0.16em] text-violet-200 transition-colors hover:border-violet-300/[0.35] hover:bg-violet-400/[0.15]"
-          >
-            <Share2 size={14} />
-            Compartilhar
-          </button>
         </div>
       </div>
 
-      <ol className="overflow-hidden rounded-[1.35rem] border border-white/[0.08] bg-[#09090b] shadow-[0_20px_56px_rgba(0,0,0,0.22)]">
+      <ol className="relative mx-auto max-w-5xl py-2 before:absolute before:bottom-8 before:left-[3.2rem] before:top-8 before:w-px before:bg-gradient-to-b before:from-violet-400/60 before:via-white/10 before:to-transparent sm:before:left-[6.7rem]">
         {pageItems.map((item, index) => {
           const position = currentPage * DIARY_PER_PAGE + index + 1;
           const backdrop = getDiaryBackdropPath(item);
           const poster = getDiaryPosterPath(item);
           const rating = Number(item.vote_average || item.rating || 0);
-          const fallbackBackground =
-            index % 3 === 0
-              ? 'radial-gradient(circle at 24% 50%, rgba(139,92,246,0.24), transparent 42%), linear-gradient(135deg, #181123, #071017 58%, #09090b)'
-              : index % 3 === 1
-                ? 'radial-gradient(circle at 74% 42%, rgba(8,145,178,0.24), transparent 44%), linear-gradient(135deg, #102a43, #070f16 62%, #09090b)'
-                : 'radial-gradient(circle at 28% 48%, rgba(245,158,11,0.18), transparent 44%), linear-gradient(135deg, #2a1712, #100b0a 60%, #09090b)';
 
           return (
-            <li key={`${item.mediaType}-${item.mediaId}-${position}`} className="border-b border-white/[0.06] last:border-b-0">
+            <li key={`${item.mediaType}-${item.mediaId}-${position}`} className="group relative grid grid-cols-[4rem_minmax(0,1fr)] gap-4 py-3 sm:grid-cols-[7.5rem_minmax(0,1fr)] sm:gap-6 sm:py-4">
+              <div className="relative z-10 flex items-start justify-between pt-3 sm:items-center">
+                <div className="text-right">
+                  <span className="block text-xl font-black leading-none tabular-nums text-white sm:text-3xl">{item.timelineDay}</span>
+                  <span className="mt-1 block text-[8px] font-black uppercase tracking-[0.16em] text-zinc-600 sm:text-[9px]">
+                    {item.timelineMonth} {item.timelineYear}
+                  </span>
+                </div>
+                <span className="absolute right-1 top-5 z-30 grid h-4 w-4 place-items-center rounded-full border-4 border-[#08080b] bg-violet-400 shadow-[0_0_0_1px_rgba(167,139,250,0.28),0_0_18px_rgba(139,92,246,0.45)] sm:top-1/2 sm:-translate-y-1/2" />
+              </div>
+
               <Link
                 to={mediaLink(item)}
-                className="group relative grid min-h-[108px] grid-cols-[56px_minmax(0,1fr)_auto] items-center overflow-hidden transition-colors hover:bg-white/[0.035] sm:min-h-[118px] sm:grid-cols-[68px_minmax(0,1fr)_auto]"
+                className="relative grid min-h-[112px] grid-cols-[70px_minmax(0,1fr)] overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0d0d11] shadow-[0_16px_45px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-300/25 hover:bg-[#111116] sm:min-h-[132px] sm:grid-cols-[88px_minmax(0,1fr)]"
               >
-                <div className="absolute inset-0" style={{ background: fallbackBackground }} />
                 {backdrop ? (
                   <img
                     src={tmdbImage(backdrop, 'w1280')}
                     alt=""
-                    className="absolute inset-0 h-full w-full object-cover opacity-52 transition-transform duration-700 group-hover:scale-[1.035]"
+                    className="absolute inset-y-0 right-0 h-full w-3/5 object-cover opacity-15 [mask-image:linear-gradient(to_right,transparent,black)] transition-opacity duration-500 group-hover:opacity-25"
                     loading="lazy"
                   />
-                ) : poster ? (
-                  <img
-                    src={tmdbImage(poster, 'w780')}
-                    alt=""
-                    className="absolute inset-0 h-full w-full scale-110 object-cover opacity-22 blur-sm transition-transform duration-700 group-hover:scale-[1.14]"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_50%,rgba(255,255,255,0.08),transparent_40%)]" />
-                )}
+                ) : null}
 
-                <div className="absolute inset-0 bg-[linear-gradient(90deg,#09090b_0%,rgba(9,9,11,0.78)_24%,rgba(9,9,11,0.48)_58%,#09090b_100%)]" />
-                <div className="absolute inset-0 bg-black/[0.18]" />
-
-                <div className="relative z-10 flex h-full items-center justify-center">
-                  <span className="text-lg font-black tabular-nums text-violet-300 drop-shadow-[0_0_14px_rgba(167,139,250,0.32)] md:text-xl">
-                    {String(position).padStart(2, '0')}
-                  </span>
+                <div className="relative z-10 overflow-hidden border-r border-white/[0.06] bg-black/20">
+                  {poster ? (
+                    <img src={tmdbImage(poster, 'w342')} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                  ) : (
+                    <span className="grid h-full place-items-center text-zinc-700"><Film size={22} /></span>
+                  )}
                 </div>
 
-                <div className="relative z-10 min-w-0 py-3 pr-4">
-                  <h4 className="truncate text-sm font-black tracking-[-0.015em] text-white sm:text-base">
+                <div className="relative z-10 flex min-w-0 flex-col justify-center p-4 sm:p-5">
+                  <div className="mb-2 flex items-center gap-2 text-[8px] font-black uppercase tracking-[0.18em] text-violet-300">
+                    <span>Entrada {String(position).padStart(2, '0')}</span>
+                    <span className="h-1 w-1 rounded-full bg-zinc-700" />
+                    <span className="text-zinc-500">{getDiaryMediaTypeLabel(item)}</span>
+                  </div>
+                  <h4 className="line-clamp-2 text-base font-black leading-tight tracking-[-0.02em] text-white sm:text-xl">
                     {getDiaryMediaTitle(item)}
                   </h4>
-                  <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2 text-[9px] font-black uppercase tracking-[0.14em] text-zinc-400">
-                    {item.displayDate && <span>{item.displayDate}</span>}
-                    <span className="h-1 w-1 rounded-full bg-violet-400/80" />
-                    <span>{getDiaryMediaTypeLabel(item)}</span>
-                  </div>
-                </div>
-
-                <div className="relative z-10 flex items-center gap-2 py-3 pl-2 pr-3 sm:pr-4">
                   {rating > 0 ? (
-                    <span className="inline-flex items-center gap-1.5 px-1 text-[10px] font-black text-yellow-300 drop-shadow-[0_0_12px_rgba(250,204,21,0.24)]">
-                      <Star size={10} className="fill-current" />
+                    <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full border border-yellow-300/10 bg-yellow-300/[0.06] px-2.5 py-1 text-[9px] font-black text-yellow-300">
+                      <Star size={9} className="fill-current" />
                       {rating.toFixed(1)}
                     </span>
-                  ) : (
-                    <span className="grid h-8 w-8 place-items-center rounded-full border border-white/[0.08] bg-black/25 text-zinc-600">
-                      <Film size={14} />
-                    </span>
-                  )}
+                  ) : null}
                 </div>
               </Link>
             </li>
@@ -217,7 +194,6 @@ export default function Diary({ items }) {
         </div>
       </div>
 
-      <DiaryShareModal items={shareItems} isOpen={shareOpen} onClose={() => setShareOpen(false)} />
     </div>
   );
 }

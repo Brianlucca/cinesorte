@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { ToastContext } from './ToastContextBase';
 
@@ -23,12 +23,12 @@ export function ToastProvider({ children }) {
     setLevelUpData(levelTitle);
   }, []);
 
-  const toast = {
+  const toast = useMemo(() => ({
     success: (title, description) => addToast({ type: 'success', title, description }),
     error: (title, description) => addToast({ type: 'error', title, description }),
     info: (title, description) => addToast({ type: 'info', title, description }),
     triggerLevelUp,
-  };
+  }), [addToast, triggerLevelUp]);
 
   return (
     <ToastContext.Provider value={toast}>

@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUpRight, Calendar, ChevronLeft, ChevronRight, Film, MessageSquare, Star } from 'lucide-react';
 
-const REVIEWS_PER_PAGE = 6;
+const REVIEWS_PER_PAGE = 10;
 
 function getMediaLink(review) {
   const idStr = String(review.mediaId || '');
@@ -41,6 +41,7 @@ function getTypeLabel(type) {
 
 export default function ReviewsList({ reviews, hasMore = false, loadingMore = false, onLoadMore }) {
   const [page, setPage] = useState(0);
+  const prefetchedAtLength = useRef(0);
   const reviewItems = useMemo(() => (Array.isArray(reviews) ? reviews : []), [reviews]);
   const loadedPages = Math.max(1, Math.ceil(reviewItems.length / REVIEWS_PER_PAGE));
   const currentPage = Math.min(page, loadedPages - 1);
@@ -67,6 +68,17 @@ export default function ReviewsList({ reviews, hasMore = false, loadingMore = fa
   useEffect(() => {
     setPage((value) => Math.min(value, loadedPages - 1));
   }, [loadedPages]);
+
+  useEffect(() => {
+    const isNearLoadedEnd = currentPage >= Math.max(0, loadedPages - 2);
+    if (!isNearLoadedEnd || !hasMore || !onLoadMore || loadingMore) return;
+    if (prefetchedAtLength.current === reviewItems.length) return;
+
+    prefetchedAtLength.current = reviewItems.length;
+    onLoadMore().catch(() => {
+      prefetchedAtLength.current = 0;
+    });
+  }, [currentPage, hasMore, loadedPages, loadingMore, onLoadMore, reviewItems.length]);
 
   if (reviewItems.length === 0) {
     return (

@@ -11,6 +11,12 @@ const notificationCache = {
   fetchedAt: 0,
 };
 
+const clearNotificationCache = () => {
+  notificationCache.items = [];
+  notificationCache.badgeCount = 0;
+  notificationCache.fetchedAt = 0;
+};
+
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
   const [badgeCount, setBadgeCount] = useState(0);
@@ -28,17 +34,18 @@ export default function NotificationBell() {
   const navigate = useNavigate();
 
   const applyNotifications = useCallback((list, { allowPopup = true } = {}) => {
-    const unreadCount = list.filter((item) => !item.read).length;
+    const visibleNotifications = list.filter((item) => !item.read);
+    const unreadCount = visibleNotifications.length;
 
-    setNotifications(list);
+    setNotifications(visibleNotifications);
     setNotificationsLoaded(true);
     setBadgeCount(unreadCount);
-    notificationCache.items = list;
+    notificationCache.items = visibleNotifications;
     notificationCache.badgeCount = unreadCount;
     notificationCache.fetchedAt = Date.now();
 
-    if (list.length > 0) {
-      const newest = list[0];
+    if (visibleNotifications.length > 0) {
+      const newest = visibleNotifications[0];
       if (allowPopup && !isInitialLoad.current && lastSeenId.current !== newest.id && !newest.read) {
         setPopupNotif(newest);
         setTimeout(() => setPopupNotif(null), 6000);
@@ -136,9 +143,7 @@ export default function NotificationBell() {
 
     if (nextOpen) {
       setPopupNotif(null);
-      loadNotifications({ force: true, allowPopup: false });
-    } else {
-      loadUnreadCount({ force: true });
+      loadNotifications({ allowPopup: false });
     }
   };
 
@@ -156,13 +161,19 @@ export default function NotificationBell() {
   }, []);
 
   const handleNotificationClick = async (notif) => {
+    const previousNotifications = notifications;
     if (!notif.read) {
+      const nextNotifications = notifications.filter((item) => item.id !== notif.id);
+      setNotifications(nextNotifications);
+      setBadgeCount((prev) => Math.max(0, prev - 1));
+      notificationCache.items = nextNotifications;
+      notificationCache.badgeCount = Math.max(0, notificationCache.badgeCount - 1);
+      notificationCache.fetchedAt = Date.now();
       try {
         await markNotificationRead(notif.id);
-        setNotifications((prev) => prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n)));
-        setBadgeCount((prev) => Math.max(0, prev - 1));
       } catch {
-        setBadgeCount((prev) => prev);
+        setNotifications(previousNotifications);
+        applyNotifications(previousNotifications, { allowPopup: false });
       }
     }
 
@@ -174,7 +185,6 @@ export default function NotificationBell() {
           detail: { conversationId: notif.conversationId },
         })
       );
-      loadUnreadCount({ force: true });
       return;
     }
 
@@ -208,13 +218,15 @@ export default function NotificationBell() {
     const unread = notifications.filter((n) => !n.read);
     if (unread.length === 0) return;
 
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    const previousNotifications = notifications;
+    setNotifications([]);
     setBadgeCount(0);
+    clearNotificationCache();
 
     try {
       await Promise.all(unread.map((n) => markNotificationRead(n.id)));
     } catch {
-      setBadgeCount((prev) => prev);
+      applyNotifications(previousNotifications, { allowPopup: false });
     }
   };
 

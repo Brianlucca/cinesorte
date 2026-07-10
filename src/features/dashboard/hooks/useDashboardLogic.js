@@ -4,11 +4,11 @@ import {
   getAnimeReleases,
   getAnimations,
   getRecommendations,
-  getMe,
   getTrending,
   getDiscover,
   getNowPlaying,
 } from "@shared/api/api";
+import { useAuth } from "@shared/context/useAuth";
 
 const CACHE_DAY_KEY = "cinesorte_trending_day";
 const CACHE_WEEK_KEY = "cinesorte_trending_week";
@@ -42,6 +42,7 @@ function writeCachedSections(cacheKey, payload) {
 }
 
 export function useDashboardLogic() {
+  const { user } = useAuth();
   const [heroQueue, setHeroQueue] = useState([]);
   const [currentHero, setCurrentHero] = useState(null);
   const [data, setData] = useState({
@@ -206,19 +207,9 @@ export function useDashboardLogic() {
     async function loadContent() {
       setLoading(true);
       try {
-        let userGenres = {};
-        let topGenresIdsString = "";
-        let dashboardCacheScope = "guest";
-        
-        try {
-          const userProfile = await getMe();
-          userGenres = userProfile.genreCounts || {};
-          dashboardCacheScope = userProfile.username || userProfile.uid || "user";
-          
-          topGenresIdsString = getPreferredGenreString(userGenres);
-        } catch {
-          topGenresIdsString = "";
-        }
+        const userGenres = user?.genreCounts || {};
+        const dashboardCacheScope = user?.username || user?.uid || "guest";
+        const topGenresIdsString = getPreferredGenreString(userGenres);
 
         const cachedDay = localStorage.getItem(CACHE_DAY_KEY);
         const cachedWeek = localStorage.getItem(CACHE_WEEK_KEY);
@@ -429,7 +420,7 @@ export function useDashboardLogic() {
     return () => {
       isMounted.current = false;
     };
-  }, [buildCompleteSection, excludeExisting, getPreferredGenreString, prioritizeContent, uniqueById]);
+  }, [buildCompleteSection, excludeExisting, getPreferredGenreString, prioritizeContent, uniqueById, user?.genreCounts, user?.uid, user?.username]);
 
   return { data, currentHero, loading };
 }
