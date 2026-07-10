@@ -147,7 +147,7 @@ function ConversationDetailsPanel({ thread, messages, onClose, onDeleteConversat
   );
 }
 
-export default function MessageChatWindow({ thread, messages, loading, sending, onClose, onSend, onDeleteConversation, onDeleteGroup, onBlockUser }) {
+export default function MessageChatWindow({ thread, messages, loading, sending, blocked = false, onClose, onSend, onDeleteConversation, onDeleteGroup, onBlockUser }) {
   const navigate = useNavigate();
   const [showAttachments, setShowAttachments] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -160,6 +160,7 @@ export default function MessageChatWindow({ thread, messages, loading, sending, 
   }, [messages.length, thread?.id]);
 
   const submit = async () => {
+    if (blocked) return;
     const text = draft.trim();
     if (!text && !selectedMedia) return;
 
@@ -277,11 +278,18 @@ export default function MessageChatWindow({ thread, messages, loading, sending, 
           setShowAttachments(false);
         }} />}
 
+        {blocked && (
+          <div className="border-t border-red-400/10 bg-red-500/[0.06] px-4 py-3 text-xs leading-5 text-red-100">
+            Você bloqueou este usuário. O histórico continua visível, mas novas mensagens estão desativadas.
+          </div>
+        )}
+
         <footer className="border-t border-white/[0.06] bg-[#0d0d11]/95 p-3">
-          <div className="flex items-end gap-2 rounded-2xl border border-white/[0.08] bg-black/25 p-2">
+          <div className={`flex items-end gap-2 rounded-2xl border border-white/[0.08] bg-black/25 p-2 ${blocked ? "opacity-60" : ""}`}>
             <button
               type="button"
               onClick={() => setShowAttachments((value) => !value)}
+              disabled={blocked}
               className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-colors ${
                 showAttachments ? "bg-violet-500/15 text-violet-200" : "text-zinc-500 hover:bg-white/[0.06] hover:text-white"
               }`}
@@ -292,19 +300,20 @@ export default function MessageChatWindow({ thread, messages, loading, sending, 
               rows={1}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
+              disabled={blocked}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
                   event.preventDefault();
                   submit();
                 }
               }}
-              placeholder="Escreva uma mensagem..."
-              className="max-h-24 min-h-10 flex-1 resize-none bg-transparent px-2 py-2.5 text-sm leading-5 text-zinc-200 outline-none placeholder:text-zinc-700"
+              placeholder={blocked ? "Envio bloqueado" : "Escreva uma mensagem..."}
+              className="max-h-24 min-h-10 flex-1 resize-none bg-transparent px-2 py-2.5 text-sm leading-5 text-zinc-200 outline-none placeholder:text-zinc-700 disabled:cursor-not-allowed"
             />
             <button
               type="button"
               onClick={submit}
-              disabled={sending || (!draft.trim() && !selectedMedia)}
+              disabled={blocked || sending || (!draft.trim() && !selectedMedia)}
               className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-zinc-950 transition-colors hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {sending ? <Loader2 size={17} className="animate-spin" /> : <Send size={17} />}

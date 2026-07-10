@@ -32,6 +32,13 @@ import { buildConversationView, cleanMessageMedia } from "@features/messages/uti
 import Modal from "@shared/components/ui/Modal";
 
 const FALLBACK_REFRESH_MS = 120000;
+const MESSAGE_FILTERS = [
+  { id: "all", label: "Tudo" },
+  { id: "direct", label: "Privado" },
+  { id: "group", label: "Grupos" },
+  { id: "hidden", label: "Ocultos" },
+  { id: "blocked", label: "Bloqueados" },
+];
 
 function streamUrl(path) {
   const base = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/$/, "");
@@ -57,6 +64,7 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
   const [loadingBlocked, setLoadingBlocked] = useState(false);
   const [chatNotice, setChatNotice] = useState("");
   const [confirmAction, setConfirmAction] = useState(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const handledInitialConversationRef = useRef(null);
 
   const visibleThreads = useMemo(
@@ -72,6 +80,12 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
 
   const activeThread = allThreads.find((thread) => thread.id === activeThreadId) || null;
   const activeMessages = activeThreadId ? messagesByConversation[activeThreadId] || [] : [];
+  const activeFilter = MESSAGE_FILTERS.find((item) => item.id === filter) || MESSAGE_FILTERS[0];
+  const blockedUsernames = useMemo(
+    () => new Set(blockedUsers.map((user) => user.username).filter(Boolean)),
+    [blockedUsers],
+  );
+  const activeThreadBlocked = Boolean(activeThread?.username && blockedUsernames.has(activeThread.username));
 
   const filteredThreads = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -192,6 +206,10 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
 
   const handleSend = async ({ text, media }) => {
     if (!activeThreadId || sending) return;
+    if (activeThreadBlocked) {
+      toast.info("Conversa bloqueada", "Você pode ver o histórico, mas não pode enviar mensagens para este usuário.");
+      return;
+    }
     setSending(true);
     try {
       const payload = { text };
@@ -301,14 +319,36 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
     if (isOpen) loadConversations();
   }, [isOpen, loadConversations]);
 
+  const loadBlockedUsers = useCallback(async () => {
+    if (!authenticated) return;
+    try {
+      const data = await getBlockedUsers();
+      setBlockedUsers(Array.isArray(data) ? data : []);
+    } catch {
+      setBlockedUsers([]);
+    }
+  }, [authenticated]);
+
+  useEffect(() => {
+    if (isOpen) loadBlockedUsers();
+  }, [isOpen, loadBlockedUsers]);
+
   useEffect(() => {
     if (filter !== "blocked") return;
     setLoadingBlocked(true);
-    getBlockedUsers()
-      .then((data) => setBlockedUsers(Array.isArray(data) ? data : []))
-      .catch(() => setBlockedUsers([]))
-      .finally(() => setLoadingBlocked(false));
-  }, [filter]);
+    loadBlockedUsers().finally(() => setLoadingBlocked(false));
+  }, [filter, loadBlockedUsers]);
+
+  useEffect(() => {
+    if (!filtersOpen) return undefined;
+
+    const closeFilters = (event) => {
+      if (!event.target.closest("[data-message-filter]")) setFiltersOpen(false);
+    };
+
+    window.addEventListener("pointerdown", closeFilters);
+    return () => window.removeEventListener("pointerdown", closeFilters);
+  }, [filtersOpen]);
 
   const handleUnblockUser = async (username) => {
     try {
@@ -332,12 +372,8 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
         photoURL: typeof user === "object" ? user?.photoURL : undefined,
       };
       window.dispatchEvent(new CustomEvent("cinesorte:user-blocked", { detail: blockedUser }));
-      setActiveThreadId(null);
-      setConversations((prev) => prev.filter((conversation) => buildConversationView(conversation).username !== username));
-      setHiddenConversations((prev) => prev.filter((conversation) => buildConversationView(conversation).username !== username));
       setBlockedUsers((prev) => [blockedUser, ...prev.filter((item) => item.username !== username)]);
-      setFilter("blocked");
-      setChatNotice(`Você bloqueou @${username}. A conversa privada foi removida.`);
+      setChatNotice(`Você bloqueou @${username}. O histórico continua visível, mas novas mensagens foram bloqueadas.`);
       toast.success("Usuário bloqueado", `@${username} foi bloqueado.`);
     } catch (error) {
       toast.error("Não foi possível bloquear", error.message || "Tente novamente.");
@@ -383,8 +419,6 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
       const username = detail.username;
       if (!username) return;
 
-      const matchesUsername = (conversation) => buildConversationView(conversation).username === username;
-
       setBlockedUsers((prev) => {
         const user = {
           username,
@@ -393,14 +427,7 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
         };
         return [user, ...prev.filter((item) => item.username !== username)];
       });
-      setConversations((prev) => prev.filter((conversation) => !matchesUsername(conversation)));
-      setHiddenConversations((prev) => prev.filter((conversation) => !matchesUsername(conversation)));
-      setActiveThreadId((currentId) => {
-        const currentThread = allThreads.find((thread) => thread.id === currentId);
-        return currentThread?.username === username ? null : currentId;
-      });
-      setFilter("blocked");
-      setChatNotice(`Você bloqueou @${username}. A conversa privada foi removida.`);
+      setChatNotice(`Você bloqueou @${username}. O histórico continua visível, mas novas mensagens foram bloqueadas.`);
     };
 
     const handleUnblocked = (event) => {
@@ -530,29 +557,45 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
             {loadingConversations && <Loader2 size={14} className="animate-spin text-zinc-500" />}
           </div>
 
-          <div className="mt-3 rounded-2xl border border-white/[0.06] bg-black/20 p-1.5">
-            <div className="grid grid-cols-3 gap-1.5">
-            {[
-              { id: "all", label: "Tudo" },
-              { id: "direct", label: "Privado" },
-              { id: "group", label: "Grupos" },
-              { id: "hidden", label: "Ocultos" },
-              { id: "blocked", label: "Bloqueados" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setFilter(tab.id)}
-                className={`rounded-xl px-2 py-2 text-[9px] font-bold uppercase tracking-[0.06em] transition-colors ${
-                  filter === tab.id
-                    ? "bg-white text-zinc-950 shadow-[0_8px_22px_rgba(0,0,0,0.25)]"
-                    : "text-zinc-500 hover:bg-white/[0.045] hover:text-zinc-200"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-            </div>
+          <div className="relative mt-3" data-message-filter>
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((value) => !value)}
+              className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-black/20 px-3 py-2 text-left transition-colors hover:bg-white/[0.035]"
+              aria-expanded={filtersOpen}
+            >
+              <span>
+                <span className="block text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-600">Filtro</span>
+                <span className="mt-0.5 block text-[11px] font-bold uppercase tracking-[0.06em] text-zinc-100">{activeFilter.label}</span>
+              </span>
+              <ChevronDown
+                size={14}
+                className={`shrink-0 text-zinc-500 transition-transform ${filtersOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            {filtersOpen && (
+              <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 overflow-hidden rounded-xl border border-white/[0.08] bg-[#111115] p-1 shadow-[0_14px_38px_rgba(0,0,0,0.38)]">
+                {MESSAGE_FILTERS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => {
+                      setFilter(tab.id);
+                      setFiltersOpen(false);
+                    }}
+                    className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-[10px] font-bold uppercase tracking-[0.06em] transition-colors ${
+                      filter === tab.id
+                        ? "bg-white text-zinc-950"
+                        : "text-zinc-500 hover:bg-white/[0.045] hover:text-zinc-100"
+                    }`}
+                  >
+                    {tab.label}
+                    {filter === tab.id && <span className="h-1.5 w-1.5 rounded-full bg-zinc-950" />}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </header>
 
@@ -616,6 +659,7 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
             onDeleteConversation={handleDeleteConversation}
             onDeleteGroup={handleDeleteGroup}
             onBlockUser={handleBlockUser}
+            blocked={activeThreadBlocked}
           />
         </div>
       )}
@@ -632,6 +676,7 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
             onDeleteConversation={handleDeleteConversation}
             onDeleteGroup={handleDeleteGroup}
             onBlockUser={handleBlockUser}
+            blocked={activeThreadBlocked}
           />
         </div>
       )}
