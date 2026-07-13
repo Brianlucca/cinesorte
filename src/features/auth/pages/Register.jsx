@@ -320,7 +320,7 @@ export default function Register() {
                 >
                   Termos de Uso
                 </button>{' '}
-                e Política de Privacidade.
+                e à <Link to="/privacidade" target="_blank" className="font-black text-white transition-colors hover:text-violet-300">Política de Privacidade</Link>.
               </span>
             </label>
 
@@ -502,7 +502,7 @@ export default function Register() {
               >
                 Termos de Uso
               </button>{' '}
-              e Política de Privacidade.
+              e à <Link to="/privacidade" target="_blank" className="font-black text-white transition-colors hover:text-violet-300">Política de Privacidade</Link>.
             </span>
           </label>
 

@@ -1,4 +1,4 @@
-import { HelpCircle, ShieldCheck } from 'lucide-react';
+import { Clapperboard, HelpCircle, ShieldCheck } from 'lucide-react';
 
 const POSTER_COLLAGE = [
   {
@@ -30,8 +30,6 @@ const POSTER_COLLAGE = [
     className: 'left-[27%] top-[72%] z-[60] h-[33%] w-[43%] rotate-1',
   },
 ];
-
-const BRAND_LOGO = '/logo-cinesorte.svg';
 
 export default function AuthShell({
   eyebrow,
@@ -66,8 +64,11 @@ export default function AuthShell({
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(124,58,237,0.10),transparent_34%)]" />
             <div className="w-full max-w-[390px] animate-in fade-in slide-in-from-bottom-3 duration-500">
               <div className="mb-8 flex items-center justify-between gap-4 lg:justify-center">
-                <div className="flex flex-col items-center text-center">
-                  <img src={BRAND_LOGO} alt="CineSorte" className="mb-2 h-20 w-auto max-w-[260px] object-contain" />
+                <div className="flex items-center gap-3" aria-label="CineSorte">
+                  <Clapperboard size={27} strokeWidth={2.25} className="text-violet-400" />
+                  <span className="text-2xl font-black tracking-[-0.05em] text-white">
+                    Cine<span className="text-violet-400">Sorte</span>
+                  </span>
                 </div>
                 <button
                   type="button"

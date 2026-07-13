@@ -15,7 +15,7 @@ import {
 import { AuthContext } from './AuthContextBase';
 import { endSessionCache } from '@shared/lib/sessionCache';
 
-const CURRENT_TERMS_VERSION = '4.0';
+const CURRENT_TERMS_VERSION = '4.1';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -52,7 +52,6 @@ export function AuthProvider({ children }) {
           timerId = window.setTimeout(processNextBatch, 2500);
         }
       } catch {
-        // Reconciliation is maintenance work and must never block the session.
       }
     };
 

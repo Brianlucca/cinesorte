@@ -16,7 +16,8 @@ import {
   Twitter,
   User,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { useMediaDetailsLogic } from "@features/media/hooks/useMediaDetailsLogic";
 import AddToListModal from "@features/media/components/AddToListModal";
 import MediaImages from "@features/media/components/MediaImages";
@@ -48,6 +49,7 @@ const getStatusColor = (status) => {
 };
 
 export default function MediaDetails() {
+  const location = useLocation();
   const {
     media,
     reviews,
@@ -63,7 +65,12 @@ export default function MediaDetails() {
     isEliteUser,
     communityStats,
     actions,
+    watchProgress,
   } = useMediaDetailsLogic();
+
+  useEffect(() => {
+    if (!loading && location.hash === "#avaliacoes") window.setTimeout(() => document.querySelector("#avaliacoes")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  }, [loading, location.hash]);
 
   if (loading) {
     return (
@@ -113,6 +120,10 @@ export default function MediaDetails() {
     ? Number(communityStats.average).toFixed(1)
     : null;
   const tmdbAverage = Number(media.vote_average || 0).toFixed(1);
+  const progressPercent = Number(watchProgress?.durationSeconds) > 0 ? Math.min(100, Math.round((Number(watchProgress?.positionSeconds) / Number(watchProgress?.durationSeconds)) * 100)) : 0;
+  const watchedMinutes = Math.floor((Number(watchProgress?.positionSeconds) || 0) / 60);
+  const remainingMinutes = Math.max(0, Math.ceil(((Number(watchProgress?.durationSeconds) || 0) - (Number(watchProgress?.positionSeconds) || 0)) / 60));
+  const providerNames = { netflix: "Netflix", "prime-video": "Prime Video", "disney-plus": "Disney+", max: "Max", globoplay: "Globoplay", "paramount-plus": "Paramount+", "apple-tv-plus": "Apple TV+", crunchyroll: "Crunchyroll" };
 
   const openTrailer = () =>
     setModals((previous) => ({ ...previous, trailer: true }));
@@ -228,6 +239,29 @@ export default function MediaDetails() {
                     TMDB
                   </span>
                 </div>
+                {media.title && watchProgress && (
+                  <div className="flex min-w-[240px] max-w-[350px] flex-1 items-center gap-3 overflow-hidden rounded-2xl border border-white/10 bg-black/25 px-4 py-3 backdrop-blur-xl sm:flex-none">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="truncate text-[9px] font-black uppercase tracking-[0.16em] text-violet-300/80">
+                          Continuar · {providerNames[watchProgress.provider] || watchProgress.provider}
+                        </span>
+                        <span className="shrink-0 text-[10px] font-bold text-zinc-300">{progressPercent}%</span>
+                      </div>
+                      <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
+                        <span className="block h-full rounded-full bg-violet-400" style={{ width: `${progressPercent}%` }} />
+                      </div>
+                      <p className="mt-1.5 truncate text-[10px] text-zinc-400">
+                        {watchedMinutes} min assistidos{Number(watchProgress.durationSeconds) <= 0 ? " · duração sendo corrigida" : remainingMinutes > 0 ? ` · ${remainingMinutes} min restantes` : " · concluído"}
+                      </p>
+                    </div>
+                    {watchProgress.url && (
+                      <a href={watchProgress.url} target="_blank" rel="noreferrer" aria-label="Continuar no streaming" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-violet-300/20 bg-violet-400/15 text-violet-200 transition hover:scale-105 hover:bg-violet-400/25">
+                        <Play size={13} fill="currentColor" />
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="mt-7 hidden flex-wrap items-center gap-2.5 md:flex">
@@ -390,7 +424,7 @@ export default function MediaDetails() {
 
           {media.images && <MediaImages images={media.images} title={title} />}
 
-          <section className="relative overflow-visible rounded-[2rem] border border-white/[0.07] bg-[radial-gradient(ellipse_at_top_left,rgba(124,58,237,0.08),transparent_38%)] p-5 sm:p-7 md:p-9">
+          <section id="avaliacoes" className="relative scroll-mt-24 overflow-visible rounded-[2rem] border border-white/[0.07] bg-[radial-gradient(ellipse_at_top_left,rgba(124,58,237,0.08),transparent_38%)] p-5 sm:p-7 md:p-9">
             <SectionHeading eyebrow="Sua voz importa">Avaliações da comunidade</SectionHeading>
             <ReviewsSection
               reviews={reviews}
