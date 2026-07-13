@@ -18,6 +18,7 @@ import {
   toggleLikeReview,
   getComments,
   getUserFollowing,
+  getWatchProgress,
 } from "@shared/api/api";
 import { useToast } from "@shared/context/useToast";
 import { useAuth } from "@shared/context/useAuth";
@@ -36,6 +37,7 @@ export function useMediaDetailsLogic() {
   const [userLists, setUserLists] = useState([]);
   const [followingList, setFollowingList] = useState([]);
   const [addingToListId, setAddingToListId] = useState(null);
+  const [watchProgress, setWatchProgress] = useState(null);
 
   const [modals, setModals] = useState({
     trailer: false,
@@ -79,6 +81,7 @@ export function useMediaDetailsLogic() {
         const interactionsPromise = user?.username ? getMediaInteraction(id) : Promise.resolve(null);
         const listsPromise = user?.username ? getUserLists("me") : Promise.resolve([]);
         const followingPromise = user?.username ? getUserFollowing(user.username) : Promise.resolve([]);
+        const progressPromise = user?.username ? getWatchProgress() : Promise.resolve([]);
 
         const mediaData = await mediaPromise;
         setMedia(mediaData);
@@ -96,8 +99,11 @@ export function useMediaDetailsLogic() {
           interactionsPromise,
           listsPromise,
           followingPromise,
+          progressPromise,
         ]);
         setProviders(results[0].status === "fulfilled" ? results[0].value : []);
+        const progressItems = results[5]?.status === "fulfilled" && Array.isArray(results[5].value) ? results[5].value : [];
+        setWatchProgress(progressItems.find((item) => String(item.tmdbId) === String(id) && item.mediaType === type) || null);
 
         const reviewsRaw = results[1].status === "fulfilled" ? results[1].value : [];
         const safeReviews = Array.isArray(reviewsRaw) ? reviewsRaw.map(r => ({
@@ -372,6 +378,7 @@ export function useMediaDetailsLogic() {
     userLists,
     followingList,
     addingToListId,
+    watchProgress,
     modals,
     setModals,
     user,

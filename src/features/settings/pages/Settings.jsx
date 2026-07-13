@@ -1,9 +1,10 @@
 import { createElement, useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
   Camera,
   CheckCircle,
+  FileText,
   Headset,
   Info,
   Key,
@@ -27,6 +28,7 @@ import {
   linkGoogleAccount,
   linkPasswordAccount,
   requestEmailChange,
+  revokeExtensionDevice,
   verifyCurrentPassword,
 } from "@shared/api/api";
 import SettingsSidebar from "@features/settings/components/SettingsSidebar";
@@ -195,6 +197,10 @@ export default function Settings() {
   const linkedProviders = securityOverview?.account?.providers || (user?.provider === "google" ? ["google"] : ["password"]);
   const hasPasswordProvider = linkedProviders.includes("password");
   const hasGoogleProvider = linkedProviders.includes("google");
+  const recentSecurityItems = useMemo(() => [
+    ...(securityOverview?.activities || []).map((item) => ({ ...item, kind: "activity", sortDate: item.createdAt })),
+    ...(securityOverview?.extensionDevices || []).map((item) => ({ ...item, kind: "extension", sortDate: item.lastUsedAt })),
+  ].sort((a, b) => new Date(b.sortDate || 0) - new Date(a.sortDate || 0)), [securityOverview]);
 
   const resetSecurityForm = useCallback(() => {
     setSecurityForm({
@@ -264,6 +270,16 @@ export default function Settings() {
       }
     }
   }, [toast, user]);
+
+  const handleRevokeExtension = useCallback(async (tokenId) => {
+    try {
+      await revokeExtensionDevice(tokenId);
+      setSecurityOverview((current) => ({ ...current, extensionDevices: (current?.extensionDevices || []).filter((device) => device.id !== tokenId) }));
+      toast.success("Extensão revogada", "Esse navegador não pode mais sincronizar sua conta.");
+    } catch (error) {
+      toast.error("Erro", error.message || "Não foi possível revogar a extensão.");
+    }
+  }, [toast]);
 
   const handleChangePassword = useCallback(async () => {
     if (securityForm.newPassword !== securityForm.confirmPassword) {
@@ -637,24 +653,29 @@ export default function Settings() {
                       </div>
 
                       <div className="divide-y divide-white/[0.06]">
-                        {(securityOverview?.activities || []).length > 0 ? (
-                          securityOverview.activities.map((activity) => (
-                            <div key={activity.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                              <div>
+                        {recentSecurityItems.length > 0 ? (
+                          recentSecurityItems.map((item) => (
+                            <div key={`${item.kind}-${item.id}`} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                              <div className="flex min-w-0 items-center">
+                                <div>
                                 <p className="text-sm font-black text-white">
-                                  {securityEventLabels[activity.event] || "Atividade de segurança"}
+                                  {item.kind === "extension" ? "Extensão CineSorte conectada" : securityEventLabels[item.event] || "Atividade de segurança"}
                                 </p>
                                 <p className="mt-1 text-xs leading-5 text-zinc-500">
-                                  {activity.device} · {activity.browser} · {activity.os}
+                                  {item.kind === "extension" ? `${item.browser} · ${item.os}` : `${item.device} · ${item.browser} · ${item.os}`}
                                 </p>
+                                </div>
                               </div>
-                              <div className="text-left sm:text-right">
-                                <p className="text-xs font-bold text-zinc-400">{formatDateTime(activity.createdAt)}</p>
-                                {activity.provider && (
+                              <div className="flex items-center gap-3 sm:justify-end">
+                                <div className="text-left sm:text-right">
+                                <p className="text-xs font-bold text-zinc-400">{formatDateTime(item.sortDate)}</p>
+                                {item.provider && (
                                   <p className="mt-1 text-[10px] font-black uppercase tracking-[0.14em] text-zinc-600">
-                                    {activity.provider === "google" ? "Google" : "Email"}
+                                    {item.provider === "google" ? "Google" : "Email"}
                                   </p>
                                 )}
+                                </div>
+                                {item.kind === "extension" && <button type="button" onClick={() => handleRevokeExtension(item.id)} className="rounded-xl border border-red-400/15 bg-red-500/10 px-4 py-2.5 text-[10px] font-black uppercase tracking-[.12em] text-red-300 hover:bg-red-500/20">Revogar</button>}
                               </div>
                             </div>
                           ))
@@ -768,6 +789,22 @@ export default function Settings() {
                     <div className="rounded-2xl border border-cyan-400/15 bg-cyan-500/10 px-4 py-3 text-sm leading-6 text-cyan-100">
                       Este produto usa a API da TMDB, mas não é endossado nem certificado pela TMDB.
                     </div>
+
+                    <section className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4" aria-label="Documentos legais">
+                      <div className="flex items-start gap-3">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-violet-400/15 bg-violet-500/10 text-violet-300">
+                          <FileText size={18} />
+                        </span>
+                        <div>
+                          <h3 className="text-sm font-black text-white">Documentos legais</h3>
+                          <p className="mt-1 text-xs leading-5 text-zinc-500">Consulte as regras de uso e como seus dados são tratados.</p>
+                        </div>
+                      </div>
+                      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                        <Link to="/termos" className="rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-center text-xs font-bold text-zinc-300 transition-colors hover:bg-white/[0.07] hover:text-white">Termos de Uso</Link>
+                        <Link to="/privacidade" className="rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-center text-xs font-bold text-zinc-300 transition-colors hover:bg-white/[0.07] hover:text-white">Política de Privacidade</Link>
+                      </div>
+                    </section>
 
                     <div className="flex flex-col justify-between gap-4 border-t border-white/[0.06] pt-5 sm:flex-row sm:items-center">
                       <span className="w-fit rounded-xl border border-white/[0.07] bg-white/[0.025] px-3.5 py-2.5 text-[9px] font-black uppercase tracking-[0.16em] text-zinc-500">

@@ -11,8 +11,8 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import MediaImages from "@features/media/components/MediaImages";
 import ReviewsSection from "@features/media/components/reviews/ReviewsSection";
 import TrailerModal from "@features/media/components/TrailerModal";
@@ -60,6 +60,7 @@ function EpisodeNavigationCard({ episode, direction, tvId, seasonNumber }) {
 }
 
 export default function EpisodeDetails() {
+  const location = useLocation();
   const {
     episode,
     tvShow,
@@ -69,9 +70,14 @@ export default function EpisodeDetails() {
     loading,
     tvId,
     seasonNumber,
+    watchProgress,
     actions,
   } = useEpisodeDetailsLogic();
   const [trailerOpen, setTrailerOpen] = useState(false);
+
+  useEffect(() => {
+    if (!loading && location.hash === "#avaliacoes") window.setTimeout(() => document.querySelector("#avaliacoes")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  }, [loading, location.hash]);
 
   if (loading) {
     return (
@@ -114,6 +120,10 @@ export default function EpisodeDetails() {
     backdrops: episode.images?.stills || [],
     posters: [],
   };
+  const progressPercent = Number(watchProgress?.durationSeconds) > 0 ? Math.min(100, Math.round((Number(watchProgress?.positionSeconds) / Number(watchProgress?.durationSeconds)) * 100)) : 0;
+  const watchedMinutes = Math.floor((Number(watchProgress?.positionSeconds) || 0) / 60);
+  const remainingMinutes = Math.max(0, Math.ceil(((Number(watchProgress?.durationSeconds) || 0) - (Number(watchProgress?.positionSeconds) || 0)) / 60));
+  const providerNames = { netflix: "Netflix", "prime-video": "Prime Video", "disney-plus": "Disney+", max: "Max", globoplay: "Globoplay", "paramount-plus": "Paramount+", "apple-tv-plus": "Apple TV+", crunchyroll: "Crunchyroll" };
 
   return (
     <div className="relative isolate -mt-24 min-h-screen overflow-x-hidden bg-zinc-950 pb-24 text-white md:-mt-8">
@@ -161,7 +171,7 @@ export default function EpisodeDetails() {
             </Link>
           </div>
 
-          <div className="mt-auto max-w-4xl">
+          <div className="mt-auto w-full max-w-6xl">
             <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-300">
               Temporada {seasonNumber} · Episódio {episode.episode_number}
             </span>
@@ -169,19 +179,42 @@ export default function EpisodeDetails() {
               {title}
             </h1>
 
-            <div className="mt-6 flex flex-wrap gap-2.5 text-xs font-semibold text-zinc-300">
+            <div className="mt-6 flex flex-wrap items-center gap-2.5 text-xs font-semibold text-zinc-300">
               {episode.vote_average > 0 && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-yellow-300/15 bg-yellow-300/[0.08] px-3 py-2 text-yellow-200 backdrop-blur-xl">
+                <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-yellow-300/15 bg-yellow-300/[0.08] px-3 py-2 text-yellow-200 backdrop-blur-xl">
                   <Star size={14} className="fill-yellow-300" /> {episode.vote_average.toFixed(1)}
                 </span>
               )}
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+              <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
                 <Calendar size={14} /> {formatDate(episode.air_date)}
               </span>
               {episode.runtime && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+                <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
                   <Clock size={14} /> {episode.runtime} min
                 </span>
+              )}
+              {watchProgress && (
+                <div className="flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-white/10 bg-black/25 px-4 py-3 backdrop-blur-xl sm:w-[336px] sm:shrink-0">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="truncate text-[9px] font-black uppercase tracking-[0.16em] text-violet-300/80">
+                        Continuar · {providerNames[watchProgress.provider] || watchProgress.provider}
+                      </span>
+                      <span className="shrink-0 text-[10px] font-bold text-zinc-300">{progressPercent}%</span>
+                    </div>
+                    <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
+                      <span className="block h-full rounded-full bg-violet-400" style={{ width: `${progressPercent}%` }} />
+                    </div>
+                    <p className="mt-1.5 truncate text-[10px] text-zinc-400">
+                      {watchedMinutes} min assistidos{Number(watchProgress.durationSeconds) <= 0 ? " · duração sendo corrigida" : remainingMinutes > 0 ? ` · ${remainingMinutes} min restantes` : " · concluído"}
+                    </p>
+                  </div>
+                  {watchProgress.url && (
+                    <a href={watchProgress.url} target="_blank" rel="noreferrer" aria-label="Continuar no streaming" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-violet-300/20 bg-violet-400/15 text-violet-200 transition hover:scale-105 hover:bg-violet-400/25">
+                      <Play size={13} fill="currentColor" />
+                    </a>
+                  )}
+                </div>
               )}
             </div>
 
@@ -280,7 +313,7 @@ export default function EpisodeDetails() {
             <MediaImages images={galleryImages} title={title} />
           )}
 
-          <section className="relative overflow-visible rounded-[2rem] border border-white/[0.07] bg-[radial-gradient(ellipse_at_top_left,rgba(124,58,237,0.08),transparent_38%)] p-5 sm:p-7 md:p-9">
+          <section id="avaliacoes" className="relative scroll-mt-24 overflow-visible rounded-[2rem] border border-white/[0.07] bg-[radial-gradient(ellipse_at_top_left,rgba(124,58,237,0.08),transparent_38%)] p-5 sm:p-7 md:p-9">
             <div className="mb-7">
               <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
                 Conversa da comunidade

@@ -14,6 +14,7 @@ import {
   getUserFollowing,
   getMovieDetails,
   getSeasonDetails,
+  getWatchProgress,
 } from '@shared/api/api';
 import { useToast } from '@shared/context/useToast';
 import { useAuth } from '@shared/context/useAuth';
@@ -29,6 +30,7 @@ export function useEpisodeDetailsLogic() {
   const [reviews, setReviews] = useState([]);
   const [followingList, setFollowingList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [watchProgress, setWatchProgress] = useState(null);
 
   const likeTimeouts = useRef({});
   const likeClickCounts = useRef({});
@@ -47,12 +49,14 @@ export function useEpisodeDetailsLogic() {
         ];
 
         const userPromise = user?.username ? getUserFollowing(user.username) : Promise.resolve(null);
+        const progressPromise = user?.username ? getWatchProgress() : Promise.resolve([]);
 
-        const [episodeData, reviewsData, tvShowData, loadedSeason, followingData] = await Promise.all([...basePromises, userPromise]);
+        const [episodeData, reviewsData, tvShowData, loadedSeason, followingData, progressItems] = await Promise.all([...basePromises, userPromise, progressPromise]);
 
         setEpisode(episodeData);
         setTvShow(tvShowData);
         setSeasonData(loadedSeason);
+        setWatchProgress((Array.isArray(progressItems) ? progressItems : []).find((item) => String(item.tmdbId) === String(tvId) && Number(item.seasonNumber) === Number(seasonNumber) && Number(item.episodeNumber) === Number(episodeNumber)) || null);
         
         setReviews(
           Array.isArray(reviewsData)
@@ -231,6 +235,7 @@ export function useEpisodeDetailsLogic() {
     tvId,
     seasonNumber,
     episodeNumber,
+    watchProgress,
     user,
     actions: {
       handlePostReview,

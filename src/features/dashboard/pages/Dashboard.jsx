@@ -5,6 +5,7 @@ import Hero from "@features/dashboard/components/Hero";
 import HomeExperience from "@features/dashboard/components/HomeExperience";
 import MovieRow from "@features/dashboard/components/MovieRow";
 import TrailerRow from "@features/dashboard/components/TrailerRow";
+import ContinueWatching from "@features/dashboard/components/ContinueWatching";
 
 const RowWrapper = ({ children }) => (
   <div className="relative z-20 hover:z-30 transition-all duration-300">
@@ -142,6 +143,7 @@ export default function Dashboard() {
       <Hero items={heroItems} />
 
       <div className="flex flex-col gap-3 md:gap-4 relative z-20 -mt-12 md:-mt-32 pt-20 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent">
+        <ContinueWatching />
         {(data.trendingWeek || []).length > 0 && (
           <div className="space-y-1 md:space-y-2">
             <HomeExperience

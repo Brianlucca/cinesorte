@@ -76,6 +76,7 @@ export const resendVerificationEmail = (email) => api.post("/users/resend-verifi
 export const logout = () => api.post("/users/logout").finally(() => clearApiCache());
 export const getMe = () => cachedGet("/users/me", {}, 10000);
 export const getSecurityOverview = (params = {}) => api.get("/users/security", { params });
+export const revokeExtensionDevice = (tokenId) => api.delete(`/users/security/extensions/${tokenId}`);
 export const verifyCurrentPassword = (data) => api.post("/users/security/verify-password", data);
 export const requestEmailChange = (data) => api.post("/users/security/change-email", data);
 export const confirmEmailChange = (token) => api.post("/users/security/confirm-email-change", { token });
@@ -148,6 +149,10 @@ export const recordInteraction = (data) => api.post("/users/interact", data);
 export const getUserInteractions = () => api.get("/users/interactions");
 export const getMediaInteraction = (mediaId) => api.get(`/users/interactions/${mediaId}`);
 export const getWatchDiary = (year) => api.get("/users/diary", { params: { year } });
+export const getWatchProgress = () => api.get("/watch-progress");
+export const getExtensionStatus = () => api.get("/watch-progress/extension/status");
+export const createExtensionPairingCode = () => api.post("/watch-progress/pairing-codes");
+export const deleteWatchProgress = (id) => api.delete(`/watch-progress/${id}`);
 export const reconcileRatedReviews = () => api.post("/users/interactions/reconcile-rated-reviews").then((response) => {
   clearApiCache("/users/me:");
   return response;

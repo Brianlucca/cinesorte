@@ -5,10 +5,13 @@ import {
   Clock,
   Layers3,
   ListVideo,
+  PlayCircle,
   Star,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSeasonDetailsLogic } from "@features/media/hooks/useSeasonDetailsLogic";
+
+const PROVIDERS = { netflix: "Netflix", "prime-video": "Prime Video", "disney-plus": "Disney+", max: "Max", globoplay: "Globoplay", "paramount-plus": "Paramount+", "apple-tv-plus": "Apple TV+", crunchyroll: "Crunchyroll" };
 
 const formatDate = (date) => {
   if (!date) return "Data a confirmar";
@@ -20,7 +23,7 @@ const formatDate = (date) => {
 };
 
 export default function SeasonDetails() {
-  const { seasonData, tvShow, loading, tvId } = useSeasonDetailsLogic();
+  const { seasonData, tvShow, loading, tvId, watchProgress } = useSeasonDetailsLogic();
 
   if (loading) {
     return (
@@ -150,7 +153,9 @@ export default function SeasonDetails() {
 
           {episodes.length > 0 ? (
             <ol className="space-y-3.5">
-              {episodes.map((episode) => (
+              {episodes.map((episode) => {
+                const progress = watchProgress.find((item) => String(item.tmdbId) === String(tvId) && Number(item.seasonNumber) === Number(seasonData.season_number) && Number(item.episodeNumber) === Number(episode.episode_number));
+                return (
                 <li key={episode.id}>
                   <Link
                     to={`/app/tv/${tvId}/season/${seasonData.season_number}/episode/${episode.episode_number}`}
@@ -210,10 +215,15 @@ export default function SeasonDetails() {
                       <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-zinc-400 md:text-sm">
                         {episode.overview || "Abra o episódio para conferir todos os detalhes."}
                       </p>
+                      {progress && <div className="mt-4">
+                        <div className="mb-1.5 flex items-center justify-between text-[10px] font-bold text-zinc-400"><span className="inline-flex items-center gap-1.5"><PlayCircle size={12} className="text-violet-300" />Assistido no {PROVIDERS[progress.provider] || progress.provider}</span><span>{Number(progress.durationSeconds) > 0 ? Math.min(100, Math.round((Number(progress.positionSeconds) / Number(progress.durationSeconds)) * 100)) : 0}%</span></div>
+                        <div className="h-1 overflow-hidden rounded-full bg-white/10"><span className="block h-full rounded-full bg-violet-500" style={{ width: `${Number(progress.durationSeconds) > 0 ? Math.min(100, Math.round((Number(progress.positionSeconds) / Number(progress.durationSeconds)) * 100)) : 0}%` }} /></div>
+                      </div>}
                     </div>
                   </Link>
                 </li>
-              ))}
+                );
+              })}
             </ol>
           ) : (
             <div className="rounded-3xl border border-dashed border-white/10 p-10 text-center text-sm text-zinc-500">

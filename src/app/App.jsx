@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@shared/context/useAuth';
 import { HelmetProvider } from 'react-helmet-async';
 
@@ -24,6 +24,9 @@ const MovieRoulette = lazy(() => import('@features/roulette/pages/MovieRoulette'
 const Feed = lazy(() => import('@features/feed/pages/Feed'));
 const PublicProfile = lazy(() => import('@features/profile/pages/PublicProfile'));
 const SharedMediaPreview = lazy(() => import('@features/media/pages/SharedMediaPreview'));
+const ExtensionConnect = lazy(() => import('@features/auth/pages/ExtensionConnect'));
+const Privacy = lazy(() => import('@features/legal/pages/Privacy'));
+const Terms = lazy(() => import('@features/legal/pages/Terms'));
 
 const RouteFallback = () => (
   <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-violet-500">
@@ -33,8 +36,9 @@ const RouteFallback = () => (
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
   if (loading) return <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-violet-500">Carregando...</div>;
-  return user ? children : <Navigate to="/login" />;
+  return user ? children : <Navigate to={`/login?redirect=${encodeURIComponent(`${location.pathname}${location.search}`)}`} />;
 };
 
 function AppRoutes() {
@@ -46,6 +50,9 @@ function AppRoutes() {
         <Route path="/" element={user ? <Navigate to="/app" /> : <Landing />} />
         
         <Route path="/share/:type/:id" element={<SharedMediaPreview />} />
+        <Route path="/privacidade" element={<Privacy />} />
+        <Route path="/termos" element={<Terms />} />
+        <Route path="/extension/connect" element={<PrivateRoute><ExtensionConnect /></PrivateRoute>} />
         
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
