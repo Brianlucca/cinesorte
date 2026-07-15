@@ -1,11 +1,77 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDashboardLogic } from "@features/dashboard/hooks/useDashboardLogic";
 import api, { getFollowingFeed, getGlobalFeed, getSuggestions } from "@shared/api/api";
-import Hero from "@features/dashboard/components/Hero";
+import Hero, { HERO_SLIDE_DURATION } from "@features/dashboard/components/Hero";
 import HomeExperience from "@features/dashboard/components/HomeExperience";
 import MovieRow from "@features/dashboard/components/MovieRow";
 import TrailerRow from "@features/dashboard/components/TrailerRow";
 import ContinueWatching from "@features/dashboard/components/ContinueWatching";
+import { useAuth } from "@shared/context/useAuth";
+
+const HERO_SET_CACHE_PREFIX = "cinesorte_dashboard_hero_set_v2";
+const HERO_SET_DURATION = 5 * 60 * 1000;
+
+const readCachedHeroSet = (cacheKey) => {
+  try {
+    const cached = JSON.parse(localStorage.getItem(cacheKey));
+    if (
+      !cached ||
+      !Array.isArray(cached.items) ||
+      cached.items.length === 0 ||
+      !Number.isFinite(cached.expiresAt) ||
+      cached.expiresAt <= Date.now()
+    ) {
+      localStorage.removeItem(cacheKey);
+      return null;
+    }
+
+    return cached;
+  } catch {
+    localStorage.removeItem(cacheKey);
+    return null;
+  }
+};
+
+const writeCachedHeroSet = (
+  cacheKey,
+  items,
+  expiresAt,
+  activeIndex = 0,
+  slideStartedAt = Date.now(),
+) => {
+  try {
+    localStorage.setItem(
+      cacheKey,
+      JSON.stringify({ items, expiresAt, activeIndex, slideStartedAt }),
+    );
+  } catch {
+    // The hero can still work for the current visit when storage is unavailable.
+  }
+};
+
+const resumeCachedHeroSet = (cacheKey) => {
+  const cached = readCachedHeroSet(cacheKey);
+  if (!cached) return null;
+
+  const cachedIndex = Math.min(
+    Math.max(Number(cached.activeIndex) || 0, 0),
+    cached.items.length - 1,
+  );
+  const elapsed = Math.max(
+    Date.now() - (Number(cached.slideStartedAt) || Date.now()),
+    0,
+  );
+  const passedSlides = Math.floor(elapsed / HERO_SLIDE_DURATION);
+  const resumedElapsed = elapsed % HERO_SLIDE_DURATION;
+
+  return {
+    items: cached.items,
+    expiresAt: cached.expiresAt,
+    index: (cachedIndex + passedSlides) % cached.items.length,
+    elapsed: resumedElapsed,
+    slideStartedAt: Date.now() - resumedElapsed,
+  };
+};
 
 const RowWrapper = ({ children }) => (
   <div className="relative z-20 hover:z-30 transition-all duration-300">
@@ -13,62 +79,169 @@ const RowWrapper = ({ children }) => (
   </div>
 );
 
+const buildHeroItems = (data, currentHero, rotation = 0) => {
+  const seen = new Set();
+  const heroSeed = (Number(currentHero?.id) || 0) + rotation;
+  const sources = [
+    data.recommendedMovies || [],
+    data.trendingDay || [],
+    [...(data.recommendedSeries || []), ...(data.series || [])],
+    data.inTheaters || [],
+    data.trailers || [],
+  ].map((source, sourceIndex) => {
+    if (source.length < 2) return source;
+    const offset = (heroSeed + sourceIndex) % source.length;
+    return [...source.slice(offset), ...source.slice(0, offset)];
+  });
+  const selectedItems = [];
+  const maxSourceLength = Math.max(0, ...sources.map((source) => source.length));
+
+  if (currentHero?.id && currentHero.backdrop_path) {
+    const mediaType = currentHero.media_type ||
+      (currentHero.first_air_date ? "tv" : "movie");
+    seen.add(`${mediaType}:${currentHero.id}`);
+    selectedItems.push(currentHero);
+  }
+
+  const trailerItem = sources[4].find((candidate) => {
+    if (!candidate?.id || !candidate.backdrop_path || !candidate.trailerKey) return false;
+    const mediaType = candidate.media_type ||
+      (candidate.first_air_date ? "tv" : "movie");
+    return !seen.has(`${mediaType}:${candidate.id}`);
+  });
+
+  if (trailerItem) {
+    const mediaType = trailerItem.media_type ||
+      (trailerItem.first_air_date ? "tv" : "movie");
+    seen.add(`${mediaType}:${trailerItem.id}`);
+    selectedItems.push(trailerItem);
+  }
+
+  for (let itemIndex = 0; itemIndex < maxSourceLength; itemIndex += 1) {
+    for (const source of sources) {
+      const item = source[itemIndex];
+      if (!item?.id || !item.backdrop_path) continue;
+      const mediaType = item.media_type || (item.first_air_date ? "tv" : "movie");
+      const key = `${mediaType}:${item.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      selectedItems.push(item);
+      if (selectedItems.length === 5) return selectedItems;
+    }
+  }
+
+  return selectedItems;
+};
+
 export default function Dashboard() {
-  const { data, currentHero, loading } = useDashboardLogic();
+  const { user } = useAuth();
+  const { data, currentHero, loading, heroReady } = useDashboardLogic();
+  const heroCacheScope = user?.username || user?.uid || "guest";
+  const heroCacheKey = `${HERO_SET_CACHE_PREFIX}:${heroCacheScope}`;
+  const initialHeroStateRef = useRef(undefined);
+
+  if (initialHeroStateRef.current === undefined) {
+    initialHeroStateRef.current = resumeCachedHeroSet(heroCacheKey);
+  }
+
+  const initialHeroState = initialHeroStateRef.current;
+  const [heroItems, setHeroItems] = useState(initialHeroState?.items || []);
+  const [heroExpiresAt, setHeroExpiresAt] = useState(
+    initialHeroState?.expiresAt || null,
+  );
+  const [heroInitialPosition, setHeroInitialPosition] = useState({
+    index: initialHeroState?.index || 0,
+    elapsed: initialHeroState?.elapsed || 0,
+  });
+  const latestHeroDataRef = useRef(data);
+  const latestCurrentHeroRef = useRef(currentHero);
+  const heroInitializedRef = useRef(Boolean(initialHeroState));
+  const heroRotationRef = useRef(0);
   const [socialPreview, setSocialPreview] = useState({ items: [], suggestions: [] });
   const [userLists, setUserLists] = useState([]);
 
-  const heroItems = useMemo(() => {
-    const seen = new Set();
-    const shuffle = (items) =>
-      [...items].sort(() => Math.random() - 0.5);
-    const sources = shuffle([
-      data.recommendedMovies || [],
-      data.trendingDay || [],
-      [
-        ...(data.recommendedSeries || []),
-        ...(data.series || []),
-      ],
-      data.inTheaters || [],
-      data.trailers || [],
-    ]).map(shuffle);
-    const selectedItems = [];
-    const maxSourceLength = Math.max(0, ...sources.map((source) => source.length));
+  latestHeroDataRef.current = data;
+  latestCurrentHeroRef.current = currentHero;
 
-    for (let itemIndex = 0; itemIndex < maxSourceLength; itemIndex += 1) {
-      for (const source of sources) {
-        const item = source[itemIndex];
-        if (!item?.id || !item.backdrop_path) continue;
-        const mediaType = item.media_type || (item.first_air_date ? "tv" : "movie");
-        const key = `${mediaType}:${item.id}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        selectedItems.push(item);
-        if (selectedItems.length === 5) return selectedItems;
+  useEffect(() => {
+    if (!initialHeroState) return;
+
+    writeCachedHeroSet(
+      heroCacheKey,
+      initialHeroState.items,
+      initialHeroState.expiresAt,
+      initialHeroState.index,
+      initialHeroState.slideStartedAt,
+    );
+  }, [heroCacheKey, initialHeroState]);
+
+  useEffect(() => {
+    if (loading || !heroReady || !currentHero?.id || heroInitializedRef.current) return;
+
+    heroInitializedRef.current = true;
+    const cachedHeroSet = readCachedHeroSet(heroCacheKey);
+
+    if (cachedHeroSet) {
+      const resumedHeroSet = resumeCachedHeroSet(heroCacheKey);
+
+      setHeroItems(resumedHeroSet.items);
+      setHeroExpiresAt(resumedHeroSet.expiresAt);
+      setHeroInitialPosition({
+        index: resumedHeroSet.index,
+        elapsed: resumedHeroSet.elapsed,
+      });
+      writeCachedHeroSet(
+        heroCacheKey,
+        resumedHeroSet.items,
+        resumedHeroSet.expiresAt,
+        resumedHeroSet.index,
+        resumedHeroSet.slideStartedAt,
+      );
+      return;
+    }
+
+    const nextItems = buildHeroItems(latestHeroDataRef.current, currentHero);
+    const nextExpiresAt = Date.now() + HERO_SET_DURATION;
+    setHeroItems(nextItems);
+    setHeroExpiresAt(nextExpiresAt);
+    setHeroInitialPosition({ index: 0, elapsed: 0 });
+    writeCachedHeroSet(heroCacheKey, nextItems, nextExpiresAt, 0, Date.now());
+  }, [currentHero, heroCacheKey, heroReady, loading]);
+
+  useEffect(() => {
+    if (!heroExpiresAt) return undefined;
+
+    const timeout = window.setTimeout(() => {
+      if (!heroInitializedRef.current || !latestCurrentHeroRef.current?.id) {
+        return;
       }
-    }
 
-    if (
-      selectedItems.length < 5 &&
-      currentHero?.id &&
-      currentHero.backdrop_path
-    ) {
-      const mediaType = currentHero.media_type ||
-        (currentHero.first_air_date ? "tv" : "movie");
-      const key = `${mediaType}:${currentHero.id}`;
-      if (!seen.has(key)) selectedItems.push(currentHero);
-    }
+      heroRotationRef.current += 1;
+      const nextItems = buildHeroItems(
+        latestHeroDataRef.current,
+        latestCurrentHeroRef.current,
+        heroRotationRef.current,
+      );
+      const nextExpiresAt = Date.now() + HERO_SET_DURATION;
 
-    return selectedItems;
-  }, [
-    currentHero,
-    data.inTheaters,
-    data.recommendedMovies,
-    data.recommendedSeries,
-    data.series,
-    data.trailers,
-    data.trendingDay,
-  ]);
+      setHeroItems(nextItems);
+      setHeroExpiresAt(nextExpiresAt);
+      setHeroInitialPosition({ index: 0, elapsed: 0 });
+      writeCachedHeroSet(heroCacheKey, nextItems, nextExpiresAt, 0, Date.now());
+    }, Math.max(heroExpiresAt - Date.now(), 0));
+
+    return () => window.clearTimeout(timeout);
+  }, [heroCacheKey, heroExpiresAt]);
+
+  const handleHeroSlideChange = useCallback((activeIndex) => {
+    writeCachedHeroSet(
+      heroCacheKey,
+      heroItems,
+      heroExpiresAt,
+      activeIndex,
+      Date.now(),
+    );
+  }, [heroCacheKey, heroExpiresAt, heroItems]);
 
   useEffect(() => {
     let cancelled = false;
@@ -117,7 +290,7 @@ export default function Dashboard() {
     };
   }, [loading]);
 
-  if (loading)
+  if (loading || heroItems.length === 0)
     return (
       <div className="h-screen flex items-center justify-center bg-zinc-950">
         <div className="w-16 h-16 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
@@ -140,7 +313,13 @@ export default function Dashboard() {
   return (
     <div className="-mt-24 md:-mt-8 pb-20 w-full max-w-full overflow-x-hidden bg-zinc-950 animate-in fade-in duration-700">
 
-      <Hero items={heroItems} />
+      <Hero
+        key={heroExpiresAt || "hero-loading"}
+        items={heroItems}
+        initialIndex={heroInitialPosition.index}
+        initialSlideElapsed={heroInitialPosition.elapsed}
+        onSlideChange={handleHeroSlideChange}
+      />
 
       <div className="flex flex-col gap-3 md:gap-4 relative z-20 -mt-12 md:-mt-32 pt-20 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent">
         <ContinueWatching />

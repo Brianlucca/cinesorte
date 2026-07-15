@@ -12,7 +12,8 @@ import {
   X,
 } from "lucide-react";
 
-const SLIDE_DURATION = 14000;
+export const HERO_SLIDE_DURATION = 14000;
+const SLIDE_DURATION = HERO_SLIDE_DURATION;
 let youtubeApiPromise;
 
 const loadYoutubeApi = () => {
@@ -42,8 +43,13 @@ const getMediaType = (item) =>
 const getYear = (item) =>
   (item.release_date || item.first_air_date || "").slice(0, 4);
 
-export default function Hero({ items = [] }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+export default function Hero({
+  items = [],
+  initialIndex = 0,
+  initialSlideElapsed = 0,
+  onSlideChange,
+}) {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [readyVideoKey, setReadyVideoKey] = useState(null);
   const [videoProgress, setVideoProgress] = useState({
     key: null,
@@ -57,6 +63,8 @@ export default function Hero({ items = [] }) {
   const youtubePlayerRef = useRef(null);
   const cinemaIframeRef = useRef(null);
   const cinemaPlayerRef = useRef(null);
+  const firstSlideTimerRef = useRef(true);
+  const didMountIndexRef = useRef(false);
   const item = items[currentIndex] || items[0];
   const videoKey = item?.trailerKey || item?.key;
 
@@ -105,14 +113,28 @@ export default function Hero({ items = [] }) {
   }, [currentIndex, items.length]);
 
   useEffect(() => {
-    if (items.length <= 1 || videoKey) return undefined;
+    if (items.length <= 1 || cinemaMode.open) return undefined;
+
+    const duration = firstSlideTimerRef.current
+      ? Math.max(SLIDE_DURATION - initialSlideElapsed, 250)
+      : SLIDE_DURATION;
+    firstSlideTimerRef.current = false;
 
     const timeout = window.setTimeout(() => {
       setCurrentIndex((previous) => (previous + 1) % items.length);
-    }, SLIDE_DURATION);
+    }, duration);
 
     return () => window.clearTimeout(timeout);
-  }, [currentIndex, items.length, videoKey]);
+  }, [cinemaMode.open, currentIndex, initialSlideElapsed, items.length]);
+
+  useEffect(() => {
+    if (!didMountIndexRef.current) {
+      didMountIndexRef.current = true;
+      return;
+    }
+
+    onSlideChange?.(currentIndex);
+  }, [currentIndex, onSlideChange]);
 
   useEffect(() => {
     if (!videoKey || !videoIframeRef.current) return undefined;
