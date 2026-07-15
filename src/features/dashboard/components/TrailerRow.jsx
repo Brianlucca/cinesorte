@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Play, Volume2 } from 'lucide-react';
 import TrailerModal from '@features/media/components/TrailerModal';
 
@@ -34,16 +33,12 @@ export default function TrailerRow({ title, items }) {
 
   return (
     <div className="relative w-full group/row z-10">
-        {selectedTrailer && createPortal(
-            <div className="fixed inset-0 z-[100000] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md">
-                <TrailerModal 
-                    isOpen={!!selectedTrailer} 
-                    onClose={() => setSelectedTrailer(null)} 
-                    videoKey={selectedTrailer} 
-                />
-            </div>,
-            document.body
-        )}
+        <TrailerModal
+            isOpen={!!selectedTrailer}
+            onClose={() => setSelectedTrailer(null)}
+            videoKey={selectedTrailer?.trailerKey}
+            title={selectedTrailer?.title || selectedTrailer?.name}
+        />
 
       <div className="flex justify-between items-center px-6 md:px-10 xl:px-14 2xl:px-16 mb-0">
           <h2 className="text-2xl font-bold text-white flex items-center gap-3">
@@ -80,7 +75,7 @@ export default function TrailerRow({ title, items }) {
                     key={`${item.id}-trailer-${index}`}
                     onMouseEnter={() => handleMouseEnter(item.id)}
                     onMouseLeave={handleMouseLeave}
-                    onClick={() => setSelectedTrailer(item.trailerKey)}
+                    onClick={() => item.trailerKey && setSelectedTrailer(item)}
                     className="flex-none w-[320px] md:w-[480px] xl:w-[520px] group/card cursor-pointer relative transition-all duration-300 hover:-translate-y-1.5"
                 >
                     <div className="aspect-video rounded-2xl overflow-hidden bg-white/[0.02] border border-white/5 relative shadow-2xl group-hover/card:border-red-500/50 transition-all duration-300 group-hover/card:shadow-[0_10px_30px_rgba(220,38,38,0.2)]">
