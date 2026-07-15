@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
+import TrailerModal from "@features/media/components/TrailerModal";
 import {
   ArrowRight,
   Calendar,
@@ -9,7 +9,6 @@ import {
   Maximize2,
   Star,
   Volume2,
-  X,
 } from "lucide-react";
 
 export const HERO_SLIDE_DURATION = 14000;
@@ -61,20 +60,13 @@ export default function Hero({
   const videoRevealTimeoutRef = useRef(null);
   const videoIframeRef = useRef(null);
   const youtubePlayerRef = useRef(null);
-  const cinemaIframeRef = useRef(null);
-  const cinemaPlayerRef = useRef(null);
   const firstSlideTimerRef = useRef(true);
   const didMountIndexRef = useRef(false);
   const item = items[currentIndex] || items[0];
   const videoKey = item?.trailerKey || item?.key;
 
   const closeCinemaMode = useCallback(
-    (advanceToNext = false) => {
-      const resumeAt =
-        cinemaPlayerRef.current?.getCurrentTime?.() || cinemaMode.startAt;
-
-      cinemaPlayerRef.current?.pauseVideo?.();
-
+    (advanceToNext = false, resumeAt = cinemaMode.startAt) => {
       if (advanceToNext) {
         setCinemaMode({ open: false, startAt: 0 });
         setCurrentIndex((previous) => (previous + 1) % items.length);
@@ -193,53 +185,6 @@ export default function Hero({
     };
   }, [items.length, videoKey]);
 
-  useEffect(() => {
-    if (!cinemaMode.open || !videoKey || !cinemaIframeRef.current) {
-      return undefined;
-    }
-
-    let cancelled = false;
-
-    loadYoutubeApi().then((YT) => {
-      if (cancelled || !cinemaIframeRef.current) return;
-
-      cinemaPlayerRef.current = new YT.Player(cinemaIframeRef.current, {
-        events: {
-          onReady: (event) => {
-            event.target.unMute();
-            event.target.setVolume(100);
-            event.target.playVideo();
-          },
-          onStateChange: (event) => {
-            if (event.data === YT.PlayerState.ENDED) closeCinemaMode(true);
-          },
-        },
-      });
-    });
-
-    return () => {
-      cancelled = true;
-      cinemaPlayerRef.current?.destroy?.();
-      cinemaPlayerRef.current = null;
-    };
-  }, [cinemaMode.open, closeCinemaMode, videoKey]);
-
-  useEffect(() => {
-    if (!cinemaMode.open) return undefined;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") closeCinemaMode(false);
-    };
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [cinemaMode.open, closeCinemaMode]);
-
   if (items.length === 0) return null;
 
   const name = item.title || item.name;
@@ -260,6 +205,9 @@ export default function Hero({
     youtubePlayerRef.current?.pauseVideo?.();
     setCinemaMode({ open: true, startAt });
   };
+
+  const handleCinemaClose = (resumeAt) => closeCinemaMode(false, resumeAt);
+  const handleCinemaEnded = () => closeCinemaMode(true);
 
   return (
     <section
@@ -466,44 +414,14 @@ export default function Hero({
         </div>
       )}
 
-      {cinemaMode.open &&
-        videoKey &&
-        createPortal(
-          <div
-          className="fixed inset-0 z-[100] bg-black trailer-cinema-enter"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Trailer de ${name}`}
-        >
-          <iframe
-            ref={cinemaIframeRef}
-            src={`https://www.youtube.com/embed/${videoKey}?enablejsapi=1&autoplay=1&mute=0&controls=1&disablekb=0&fs=1&modestbranding=1&playsinline=1&rel=0&iv_load_policy=3&start=${Math.floor(cinemaMode.startAt)}`}
-            title={`Trailer de ${name} em tela cheia`}
-            className="absolute inset-0 h-full w-full trailer-cinema-video-enter"
-            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-            allowFullScreen
-          />
-
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-28 bg-gradient-to-b from-black/80 to-transparent" />
-          <div className="absolute left-5 md:left-8 top-5 md:top-7 z-20 max-w-[70%]">
-            <span className="block text-[9px] md:text-[10px] font-black uppercase tracking-[0.24em] text-violet-300">
-              Modo cinema
-            </span>
-            <span className="mt-1 block truncate text-sm md:text-base font-bold text-white/90">
-              {name}
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => closeCinemaMode(false)}
-            aria-label="Fechar trailer"
-            className="absolute right-5 md:right-8 top-5 md:top-7 z-30 grid h-11 w-11 md:h-12 md:w-12 place-items-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-xl transition-all hover:scale-105 hover:bg-white hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
-          >
-            <X size={22} />
-          </button>
-          </div>,
-          document.body,
-        )}
+      <TrailerModal
+        isOpen={cinemaMode.open}
+        videoKey={videoKey}
+        title={name}
+        startAt={cinemaMode.startAt}
+        onClose={handleCinemaClose}
+        onEnded={handleCinemaEnded}
+      />
     </section>
   );
 }

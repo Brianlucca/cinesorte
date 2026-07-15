@@ -137,6 +137,66 @@ body {
   animation: trailer-cinema-video-enter 500ms ease-out both;
 }
 
+.cine-player-control {
+  display: grid;
+  height: 2.75rem;
+  width: 2.75rem;
+  flex: none;
+  place-items: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  transition: 180ms ease;
+}
+
+.cine-player-control:hover {
+  border-color: rgba(196, 181, 253, 0.45);
+  background: rgba(124, 58, 237, 0.38);
+  transform: translateY(-1px);
+}
+
+.cine-player-control:focus-visible {
+  outline: 2px solid rgb(167, 139, 250);
+  outline-offset: 2px;
+}
+
+.cine-player-range,
+.cine-player-volume {
+  appearance: none;
+  height: 4px;
+  cursor: pointer;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    rgb(139, 92, 246) 0%,
+    rgb(167, 139, 250) var(--cine-progress, 0%),
+    rgba(255, 255, 255, 0.2) var(--cine-progress, 0%),
+    rgba(255, 255, 255, 0.2) 100%
+  );
+}
+
+.cine-player-range::-webkit-slider-thumb,
+.cine-player-volume::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 3px solid white;
+  border-radius: 9999px;
+  background: rgb(124, 58, 237);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.8);
+}
+
+.cine-player-range::-moz-range-thumb,
+.cine-player-volume::-moz-range-thumb {
+  width: 9px;
+  height: 9px;
+  border: 3px solid white;
+  border-radius: 9999px;
+  background: rgb(124, 58, 246);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.8);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-ken-burns,
   .hero-slide-reveal,
