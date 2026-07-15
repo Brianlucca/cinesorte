@@ -61,7 +61,14 @@ export function useDashboardLogic() {
     inTheaters: [],
   });
   const [loading, setLoading] = useState(true);
+  const [heroReady, setHeroReady] = useState(false);
   const isMounted = useRef(true);
+  const hasLoadedDashboard = useRef(false);
+  const userGenreCountsKey = JSON.stringify(
+    Object.entries(user?.genreCounts || {}).sort(([firstId], [secondId]) =>
+      firstId.localeCompare(secondId),
+    ),
+  );
 
   const prioritizeContent = useCallback((items, userGenreCounts) => {
     if (!items || !Array.isArray(items) || items.length === 0) return [];
@@ -196,8 +203,15 @@ export function useDashboardLogic() {
   useEffect(() => {
     if (heroQueue.length === 0) return;
     const interval = setInterval(() => {
-      const randomIndex = Math.floor(Math.random() * heroQueue.length);
-      setCurrentHero(heroQueue[randomIndex]);
+      setCurrentHero((previousHero) => {
+        if (heroQueue.length === 1) return heroQueue[0];
+
+        const availableHeroes = heroQueue.filter(
+          (hero) => hero.id !== previousHero?.id,
+        );
+        const randomIndex = Math.floor(Math.random() * availableHeroes.length);
+        return availableHeroes[randomIndex];
+      });
     }, 300000);
     return () => clearInterval(interval);
   }, [heroQueue]);
@@ -205,9 +219,9 @@ export function useDashboardLogic() {
   useEffect(() => {
     isMounted.current = true;
     async function loadContent() {
-      setLoading(true);
+      if (!hasLoadedDashboard.current) setLoading(true);
       try {
-        const userGenres = user?.genreCounts || {};
+        const userGenres = Object.fromEntries(JSON.parse(userGenreCountsKey));
         const dashboardCacheScope = user?.username || user?.uid || "guest";
         const topGenresIdsString = getPreferredGenreString(userGenres);
 
@@ -286,7 +300,10 @@ export function useDashboardLogic() {
           trendingDay: sortedDay,
           trendingWeek: sortedWeek,
         }));
-        if (isMounted.current) setLoading(false);
+        if (isMounted.current) {
+          hasLoadedDashboard.current = true;
+          setLoading(false);
+        }
 
         const dashboardCacheKey = `${DASHBOARD_SECTIONS_CACHE_PREFIX}:${dashboardCacheScope}:${topGenresIdsString || "default"}`;
         const cachedSections = readCachedSections(dashboardCacheKey);
@@ -297,6 +314,7 @@ export function useDashboardLogic() {
             trendingDay: sortedDay,
             trendingWeek: sortedWeek,
           }));
+          setHeroReady(true);
           return;
         }
 
@@ -341,12 +359,10 @@ export function useDashboardLogic() {
 
         if (validHeroes.length > 0) {
           setHeroQueue(validHeroes);
-          setCurrentHero(validHeroes[Math.floor(Math.random() * validHeroes.length)]);
         } else {
           const fallback = [...sortedWeek].filter((i) => i.backdrop_path && !i.trailerKey).slice(0, 20);
           if (fallback.length > 0) {
             setHeroQueue(fallback);
-            setCurrentHero(fallback[Math.floor(Math.random() * fallback.length)]);
           }
         }
 
@@ -409,18 +425,25 @@ export function useDashboardLogic() {
           trendingWeek: sortedWeek,
           ...nextSections,
         });
+        setHeroReady(true);
       } catch {
-        setHeroQueue([]);
-        setCurrentHero(null);
+        if (!hasLoadedDashboard.current) {
+          setHeroQueue([]);
+          setCurrentHero(null);
+        }
+        setHeroReady(true);
       } finally {
-        if (isMounted.current) setLoading(false);
+        if (isMounted.current) {
+          hasLoadedDashboard.current = true;
+          setLoading(false);
+        }
       }
     }
     loadContent();
     return () => {
       isMounted.current = false;
     };
-  }, [buildCompleteSection, excludeExisting, getPreferredGenreString, prioritizeContent, uniqueById, user?.genreCounts, user?.uid, user?.username]);
+  }, [buildCompleteSection, excludeExisting, getPreferredGenreString, prioritizeContent, uniqueById, userGenreCountsKey, user?.uid, user?.username]);
 
-  return { data, currentHero, loading };
+  return { data, currentHero, loading, heroReady };
 }
