@@ -1,6 +1,11 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import {
+  cancelMovieDetailsPrefetch,
+  prefetchMovieDetails,
+  scheduleMovieDetailsPrefetch,
+} from "@shared/lib/mediaDetailsPrefetch";
 
 const variants = {
   poster: {
@@ -106,6 +111,7 @@ export default function MovieRow({ title, items, variant = "poster" }) {
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {visibleItems.map((item, index) => {
+          const mediaType = getMediaType(item);
           const imagePath = isLandscape
             ? item.backdrop_path || item.poster_path
             : item.poster_path || item.backdrop_path;
@@ -115,7 +121,11 @@ export default function MovieRow({ title, items, variant = "poster" }) {
           return (
             <Link
               key={`${item.id}-${index}`}
-              to={`/app/${getMediaType(item)}/${item.id}`}
+              to={`/app/${mediaType}/${item.id}`}
+              onMouseEnter={() => scheduleMovieDetailsPrefetch(mediaType, item.id)}
+              onMouseLeave={() => cancelMovieDetailsPrefetch(mediaType, item.id)}
+              onFocus={() => prefetchMovieDetails(mediaType, item.id)}
+              onPointerDown={() => prefetchMovieDetails(mediaType, item.id)}
               className={`flex-none snap-start ${layout.card} group/card transition-transform duration-300 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 rounded-2xl`}
             >
               <article
