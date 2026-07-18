@@ -1,5 +1,10 @@
 import { Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  cancelMovieDetailsPrefetch,
+  prefetchMovieDetails,
+  scheduleMovieDetailsPrefetch,
+} from '@shared/lib/mediaDetailsPrefetch';
 
 export default function MediaCard({ media }) {
   if (!media.poster_path) return null;
@@ -20,6 +25,10 @@ export default function MediaCard({ media }) {
   return (
     <Link
       to={`/app/${type}/${media.id}`}
+      onMouseEnter={() => scheduleMovieDetailsPrefetch(type, media.id)}
+      onMouseLeave={() => cancelMovieDetailsPrefetch(type, media.id)}
+      onFocus={() => prefetchMovieDetails(type, media.id)}
+      onPointerDown={() => prefetchMovieDetails(type, media.id)}
       className="group relative flex flex-col bg-white/[0.02] border border-white/5 hover:border-white/10 hover:bg-white/[0.04] rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-2 shadow-xl"
     >
       <div className="aspect-[2/3] w-full relative overflow-hidden bg-zinc-900/50">

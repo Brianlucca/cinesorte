@@ -1,6 +1,11 @@
 import { useRef } from "react";
 import { ArrowUpRight, ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
+import {
+  cancelMovieDetailsPrefetch,
+  prefetchMovieDetails,
+  scheduleMovieDetailsPrefetch,
+} from "@shared/lib/mediaDetailsPrefetch";
 
 const getMediaType = (item) =>
   item.media_type || (item.first_air_date ? "tv" : "movie");
@@ -71,6 +76,10 @@ export default function MediaRecommendations({ items }) {
               <Link
                 key={`${mediaType}-${item.id}`}
                 to={`/app/${mediaType}/${item.id}`}
+                onMouseEnter={() => scheduleMovieDetailsPrefetch(mediaType, item.id)}
+                onMouseLeave={() => cancelMovieDetailsPrefetch(mediaType, item.id)}
+                onFocus={() => prefetchMovieDetails(mediaType, item.id)}
+                onPointerDown={() => prefetchMovieDetails(mediaType, item.id)}
                 className="group w-[78vw] max-w-[310px] shrink-0 snap-start sm:w-[340px] sm:max-w-none md:w-[390px]"
               >
                 <article className="relative aspect-video overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-900 shadow-xl transition-all duration-300 group-hover:-translate-y-1 group-hover:border-violet-300/30">
