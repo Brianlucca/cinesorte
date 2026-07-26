@@ -52,6 +52,7 @@ export function AuthProvider({ children }) {
           timerId = window.setTimeout(processNextBatch, 2500);
         }
       } catch {
+        // A reconciliação é oportunista e pode ser retomada na próxima sessão.
       }
     };
 

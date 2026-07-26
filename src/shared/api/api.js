@@ -200,4 +200,15 @@ export const deleteMessageGroup = (conversationId) =>
   api.delete(`/messages/conversations/${conversationId}/group`);
 export const getMessageUnreadCount = () => api.get("/messages/unread-count");
 
+export const createWatchPartyRoom = (data) => api.post("/watch-party/rooms", data);
+export const getMyWatchPartyRooms = () => api.get("/watch-party/rooms/mine");
+export const getPublicWatchPartyRooms = () => api.get("/watch-party/rooms/public");
+export const getFollowingWatchPartyRooms = () => api.get("/watch-party/rooms/following");
+export const getWatchPartyRoom = (roomId) => api.get(`/watch-party/rooms/${roomId}`);
+export const joinWatchPartyRoom = (code) => api.post("/watch-party/rooms/join", { code });
+export const updateWatchPartyRoom = (roomId, data) => api.patch(`/watch-party/rooms/${roomId}`, data);
+export const deleteWatchPartyRoom = (roomId) => api.delete(`/watch-party/rooms/${roomId}`);
+export const blockWatchPartyParticipant = (roomId, userId) => api.post(`/watch-party/rooms/${roomId}/block`, { userId });
+export const addWatchPartyQueueItem = (roomId, data) => api.post(`/watch-party/rooms/${roomId}/queue`, data);
+
 export default api;

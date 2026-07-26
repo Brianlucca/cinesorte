@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@shared/context/useAuth';
 import { HelmetProvider } from 'react-helmet-async';
+import { WatchPartyBroadcastProvider } from '@features/watch-party/context/WatchPartyBroadcastContext';
 
 const AuthLayout = lazy(() => import('@app/layouts/AuthLayout'));
 const AppLayout = lazy(() => import('@app/layouts/AppLayout'));
@@ -22,6 +23,8 @@ const ListDetails = lazy(() => import('@features/lists/pages/ListDetails'));
 const Settings = lazy(() => import('@features/settings/pages/Settings'));
 const MovieRoulette = lazy(() => import('@features/roulette/pages/MovieRoulette'));
 const Feed = lazy(() => import('@features/feed/pages/Feed'));
+const WatchParty = lazy(() => import('@features/watch-party/pages/WatchParty'));
+const WatchPartyRoom = lazy(() => import('@features/watch-party/pages/WatchPartyRoom'));
 const PublicProfile = lazy(() => import('@features/profile/pages/PublicProfile'));
 const SharedMediaPreview = lazy(() => import('@features/media/pages/SharedMediaPreview'));
 const ExtensionConnect = lazy(() => import('@features/auth/pages/ExtensionConnect'));
@@ -70,6 +73,8 @@ function AppRoutes() {
           <Route index element={<Dashboard />} />
           
           <Route path="feed" element={<Feed />} />
+          <Route path="watch-party" element={<WatchParty />} />
+          <Route path="watch-party/:roomId" element={<WatchPartyRoom />} />
           <Route path="profile/:username" element={<PublicProfile />} /> 
 
           <Route path="lists" element={<MyLists />} />
@@ -93,7 +98,7 @@ export default function App() {
   return (
     <HelmetProvider>
       <BrowserRouter>
-        <AppRoutes />
+        <WatchPartyBroadcastProvider><AppRoutes /></WatchPartyBroadcastProvider>
       </BrowserRouter>
     </HelmetProvider>
   );
