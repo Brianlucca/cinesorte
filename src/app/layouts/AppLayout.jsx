@@ -17,6 +17,7 @@ import {
   Search,
   Settings,
   Shield,
+  UsersRound,
   User,
   X,
 } from "lucide-react";
@@ -271,6 +272,7 @@ export default function AppLayout() {
           <div className={`grid transition-[grid-template-rows,opacity] duration-300 ${isSidebarCollapsed ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100 delay-100"}`}><div className="min-h-0 overflow-hidden"><span className="mb-2 block px-3 text-[8px] font-black uppercase tracking-[0.22em] text-zinc-700">Sua experiência</span></div></div>
           <div className="space-y-1.5">
             <NavItem to="/app/roulette" icon={Dices} label="Roleta" preview={<RoulettePreview items={savedItems} totalItems={totalSavedItems} />} />
+            <NavItem to="/app/watch-party" icon={UsersRound} label="Assistir juntos" />
             <NavItem to="/app/lists" icon={List} label="Minhas Listas" preview={<SavedPreview items={savedItems} totalItems={totalSavedItems} loading={sidebarListsLoading} />} />
             <NavItem to="/app/profile" icon={User} label="Perfil" />
             <NavItem to="/app/settings" icon={Settings} label="Configurações" />
@@ -318,6 +320,7 @@ export default function AppLayout() {
             <NavItem icon={Search} label="Buscar" onClick={() => { setIsSearchOpen(true); setIsMobileMenuOpen(false); }} isMobileItem />
             <div className="my-3 h-px bg-white/[0.06]" />
             <NavItem to="/app/roulette" icon={Dices} label="Roleta" isMobileItem />
+            <NavItem to="/app/watch-party" icon={UsersRound} label="Assistir juntos" isMobileItem />
             <NavItem to="/app/lists" icon={List} label="Minhas Listas" isMobileItem />
             <NavItem to="/app/profile" icon={User} label="Perfil" isMobileItem />
             <NavItem to="/app/settings" icon={Settings} label="Configurações" isMobileItem />

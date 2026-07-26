@@ -17,6 +17,7 @@ export function clearDisposableSessionCache() {
       if (isDisposableCacheKey(key)) localStorage.removeItem(key);
     });
   } catch {
+    // O armazenamento pode estar indisponível em modos privados ou restritos.
   }
 }
 
@@ -35,5 +36,6 @@ export function endSessionCache() {
   try {
     sessionStorage.removeItem(SESSION_MARKER);
   } catch {
+    // Encerrar a sessão não deve falhar por indisponibilidade do storage.
   }
 }
