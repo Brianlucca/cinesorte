@@ -204,6 +204,7 @@ export const createWatchPartyRoom = (data) => api.post("/watch-party/rooms", dat
 export const getMyWatchPartyRooms = () => api.get("/watch-party/rooms/mine");
 export const getPublicWatchPartyRooms = () => api.get("/watch-party/rooms/public");
 export const getFollowingWatchPartyRooms = () => api.get("/watch-party/rooms/following");
+export const getWatchPartyLiveVersion = () => api.get("/watch-party/rooms/live-version");
 export const getWatchPartyRoom = (roomId) => api.get(`/watch-party/rooms/${roomId}`);
 export const joinWatchPartyRoom = (code) => api.post("/watch-party/rooms/join", { code });
 export const updateWatchPartyRoom = (roomId, data) => api.patch(`/watch-party/rooms/${roomId}`, data);

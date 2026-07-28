@@ -11,8 +11,7 @@ export default function PartyChat({ messages, currentUserId, onSend, compact = f
   const submit = (event) => {
     event.preventDefault();
     if (!draft.trim()) return;
-    onSend(draft);
-    setDraft("");
+    if (onSend(draft) !== false) setDraft("");
   };
 
   return (

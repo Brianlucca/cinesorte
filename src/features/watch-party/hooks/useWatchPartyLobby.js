@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@shared/context/useToast";
 import { INITIAL_PARTY_FORM } from "@features/watch-party/data/watchPartyOptions";
@@ -19,6 +19,7 @@ export function useWatchPartyLobby() {
   const [myRooms, setMyRooms] = useState([]);
   const [followingRooms, setFollowingRooms] = useState([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
+  const liveVersionRef = useRef(null);
 
   useEffect(() => {
     let active = true;
@@ -54,7 +55,25 @@ export function useWatchPartyLobby() {
           if (active) setLoadingRooms(false);
         });
     loadRooms();
-    const refreshTimer = window.setInterval(loadRooms, 30000);
+    repository.getLiveVersion().then(({ version }) => {
+      if (active) liveVersionRef.current = version;
+    }).catch(() => undefined);
+    const refreshTimer = window.setInterval(async () => {
+      try {
+        const { version } = await repository.getLiveVersion();
+        if (!active) return;
+        if (liveVersionRef.current === null) {
+          liveVersionRef.current = version;
+          return;
+        }
+        if (version !== liveVersionRef.current) {
+          liveVersionRef.current = version;
+          loadRooms();
+        }
+      } catch {
+        /* A próxima verificação recupera uma oscilação temporária. */
+      }
+    }, 5000);
     return () => {
       active = false;
       window.clearInterval(refreshTimer);
@@ -68,7 +87,13 @@ export function useWatchPartyLobby() {
     setForm((current) => ({ ...current, [field]: value }));
   }, []);
 
-  const openCreate = useCallback(() => setIsCreateOpen(true), []);
+  const openCreate = useCallback(() => {
+    if (myRooms[0]) {
+      navigate(`/app/watch-party/${myRooms[0].id}`);
+      return;
+    }
+    setIsCreateOpen(true);
+  }, [myRooms, navigate]);
   const closeCreate = useCallback(() => setIsCreateOpen(false), []);
   const updateInviteCode = useCallback(
     (value) => setInviteCode(normalizeCode(value)),
@@ -110,6 +135,7 @@ export function useWatchPartyLobby() {
       canCreate,
       canJoin,
       myRooms,
+      hasRoom: myRooms.length > 0,
       followingRooms,
       loadingRooms,
     },

@@ -1,6 +1,6 @@
 import {
   addWatchPartyQueueItem, blockWatchPartyParticipant, createWatchPartyRoom, deleteWatchPartyRoom, getFollowingWatchPartyRooms, getMyWatchPartyRooms, getPublicWatchPartyRooms, getWatchPartyRoom,
-  joinWatchPartyRoom, updateWatchPartyRoom,
+  getWatchPartyLiveVersion, joinWatchPartyRoom, updateWatchPartyRoom,
 } from "@shared/api/api";
 
 export const watchPartyRepository = {
@@ -8,6 +8,7 @@ export const watchPartyRepository = {
   listMine: () => getMyWatchPartyRooms(),
   listPublic: () => getPublicWatchPartyRooms(),
   listFollowing: () => getFollowingWatchPartyRooms(),
+  getLiveVersion: () => getWatchPartyLiveVersion(),
   findById: (roomId) => getWatchPartyRoom(roomId),
   findByCode: (code) => joinWatchPartyRoom(code),
   updateSettings: (roomId, settings) => updateWatchPartyRoom(roomId, settings),

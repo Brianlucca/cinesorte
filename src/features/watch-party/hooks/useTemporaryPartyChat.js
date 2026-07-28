@@ -5,42 +5,70 @@ export function useTemporaryPartyChat(roomId) {
   const socketRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [participants, setParticipants] = useState([]);
+  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const socket = createWatchPartySocket(roomId);
-    socketRef.current = socket;
-    socket.onmessage = ({ data }) => {
-      const message = JSON.parse(data);
-      if (message.type === "chat-history") {
-        setMessages(
-          (message.payload?.messages || []).map((item) => ({
-            ...item,
-            text: item.body,
-          })),
-        );
-      }
-      if (message.type === "chat-message") {
-        const item = message.payload;
-        setMessages((current) =>
-          current.some(({ id }) => id === item.id)
-            ? current
-            : [...current, { ...item, text: item.body }],
-        );
-      }
-      if (message.type === "chat-expired") {
-        setMessages((current) =>
-          current.filter(({ id }) => id !== message.payload?.id),
-        );
-      }
-      if (message.type === "presence")
-        setParticipants(message.payload?.participants || []);
-      if (message.type === "kicked") window.location.assign("/app/watch-party");
+    let disposed = false;
+    let retryTimer = null;
+    let retryAttempt = 0;
+
+    const connect = () => {
+      if (disposed) return;
+      const socket = createWatchPartySocket(roomId);
+      socketRef.current = socket;
+      socket.onopen = () => {
+        retryAttempt = 0;
+        setConnected(true);
+      };
+      socket.onmessage = ({ data }) => {
+        const message = JSON.parse(data);
+        if (message.type === "chat-history") {
+          setMessages(
+            (message.payload?.messages || []).map((item) => ({
+              ...item,
+              text: item.body,
+            })),
+          );
+        }
+        if (message.type === "chat-message") {
+          const item = message.payload;
+          setMessages((current) =>
+            current.some(({ id }) => id === item.id)
+              ? current
+              : [...current, { ...item, text: item.body }],
+          );
+        }
+        if (message.type === "chat-expired")
+          setMessages((current) =>
+            current.filter(({ id }) => id !== message.payload?.id),
+          );
+        if (message.type === "presence")
+          setParticipants(message.payload?.participants || []);
+        if (message.type === "kicked" || message.type === "room-deleted") {
+          disposed = true;
+          window.location.assign("/app/watch-party");
+        }
+      };
+      socket.onclose = (event) => {
+        if (socketRef.current === socket) socketRef.current = null;
+        setConnected(false);
+        if (disposed || [4003, 4004].includes(event.code)) return;
+        const delay = Math.min(1000 * 2 ** retryAttempt, 10000);
+        retryAttempt += 1;
+        retryTimer = window.setTimeout(connect, delay);
+      };
+      socket.onerror = () => socket.close();
     };
+
+    connect();
     return () => {
-      socket.close();
+      disposed = true;
+      window.clearTimeout(retryTimer);
+      socketRef.current?.close();
       socketRef.current = null;
       setMessages([]);
       setParticipants([]);
+      setConnected(false);
     };
   }, [roomId]);
 
@@ -59,5 +87,5 @@ export function useTemporaryPartyChat(roomId) {
     return true;
   }, []);
 
-  return { messages, participants, sendMessage, kickParticipant };
+  return { messages, participants, connected, sendMessage, kickParticipant };
 }

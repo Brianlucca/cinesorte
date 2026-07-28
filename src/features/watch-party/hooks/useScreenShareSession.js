@@ -136,18 +136,35 @@ export function useScreenShareSession(
       setError("Este navegador não oferece suporte a WebRTC.");
       return undefined;
     }
-    const socket = createWatchPartySocket(roomId);
-    socketRef.current = socket;
-    socket.onopen = () => {
-      sendSignal("viewer-ready");
-      if (mediaMetadataRef.current)
-        sendSignal("media-metadata", mediaMetadataRef.current);
-    };
-    socket.onerror = () =>
-      setError("Não foi possível conectar ao servidor da sala.");
-    socket.onmessage = async ({ data: rawData }) => {
+    let disposed = false;
+    let terminal = false;
+    let retryAttempt = 0;
+    let retryTimer = null;
+    const connect = () => {
+      if (disposed || terminal) return;
+      const socket = createWatchPartySocket(roomId);
+      socketRef.current = socket;
+      socket.onopen = () => {
+        retryAttempt = 0;
+        setError("");
+        sendSignal("viewer-ready");
+        if (localStreamRef.current) sendSignal("host-ready");
+        if (mediaMetadataRef.current)
+          sendSignal("media-metadata", mediaMetadataRef.current);
+      };
+      socket.onerror = () => socket.close();
+      socket.onmessage = async ({ data: rawData }) => {
       const message = JSON.parse(rawData);
       if (["connected", "presence"].includes(message.type)) return;
+      if (message.type === "room-deleted") {
+        terminal = true;
+        localStreamRef.current?.getTracks().forEach((track) => track.stop());
+        localStreamRef.current = null;
+        setLocalStream(null);
+        closePeers();
+        setError("Esta sala foi encerrada pelo anfitrião.");
+        return;
+      }
       const remoteId = message.senderId;
       try {
         if (message.type === "host-ready" && !localStreamRef.current)
@@ -201,9 +218,22 @@ export function useScreenShareSession(
       } catch (signalError) {
         setError(signalError.message || "Falha ao negociar a transmissão.");
       }
+      };
+      socket.onclose = (event) => {
+        if (socketRef.current === socket) socketRef.current = null;
+        closePeers();
+        if (disposed || terminal || event.code === 4004) return;
+        setError("Reconectando à sala…");
+        const delay = Math.min(1000 * 2 ** retryAttempt, 10000);
+        retryAttempt += 1;
+        retryTimer = window.setTimeout(connect, delay);
+      };
     };
+    connect();
     return () => {
-      socket.close();
+      disposed = true;
+      window.clearTimeout(retryTimer);
+      socketRef.current?.close();
       socketRef.current = null;
       closePeers();
     };
