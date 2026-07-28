@@ -243,7 +243,7 @@ export function PersistentHostBroadcast({ roomId, service, allowGuestControl, ci
     if (targetRef.current && !hasOtherActiveBroadcast)
       context?.mount({ roomId, service, allowGuestControl, cinemaWidget }, targetRef.current);
   }, [allowGuestControl, cinemaWidget, context, hasOtherActiveBroadcast, roomId, service]);
-  useEffect(() => () => detach?.(roomId), [detach, roomId]);
+  useLayoutEffect(() => () => detach?.(roomId), [detach, roomId]);
 
   if (hasOtherActiveBroadcast)
     return (

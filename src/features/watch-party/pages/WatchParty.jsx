@@ -44,7 +44,7 @@ export default function WatchParty() {
               onClick={actions.openCreate}
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-violet-500 px-5 text-[9px] font-black uppercase tracking-[0.1em] text-white hover:bg-violet-400"
             >
-              <Plus size={15} /> Criar sala
+              <Plus size={15} /> {state.hasRoom ? "Acessar minha sala" : "Criar sala"}
             </button>
           </div>
         </header>

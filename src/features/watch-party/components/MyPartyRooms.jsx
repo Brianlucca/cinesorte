@@ -58,10 +58,10 @@ export default function MyPartyRooms({ rooms, loading = false }) {
             <History size={14} /> Sua atividade
           </p>
           <h2 className="mt-2 text-2xl font-black tracking-[-0.03em] text-white">
-            Minhas salas
+            Minha sala
           </h2>
           <p className="mt-1 text-xs text-zinc-600">
-            Retome as sessões que você criou.
+            Sua transmissão fica vinculada ao seu perfil.
           </p>
         </div>
         <span className="rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-2 text-[9px] font-black uppercase tracking-wider text-zinc-500">
@@ -95,8 +95,8 @@ export default function MyPartyRooms({ rooms, loading = false }) {
                   >
                     <ServiceIcon size={17} />
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/10 bg-emerald-500/[0.07] px-2 py-1.5 text-[8px] font-black uppercase tracking-wider text-emerald-300">
-                    <Radio size={10} /> Ativa
+                  <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-[8px] font-black uppercase tracking-wider ${room.isLive ? "border-red-400/15 bg-red-500/10 text-red-300" : "border-white/[0.07] bg-white/[0.03] text-zinc-500"}`}>
+                    <Radio size={10} /> {room.isLive ? "Ao vivo" : "Fora do ar"}
                   </span>
                 </div>
                 <h3 className="mt-4 truncate text-base font-black text-zinc-100">
