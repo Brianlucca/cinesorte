@@ -79,14 +79,9 @@ export function AuthProvider({ children }) {
 
   async function login(email, password, turnstileToken) {
     const data = await apiLogin({ email, password, turnstileToken });
-    setUser({ ...data });
-    try {
-      const userDetails = await getMe();
-      setUser(userDetails);
-      if (userDetails.termsVersion !== CURRENT_TERMS_VERSION) setShowTermsModal(true);
-    } catch {
-      setShowTermsModal(false);
-    }
+    const userDetails = await getMe();
+    setUser(userDetails);
+    setShowTermsModal(userDetails.termsVersion !== CURRENT_TERMS_VERSION);
     return data;
   }
 
@@ -99,14 +94,9 @@ export function AuthProvider({ children }) {
       return { ...data, idToken };
     }
 
-    setUser({ ...data });
-    try {
-      const userDetails = await getMe();
-      setUser(userDetails);
-      if (userDetails.termsVersion !== CURRENT_TERMS_VERSION) setShowTermsModal(true);
-    } catch {
-      setShowTermsModal(false);
-    }
+    const userDetails = await getMe();
+    setUser(userDetails);
+    setShowTermsModal(userDetails.termsVersion !== CURRENT_TERMS_VERSION);
     return data;
   }
 
@@ -121,14 +111,9 @@ export function AuthProvider({ children }) {
       return { ...data, idToken };
     }
 
-    setUser({ ...data });
-    try {
-      const userDetails = await getMe();
-      setUser(userDetails);
-      if (userDetails.termsVersion !== CURRENT_TERMS_VERSION) setShowTermsModal(true);
-    } catch {
-      setShowTermsModal(false);
-    }
+    const userDetails = await getMe();
+    setUser(userDetails);
+    setShowTermsModal(userDetails.termsVersion !== CURRENT_TERMS_VERSION);
     return data;
   }
 
