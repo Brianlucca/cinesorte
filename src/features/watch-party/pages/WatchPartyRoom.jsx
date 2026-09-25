@@ -214,7 +214,6 @@ export default function WatchPartyRoom() {
         onClose={actions.closeSettings}
         room={room}
         onSave={actions.updateSettings}
-        onDelete={actions.deleteRoom}
         onResetInvite={actions.resetInviteCode}
         resettingInvite={state.resettingInvite}
       />
