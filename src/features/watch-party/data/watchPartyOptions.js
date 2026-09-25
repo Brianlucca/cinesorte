@@ -10,4 +10,5 @@ export const WATCH_PARTY_PRIVACY = [
   { id: "following", label: "Pessoas que eu sigo", description: "Somente perfis que você segue; você também pode limitar a pessoas específicas." },
 ];
 
-export const INITIAL_PARTY_FORM = { name: "", service: "screen", privacy: "invite", selectedUserIds: [], allowGuestControl: false };
+// A fonte é escolhida dentro do canal e pode ser trocada durante a live.
+export const INITIAL_PARTY_FORM = { name: "", service: "screen", privacy: "public", selectedUserIds: [], allowGuestControl: false, media: null };
