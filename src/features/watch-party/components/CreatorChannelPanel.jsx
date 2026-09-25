@@ -24,11 +24,9 @@ export default function CreatorChannelPanel({ mode, user, room, loading, form, c
     <div className="mt-5 grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)]">
       <aside className="h-fit rounded-2xl border border-white/[0.07] bg-[#0d0d11] p-3">
         <p className="px-3 py-2 text-[9px] font-black uppercase tracking-wider text-zinc-600">Painel do criador</p>
-        <div className="flex h-11 items-center gap-3 rounded-xl bg-white/[0.07] px-3 text-xs font-bold text-white"><Radio size={15} /> Transmissão</div>
-        <div className="flex h-11 items-center gap-3 px-3 text-xs font-bold text-zinc-600"><UsersRound size={15} /> Comunidade</div>
-        <div className="flex h-11 items-center gap-3 px-3 text-xs font-bold text-zinc-600"><BarChart3 size={15} /> Análises</div>
+        {[["Transmissão", Radio], ["Comunidade", UsersRound], ["Análises", BarChart3]].map(([label, icon]) => <button key={label} type="button" onClick={() => setCreatorSection(label)} className={"flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-bold " + (creatorSection === label ? "bg-white/[0.07] text-white" : "text-zinc-500 hover:bg-white/[0.035] hover:text-white")}>{createElement(icon, { size: 15 })} {label}</button>)}
       </aside>
-      <main className="rounded-2xl border border-white/[0.07] bg-[#0d0d11]">
+      {creatorSection === "Transmissão" ? <main className="rounded-2xl border border-white/[0.07] bg-[#0d0d11]">
         <div className="flex items-center justify-between border-b border-white/[0.07] px-5 py-4"><div><h2 className="text-base font-black">Configuração da transmissão</h2><p className="mt-0.5 text-[10px] text-zinc-600">Defina as informações antes de entrar ao vivo.</p></div><span className="rounded-md bg-white/[0.06] px-2 py-1 text-[8px] font-black uppercase text-zinc-500">Offline</span></div>
         <form onSubmit={(event) => { event.preventDefault(); onCreate(); }} className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div className="space-y-5">
@@ -40,7 +38,11 @@ export default function CreatorChannelPanel({ mode, user, room, loading, form, c
           </div>
           <aside className="flex flex-col justify-between rounded-xl border border-white/[0.07] bg-black/20 p-4"><div><p className="text-[9px] font-black uppercase tracking-wider text-zinc-600">Próxima etapa</p><p className="mt-3 text-sm font-bold">Escolher a fonte</p><p className="mt-1 text-[10px] leading-5 text-zinc-600">No estúdio você escolhe tela ou pasta e pode alternar durante a transmissão.</p></div><button type="submit" disabled={!canCreate} className="mt-8 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-violet-500 px-5 text-[9px] font-black uppercase text-white hover:bg-violet-400 disabled:opacity-35"><Radio size={14} /> Entrar no estúdio</button></aside>
         </form>
-      </main>
+      </main> : <main className="rounded-2xl border border-white/[0.07] bg-[#0d0d11] p-6">
+        <div className="flex items-center gap-4">{avatar}<div><p className="text-xl font-black">{creatorSection}</p><p className="mt-1 text-xs text-zinc-600">@{user?.username}</p></div></div>
+        {creatorSection === "Comunidade" && <div className="mt-7 grid gap-3 sm:grid-cols-3"><article className="rounded-xl border border-white/[0.07] p-5"><strong className="text-2xl">{user?.followersCount || 0}</strong><p className="mt-1 text-xs text-zinc-600">Seguidores</p></article><article className="rounded-xl border border-white/[0.07] p-5"><strong className="text-2xl">{user?.followingCount || 0}</strong><p className="mt-1 text-xs text-zinc-600">Seguindo</p></article><article className="rounded-xl border border-white/[0.07] p-5"><strong className="text-2xl">0</strong><p className="mt-1 text-xs text-zinc-600">No canal agora</p></article></div>}
+        {creatorSection === "Análises" && <div className="mt-7 grid min-h-52 place-items-center rounded-xl border border-dashed border-white/[0.08]"><div className="text-center"><BarChart3 size={25} className="mx-auto text-zinc-700" /><p className="mt-3 text-sm font-bold text-zinc-400">Resumo do canal</p><p className="mt-1 text-xs text-zinc-600">{user?.followersCount || 0} seguidores · nenhuma transmissão ativa</p></div></div>}
+      </main>}
     </div>
   );
   if (!room) return (
