@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { usePublicProfileLogic } from '@features/profile/hooks/usePublicProfileLogic';
 import PublicProfileHeader from '@features/profile/components/PublicProfileHeader';
+import ProfileLiveCard from '@features/watch-party/components/ProfileLiveCard';
 import StatsOverview from '@features/profile/components/StatsOverview';
 import ReviewsList from '@features/profile/components/ReviewsList';
 import UserSearch from '@shared/components/UserSearch';
@@ -144,6 +145,8 @@ export default function PublicProfile() {
           onBlock={actions.handleBlock}
           compatibility={compatibility}
         />
+
+        <ProfileLiveCard username={profile.username || username} />
 
         <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-4">
           <section className={`group relative min-h-[180px] overflow-hidden rounded-[1.5rem] border bg-[#0d0d11]/95 p-4 shadow-2xl md:p-5 ${levelStyle.border}`}>

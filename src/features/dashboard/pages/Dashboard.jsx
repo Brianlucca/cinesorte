@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDashboardLogic } from "@features/dashboard/hooks/useDashboardLogic";
-import api, { getFollowingFeed, getGlobalFeed, getSuggestions } from "@shared/api/api";
+import api, { getAccessibleLiveWatchPartyRooms, getFollowingFeed, getGlobalFeed, getSuggestions } from "@shared/api/api";
 import Hero, { HERO_SLIDE_DURATION } from "@features/dashboard/components/Hero";
 import HomeExperience from "@features/dashboard/components/HomeExperience";
 import MovieRow from "@features/dashboard/components/MovieRow";
@@ -159,6 +159,7 @@ export default function Dashboard() {
   const heroRotationRef = useRef(0);
   const [socialPreview, setSocialPreview] = useState({ items: [], suggestions: [] });
   const [userLists, setUserLists] = useState([]);
+  const [liveHeroItems, setLiveHeroItems] = useState([]);
 
   latestHeroDataRef.current = data;
   latestCurrentHeroRef.current = currentHero;
@@ -248,11 +249,12 @@ export default function Dashboard() {
 
     async function loadHomeExperience() {
       try {
-        const [followingResult, globalResult, suggestionsResult, listsResult] = await Promise.allSettled([
+        const [followingResult, globalResult, suggestionsResult, listsResult, liveResult] = await Promise.allSettled([
           getFollowingFeed(),
           getGlobalFeed(),
           getSuggestions(),
           api.get("/users/lists/me"),
+          getAccessibleLiveWatchPartyRooms(),
         ]);
 
         if (cancelled) return;
@@ -269,12 +271,26 @@ export default function Dashboard() {
         const lists = listsResult.status === "fulfilled" && Array.isArray(listsResult.value)
           ? listsResult.value
           : [];
+        const liveRooms = liveResult.status === "fulfilled" && Array.isArray(liveResult.value)
+          ? liveResult.value
+          : [];
 
         setSocialPreview({
           items: followingItems.length > 0 ? followingItems : globalItems,
           suggestions,
         });
         setUserLists(lists);
+        setLiveHeroItems(liveRooms.map((room) => ({
+          id: "live-" + room.id,
+          roomId: room.id,
+          kind: "watch-party",
+          title: room.name,
+          overview: room.host?.bio || "Transmissão ao vivo no CineParty.",
+          backdrop_path: room.media?.backdropPath ? `https://image.tmdb.org/t/p/original${room.media.backdropPath}` : room.host?.backgroundURL || room.preview?.image || null,
+          host: room.host,
+          participantCount: room.participantCount || 1,
+          service: room.service,
+        })));
       } catch {
         if (!cancelled) {
           setSocialPreview({ items: [], suggestions: [] });
@@ -287,6 +303,35 @@ export default function Dashboard() {
 
     return () => {
       cancelled = true;
+    };
+  }, [loading]);
+
+  useEffect(() => {
+    if (loading) return undefined;
+    let active = true;
+    const refreshLives = async () => {
+      try {
+        const rooms = await getAccessibleLiveWatchPartyRooms();
+        if (!active || !Array.isArray(rooms)) return;
+        setLiveHeroItems(rooms.map((room) => ({
+          id: "live-" + room.id,
+          roomId: room.id,
+          kind: "watch-party",
+          title: room.name,
+          overview: room.host?.bio || "Transmissão ao vivo no CineParty.",
+          backdrop_path: room.media?.backdropPath ? `https://image.tmdb.org/t/p/original${room.media.backdropPath}` : room.host?.backgroundURL || room.preview?.image || null,
+          host: room.host,
+          participantCount: room.participantCount || 1,
+          service: room.service,
+        })));
+      } catch {
+        // Mantém o último estado conhecido durante oscilações temporárias.
+      }
+    };
+    const timer = window.setInterval(refreshLives, 5000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
     };
   }, [loading]);
 
@@ -309,15 +354,16 @@ export default function Dashboard() {
     { id: 'inTheaters', title: "Nos Cinemas", type: 'movie', variant: 'spotlight' },
     { id: 'movies', title: "Filmes Populares", type: 'movie', variant: 'poster' },
   ];
+  const displayedHeroItems = [...liveHeroItems, ...heroItems].slice(0, 6);
 
   return (
     <div className="-mt-24 md:-mt-8 pb-20 w-full max-w-full overflow-x-hidden bg-zinc-950 animate-in fade-in duration-700">
 
       <Hero
-        key={heroExpiresAt || "hero-loading"}
-        items={heroItems}
-        initialIndex={heroInitialPosition.index}
-        initialSlideElapsed={heroInitialPosition.elapsed}
+        key={`${heroExpiresAt || "hero-loading"}-${liveHeroItems.map(({ id }) => id).join("-")}`}
+        items={displayedHeroItems}
+        initialIndex={liveHeroItems.length ? 0 : heroInitialPosition.index}
+        initialSlideElapsed={liveHeroItems.length ? 0 : heroInitialPosition.elapsed}
         onSlideChange={handleHeroSlideChange}
       />
 

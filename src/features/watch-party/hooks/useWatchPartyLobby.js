@@ -19,6 +19,7 @@ export function useWatchPartyLobby() {
   const [myRooms, setMyRooms] = useState([]);
   const [followingRooms, setFollowingRooms] = useState([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
+  const [resettingInvite, setResettingInvite] = useState(false);
   const liveVersionRef = useRef(null);
 
   useEffect(() => {
@@ -108,7 +109,7 @@ export function useWatchPartyLobby() {
       navigate(`/app/watch-party/${room.id}`);
     } catch (error) {
       toast.error(
-        "Não foi possível criar",
+        "Não foi possível preparar a transmissão",
         error.message || "Confira a conexão com o servidor.",
       );
     }
@@ -121,11 +122,37 @@ export function useWatchPartyLobby() {
       navigate(`/app/watch-party/${room.id}`);
     } catch {
       toast.error(
-        "Sala não encontrada",
+        "Transmissão não encontrada",
         "Confira o código recebido e tente novamente.",
       );
     }
   }, [canJoin, inviteCode, navigate, toast]);
+
+  const updateTransmission = useCallback(async (settings) => {
+    const currentRoom = myRooms[0];
+    if (!currentRoom) return;
+    try {
+      const updated = await repository.updateSettings(currentRoom.id, settings);
+      setMyRooms((rooms) => rooms.map((room) => room.id === currentRoom.id ? { ...room, ...updated } : room));
+      toast.success("Transmissão atualizada", "As informações foram salvas.");
+    } catch (error) {
+      toast.error("Não foi possível salvar", error.message || "Tente novamente.");
+    }
+  }, [myRooms, toast]);
+  const resetInviteCode = useCallback(async () => {
+    const currentRoom = myRooms[0];
+    if (!currentRoom || resettingInvite) return;
+    setResettingInvite(true);
+    try {
+      const updated = await repository.resetInviteCode(currentRoom.id);
+      setMyRooms((rooms) => rooms.map((room) => room.id === currentRoom.id ? { ...room, ...updated } : room));
+      toast.success("Código alterado", `O novo código é ${updated.code}.`);
+    } catch (error) {
+      toast.error("Não foi possível trocar o código", error.message || "Tente novamente.");
+    } finally {
+      setResettingInvite(false);
+    }
+  }, [myRooms, resettingInvite, toast]);
 
   return {
     state: {
@@ -138,6 +165,7 @@ export function useWatchPartyLobby() {
       hasRoom: myRooms.length > 0,
       followingRooms,
       loadingRooms,
+      resettingInvite,
     },
     actions: {
       openCreate,
@@ -146,6 +174,8 @@ export function useWatchPartyLobby() {
       updateInviteCode,
       createRoom,
       joinRoom,
+      updateTransmission,
+      resetInviteCode,
     },
   };
 }

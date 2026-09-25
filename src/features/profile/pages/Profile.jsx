@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useProfileLogic } from '@features/profile/hooks/useProfileLogic';
 import ProfileHeader from '@features/profile/components/ProfileHeader';
+import ProfileLiveCard from '@features/watch-party/components/ProfileLiveCard';
 import StatsOverview from '@features/profile/components/StatsOverview';
 import ActivityFeed from '@features/profile/components/ActivityFeed';
 import ReviewsList from '@features/profile/components/ReviewsList';
@@ -118,6 +119,8 @@ export default function Profile() {
           onShowFollowers={actions.openFollowersModal}
           onShowFollowing={actions.openFollowingModal}
         />
+
+        <ProfileLiveCard username={user.username} />
 
         <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-4">
           <section className={`group relative min-h-[180px] overflow-hidden rounded-[1.5rem] border bg-[#0d0d11]/95 p-4 shadow-2xl md:p-5 ${levelStyle.border}`}>
