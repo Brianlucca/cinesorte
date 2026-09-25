@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
 import { Info, LockKeyhole, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { WATCH_PARTY_PRIVACY } from "@features/watch-party/data/watchPartyOptions";
+import BroadcastMediaPicker from "@features/watch-party/components/BroadcastMediaPicker";
 
 export default function TransmissionInformationForm({ room, onSave, onResetInvite, resettingInvite = false, profileDescription, submitLabel = "Salvar informações" }) {
   const [name, setName] = useState(room.name || "");
   const [privacy, setPrivacy] = useState(room.privacy || "invite");
   const [allowGuestControl, setAllowGuestControl] = useState(Boolean(room.allowGuestControl));
+  const [media, setMedia] = useState(room.media || null);
 
   useEffect(() => {
     setName(room.name || "");
     setPrivacy(room.privacy || "invite");
     setAllowGuestControl(Boolean(room.allowGuestControl));
-  }, [room.allowGuestControl, room.id, room.name, room.privacy]);
+    setMedia(room.media || null);
+  }, [room.allowGuestControl, room.id, room.media, room.name, room.privacy]);
 
   const trimmedName = name.trim();
 
@@ -19,10 +22,13 @@ export default function TransmissionInformationForm({ room, onSave, onResetInvit
     <form
       onSubmit={(event) => {
         event.preventDefault();
-        onSave({ name: trimmedName, privacy, allowGuestControl: room.service === "local" && allowGuestControl });
+        onSave({ name: trimmedName, privacy, media, allowGuestControl: room.service === "local" && allowGuestControl });
       }}
       className="grid gap-4 sm:grid-cols-2"
     >
+      <div className="sm:col-span-2">
+        <BroadcastMediaPicker value={media} onChange={setMedia} />
+      </div>
       <div>
         <label htmlFor={`transmission-title-${room.id}`} className="mb-2 block text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500">Título da transmissão</label>
         <input id={`transmission-title-${room.id}`} value={name} onChange={(event) => setName(event.target.value)} minLength={3} maxLength={48} className="h-11 w-full rounded-xl border border-white/[0.08] bg-black/25 px-4 text-sm font-bold text-white outline-none focus:border-violet-400/40" />
