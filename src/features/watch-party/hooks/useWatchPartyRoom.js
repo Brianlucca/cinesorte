@@ -33,6 +33,8 @@ export function useWatchPartyRoom() {
   const [isAddVideoOpen, setIsAddVideoOpen] = useState(false);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [switchingSource, setSwitchingSource] = useState(false);
+  const [resettingInvite, setResettingInvite] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -49,6 +51,34 @@ export function useWatchPartyRoom() {
       });
     return () => {
       active = false;
+    };
+  }, [roomId]);
+
+  useEffect(() => {
+    let active = true;
+    const syncRoom = async () => {
+      try {
+        const latest = await repository.findById(roomId);
+        if (!active) return;
+        setRoom((current) =>
+          current
+            ? {
+                ...current,
+                service: latest.service,
+                privacy: latest.privacy,
+                allowGuestControl: latest.allowGuestControl,
+                updatedAt: latest.updatedAt,
+              }
+            : current,
+        );
+      } catch {
+        // A próxima sincronização recupera oscilações temporárias.
+      }
+    };
+    const timer = window.setInterval(syncRoom, 4000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
     };
   }, [roomId]);
 
@@ -141,6 +171,22 @@ export function useWatchPartyRoom() {
     },
     [room, toast],
   );
+  const switchSource = useCallback(
+    async (service) => {
+      if (!room || service === room.service) return;
+      setSwitchingSource(true);
+      try {
+        const updatedRoom = await repository.updateSettings(room.id, { service });
+        setRoom((current) => ({ ...current, ...updatedRoom }));
+        toast.success("Fonte alterada", service === "local" ? "Agora escolha sua pasta de filmes." : "Agora escolha a tela ou janela.");
+      } catch (error) {
+        toast.error("Não foi possível trocar a fonte", error.message || "Tente novamente.");
+      } finally {
+        setSwitchingSource(false);
+      }
+    },
+    [room, toast],
+  );
   const copyInvite = useCallback(async () => {
     const invitation =
       room.privacy === "public"
@@ -154,6 +200,19 @@ export function useWatchPartyRoom() {
         : `Código da sala: ${room.code}`,
     );
   }, [room, toast]);
+  const resetInviteCode = useCallback(async () => {
+    if (!room || resettingInvite) return;
+    setResettingInvite(true);
+    try {
+      const updatedRoom = await repository.resetInviteCode(room.id);
+      setRoom((current) => ({ ...current, ...updatedRoom }));
+      toast.success("Código alterado", `O novo código é ${updatedRoom.code}.`);
+    } catch (error) {
+      toast.error("Não foi possível trocar o código", error.message || "Tente novamente.");
+    } finally {
+      setResettingInvite(false);
+    }
+  }, [resettingInvite, room, toast]);
   const deleteRoom = useCallback(async () => {
     if (!room) return;
     try {
@@ -198,12 +257,15 @@ export function useWatchPartyRoom() {
       room,
       messages: chat.messages,
       participants: chat.participants,
+      connected: chat.connected,
       loading,
       currentVideo,
       playerCommand,
       isAddVideoOpen,
       isParticipantsOpen,
       isSettingsOpen,
+      switchingSource,
+      resettingInvite,
     },
     actions: {
       controlPlayback,
@@ -213,7 +275,9 @@ export function useWatchPartyRoom() {
       removeVideo,
       sendMessage: chat.sendMessage,
       copyInvite,
+      resetInviteCode,
       updateSettings,
+      switchSource,
       deleteRoom,
       blockParticipant,
       openAddVideo: () => setIsAddVideoOpen(true),
