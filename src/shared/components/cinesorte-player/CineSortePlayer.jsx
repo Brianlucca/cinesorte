@@ -29,6 +29,7 @@ export default function CineSortePlayer({
   onToggleMute,
   onClose,
   widget,
+  widgetMessageCount = 0,
   compact = false,
   className = "",
 }) {
@@ -36,6 +37,7 @@ export default function CineSortePlayer({
   const [fullscreen, setFullscreen] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
   const [widgetOpen, setWidgetOpen] = useState(false);
+  const [lastReadWidgetCount, setLastReadWidgetCount] = useState(widgetMessageCount);
   const timerRef = useRef(null);
 
   const showControls = useCallback(() => {
@@ -71,7 +73,12 @@ export default function CineSortePlayer({
     showControls();
   }, [playing, showControls]);
 
+  useEffect(() => {
+    if (!fullscreen || widgetOpen) setLastReadWidgetCount(widgetMessageCount);
+  }, [fullscreen, widgetMessageCount, widgetOpen]);
+
   const hasTimeline = Number.isFinite(duration) && duration > 0 && onSeek;
+  const unreadWidgetCount = Math.max(0, widgetMessageCount - lastReadWidgetCount);
   return (
     <section
       ref={playerRef}
@@ -106,6 +113,7 @@ export default function CineSortePlayer({
               aria-label="Abrir chat"
             >
               <MessageCircle size={19} />
+              {unreadWidgetCount > 0 && <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-red-600 px-1 text-[9px] font-black leading-none text-white shadow-[0_0_0_2px_rgba(0,0,0,.85)]">{unreadWidgetCount > 99 ? "99+" : unreadWidgetCount}</span>}
             </button>
           )}
           <button

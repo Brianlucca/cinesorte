@@ -40,6 +40,9 @@ export function useScreenShareSession(
       parameters.encodings[0].maxBitrate =
         Math.max(500, selected.bitrateKbps || 4500) * 1000;
       parameters.encodings[0].maxFramerate = selected.fps || 30;
+      parameters.encodings[0].priority = "high";
+      parameters.encodings[0].networkPriority = "high";
+      parameters.degradationPreference = selected.degradationPreference || "maintain-resolution";
       parameters.encodings[0].scaleResolutionDownBy = Math.max(
         1,
         sourceHeight / (selected.height || sourceHeight),
@@ -57,6 +60,15 @@ export function useScreenShareSession(
         .filter(({ track }) => track?.kind === "video")
         .forEach(configureVideoSender),
     );
+    const track = localStreamRef.current?.getVideoTracks?.()[0];
+    const selected = qualityRef.current;
+    if (track && selected) {
+      track.contentHint = "detail";
+      track.applyConstraints?.({
+        frameRate: { ideal: selected.fps || 30, max: selected.fps || 30 },
+        height: { ideal: selected.height || 1080, max: selected.height || 1080 },
+      }).catch(() => undefined);
+    }
   }, [configureVideoSender, quality]);
 
   const sendSignal = useCallback((type, payload = {}, targetId) => {
@@ -259,6 +271,10 @@ export function useScreenShareSession(
       let height = 0;
       let fps = 0;
       let rtt = 0;
+      let jitter = 0;
+      let framesDropped = 0;
+      let qualityLimitationReason = "none";
+      let availableOutgoingBitrate = 0;
       let direction = localStreamRef.current ? "upload" : "download";
       for (const peer of peers) {
         const reports = await peer.getStats();
@@ -275,13 +291,20 @@ export function useScreenShareSession(
             width = Math.max(width, report.frameWidth || 0);
             height = Math.max(height, report.frameHeight || 0);
             fps = Math.max(fps, report.framesPerSecond || 0);
+            jitter = Math.max(jitter, (report.jitter || 0) * 1000);
+            framesDropped += report.framesDropped || 0;
           }
+          if (report.type === "outbound-rtp" && report.kind === "video")
+            qualityLimitationReason = report.qualityLimitationReason || qualityLimitationReason;
           if (
             report.type === "candidate-pair" &&
             report.nominated &&
             report.state === "succeeded"
           )
+          {
             rtt = Math.max(rtt, (report.currentRoundTripTime || 0) * 1000);
+            availableOutgoingBitrate = Math.max(availableOutgoingBitrate, report.availableOutgoingBitrate || 0);
+          }
         });
       }
       const now = Date.now();
@@ -299,6 +322,10 @@ export function useScreenShareSession(
         fps: Math.round(fps),
         rttMs: Math.round(rtt),
         packetsLost,
+        jitterMs: Math.round(jitter),
+        framesDropped,
+        qualityLimitationReason,
+        availableOutgoingKbps: Math.round(availableOutgoingBitrate / 1000),
         peers: peers.length,
         connectionState: peers[0].connectionState,
         iceState: peers[0].iceConnectionState,
@@ -323,6 +350,8 @@ export function useScreenShareSession(
     (stream) => {
       if (!stream?.getVideoTracks().length)
         throw new Error("O vídeo não gerou uma faixa para transmissão.");
+      const videoTrack = stream.getVideoTracks()[0];
+      videoTrack.contentHint = "detail";
       localStreamRef.current = stream;
       setLocalStream(stream);
       setConnectionState("waiting");
@@ -351,9 +380,14 @@ export function useScreenShareSession(
     setError("");
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { frameRate: { ideal: 30, max: 60 } },
+        video: {
+          frameRate: { ideal: qualityRef.current?.fps || 30, max: qualityRef.current?.fps || 30 },
+          height: { ideal: qualityRef.current?.height || 1080, max: qualityRef.current?.height || 1080 },
+        },
         audio: true,
       });
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) videoTrack.contentHint = "detail";
       localStreamRef.current = stream;
       setLocalStream(stream);
       setConnectionState("waiting");

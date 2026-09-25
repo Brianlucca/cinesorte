@@ -147,6 +147,7 @@ export default function LocalVideoStage({
   isHost,
   allowGuestControl,
   cinemaWidget,
+  widgetMessageCount = 0,
   onBroadcastStateChange,
   compact = false,
 }) {
@@ -597,6 +598,7 @@ export default function LocalVideoStage({
             : (value) => setViewerVolume(value / 100)
         }
         widget={cinemaWidget}
+        widgetMessageCount={widgetMessageCount}
         compact={compact}
         className={compact ? "h-full min-h-0" : "aspect-video min-h-[260px]"}
       >

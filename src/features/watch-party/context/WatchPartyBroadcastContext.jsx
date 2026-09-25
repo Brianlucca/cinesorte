@@ -210,6 +210,7 @@ export function WatchPartyBroadcastProvider({ children }) {
       isHost
       allowGuestControl={broadcast.allowGuestControl}
       cinemaWidget={broadcast.cinemaWidget}
+      widgetMessageCount={broadcast.widgetMessageCount}
       onBroadcastStateChange={reportState}
       compact={docked}
     />
@@ -228,7 +229,7 @@ export function WatchPartyBroadcastProvider({ children }) {
   );
 }
 
-export function PersistentHostBroadcast({ roomId, service, allowGuestControl, cinemaWidget }) {
+export function PersistentHostBroadcast({ roomId, service, allowGuestControl, cinemaWidget, widgetMessageCount = 0 }) {
   const context = useContext(BroadcastContext);
   const detach = context?.detach;
   const targetRef = useRef(null);
@@ -236,13 +237,13 @@ export function PersistentHostBroadcast({ roomId, service, allowGuestControl, ci
   const attachTarget = useCallback((node) => {
     targetRef.current = node;
     if (node && !hasOtherActiveBroadcast)
-      context?.mount({ roomId, service, allowGuestControl, cinemaWidget }, node);
-  }, [allowGuestControl, cinemaWidget, context, hasOtherActiveBroadcast, roomId, service]);
+      context?.mount({ roomId, service, allowGuestControl, cinemaWidget, widgetMessageCount }, node);
+  }, [allowGuestControl, cinemaWidget, context, hasOtherActiveBroadcast, roomId, service, widgetMessageCount]);
 
   useLayoutEffect(() => {
     if (targetRef.current && !hasOtherActiveBroadcast)
-      context?.mount({ roomId, service, allowGuestControl, cinemaWidget }, targetRef.current);
-  }, [allowGuestControl, cinemaWidget, context, hasOtherActiveBroadcast, roomId, service]);
+      context?.mount({ roomId, service, allowGuestControl, cinemaWidget, widgetMessageCount }, targetRef.current);
+  }, [allowGuestControl, cinemaWidget, context, hasOtherActiveBroadcast, roomId, service, widgetMessageCount]);
   useLayoutEffect(() => () => detach?.(roomId), [detach, roomId]);
 
   if (hasOtherActiveBroadcast)

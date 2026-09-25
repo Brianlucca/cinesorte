@@ -58,14 +58,14 @@ export default function MyPartyRooms({ rooms, loading = false }) {
             <History size={14} /> Sua atividade
           </p>
           <h2 className="mt-2 text-2xl font-black tracking-[-0.03em] text-white">
-            Minha sala
+            Meu canal
           </h2>
           <p className="mt-1 text-xs text-zinc-600">
-            Sua transmissão fica vinculada ao seu perfil.
+            Um canal permanente vinculado ao seu perfil.
           </p>
         </div>
         <span className="rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-2 text-[9px] font-black uppercase tracking-wider text-zinc-500">
-          {rooms.length} {rooms.length === 1 ? "sala" : "salas"}
+          {rooms.length ? "Canal criado" : "Sem canal"}
         </span>
       </div>
 
@@ -126,7 +126,7 @@ export default function MyPartyRooms({ rooms, loading = false }) {
                   onClick={() => navigate(`/app/watch-party/${room.id}`)}
                   className="mt-3 flex w-full items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-3 text-[9px] font-black uppercase tracking-[0.1em] text-zinc-200 transition-colors hover:bg-white hover:text-zinc-950"
                 >
-                  <span>Entrar na sala</span>
+                  <span>Abrir estúdio</span>
                   <ArrowRight size={14} />
                 </button>
               </article>
@@ -137,10 +137,10 @@ export default function MyPartyRooms({ rooms, loading = false }) {
         <div className="mt-5 rounded-[1.35rem] border border-dashed border-white/[0.08] bg-white/[0.015] px-6 py-10 text-center">
           <History size={24} className="mx-auto text-zinc-700" />
           <p className="mt-3 text-sm font-bold text-zinc-500">
-            Nenhuma sala criada ainda
+            Você ainda não criou seu canal
           </p>
           <p className="mt-1 text-xs text-zinc-700">
-            Suas próximas sessões aparecerão aqui.
+            Crie uma vez e volte quando quiser transmitir.
           </p>
         </div>
       )}

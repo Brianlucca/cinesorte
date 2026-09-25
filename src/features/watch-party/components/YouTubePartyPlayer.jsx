@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CirclePlay } from "lucide-react";
 import CineSortePlayer from "@shared/components/cinesorte-player";
 
-export default function YouTubePartyPlayer({ video, playback, command, onControl, onEnded, canControl = true, cinemaWidget }) {
+export default function YouTubePartyPlayer({ video, playback, command, onControl, onEnded, canControl = true, cinemaWidget, widgetMessageCount = 0 }) {
   const iframeRef = useRef(null);
   const endedVideoRef = useRef(null);
   const [currentTime, setCurrentTime] = useState(playback.position || 0);
@@ -33,7 +33,7 @@ export default function YouTubePartyPlayer({ video, playback, command, onControl
 
   const seekRelative = (amount) => onControl("seek", Math.max(0, currentTime + amount));
   const toggle = () => onControl(playback.status === "playing" ? "pause" : "play", currentTime);
-  return <CineSortePlayer title={video?.title || "Sala do YouTube"} status={playback.status === "playing" ? "Transmitindo" : "Sincronizado"} playing={playback.status === "playing"} currentTime={currentTime} onTogglePlayback={video && canControl ? toggle : undefined} onSeekBy={video && canControl ? seekRelative : undefined} widget={cinemaWidget} className="aspect-video min-h-[240px] rounded-[1.5rem] border border-white/[0.08] shadow-[0_30px_100px_rgba(0,0,0,0.5)]">
+  return <CineSortePlayer title={video?.title || "Sala do YouTube"} status={playback.status === "playing" ? "Transmitindo" : "Sincronizado"} playing={playback.status === "playing"} currentTime={currentTime} onTogglePlayback={video && canControl ? toggle : undefined} onSeekBy={video && canControl ? seekRelative : undefined} widget={cinemaWidget} widgetMessageCount={widgetMessageCount} className="aspect-video min-h-[240px] rounded-[1.5rem] border border-white/[0.08] shadow-[0_30px_100px_rgba(0,0,0,0.5)]">
     {video ? <iframe ref={iframeRef} key={video.videoId} src={embedUrl} title={video.title} allow="autoplay; encrypted-media; picture-in-picture" className="absolute inset-0 h-full w-full border-0" /> : <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(circle_at_50%_30%,rgba(124,58,237,0.15),transparent_38%)] p-8 text-center"><div><span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-violet-400/15 bg-violet-500/10 text-violet-300"><CirclePlay size={28} /></span><h2 className="mt-5 text-xl font-black text-white">A tela está pronta</h2><p className="mt-2 text-sm text-zinc-600">Adicione um vídeo do YouTube para começar a sessão.</p></div></div>}
   </CineSortePlayer>;
 }

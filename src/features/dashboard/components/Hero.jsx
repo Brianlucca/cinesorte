@@ -7,7 +7,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Maximize2,
+  Radio,
   Star,
+  UsersRound,
   Volume2,
 } from "lucide-react";
 
@@ -63,7 +65,8 @@ export default function Hero({
   const firstSlideTimerRef = useRef(true);
   const didMountIndexRef = useRef(false);
   const item = items[currentIndex] || items[0];
-  const videoKey = item?.trailerKey || item?.key;
+  const isLive = item?.kind === "watch-party";
+  const videoKey = isLive ? null : item?.trailerKey || item?.key;
 
   const closeCinemaMode = useCallback(
     (advanceToNext = false, resumeAt = cinemaMode.startAt) => {
@@ -192,6 +195,9 @@ export default function Hero({
   const year = getYear(item);
   const rating = Number(item.vote_average || 0).toFixed(1);
   const videoIsReady = Boolean(videoKey && readyVideoKey === videoKey);
+  const backdrop = isLive
+    ? item.backdrop_path
+    : `https://image.tmdb.org/t/p/original${item.backdrop_path}`;
 
   const changeSlide = (direction) => {
     setCurrentIndex((previous) => {
@@ -215,14 +221,14 @@ export default function Hero({
       aria-label="Destaques"
     >
       <div key={item.id} className="absolute inset-0 hero-slide-reveal">
-        <img
-          src={`https://image.tmdb.org/t/p/original${item.backdrop_path}`}
+        {backdrop ? <img
+          src={backdrop}
           alt=""
           className={`w-full h-full object-cover object-center hero-ken-burns transition-opacity duration-700 ${
             videoIsReady ? "opacity-0" : "opacity-100"
           }`}
           fetchPriority="high"
-        />
+        /> : <div className="h-full w-full bg-[radial-gradient(circle_at_70%_30%,rgba(124,58,237,.32),transparent_38%),linear-gradient(135deg,#211638,#09090b)]" />}
         {videoKey && (
           <iframe
             ref={videoIframeRef}
@@ -256,7 +262,7 @@ export default function Hero({
           <div className="flex items-center gap-3 mb-5">
             <span className="h-px w-8 md:w-12 bg-violet-400" />
             <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.28em] text-violet-300">
-              Seleção CineSorte
+              {isLive ? "CineParty · Ao vivo" : "Seleção CineSorte"}
             </span>
           </div>
 
@@ -265,18 +271,20 @@ export default function Hero({
           </h1>
 
           <div className="mt-5 md:mt-7 flex flex-wrap items-center gap-2.5 md:gap-3 text-xs md:text-sm font-semibold text-zinc-200">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-yellow-300/20 bg-yellow-300/10 px-3 py-1.5 text-yellow-200 backdrop-blur-md">
+            {isLive ? <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 text-white"><Radio size={13} /> Ao vivo</span> : <span className="inline-flex items-center gap-1.5 rounded-full border border-yellow-300/20 bg-yellow-300/10 px-3 py-1.5 text-yellow-200 backdrop-blur-md">
               <Star size={14} className="fill-yellow-300 text-yellow-300" />
               {rating}
-            </span>
-            {year && (
+            </span>}
+            {isLive && <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/30 px-3 py-1.5"><UsersRound size={14} /> {item.participantCount} assistindo</span>}
+            {!isLive && year && (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/20 px-3 py-1.5 backdrop-blur-md">
                 <Calendar size={14} /> {year}
               </span>
             )}
-            <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 uppercase tracking-wider backdrop-blur-md">
+            {!isLive && <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 uppercase tracking-wider backdrop-blur-md">
               {mediaType === "tv" ? "Série" : "Filme"}
-            </span>
+            </span>}
+            {isLive && <span className="text-sm font-bold text-zinc-300">@{item.host?.username}</span>}
           </div>
 
           {item.overview && (
@@ -287,10 +295,10 @@ export default function Hero({
 
           <div className="mt-7 md:mt-9 flex items-center gap-3">
             <Link
-              to={`/app/${mediaType}/${item.id}`}
+              to={isLive ? "/app/watch-party/" + item.roomId : `/app/${mediaType}/${item.id}`}
               className="group/button inline-flex items-center gap-3 rounded-full bg-white px-6 md:px-8 py-3 md:py-3.5 text-sm font-black text-zinc-950 shadow-xl shadow-black/20 transition-all hover:bg-violet-100 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
             >
-              Ver detalhes
+              {isLive ? "Assistir agora" : "Ver detalhes"}
               <ArrowRight
                 size={18}
                 className="transition-transform group-hover/button:translate-x-1"
@@ -357,12 +365,12 @@ export default function Hero({
                 }`}
               >
                 <div className="relative aspect-[16/5]">
-                  <img
-                    src={`https://image.tmdb.org/t/p/w300${slide.backdrop_path}`}
+                  {slide.backdrop_path ? <img
+                    src={slide.kind === "watch-party" ? slide.backdrop_path : `https://image.tmdb.org/t/p/w300${slide.backdrop_path}`}
                     alt=""
                     className="h-full w-full object-cover"
                     loading="lazy"
-                  />
+                  /> : <div className="h-full w-full bg-violet-950" />}
                   <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/35 to-transparent" />
                   <span className="absolute inset-y-0 left-3 flex max-w-[75%] items-center text-[11px] font-bold text-white line-clamp-2">
                     {slide.title || slide.name}
