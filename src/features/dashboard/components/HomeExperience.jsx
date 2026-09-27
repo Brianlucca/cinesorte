@@ -4,8 +4,11 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
+  Heart,
   Layers3,
+  MessageCircle,
   Plus,
+  Star,
 } from "lucide-react";
 import { useAuth } from "@shared/context/useAuth";
 
@@ -37,6 +40,12 @@ function mediaPath(item = {}) {
   const id = item.mediaId || item.id;
   if (!id) return "/app";
   return `/app/${mediaType === "tv" ? "tv" : "movie"}/${String(id).replace(/^(movie-|tv-)/, "")}`;
+}
+
+function reviewExcerpt(text = "") {
+  if (!text) return "Avaliação registrada sem comentário.";
+  if (/\|\|[^|]+\|\|/.test(text)) return "Esta avaliação contém spoilers.";
+  return text.replace(/\*\*|\*/g, "").replace(/^>\s?/gm, "").trim();
 }
 
 function MediaImage({ item, size = "w500", preferred = "poster", className = "" }) {
@@ -184,6 +193,80 @@ function TopRail({ items = [] }) {
           <TopItemCard key={`${getMediaType(item)}-${item.id || item.mediaId}`} item={item} index={index} />
         ))}
         <div className="w-1 flex-none md:w-6" aria-hidden="true" />
+      </div>
+    </SectionShell>
+  );
+}
+
+function ReviewSpotlight({ items = [] }) {
+  const reviews = items
+    .filter((item) => item.type !== "list_share" && item.mediaTitle)
+    .slice(0, 4);
+  const [featuredReview, ...recentReviews] = reviews;
+
+  if (!featuredReview) return null;
+
+  return (
+    <SectionShell
+      title="Reviews em destaque"
+      eyebrow="A conversa começa aqui"
+      actionTo="/app/feed"
+      actionLabel="Ver todas"
+    >
+      <div className={`space-y-3 pt-5 md:pt-6 ${PAGE_X}`}>
+        <Link
+          to={mediaPath(featuredReview)}
+          className="group/review relative block min-h-[380px] overflow-hidden rounded-xl border border-white/[0.06] bg-[#181a20] sm:min-h-[430px]"
+        >
+          <MediaImage
+            item={{ poster_path: featuredReview.posterPath, backdrop_path: featuredReview.backdropPath }}
+            size="w1280"
+            preferred="backdrop"
+            className="absolute inset-0 h-full w-full opacity-75 transition duration-700 group-hover/review:scale-[1.025] group-hover/review:opacity-85"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,18,22,0.92)_0%,rgba(17,18,22,0.66)_44%,rgba(17,18,22,0.10)_82%),linear-gradient(0deg,#111216_0%,rgba(17,18,22,0.72)_24%,rgba(17,18,22,0.08)_72%)]" />
+          <div className="absolute inset-x-0 bottom-0 max-w-4xl p-6 sm:p-9 lg:p-11">
+            <div className="flex items-center gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-zinc-800 text-sm font-semibold uppercase text-zinc-300">
+                {featuredReview.userPhoto ? <img src={featuredReview.userPhoto} alt="" className="h-full w-full object-cover" /> : (featuredReview.username || "C")[0]}
+              </span>
+              <span className="text-base font-semibold text-zinc-100">@{featuredReview.username || "cinesorte"}</span>
+              {featuredReview.rating !== null && featuredReview.rating !== undefined && (
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-black/45 px-3 py-2 text-sm font-semibold text-yellow-300 backdrop-blur-md">
+                  <Star size={14} className="fill-current" />
+                  {Number(featuredReview.rating).toFixed(1)}
+                </span>
+              )}
+            </div>
+            <p className="mt-7 text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">Review em destaque sobre</p>
+            <h3 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-white sm:text-4xl">{featuredReview.mediaTitle}</h3>
+            <p className="mt-4 line-clamp-3 max-w-3xl text-base leading-7 text-zinc-200 sm:text-lg sm:leading-8">{reviewExcerpt(featuredReview.text)}</p>
+            <div className="mt-7 flex items-center gap-5 text-xs text-zinc-300">
+              <span className="inline-flex items-center gap-1.5"><Heart size={14} /> {featuredReview.likesCount || 0}</span>
+              <span className="inline-flex items-center gap-1.5"><MessageCircle size={14} /> {featuredReview.commentsCount || 0}</span>
+              <span className="ml-2 inline-flex items-center gap-2 font-semibold text-white">Ler review completa <ArrowRight size={14} /></span>
+            </div>
+          </div>
+        </Link>
+
+        <div className="grid border-y border-white/[0.06] sm:grid-cols-2 lg:grid-cols-3 lg:divide-x lg:divide-white/[0.06]">
+          {recentReviews.map((review) => (
+            <Link key={review.uniqueKey || review.id} to={mediaPath(review)} className="group/item grid grid-cols-[58px_minmax(0,1fr)] gap-3 border-b border-white/[0.06] px-0 py-4 sm:px-4 lg:border-b-0 lg:first:pl-0 lg:last:pr-0">
+              <MediaImage item={{ poster_path: review.posterPath, backdrop_path: review.backdropPath }} size="w342" className="aspect-[2/3] w-[58px] rounded-lg bg-zinc-900" />
+              <span className="min-w-0 self-center">
+                <span className="flex items-center gap-2">
+                  <span className="truncate text-xs font-semibold text-zinc-300">@{review.username || "cinesorte"}</span>
+                  {review.rating !== null && review.rating !== undefined && <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-yellow-300"><Star size={11} className="fill-current" /> {Number(review.rating).toFixed(1)}</span>}
+                </span>
+                <span className="mt-1 block truncate text-sm font-semibold text-white transition-colors group-hover/item:text-violet-300">{review.mediaTitle}</span>
+                <span className="mt-1 line-clamp-1 block text-xs text-zinc-500">{reviewExcerpt(review.text)}</span>
+              </span>
+            </Link>
+          ))}
+          {recentReviews.length === 0 && (
+            <div className="flex min-h-24 items-center text-sm leading-6 text-zinc-500">As próximas reviews da comunidade aparecerão aqui.</div>
+          )}
+        </div>
       </div>
     </SectionShell>
   );
@@ -361,7 +444,7 @@ function SuggestionChip({ user }) {
 function CommunitySection({ items = [], suggestions = [] }) {
   const communityRef = useRef(null);
   const suggestionsRef = useRef(null);
-  const featuredItems = items.slice(0, 6);
+  const featuredItems = items.filter((item) => item.type === "list_share").slice(0, 6);
   const visibleSuggestions = suggestions.slice(0, 8);
   const communityKey = featuredItems.map((item) => `${item.type}-${item.id}`).join("|");
   const suggestionsKey = visibleSuggestions.map((user) => user.username).join("|");
@@ -412,6 +495,10 @@ export default function HomeExperience({ variant, data, socialItems = [], sugges
 
   if (variant === "library") {
     return <LibrarySection lists={lists} />;
+  }
+
+  if (variant === "reviews") {
+    return <ReviewSpotlight items={socialItems} />;
   }
 
   if (variant === "community") {
