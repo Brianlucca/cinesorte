@@ -157,13 +157,23 @@ export default function InTheaters({ items = [] }) {
   return (
     <section className="relative overflow-hidden">
       <div className="flex flex-col gap-3 px-5 sm:px-6 md:flex-row md:items-end md:justify-between md:px-10 xl:px-14 2xl:px-16">
-          <div>
+          <div className="flex items-end justify-between gap-3">
+            <div className="min-w-0">
             <span className="mb-1 flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-violet-300/75">
               <MapPin size={12} /> Perto de você
             </span>
             <h2 className="text-lg font-semibold tracking-[-0.02em] text-zinc-100 sm:text-xl md:text-2xl">
               {location.cityName ? `Nos cinemas em ${location.cityName}` : "Nos cinemas"}
             </h2>
+            </div>
+            <div className="flex shrink-0 gap-2 sm:hidden">
+              <button type="button" onClick={() => slide("left")} aria-label="Voltar filmes em cartaz" className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white">
+                <ChevronLeft size={18} />
+              </button>
+              <button type="button" onClick={() => slide("right")} aria-label="Avançar filmes em cartaz" className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white">
+                <ChevronRight size={18} />
+              </button>
+            </div>
           </div>
 
         <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
@@ -193,7 +203,7 @@ export default function InTheaters({ items = [] }) {
               ))}
             </SelectField>
           </div>
-          <div className="order-1 flex shrink-0 gap-2 sm:hidden">
+          <div className="hidden">
             <button type="button" onClick={() => slide("left")} aria-label="Voltar filmes em cartaz" className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white">
               <ChevronLeft size={18} />
             </button>
