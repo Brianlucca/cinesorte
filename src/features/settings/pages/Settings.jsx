@@ -46,17 +46,16 @@ function SettingPanel({ eyebrow, title, description, icon: Icon, children, tone 
   const iconNode = createElement(Icon, { size: 19 });
 
   return (
-    <section className="relative overflow-hidden rounded-[1.5rem] border border-white/[0.07] bg-[#0d0d11]/92 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.24)] backdrop-blur-xl md:p-5 lg:p-6">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(139,92,246,0.10),transparent_38%)]" />
-      <div className="relative">
+    <section className="rounded-xl border border-white/[0.06] bg-white/[0.018] p-4 md:p-5 lg:p-6">
+      <div>
         <div className="mb-6 flex flex-col justify-between gap-4 border-b border-white/[0.06] pb-5 sm:flex-row sm:items-start">
           <div className="flex gap-3">
             <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border ${toneClasses[tone]}`}>
               {iconNode}
             </span>
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.22em] text-zinc-500">{eyebrow}</p>
-              <h2 className="mt-1 text-xl font-black leading-tight tracking-[-0.025em] text-white sm:text-2xl">{title}</h2>
+              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-zinc-500">{eyebrow}</p>
+              <h2 className="mt-1 text-xl font-semibold leading-tight tracking-[-0.02em] text-white sm:text-2xl">{title}</h2>
               {description && <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">{description}</p>}
             </div>
           </div>
@@ -69,7 +68,7 @@ function SettingPanel({ eyebrow, title, description, icon: Icon, children, tone 
 
 function FieldLabel({ children, aside }) {
   return (
-    <label className="mb-2.5 flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
+    <label className="mb-2 flex items-center justify-between gap-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
       <span>{children}</span>
       {aside && <span className="text-[10px] font-bold normal-case tracking-normal text-zinc-600">{aside}</span>}
     </label>
@@ -80,7 +79,7 @@ function TextInput({ className = "", ...props }) {
   return (
     <input
       {...props}
-      className={`w-full rounded-2xl border border-white/[0.08] bg-black/20 px-4 py-3.5 text-sm font-medium text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-violet-400/50 focus:bg-white/[0.035] disabled:cursor-not-allowed disabled:opacity-55 ${className}`}
+      className={`h-12 w-full rounded-xl border border-white/[0.06] bg-white/[0.018] px-4 text-sm font-medium text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-violet-400/40 focus:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-55 ${className}`}
     />
   );
 }
@@ -123,8 +122,8 @@ function ProfileAvatar({ user, onEdit }) {
   return (
     <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
       <div className="relative shrink-0">
-        <div className="relative h-28 w-28 overflow-hidden rounded-[1.35rem] border border-white/10 bg-zinc-900 p-1.5 shadow-[0_20px_52px_rgba(0,0,0,0.38)]">
-          <div className="group relative h-full w-full overflow-hidden rounded-[1.1rem] bg-zinc-900">
+        <div className="relative h-24 w-24 overflow-hidden rounded-xl border border-white/[0.08] bg-zinc-900 p-1">
+          <div className="group relative h-full w-full overflow-hidden rounded-lg bg-zinc-900">
             {user?.photoURL ? (
               <img src={user.photoURL} alt={user.name || "Avatar"} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
             ) : (
@@ -153,8 +152,8 @@ function ProfileAvatar({ user, onEdit }) {
       </div>
 
       <div className="min-w-0">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-300">Identidade pública</p>
-        <h3 className="mt-1 break-words text-2xl font-black tracking-[-0.035em] text-white sm:text-3xl">{user?.name || "Seu perfil"}</h3>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">Identidade pública</p>
+        <h3 className="mt-1 break-words text-2xl font-semibold tracking-[-0.03em] text-white">{user?.name || "Seu perfil"}</h3>
         <p className="mt-2 text-sm leading-6 text-zinc-500">Ajuste como seu perfil aparece para a comunidade CineSorte.</p>
       </div>
     </div>
@@ -399,18 +398,16 @@ export default function Settings() {
   }, [activeTab, loadSecurityOverview, user]);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#08080b] pb-24 text-white animate-in fade-in duration-700">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(124,58,237,0.10),transparent_30%),radial-gradient(circle_at_88%_22%,rgba(14,165,233,0.05),transparent_28%)]" />
-
-      <div className="relative mx-auto w-full max-w-[1600px] px-4 pt-8 sm:px-6 md:px-10 md:pt-10 xl:px-14">
+    <div className="min-h-screen bg-[#111216] pb-24 text-white animate-in fade-in duration-500">
+      <div className="mx-auto w-full max-w-[1500px] px-4 pt-8 sm:px-6 md:px-10 md:pt-10 xl:px-14">
         <header className="border-b border-white/[0.07] pb-6 md:pb-8">
           <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
             <div>
-              <div className="mb-3 flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.24em] text-violet-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-violet-400 shadow-[0_0_12px_rgba(167,139,250,0.8)]" />
+              <div className="mb-3 flex items-center gap-2 text-[9px] font-semibold uppercase tracking-[0.2em] text-violet-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
                 Central da conta
               </div>
-              <h1 className="text-3xl font-black leading-tight tracking-[-0.04em] text-white sm:text-4xl">Configurações</h1>
+              <h1 className="text-3xl font-semibold leading-tight tracking-[-0.035em] text-white sm:text-4xl">Configurações</h1>
               <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-500">
                 Controle seus dados, segurança e canais de suporte sem sair do visual do CineSorte.
               </p>
@@ -429,7 +426,7 @@ export default function Settings() {
           </div>
         </header>
 
-        <div className="mt-7 grid grid-cols-1 gap-6 xl:grid-cols-[310px_minmax(0,1fr)] xl:gap-8">
+        <div className="mt-7 grid grid-cols-1 gap-6 xl:grid-cols-[250px_minmax(0,1fr)] xl:gap-8">
           <SettingsSidebar
             menuItems={menuItems}
             activeTab={activeTab}
@@ -481,7 +478,7 @@ export default function Settings() {
                           onChange={(event) => actions.handleInputChange("bio", event.target.value)}
                           maxLength={300}
                           rows={5}
-                          className="w-full resize-none rounded-2xl border border-white/[0.08] bg-black/20 px-4 py-3.5 text-sm font-medium leading-6 text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-violet-400/50 focus:bg-white/[0.035]"
+                          className="w-full resize-none rounded-xl border border-white/[0.06] bg-white/[0.018] px-4 py-3 text-sm font-medium leading-6 text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-violet-400/40 focus:bg-white/[0.03]"
                           placeholder="Conte um pouco sobre você..."
                         />
                       </div>
@@ -490,7 +487,7 @@ export default function Settings() {
                         <button
                           type="submit"
                           disabled={ui.isLoading}
-                          className="inline-flex w-full items-center justify-center gap-2.5 rounded-xl bg-white px-5 py-3.5 text-[10px] font-black uppercase tracking-[0.13em] text-black transition-all hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98] sm:w-auto"
+                          className="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-xl bg-white px-5 text-sm font-semibold text-black transition-colors hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
                           <Save size={16} />
                           {ui.isLoading ? "Salvando" : "Salvar alterações"}

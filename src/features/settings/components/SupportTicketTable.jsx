@@ -145,24 +145,24 @@ export default function SupportTicketTable({ tickets, isLoading, onRefresh }) {
 
   return (
     <>
-      <section className="min-h-[520px] rounded-[1.5rem] border border-white/[0.07] bg-[#0d0d11]/92 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.24)] backdrop-blur-xl md:p-5 lg:p-6">
+      <section className="min-h-[420px] rounded-xl border border-white/[0.06] bg-white/[0.018] p-4 md:p-5 lg:p-6">
         <div className="mb-6 flex flex-col justify-between gap-4 border-b border-white/[0.06] pb-5 sm:flex-row sm:items-center">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-zinc-500">Histórico de suporte</p>
-            <h4 className="mt-1 text-xl font-black tracking-[-0.025em] text-white">Meus protocolos</h4>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Histórico de suporte</p>
+            <h4 className="mt-1 text-xl font-semibold tracking-[-0.02em] text-white">Meus protocolos</h4>
             <p className="mt-2 text-sm leading-6 text-zinc-500">Visualização rápida dos chamados já enviados.</p>
           </div>
           <button
             type="button"
             onClick={onRefresh}
             disabled={isLoading}
-            className="inline-flex w-full items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.035] px-5 py-3 text-[10px] font-black uppercase tracking-[0.13em] text-zinc-200 transition-colors hover:bg-white hover:text-black disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            className="inline-flex h-10 w-full items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 text-xs font-semibold text-zinc-200 transition-colors hover:bg-white/[0.07] hover:text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
             {isLoading ? "Atualizando" : "Atualizar"}
           </button>
         </div>
 
-        <div className="hidden overflow-hidden rounded-2xl border border-white/[0.07] bg-black/20 md:block">
+        <div className="hidden overflow-hidden rounded-xl border border-white/[0.06] md:block">
           <div className="grid grid-cols-[1.1fr_1.3fr_0.75fr_0.9fr_0.9fr] gap-4 border-b border-white/[0.06] bg-white/[0.025] px-5 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
             <span>Protocolo</span>
             <span>Assunto</span>

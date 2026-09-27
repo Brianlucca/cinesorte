@@ -61,15 +61,13 @@ export default function SeasonDetails() {
     : null;
 
   return (
-    <div className="relative isolate -mt-24 min-h-screen overflow-x-hidden bg-zinc-950 pb-24 text-white md:-mt-8">
-      <header className="relative h-[76svh] min-h-[650px] max-h-[780px]">
+    <div className="relative isolate -mt-24 min-h-screen overflow-x-hidden bg-[#101115] pb-24 text-white md:-mt-8">
+      <header className="relative h-[70svh] min-h-[580px] max-h-[720px]">
         <div
           className="pointer-events-none absolute inset-x-0 top-0 -bottom-48"
           style={{
-            WebkitMaskImage:
-              "linear-gradient(to bottom, black 0%, black 60%, rgba(0,0,0,0.78) 78%, rgba(0,0,0,0.22) 92%, transparent 100%)",
-            maskImage:
-              "linear-gradient(to bottom, black 0%, black 60%, rgba(0,0,0,0.78) 78%, rgba(0,0,0,0.22) 92%, transparent 100%)",
+            WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 70%, transparent 100%)",
+            maskImage: "linear-gradient(to bottom, black 0%, black 70%, transparent 100%)",
           }}
         >
           {backdrop ? (
@@ -77,23 +75,22 @@ export default function SeasonDetails() {
           ) : (
             <div className="h-full w-full bg-gradient-to-br from-violet-950/30 to-zinc-950" />
           )}
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,9,11,0.98)_0%,rgba(9,9,11,0.82)_38%,rgba(9,9,11,0.25)_75%,rgba(9,9,11,0.12)_100%)]" />
-          <div className="absolute inset-0 bg-[linear-gradient(0deg,#09090b_0%,rgba(9,9,11,0.86)_12%,transparent_55%,rgba(9,9,11,0.35)_100%)]" />
-          <div className="absolute -bottom-20 left-[20%] h-80 w-[34rem] rounded-full bg-violet-700/10 blur-[120px]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(16,17,21,0.96)_0%,rgba(16,17,21,0.72)_42%,rgba(16,17,21,0.12)_80%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(0deg,#101115_0%,rgba(16,17,21,0.72)_18%,transparent_58%,rgba(16,17,21,0.25)_100%)]" />
         </div>
-        <div className="pointer-events-none absolute inset-x-0 -bottom-44 z-[1] h-72 bg-gradient-to-b from-transparent via-zinc-950/70 to-zinc-950" />
+        <div className="pointer-events-none absolute inset-x-0 -bottom-32 z-[1] h-64 bg-gradient-to-b from-transparent via-[#101115]/70 to-[#101115]" />
 
-        <div className="relative z-10 mx-auto flex h-full max-w-[1600px] flex-col px-5 pb-20 pt-28 sm:px-8 md:px-12 md:pb-24 xl:px-16">
+        <div className="relative z-10 mx-auto flex h-full max-w-[1380px] flex-col px-5 pb-12 pt-28 sm:px-8 md:px-10 md:pb-16 xl:px-12">
           <Link
             to={`/app/tv/${tvId}`}
-            className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-black/25 px-4 py-2.5 text-xs font-bold text-zinc-200 backdrop-blur-xl transition-all hover:bg-white hover:text-black"
+            className="inline-flex w-fit items-center gap-2 rounded-full bg-black/30 px-4 py-2.5 text-xs font-medium text-zinc-200 backdrop-blur-md transition-colors hover:bg-white hover:text-black"
           >
             <ArrowLeft size={16} /> Voltar para a série
           </Link>
 
           <div className="mt-auto flex items-end gap-7 xl:gap-10">
             {seasonPoster && (
-              <div className="hidden w-[180px] shrink-0 overflow-hidden rounded-[1.5rem] border border-white/15 bg-zinc-900 shadow-[0_30px_70px_rgba(0,0,0,0.65)] md:block xl:w-[210px]">
+              <div className="hidden w-[165px] shrink-0 overflow-hidden rounded-xl bg-zinc-900 shadow-[0_18px_48px_rgba(0,0,0,0.45)] md:block xl:w-[190px]">
                 <img
                   src={seasonPoster}
                   alt={`Pôster de ${seasonData.name}`}
@@ -103,10 +100,10 @@ export default function SeasonDetails() {
             )}
 
             <div className="max-w-3xl pb-1">
-              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-violet-300">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
                 {tvShow?.name || "Série"}
               </span>
-              <h1 className="mt-3 text-4xl font-black leading-[0.95] tracking-[-0.04em] text-white sm:text-5xl md:text-[3rem] xl:text-[3.45rem]">
+              <h1 className="mt-2 text-4xl font-semibold leading-[0.98] tracking-[-0.045em] text-white sm:text-5xl xl:text-[3.2rem]">
                 {seasonData.name}
               </h1>
               {seasonData.overview && (
@@ -115,20 +112,20 @@ export default function SeasonDetails() {
                 </p>
               )}
 
-              <div className="mt-6 flex flex-wrap gap-2.5 text-xs font-semibold text-zinc-300">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+              <div className="mt-5 flex flex-wrap gap-4 text-xs font-medium text-zinc-300">
+                <span className="inline-flex items-center gap-1.5">
                   <Calendar size={14} /> {seasonData.air_date?.slice(0, 4) || "TBA"}
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+                <span className="inline-flex items-center gap-1.5">
                   <ListVideo size={14} /> {episodes.length} episódios
                 </span>
                 {averageRuntime && (
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+                  <span className="inline-flex items-center gap-1.5">
                     <Clock size={14} /> média de {averageRuntime} min
                   </span>
                 )}
                 {seasonData.vote_average > 0 && (
-                  <span className="inline-flex items-center gap-2 rounded-full border border-yellow-300/15 bg-yellow-300/[0.08] px-3 py-2 text-yellow-200 backdrop-blur-xl">
+                  <span className="inline-flex items-center gap-1.5 text-yellow-200">
                     <Star size={14} className="fill-yellow-300 text-yellow-300" />
                     {seasonData.vote_average.toFixed(1)}
                   </span>
@@ -139,29 +136,29 @@ export default function SeasonDetails() {
         </div>
       </header>
 
-      <div className="relative z-20 mx-auto -mt-8 grid max-w-[1600px] grid-cols-1 gap-10 px-5 sm:px-8 md:-mt-12 md:px-12 lg:grid-cols-12 lg:gap-12 xl:px-16">
+      <div className="relative z-20 mx-auto grid max-w-[1380px] grid-cols-1 gap-10 px-5 sm:px-8 md:px-10 lg:grid-cols-12 lg:gap-14 xl:px-12">
         <main className="lg:col-span-8 xl:col-span-9">
           <div className="mb-7 flex items-end justify-between gap-4 border-b border-white/[0.06] pb-5">
             <div>
-              <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
                 Guia da temporada
               </span>
-              <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">Episódios</h2>
+              <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">Episódios</h2>
             </div>
             <span className="text-xs font-semibold text-zinc-500">{episodes.length} no total</span>
           </div>
 
           {episodes.length > 0 ? (
-            <ol className="space-y-3.5">
+            <ol className="space-y-2.5">
               {episodes.map((episode) => {
                 const progress = watchProgress.find((item) => String(item.tmdbId) === String(tvId) && Number(item.seasonNumber) === Number(seasonData.season_number) && Number(item.episodeNumber) === Number(episode.episode_number));
                 return (
                 <li key={episode.id}>
                   <Link
                     to={`/app/tv/${tvId}/season/${seasonData.season_number}/episode/${episode.episode_number}`}
-                    className="group grid overflow-hidden rounded-[1.5rem] border border-white/[0.07] bg-gradient-to-br from-white/[0.035] to-white/[0.012] transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-300/25 sm:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)]"
+                    className="group grid overflow-hidden rounded-xl bg-white/[0.025] transition-colors hover:bg-white/[0.045] sm:grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-[230px_minmax(0,1fr)]"
                   >
-                    <div className="relative aspect-video overflow-hidden bg-zinc-900 sm:aspect-auto sm:min-h-[170px]">
+                    <div className="relative aspect-video overflow-hidden bg-zinc-900 sm:aspect-auto sm:min-h-[150px]">
                       {episode.still_path ? (
                         <img
                           src={`https://image.tmdb.org/t/p/w500${episode.still_path}`}
@@ -175,18 +172,18 @@ export default function SeasonDetails() {
                         </div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent sm:bg-gradient-to-r" />
-                      <span className="absolute bottom-3 left-3 rounded-full border border-white/15 bg-black/45 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white backdrop-blur-md">
+                      <span className="absolute bottom-3 left-3 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white backdrop-blur-md">
                         Episódio {episode.episode_number}
                       </span>
                     </div>
 
-                    <div className="flex min-w-0 flex-col justify-center p-5 md:p-6">
+                    <div className="flex min-w-0 flex-col justify-center p-4 md:p-5">
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
-                          <span className="text-[9px] font-black uppercase tracking-[0.18em] text-violet-400/80">
+                          <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-violet-300/80">
                             S{String(seasonData.season_number).padStart(2, "0")} · E{String(episode.episode_number).padStart(2, "0")}
                           </span>
-                          <h3 className="mt-1.5 text-lg font-black leading-tight text-white transition-colors group-hover:text-violet-200 md:text-xl">
+                          <h3 className="mt-1.5 text-base font-semibold leading-tight text-white transition-colors group-hover:text-violet-200 md:text-lg">
                             {episode.name}
                           </h3>
                         </div>
@@ -233,20 +230,20 @@ export default function SeasonDetails() {
         </main>
 
         <aside className="lg:col-span-4 xl:col-span-3">
-          <div className="rounded-[1.75rem] border border-white/[0.07] bg-gradient-to-br from-white/[0.04] to-transparent p-5 lg:sticky lg:top-24">
+          <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-5 lg:sticky lg:top-24">
             <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-violet-500/10 text-violet-300">
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-violet-500/10 text-violet-300">
                 <Layers3 size={17} />
               </span>
               <div>
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
+                <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
                   Navegação
                 </span>
-                <h2 className="text-base font-black text-white">Outras temporadas</h2>
+                <h2 className="text-base font-semibold text-white">Outras temporadas</h2>
               </div>
             </div>
 
-            <div className="content-scrollbar mt-5 max-h-[480px] space-y-2 overflow-y-auto pr-2">
+            <div className="scrollbar-hide mt-4 max-h-[480px] space-y-1.5 overflow-y-auto">
               {availableSeasons.map((season) => {
                 const isCurrent = season.season_number === seasonData.season_number;
                 return (
@@ -254,7 +251,7 @@ export default function SeasonDetails() {
                     key={season.id}
                     to={`/app/tv/${tvId}/season/${season.season_number}`}
                     aria-current={isCurrent ? "page" : undefined}
-                    className={`flex items-center gap-3 rounded-2xl border p-2.5 transition-all ${
+                    className={`flex items-center gap-3 rounded-lg border p-2.5 transition-colors ${
                       isCurrent
                         ? "border-violet-400/35 bg-violet-500/10"
                         : "border-transparent bg-white/[0.02] hover:border-white/[0.08] hover:bg-white/[0.045]"

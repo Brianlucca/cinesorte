@@ -2,33 +2,30 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, ChevronLeft, ChevronRight, Film, Star } from 'lucide-react';
 import {
-  getDiaryBackdropPath,
   getDiaryMediaTitle,
   getDiaryMediaTypeLabel,
   getDiaryPosterPath,
   tmdbImage,
 } from '@features/profile/components/diary/diaryUtils';
+import {
+  cancelMovieDetailsPrefetch,
+  prefetchMovieDetails,
+  scheduleMovieDetailsPrefetch,
+} from '@shared/lib/mediaDetailsPrefetch';
 
-const DIARY_PER_PAGE = 10;
+const DIARY_PER_PAGE = 12;
 
 function parseDate(value) {
   if (!value) return null;
   if (value._seconds) return new Date(value._seconds * 1000);
   if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
-
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function getItemDate(item) {
-  return (
-    parseDate(item.watchedAt) ||
-    parseDate(item.actionDate) ||
-    parseDate(item.timestamp) ||
-    parseDate(item.createdAt) ||
-    parseDate(item.updatedAt) ||
-    parseDate(item.sortDate)
-  );
+  return parseDate(item.watchedAt) || parseDate(item.actionDate) || parseDate(item.timestamp) ||
+    parseDate(item.createdAt) || parseDate(item.updatedAt) || parseDate(item.sortDate);
 }
 
 function mediaLink(item) {
@@ -36,164 +33,113 @@ function mediaLink(item) {
   return `/app/${item.mediaType || 'movie'}/${mediaId}`;
 }
 
-function formatDisplayDate(date) {
-  if (!date) return null;
-  return date.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
+function capitalize(value) {
+  return value ? value.charAt(0).toUpperCase() + value.slice(1) : value;
 }
 
 export default function Diary({ items }) {
   const [page, setPage] = useState(0);
-
   const normalizedItems = useMemo(() => {
-    const safeItems = Array.isArray(items) ? items : [];
-    return [...safeItems]
-      .map((item) => {
-        const itemDate = getItemDate(item);
-        return {
-          ...item,
-          mediaId: String(item.mediaId || item.id || '').replace(/^(movie-|tv-)/, ''),
-          mediaType: item.mediaType || item.media_type || 'movie',
-          posterPath: getDiaryPosterPath(item),
-          backdropPath: getDiaryBackdropPath(item),
-          displayDate: formatDisplayDate(itemDate),
-          timelineDay: itemDate?.toLocaleDateString('pt-BR', { day: '2-digit' }) || '--',
-          timelineMonth: itemDate?.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '') || 'sem data',
-          timelineYear: itemDate?.getFullYear() || '',
-          sortTime: itemDate?.getTime() || 0,
-        };
-      })
-      .sort((a, b) => b.sortTime - a.sortTime);
+    return [...(Array.isArray(items) ? items : [])].map((item) => {
+      const itemDate = getItemDate(item);
+      return {
+        ...item,
+        mediaId: String(item.mediaId || item.id || '').replace(/^(movie-|tv-)/, ''),
+        mediaType: item.mediaType || item.media_type || 'movie',
+        posterPath: getDiaryPosterPath(item),
+        day: itemDate?.toLocaleDateString('pt-BR', { day: '2-digit' }) || '--',
+        weekday: itemDate?.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '') || 'sem data',
+        monthKey: itemDate ? `${itemDate.getFullYear()}-${itemDate.getMonth()}` : 'sem-data',
+        monthLabel: itemDate ? capitalize(itemDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })) : 'Sem data',
+        sortTime: itemDate?.getTime() || 0,
+      };
+    }).sort((a, b) => b.sortTime - a.sortTime);
   }, [items]);
 
   const totalPages = Math.max(1, Math.ceil(normalizedItems.length / DIARY_PER_PAGE));
   const currentPage = Math.min(page, totalPages - 1);
   const pageItems = normalizedItems.slice(currentPage * DIARY_PER_PAGE, (currentPage + 1) * DIARY_PER_PAGE);
+  const monthGroups = pageItems.reduce((groups, item) => {
+    const current = groups.at(-1);
+    if (current?.key === item.monthKey) current.items.push(item);
+    else groups.push({ key: item.monthKey, label: item.monthLabel, items: [item] });
+    return groups;
+  }, []);
 
-  useEffect(() => {
-    setPage(0);
-  }, [normalizedItems.length]);
+  useEffect(() => setPage(0), [normalizedItems.length]);
 
   if (normalizedItems.length === 0) {
     return (
-      <div className="relative grid min-h-[280px] place-items-center overflow-hidden rounded-[1.5rem] border border-dashed border-white/[0.08] bg-white/[0.015] text-center animate-in zoom-in-95 duration-500">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.10),transparent_45%)]" />
-        <div className="relative px-6">
-          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl border border-white/[0.07] bg-white/[0.04] text-violet-300">
-            <Calendar size={22} />
-          </div>
-          <p className="mb-2 text-lg font-black tracking-tight text-white">Diário vazio</p>
-          <p className="text-sm font-medium text-zinc-500">Marque filmes e séries como assistidos para preencher sua linha do tempo.</p>
+      <div className="grid min-h-[260px] place-items-center rounded-xl border border-dashed border-white/[0.06] bg-white/[0.012] text-center animate-in fade-in duration-300">
+        <div className="px-6">
+          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] text-violet-300"><Calendar size={22} /></div>
+          <p className="mb-2 text-lg font-semibold tracking-[-0.02em] text-white">Diário vazio</p>
+          <p className="text-sm text-zinc-500">Marque filmes e séries como assistidos para começar seu histórico.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-5 animate-in fade-in duration-500">
-      <div className="flex flex-col justify-between gap-3 border-b border-white/[0.06] pb-4 md:flex-row md:items-end">
+    <div className="animate-in fade-in duration-300">
+      <div className="mb-6 flex flex-col justify-between gap-3 border-b border-white/[0.06] pb-4 sm:flex-row sm:items-end">
         <div>
-          <span className="text-[9px] font-black uppercase tracking-[0.22em] text-violet-300">Diário visual</span>
-          <h3 className="mt-1 text-lg font-black tracking-[-0.02em] text-white sm:text-xl">Linha do tempo assistida</h3>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">Seu histórico</span>
+          <h3 className="mt-1 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">Diário de exibições</h3>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">
-            {normalizedItems.length} {normalizedItems.length === 1 ? 'registro' : 'registros'}
-          </span>
-        </div>
+        <span className="text-xs text-zinc-600">{normalizedItems.length} {normalizedItems.length === 1 ? 'registro' : 'registros'}</span>
       </div>
 
-      <ol className="relative mx-auto max-w-5xl py-2 before:absolute before:bottom-8 before:left-[3.2rem] before:top-8 before:w-px before:bg-gradient-to-b before:from-violet-400/60 before:via-white/10 before:to-transparent sm:before:left-[6.7rem]">
-        {pageItems.map((item, index) => {
-          const position = currentPage * DIARY_PER_PAGE + index + 1;
-          const backdrop = getDiaryBackdropPath(item);
-          const poster = getDiaryPosterPath(item);
-          const rating = Number(item.vote_average || item.rating || 0);
+      <div className="space-y-12">
+        {monthGroups.map((group) => (
+          <section key={group.key}>
+            <div className="mb-5 flex items-center gap-3">
+              <h4 className="shrink-0 text-sm font-semibold text-zinc-200">{group.label}</h4>
+              <span className="h-px flex-1 bg-white/[0.06]" />
+              <span className="text-[10px] text-zinc-600">{group.items.length}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-10 sm:grid-cols-4 sm:gap-x-4 sm:gap-y-11 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+              {group.items.map((item, index) => {
+                const rating = Number(item.rating || item.vote_average || 0);
+                return (
+                  <Link
+                    key={`${item.mediaType}-${item.mediaId}-${index}`}
+                    to={mediaLink(item)}
+                    onMouseEnter={() => scheduleMovieDetailsPrefetch(item.mediaType, item.mediaId)}
+                    onMouseLeave={() => cancelMovieDetailsPrefetch(item.mediaType, item.mediaId)}
+                    onFocus={() => prefetchMovieDetails(item.mediaType, item.mediaId)}
+                    onPointerDown={() => prefetchMovieDetails(item.mediaType, item.mediaId)}
+                    className="group/card block min-w-0 rounded-xl pb-8 transition-opacity duration-200 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                  >
+                    <article className="relative overflow-hidden rounded-xl bg-white/[0.025]" style={{ aspectRatio: '2 / 3' }}>
+                      {item.posterPath ? <img src={tmdbImage(item.posterPath, 'w342')} alt="" className="h-full w-full object-cover" loading="lazy" /> : <span className="grid h-full place-items-center text-zinc-700"><Film size={24} /></span>}
+                      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-40 transition-opacity duration-300 md:opacity-0 md:group-hover/card:opacity-100" />
+                      <span className="absolute left-2.5 top-2.5 rounded-lg bg-black/65 px-2 py-1 text-center backdrop-blur-md">
+                        <strong className="block text-sm font-semibold leading-none text-white">{item.day}</strong>
+                        <span className="mt-0.5 block text-[8px] font-semibold uppercase tracking-[0.1em] text-zinc-400">{item.weekday}</span>
+                      </span>
+                      {rating > 0 && <span className="absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold text-yellow-300 backdrop-blur-md"><Star size={9} className="fill-current" /> {rating.toFixed(1)}</span>}
+                      <span className="absolute bottom-2.5 left-2.5 rounded-lg bg-black/55 px-2 py-1 text-[8px] font-semibold uppercase tracking-[0.1em] text-zinc-300 backdrop-blur-md">Assistido</span>
+                    </article>
+                    <div className="px-0.5 pt-4">
+                      <h5 className="truncate text-sm font-semibold text-zinc-100">{getDiaryMediaTitle(item)}</h5>
+                      <span className="mt-0.5 block text-[11px] text-zinc-600">{getDiaryMediaTypeLabel(item)}</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
 
-          return (
-            <li key={`${item.mediaType}-${item.mediaId}-${position}`} className="group relative grid grid-cols-[4rem_minmax(0,1fr)] gap-4 py-3 sm:grid-cols-[7.5rem_minmax(0,1fr)] sm:gap-6 sm:py-4">
-              <div className="relative z-10 flex items-start justify-between pt-3 sm:items-center">
-                <div className="text-right">
-                  <span className="block text-xl font-black leading-none tabular-nums text-white sm:text-3xl">{item.timelineDay}</span>
-                  <span className="mt-1 block text-[8px] font-black uppercase tracking-[0.16em] text-zinc-600 sm:text-[9px]">
-                    {item.timelineMonth} {item.timelineYear}
-                  </span>
-                </div>
-                <span className="absolute right-1 top-5 z-30 grid h-4 w-4 place-items-center rounded-full border-4 border-[#08080b] bg-violet-400 shadow-[0_0_0_1px_rgba(167,139,250,0.28),0_0_18px_rgba(139,92,246,0.45)] sm:top-1/2 sm:-translate-y-1/2" />
-              </div>
-
-              <Link
-                to={mediaLink(item)}
-                className="relative grid min-h-[112px] grid-cols-[70px_minmax(0,1fr)] overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0d0d11] shadow-[0_16px_45px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-300/25 hover:bg-[#111116] sm:min-h-[132px] sm:grid-cols-[88px_minmax(0,1fr)]"
-              >
-                {backdrop ? (
-                  <img
-                    src={tmdbImage(backdrop, 'w1280')}
-                    alt=""
-                    className="absolute inset-y-0 right-0 h-full w-3/5 object-cover opacity-15 [mask-image:linear-gradient(to_right,transparent,black)] transition-opacity duration-500 group-hover:opacity-25"
-                    loading="lazy"
-                  />
-                ) : null}
-
-                <div className="relative z-10 overflow-hidden border-r border-white/[0.06] bg-black/20">
-                  {poster ? (
-                    <img src={tmdbImage(poster, 'w342')} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-                  ) : (
-                    <span className="grid h-full place-items-center text-zinc-700"><Film size={22} /></span>
-                  )}
-                </div>
-
-                <div className="relative z-10 flex min-w-0 flex-col justify-center p-4 sm:p-5">
-                  <div className="mb-2 flex items-center gap-2 text-[8px] font-black uppercase tracking-[0.18em] text-violet-300">
-                    <span>Entrada {String(position).padStart(2, '0')}</span>
-                    <span className="h-1 w-1 rounded-full bg-zinc-700" />
-                    <span className="text-zinc-500">{getDiaryMediaTypeLabel(item)}</span>
-                  </div>
-                  <h4 className="line-clamp-2 text-base font-black leading-tight tracking-[-0.02em] text-white sm:text-xl">
-                    {getDiaryMediaTitle(item)}
-                  </h4>
-                  {rating > 0 ? (
-                    <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full border border-yellow-300/10 bg-yellow-300/[0.06] px-2.5 py-1 text-[9px] font-black text-yellow-300">
-                      <Star size={9} className="fill-current" />
-                      {rating.toFixed(1)}
-                    </span>
-                  ) : null}
-                </div>
-              </Link>
-            </li>
-          );
-        })}
-      </ol>
-
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">
-          Página {currentPage + 1} de {totalPages}
-        </span>
+      <div className="mt-6 flex items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-600">Página {currentPage + 1} de {totalPages}</span>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setPage((value) => Math.max(0, value - 1))}
-            disabled={currentPage === 0}
-            className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.035] text-zinc-300 transition-colors hover:bg-white/[0.08] disabled:pointer-events-none disabled:opacity-30"
-            aria-label="Página anterior do diário"
-          >
-            <ChevronLeft size={17} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setPage((value) => Math.min(totalPages - 1, value + 1))}
-            disabled={currentPage >= totalPages - 1}
-            className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.035] text-zinc-300 transition-colors hover:bg-white/[0.08] disabled:pointer-events-none disabled:opacity-30"
-            aria-label="Próxima página do diário"
-          >
-            <ChevronRight size={17} />
-          </button>
+          <button type="button" onClick={() => setPage((value) => Math.max(0, value - 1))} disabled={currentPage === 0} className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] text-zinc-300 transition-colors hover:bg-white/[0.06] disabled:pointer-events-none disabled:opacity-30" aria-label="Página anterior do diário"><ChevronLeft size={17} /></button>
+          <button type="button" onClick={() => setPage((value) => Math.min(totalPages - 1, value + 1))} disabled={currentPage >= totalPages - 1} className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] text-zinc-300 transition-colors hover:bg-white/[0.06] disabled:pointer-events-none disabled:opacity-30" aria-label="Próxima página do diário"><ChevronRight size={17} /></button>
         </div>
       </div>
-
     </div>
   );
 }

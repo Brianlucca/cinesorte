@@ -12,7 +12,6 @@ export function useRouletteLogic() {
   const [loading, setLoading] = useState(false);
   const [genres, setGenres] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [previewMedia, setPreviewMedia] = useState(null);
   const [source, setSource] = useState('global');
   const [userLists, setUserLists] = useState([]);
@@ -126,7 +125,6 @@ export function useRouletteLogic() {
       setPreviewMedia(finalWinner);
       setWinner(finalWinner);
 
-      setTimeout(() => setIsModalOpen(true), 400);
     } catch (error) {
       clearInterval(timerRef.current);
       toast.error('Roleta', error.message);
@@ -140,7 +138,6 @@ export function useRouletteLogic() {
       winner,
       loading,
       selectedGenre,
-      isModalOpen,
       genres,
       previewMedia,
       source,
@@ -150,7 +147,6 @@ export function useRouletteLogic() {
     actions: {
       setSelectedGenre,
       spinRoulette,
-      closeModal: () => setIsModalOpen(false),
       setSource,
       setSelectedListId,
     },

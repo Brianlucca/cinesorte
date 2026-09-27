@@ -118,7 +118,7 @@ export default function Login() {
     <div className="text-center">
       <p className="text-sm font-medium text-zinc-500">
         Novo por aqui?{' '}
-        <Link to={`/register${location.search}`} className="font-black text-white transition-colors hover:text-violet-300">
+        <Link to={`/register${location.search}`} className="font-semibold text-white transition-colors hover:text-violet-300">
           Criar conta gratuita
         </Link>
       </p>
@@ -139,7 +139,7 @@ export default function Login() {
         onHelp={() => setShowHelpModal(true)}
       >
         {error && (
-          <div className="mb-5 flex items-start gap-3 rounded-2xl border border-red-400/15 bg-red-500/10 p-4 text-sm font-medium leading-6 text-red-200">
+          <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-400/15 bg-red-500/10 p-4 text-sm font-medium leading-6 text-red-200">
             <AlertCircle size={18} className="mt-0.5 shrink-0 text-red-300" />
             <span>{error}</span>
           </div>
@@ -148,7 +148,7 @@ export default function Login() {
         {step === 'email' ? (
           <form onSubmit={handleEmailContinue} className="space-y-4">
             <div className="space-y-2.5">
-              <label htmlFor="login-email" className="ml-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+              <label htmlFor="login-email" className="ml-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
                 Email
               </label>
               <div className="group relative">
@@ -158,7 +158,7 @@ export default function Login() {
                   type="email"
                   required
                   autoComplete="email"
-                  className="h-[52px] w-full rounded-xl border border-white/[0.08] bg-black/30 py-4 pl-12 pr-4 text-sm font-semibold text-white outline-none transition-all placeholder:text-zinc-700 focus:border-violet-300/35 focus:bg-black/45 focus:ring-2 focus:ring-violet-400/10"
+                  className="h-12 w-full rounded-xl border border-white/[0.08] bg-[#111216] pl-12 pr-4 text-sm font-medium text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-violet-300/35 focus:bg-black/35 focus:ring-2 focus:ring-violet-400/10"
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
@@ -168,7 +168,7 @@ export default function Login() {
 
             <button
               type="submit"
-              className="flex h-[52px] w-full items-center justify-center gap-3 rounded-xl bg-violet-600 px-5 py-4 text-sm font-black uppercase tracking-[0.08em] text-white shadow-xl shadow-black/20 transition-all hover:bg-violet-500 active:scale-[0.99]"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100 active:scale-[0.99]"
             >
               <ArrowRight size={18} />
               Continuar
@@ -176,7 +176,7 @@ export default function Login() {
 
             <div className="flex items-center gap-3 py-1">
               <span className="h-px flex-1 bg-white/[0.08]" />
-              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">ou</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-600">ou</span>
               <span className="h-px flex-1 bg-white/[0.08]" />
             </div>
 
@@ -184,7 +184,7 @@ export default function Login() {
               type="button"
               onClick={handleGoogleLogin}
               disabled={googleLoading}
-              className="flex h-[52px] w-full items-center justify-center gap-3 rounded-xl border border-white/[0.08] bg-white px-5 py-4 text-sm font-black text-zinc-950 shadow-xl shadow-black/20 transition-all hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.025] px-5 text-sm font-semibold text-white transition-colors hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {googleLoading ? (
                 <Loader2 size={18} className="animate-spin" />
@@ -213,7 +213,7 @@ export default function Login() {
 
             <div className="space-y-2.5">
               <div className="ml-1 flex items-center justify-between gap-4">
-                <label htmlFor="login-password" className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                <label htmlFor="login-password" className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
                   Senha
                 </label>
                 <button
@@ -231,7 +231,7 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   required
                   autoComplete="current-password"
-                  className="h-[52px] w-full rounded-xl border border-white/[0.08] bg-black/30 py-4 pl-12 pr-12 text-sm font-semibold text-white outline-none transition-all placeholder:text-zinc-700 focus:border-violet-300/35 focus:bg-black/45 focus:ring-2 focus:ring-violet-400/10"
+                  className="h-12 w-full rounded-xl border border-white/[0.08] bg-[#111216] pl-12 pr-12 text-sm font-medium text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-violet-300/35 focus:bg-black/35 focus:ring-2 focus:ring-violet-400/10"
                   placeholder="••••••••"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
@@ -261,7 +261,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading || !turnstileToken}
-              className="flex h-[52px] w-full items-center justify-center gap-3 rounded-xl bg-violet-600 px-5 py-4 text-sm font-black uppercase tracking-[0.08em] text-white shadow-xl shadow-black/20 transition-all hover:bg-violet-500 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400 active:scale-[0.99]"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400 active:scale-[0.99]"
             >
               {loading ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
               {loading ? 'Entrando' : 'Entrar agora'}

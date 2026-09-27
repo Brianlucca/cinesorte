@@ -217,7 +217,7 @@ export default function Register() {
 
   const PasswordPill = ({ met, text }) => (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] transition-all ${
+      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] transition-colors ${
         met
           ? 'border-emerald-400/20 bg-emerald-500/10 text-emerald-300'
           : 'border-white/[0.07] bg-black/25 text-zinc-600'
@@ -232,7 +232,7 @@ export default function Register() {
     <div className="text-center">
       <p className="text-sm font-medium text-zinc-500">
         Já possui uma conta?{' '}
-        <Link to={`/login${location.search}`} className="font-black text-white transition-colors hover:text-violet-300">
+        <Link to={`/login${location.search}`} className="font-semibold text-white transition-colors hover:text-violet-300">
           Entrar agora
         </Link>
       </p>
@@ -253,7 +253,7 @@ export default function Register() {
         onHelp={() => setShowHelpModal(true)}
       >
         {error && (
-          <div className="mb-5 flex items-start gap-3 rounded-2xl border border-red-400/15 bg-red-500/10 p-4 text-sm font-medium leading-6 text-red-200">
+          <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-400/15 bg-red-500/10 p-4 text-sm font-medium leading-6 text-red-200">
             <AlertCircle size={18} className="mt-0.5 shrink-0 text-red-300" />
             <span>{error}</span>
           </div>
@@ -261,24 +261,24 @@ export default function Register() {
 
         {googleProfile ? (
           <form onSubmit={handleGoogleComplete} className="space-y-5">
-            <div className="rounded-2xl border border-white/[0.08] bg-black/25 p-4">
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.018] p-4">
               <div className="flex items-center gap-3">
                 {googleProfile.photoURL ? (
                   <img src={googleProfile.photoURL} alt="" className="h-11 w-11 rounded-full object-cover" />
                 ) : (
-                  <span className="grid h-11 w-11 place-items-center rounded-full bg-violet-500/15 text-base font-black text-violet-200 ring-1 ring-violet-300/20">
+                  <span className="grid h-11 w-11 place-items-center rounded-full bg-violet-500/15 text-base font-semibold text-violet-200 ring-1 ring-violet-300/20">
                     {googleProfileInitial}
                   </span>
                 )}
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-black text-white">{googleProfile.name}</p>
+                  <p className="truncate text-sm font-semibold text-white">{googleProfile.name}</p>
                   <p className="truncate text-xs font-semibold text-zinc-500">{googleProfile.email}</p>
                 </div>
               </div>
             </div>
 
             <div className="space-y-2.5">
-              <label htmlFor="google-register-nickname" className="ml-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+              <label htmlFor="google-register-nickname" className="ml-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
                 Usuário
               </label>
               <div className="group relative">
@@ -287,7 +287,7 @@ export default function Register() {
                   id="google-register-nickname"
                   type="text"
                   autoComplete="username"
-                  className={`w-full rounded-xl border bg-black/30 py-4 pl-11 pr-10 text-sm font-semibold lowercase text-white outline-none transition-all placeholder:text-zinc-700 focus:bg-black/45 focus:ring-2 focus:ring-violet-400/10 ${
+                  className={`h-12 w-full rounded-xl border bg-[#111216] pl-11 pr-10 text-sm font-medium lowercase text-white outline-none transition-all placeholder:text-zinc-600 focus:ring-2 focus:ring-violet-400/10 ${
                     googleNickname && !isGoogleNicknameValid ? 'border-red-400/60' : 'border-white/[0.08] focus:border-violet-300/35'
                   }`}
                   placeholder="joaosilva"
@@ -298,7 +298,7 @@ export default function Register() {
               </div>
             </div>
 
-            <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/[0.08] bg-black/25 p-4 transition-colors hover:bg-white/[0.035]">
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.018] p-4 transition-colors hover:bg-white/[0.035]">
               <span className="relative mt-0.5 flex shrink-0 items-center">
                 <input
                   type="checkbox"
@@ -316,18 +316,18 @@ export default function Register() {
                     event.preventDefault();
                     setShowTermsPreview(true);
                   }}
-                  className="font-black text-white transition-colors hover:text-violet-300"
+                  className="font-semibold text-white transition-colors hover:text-violet-300"
                 >
                   Termos de Uso
                 </button>{' '}
-                e à <Link to="/privacidade" target="_blank" className="font-black text-white transition-colors hover:text-violet-300">Política de Privacidade</Link>.
+                e à <Link to="/privacidade" target="_blank" className="font-semibold text-white transition-colors hover:text-violet-300">Política de Privacidade</Link>.
               </span>
             </label>
 
             <button
               type="submit"
               disabled={googleCompleteLoading || !isGoogleNicknameValid || !googleTermsAccepted}
-              className="flex h-[52px] w-full items-center justify-center gap-3 rounded-xl bg-violet-600 px-5 py-4 text-sm font-black uppercase tracking-[0.08em] text-white shadow-xl shadow-black/20 transition-all hover:bg-violet-500 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400 active:scale-[0.99]"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400 active:scale-[0.99]"
             >
               {googleCompleteLoading ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
               {googleCompleteLoading ? 'Finalizando' : 'Finalizar cadastro'}
@@ -340,7 +340,7 @@ export default function Register() {
                 type="button"
                 onClick={handleGoogleRegister}
                 disabled={googleLoading}
-                className="flex h-[52px] w-full items-center justify-center gap-3 rounded-xl border border-white/[0.08] bg-white px-5 py-4 text-sm font-black text-zinc-950 shadow-xl shadow-black/20 transition-all hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.025] px-5 text-sm font-semibold text-white transition-colors hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {googleLoading ? (
                   <Loader2 size={18} className="animate-spin" />
@@ -352,7 +352,7 @@ export default function Register() {
 
               <div className="flex items-center gap-3">
                 <span className="h-px flex-1 bg-white/[0.08]" />
-                <span className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">ou</span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-600">ou</span>
                 <span className="h-px flex-1 bg-white/[0.08]" />
               </div>
             </div>
@@ -360,7 +360,7 @@ export default function Register() {
             <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2.5">
-              <label htmlFor="register-name" className="ml-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+              <label htmlFor="register-name" className="ml-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
                 Nome
               </label>
               <div className="group relative">
@@ -370,7 +370,7 @@ export default function Register() {
                   name="name"
                   type="text"
                   autoComplete="name"
-                  className={`w-full rounded-xl border bg-black/30 py-4 pl-11 pr-10 text-sm font-semibold text-white outline-none transition-all placeholder:text-zinc-700 focus:bg-black/45 focus:ring-2 focus:ring-violet-400/10 ${
+                  className={`h-12 w-full rounded-xl border bg-[#111216] pl-11 pr-10 text-sm font-medium text-white outline-none transition-all placeholder:text-zinc-600 focus:ring-2 focus:ring-violet-400/10 ${
                   formData.name && !validations.isNameValid ? 'border-red-400/60' : 'border-white/[0.08] focus:border-violet-300/35'
                   }`}
                   placeholder="João Silva"
@@ -382,7 +382,7 @@ export default function Register() {
             </div>
 
             <div className="space-y-2.5">
-              <label htmlFor="register-nickname" className="ml-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+              <label htmlFor="register-nickname" className="ml-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
                 Usuário
               </label>
               <div className="group relative">
@@ -392,7 +392,7 @@ export default function Register() {
                   name="nickname"
                   type="text"
                   autoComplete="username"
-                  className={`w-full rounded-xl border bg-black/30 py-4 pl-11 pr-10 text-sm font-semibold lowercase text-white outline-none transition-all placeholder:text-zinc-700 focus:bg-black/45 focus:ring-2 focus:ring-violet-400/10 ${
+                  className={`h-12 w-full rounded-xl border bg-[#111216] pl-11 pr-10 text-sm font-medium lowercase text-white outline-none transition-all placeholder:text-zinc-600 focus:ring-2 focus:ring-violet-400/10 ${
                   formData.nickname && !validations.isNickValid ? 'border-red-400/60' : 'border-white/[0.08] focus:border-violet-300/35'
                   }`}
                   placeholder="joaosilva"
@@ -405,7 +405,7 @@ export default function Register() {
           </div>
 
           <div className="space-y-2.5">
-            <label htmlFor="register-email" className="ml-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+            <label htmlFor="register-email" className="ml-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
               Email
             </label>
             <div className="group relative">
@@ -415,7 +415,7 @@ export default function Register() {
                 name="email"
                 type="email"
                 autoComplete="email"
-                className={`w-full rounded-xl border bg-black/30 py-4 pl-11 pr-10 text-sm font-semibold text-white outline-none transition-all placeholder:text-zinc-700 focus:bg-black/45 focus:ring-2 focus:ring-violet-400/10 ${
+                className={`h-12 w-full rounded-xl border bg-[#111216] pl-11 pr-10 text-sm font-medium text-white outline-none transition-all placeholder:text-zinc-600 focus:ring-2 focus:ring-violet-400/10 ${
                 formData.email && !validations.isEmailValid ? 'border-red-400/60' : 'border-white/[0.08] focus:border-violet-300/35'
                 }`}
                 placeholder="seu@email.com"
@@ -427,7 +427,7 @@ export default function Register() {
           </div>
 
           <div className="space-y-2.5">
-            <label htmlFor="register-password" className="ml-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+            <label htmlFor="register-password" className="ml-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
               Senha
             </label>
             <div className="group relative">
@@ -436,7 +436,7 @@ export default function Register() {
                 name="password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="new-password"
-                className={`w-full rounded-xl border bg-black/30 py-4 pl-4 pr-12 text-sm font-semibold text-white outline-none transition-all placeholder:text-zinc-700 focus:bg-black/45 focus:ring-2 focus:ring-violet-400/10 ${
+                className={`h-12 w-full rounded-xl border bg-[#111216] pl-4 pr-12 text-sm font-medium text-white outline-none transition-all placeholder:text-zinc-600 focus:ring-2 focus:ring-violet-400/10 ${
                   formData.password && !validations.isPwdValid ? 'border-amber-300/60' : 'border-white/[0.08] focus:border-violet-300/35'
                 }`}
                 placeholder="••••••••"
@@ -460,7 +460,7 @@ export default function Register() {
           </div>
 
           <div className="space-y-2.5">
-            <label htmlFor="register-confirm-password" className="ml-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+            <label htmlFor="register-confirm-password" className="ml-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
               Confirmar senha
             </label>
             <div className="relative">
@@ -469,7 +469,7 @@ export default function Register() {
                 name="confirmPassword"
                 type="password"
                 autoComplete="new-password"
-                className={`w-full rounded-xl border bg-black/30 py-4 pl-4 pr-10 text-sm font-semibold text-white outline-none transition-all placeholder:text-zinc-700 focus:bg-black/45 focus:ring-2 focus:ring-violet-400/10 ${
+                className={`h-12 w-full rounded-xl border bg-[#111216] pl-4 pr-10 text-sm font-medium text-white outline-none transition-all placeholder:text-zinc-600 focus:ring-2 focus:ring-violet-400/10 ${
                   formData.confirmPassword && !validations.isMatch ? 'border-red-400/60' : 'border-white/[0.08] focus:border-violet-300/35'
                 }`}
                 placeholder="••••••••"
@@ -480,7 +480,7 @@ export default function Register() {
             </div>
           </div>
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/[0.08] bg-black/25 p-4 transition-colors hover:bg-white/[0.035]">
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.018] p-4 transition-colors hover:bg-white/[0.035]">
             <span className="relative mt-0.5 flex shrink-0 items-center">
               <input
                 type="checkbox"
@@ -498,11 +498,11 @@ export default function Register() {
                   event.preventDefault();
                   setShowTermsPreview(true);
                 }}
-                className="font-black text-white transition-colors hover:text-violet-300"
+                className="font-semibold text-white transition-colors hover:text-violet-300"
               >
                 Termos de Uso
               </button>{' '}
-              e à <Link to="/privacidade" target="_blank" className="font-black text-white transition-colors hover:text-violet-300">Política de Privacidade</Link>.
+              e à <Link to="/privacidade" target="_blank" className="font-semibold text-white transition-colors hover:text-violet-300">Política de Privacidade</Link>.
             </span>
           </label>
 
@@ -520,7 +520,7 @@ export default function Register() {
           <button
             type="submit"
             disabled={loading || !canSubmit}
-            className="flex w-full items-center justify-center gap-3 rounded-xl bg-violet-600 px-5 py-4 text-sm font-black uppercase tracking-[0.08em] text-white shadow-xl shadow-black/20 transition-all hover:bg-violet-500 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400 active:scale-[0.99]"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400 active:scale-[0.99]"
           >
             {loading ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
             {loading ? 'Criando conta' : 'Criar conta'}

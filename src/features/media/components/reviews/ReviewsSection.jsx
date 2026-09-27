@@ -133,37 +133,36 @@ export default function ReviewsSection({
   return (
     <div className="w-full">
       {stats && (
-        <div className="mb-8 grid gap-3 md:grid-cols-[0.9fr_1.25fr]">
-          <div className="relative overflow-hidden rounded-3xl border border-yellow-300/10 bg-gradient-to-br from-yellow-300/[0.08] to-transparent p-5">
-            <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-yellow-300/10 blur-3xl" />
+        <div className="mb-8 grid gap-3 border-y border-white/[0.07] py-5 md:grid-cols-2">
+          <div className="relative px-1 md:border-r md:border-white/[0.07] md:px-4">
             <div className="relative flex items-center gap-4">
-              <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-yellow-300/15 bg-black/20">
+              <div className="grid h-14 w-14 shrink-0 place-items-center">
                 <div className="text-center">
-                  <span className="block text-2xl font-black text-white">{stats.average}</span>
+                  <span className="block text-3xl font-semibold tracking-[-0.04em] text-white">{stats.average}</span>
                   <Star size={12} className="mx-auto mt-1 fill-yellow-300 text-yellow-300" />
                 </div>
               </div>
               <div>
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-yellow-200/60">
+                <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-yellow-200/60">
                   Nota CineSorte
                 </span>
-                <h3 className="mt-1 text-base font-black text-white">Média da comunidade</h3>
+                <h3 className="mt-1 text-sm font-semibold text-white">Média da comunidade</h3>
                 <p className="mt-1 text-xs text-zinc-500">{stats.count} avaliações publicadas</p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-emerald-400/10 bg-gradient-to-br from-emerald-500/[0.07] to-transparent p-5">
+          <div className="px-1 md:px-4">
             <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-300">
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-emerald-500/10 text-emerald-300">
                 <TrendingUp size={17} />
               </span>
               <div>
-                <span className="text-2xl font-black text-white">{stats.positivePercent}%</span>
-                <span className="ml-2 text-sm font-semibold text-zinc-400">recomendam esta obra</span>
+                <span className="text-2xl font-semibold text-white">{stats.positivePercent}%</span>
+                <span className="ml-2 text-sm text-zinc-400">recomendam esta obra</span>
               </div>
             </div>
-            <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/[0.05]">
+            <div className="mt-4 h-1 overflow-hidden rounded-full bg-white/[0.05]">
               <div
                 style={{ width: `${stats.positivePercent}%` }}
                 className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-300 transition-all duration-1000"
@@ -175,7 +174,7 @@ export default function ReviewsSection({
 
       <div className="mb-10 flex gap-3 sm:gap-4">
         <div className="hidden shrink-0 sm:block">
-          <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl border border-white/10 bg-zinc-800 text-sm font-black uppercase text-white shadow-xl">
+          <div className="grid h-11 w-11 place-items-center overflow-hidden rounded-full bg-zinc-800 text-sm font-semibold uppercase text-white ring-1 ring-white/[0.08]">
             {user?.photoURL ? (
               <img src={user.photoURL} className="h-full w-full object-cover" alt="" />
             ) : (
@@ -186,15 +185,15 @@ export default function ReviewsSection({
 
         <div className="min-w-0 flex-1">
           <div
-            className={`relative overflow-visible rounded-[1.75rem] border bg-gradient-to-br from-white/[0.045] to-white/[0.015] transition-all duration-300 ${
+            className={`relative overflow-visible rounded-xl border bg-white/[0.025] transition-colors duration-200 ${
               isFocusedGeneral
-                ? "z-[30] border-violet-400/45 shadow-[0_20px_60px_rgba(0,0,0,0.3)]"
-                : "border-white/[0.08] hover:border-white/15"
+                ? "z-[30] border-violet-400/35"
+                : "border-white/[0.07] hover:border-white/12"
             }`}
           >
             <div className="flex flex-col gap-3 border-b border-white/[0.06] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
               <div>
-                <h3 className="text-sm font-black text-white">Compartilhe sua visão</h3>
+                <h3 className="text-sm font-semibold text-white">Compartilhe sua visão</h3>
                 <p className="mt-0.5 text-[11px] text-zinc-500">Uma nota, uma análise ou os dois.</p>
               </div>
               <div className="flex items-center gap-1">
@@ -223,7 +222,7 @@ export default function ReviewsSection({
                   <button
                     type="button"
                     onClick={() => setGeneralRating(null)}
-                    className="ml-2 text-[9px] font-black uppercase tracking-wider text-zinc-600 hover:text-white"
+                    className="ml-2 text-[9px] font-semibold uppercase tracking-wider text-zinc-600 hover:text-white"
                   >
                     Limpar
                   </button>
@@ -288,7 +287,7 @@ export default function ReviewsSection({
                     type="button"
                     onClick={handleSubmitGeneral}
                     disabled={isPostingGeneral}
-                    className="rounded-full bg-white px-5 py-2.5 text-xs font-black text-zinc-950 transition-all hover:bg-violet-100 disabled:opacity-60"
+                    className="rounded-full bg-white px-5 py-2.5 text-xs font-semibold text-zinc-950 transition-colors hover:bg-violet-100 disabled:opacity-60"
                   >
                     {isPostingGeneral ? "Publicando..." : "Publicar review"}
                   </button>
@@ -302,11 +301,11 @@ export default function ReviewsSection({
       {topEliteReview && (
         <div className="mb-9">
           <div className="mb-4 flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-2xl border border-violet-400/15 bg-violet-500/10 text-violet-300">
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-violet-500/10 text-violet-300">
               <Pin size={14} />
             </span>
             <div>
-              <h3 className="text-sm font-black text-white">Review em destaque</h3>
+              <h3 className="text-sm font-semibold text-white">Review em destaque</h3>
               <p className="text-[11px] text-zinc-500">Uma análise selecionada da comunidade elite.</p>
             </div>
           </div>
@@ -314,10 +313,10 @@ export default function ReviewsSection({
         </div>
       )}
 
-      <div className="space-y-4">
+      <div>
         <div className="mb-5 flex items-center justify-between border-b border-white/[0.06] pb-4">
-          <h3 className="text-base font-black text-white">Reviews recentes</h3>
-          <span className="rounded-full border border-white/[0.07] bg-white/[0.035] px-3 py-1 text-[10px] font-black text-zinc-400">
+          <h3 className="text-base font-semibold text-white">Reviews recentes</h3>
+          <span className="text-[11px] font-medium text-zinc-500">
             {reviews.length}
           </span>
         </div>

@@ -6,7 +6,7 @@ import {
   scheduleMovieDetailsPrefetch,
 } from '@shared/lib/mediaDetailsPrefetch';
 
-export default function MediaCard({ media }) {
+export default function MediaCard({ media, variant = 'default' }) {
   if (!media.poster_path) return null;
 
   const imageUrl = `https://image.tmdb.org/t/p/w500${media.poster_path}`;
@@ -21,6 +21,41 @@ export default function MediaCard({ media }) {
   ).toString().split('-')[0];
   const title = media.title || media.name;
   const type = media.media_type || (media.title ? 'movie' : 'tv');
+
+  if (variant === 'home') {
+    return (
+      <Link
+        to={`/app/${type}/${media.id}`}
+        onMouseEnter={() => scheduleMovieDetailsPrefetch(type, media.id)}
+        onMouseLeave={() => cancelMovieDetailsPrefetch(type, media.id)}
+        onFocus={() => prefetchMovieDetails(type, media.id)}
+        onPointerDown={() => prefetchMovieDetails(type, media.id)}
+        className="group/card block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+      >
+        <article className="relative aspect-[2/3] overflow-hidden rounded-xl bg-white/[0.025]">
+          <img
+            src={imageUrl}
+            alt={title}
+            className="h-full w-full object-cover transition-opacity duration-200 group-hover/card:opacity-90"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 via-transparent to-transparent opacity-50 transition-opacity duration-300 md:opacity-0 md:group-hover/card:opacity-100" />
+          <div className="absolute right-2.5 top-2.5 flex items-center gap-1.5 rounded-full bg-black/55 px-2 py-1 backdrop-blur-md md:right-3 md:top-3">
+            <Star size={10} className="fill-yellow-400 text-yellow-400" />
+            <span className="text-[10px] font-semibold text-white">{rating}</span>
+          </div>
+        </article>
+        <div className="px-0.5 pt-2.5">
+          <h3 className="truncate text-sm font-semibold text-zinc-100">{title}</h3>
+          <div className="mt-0.5 flex items-center gap-2 text-[11px] text-zinc-500">
+            {year && <span>{year}</span>}
+            {year && <span>•</span>}
+            <span>{type === 'movie' ? 'Filme' : 'Série'}</span>
+          </div>
+        </div>
+      </Link>
+    );
+  }
 
   return (
     <Link

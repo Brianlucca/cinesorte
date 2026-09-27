@@ -4,8 +4,11 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
+  Heart,
   Layers3,
+  MessageCircle,
   Plus,
+  Star,
 } from "lucide-react";
 import { useAuth } from "@shared/context/useAuth";
 
@@ -37,6 +40,12 @@ function mediaPath(item = {}) {
   const id = item.mediaId || item.id;
   if (!id) return "/app";
   return `/app/${mediaType === "tv" ? "tv" : "movie"}/${String(id).replace(/^(movie-|tv-)/, "")}`;
+}
+
+function reviewExcerpt(text = "") {
+  if (!text) return "Avaliação registrada sem comentário.";
+  if (/\|\|[^|]+\|\|/.test(text)) return "Esta avaliação contém spoilers.";
+  return text.replace(/\*\*|\*/g, "").replace(/^>\s?/gm, "").trim();
 }
 
 function MediaImage({ item, size = "w500", preferred = "poster", className = "" }) {
@@ -100,17 +109,16 @@ function SectionShell({ title, eyebrow, children, actionTo, actionLabel, rowRef,
               {eyebrow}
             </span>
           )}
-          <h2 className="flex items-center gap-3 text-xl font-bold text-white sm:text-2xl md:text-3xl">
-            <span className="h-6 w-1.5 rounded-full bg-gradient-to-b from-violet-400 to-violet-700" />
+          <h2 className="flex items-center gap-3 text-lg font-semibold tracking-[-0.02em] text-zinc-100 sm:text-xl md:text-2xl">
             {title}
           </h2>
         </div>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="flex shrink-0 items-center gap-2">
           {actionTo && actionLabel && (
             <Link
               to={actionTo}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-zinc-200 transition-all hover:bg-white hover:text-zinc-950"
+              className="hidden items-center gap-2 px-1 py-2 text-[11px] font-bold text-zinc-400 transition-colors hover:text-white sm:inline-flex"
             >
               {actionLabel}
               <ArrowRight size={14} />
@@ -118,22 +126,22 @@ function SectionShell({ title, eyebrow, children, actionTo, actionLabel, rowRef,
           )}
 
           {hasControls && (
-            <div className="flex gap-2 opacity-40 transition-opacity duration-300 group-hover/row:opacity-100">
+            <div className="flex gap-2 opacity-100 transition-opacity duration-300 md:opacity-40 md:group-hover/row:opacity-100">
               <button
                 type="button"
                 aria-label={`Voltar na seção ${title}`}
                 onClick={() => slideRail(rowRef, "left")}
-                className="rounded-xl border border-white/10 bg-white/5 p-2.5 text-white shadow-lg transition-all hover:bg-white/10"
+                className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
               >
-                <ChevronLeft size={20} />
+                <ChevronLeft size={18} />
               </button>
               <button
                 type="button"
                 aria-label={`Avançar na seção ${title}`}
                 onClick={() => slideRail(rowRef, "right")}
-                className="rounded-xl border border-white/10 bg-white/5 p-2.5 text-white shadow-lg transition-all hover:bg-white/10"
+                className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
               >
-                <ChevronRight size={20} />
+                <ChevronRight size={18} />
               </button>
             </div>
           )}
@@ -149,7 +157,7 @@ function TopItemCard({ item, index }) {
   return (
     <Link
       to={mediaPath(item)}
-      className="group/card flex h-20 w-[260px] flex-none items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-2.5 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-300/25 sm:w-[300px]"
+      className="group/card flex h-20 w-[250px] flex-none items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.018] p-2.5 transition-colors hover:border-white/[0.13] hover:bg-white/[0.035] sm:w-[280px]"
     >
       <span className="w-8 flex-none text-center text-lg font-black tabular-nums text-zinc-500">
         {index + 1}
@@ -190,6 +198,69 @@ function TopRail({ items = [] }) {
   );
 }
 
+function ReviewSpotlight({ items = [] }) {
+  const reviews = items
+    .filter(
+      (item) =>
+        item.type !== "list_share" &&
+        item.mediaTitle &&
+        item.rating !== null &&
+        item.rating !== undefined &&
+        item.rating !== "" &&
+        Number.isFinite(Number(item.rating)),
+    )
+    .sort((a, b) => {
+      const aHasText = Boolean(a.text?.trim());
+      const bHasText = Boolean(b.text?.trim());
+      if (aHasText !== bHasText) return bHasText - aHasText;
+      return (b.likesCount || 0) + (b.commentsCount || 0) - (a.likesCount || 0) - (a.commentsCount || 0);
+    })
+    .slice(0, 6);
+
+  if (reviews.length === 0) return null;
+
+  return (
+    <SectionShell
+      title="Reviews em destaque"
+      eyebrow="A conversa começa aqui"
+      actionTo="/app/feed"
+      actionLabel="Ver todas"
+    >
+      <div className={`mt-5 grid gap-x-8 border-y border-white/[0.06] md:mt-6 md:grid-cols-2 ${PAGE_X}`}>
+        {reviews.map((review) => (
+          <Link
+            key={review.uniqueKey || review.id}
+            to={mediaPath(review)}
+            className="group/review grid grid-cols-[64px_minmax(0,1fr)] gap-4 border-b border-white/[0.06] py-4 last:border-b-0 md:min-h-[132px] md:grid-cols-[72px_minmax(0,1fr)] md:[&:nth-last-child(-n+2)]:border-b-0"
+          >
+            <MediaImage
+              item={{ poster_path: review.posterPath, backdrop_path: review.backdropPath }}
+              size="w342"
+              className="aspect-[2/3] w-full self-start rounded-md bg-zinc-900 transition-transform duration-300 group-hover/review:-translate-y-0.5"
+            />
+            <span className="min-w-0 self-center">
+              <span className="flex items-center gap-2.5">
+                <span className="relative grid h-6 w-6 shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-zinc-800 text-[9px] font-semibold uppercase text-zinc-300">
+                  {(review.username || "C")[0]}
+                  {review.userPhoto && <img src={review.userPhoto} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(event) => event.currentTarget.remove()} />}
+                </span>
+                <span className="truncate text-xs font-semibold text-zinc-300">@{review.username || "cinesorte"}</span>
+                {review.rating !== null && review.rating !== undefined && <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-yellow-300"><Star size={11} className="fill-current" /> {Number(review.rating).toFixed(1)}</span>}
+              </span>
+              <span className="mt-2 line-clamp-2 block text-sm leading-5 text-zinc-200 sm:text-[15px]">{reviewExcerpt(review.text)}</span>
+              <span className="mt-2 flex min-w-0 items-center gap-3 text-[11px] text-zinc-500">
+                <span className="truncate font-semibold text-white transition-colors group-hover/review:text-violet-300">{review.mediaTitle}</span>
+                <span className="inline-flex shrink-0 items-center gap-1"><Heart size={11} /> {review.likesCount || 0}</span>
+                <span className="inline-flex shrink-0 items-center gap-1"><MessageCircle size={11} /> {review.commentsCount || 0}</span>
+              </span>
+            </span>
+          </Link>
+        ))}
+      </div>
+    </SectionShell>
+  );
+}
+
 function ListCoverStack({ items = [] }) {
   const visibleItems = items.filter((item) => getImagePath(item)).slice(0, 4);
 
@@ -219,7 +290,7 @@ function LibraryEmptyCard() {
   return (
     <Link
       to="/app/lists"
-      className="flex h-[220px] w-[280px] flex-none flex-col justify-between rounded-2xl border border-dashed border-white/[0.12] bg-white/[0.02] p-4 transition-all hover:border-violet-300/30 hover:bg-white/[0.04] sm:w-[320px]"
+      className="flex h-[190px] w-[270px] flex-none flex-col justify-between rounded-xl border border-dashed border-white/[0.1] bg-white/[0.015] p-4 transition-colors hover:border-white/[0.18] hover:bg-white/[0.03] sm:w-[300px]"
     >
       <span className="grid h-11 w-11 place-items-center rounded-xl border border-violet-300/15 bg-violet-500/10 text-violet-300">
         <Plus size={20} />
@@ -242,7 +313,7 @@ function LibraryCard({ list, username }) {
   return (
     <Link
       to={listTo}
-      className="group/card w-[280px] flex-none overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3.5 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-300/25 sm:w-[320px]"
+      className="group/card w-[270px] flex-none overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.018] p-3 transition-colors hover:border-white/[0.14] sm:w-[300px]"
     >
       <ListCoverStack items={items} />
 
@@ -295,7 +366,7 @@ function CommunityCard({ item }) {
   const profileTo = item.username ? `/app/profile/${item.username}` : "/app/feed";
 
   return (
-    <article className="group/card w-[280px] flex-none overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.025] shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-300/25 sm:w-[320px] md:w-[360px]">
+    <article className="group/card w-[270px] flex-none overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.018] transition-colors hover:border-white/[0.14] sm:w-[310px] md:w-[340px]">
       <Link to={detailTo} className="block">
         <div className="relative h-32 overflow-hidden bg-zinc-900 sm:h-36">
           {item.type === "list_share" && Array.isArray(item.listItems) && item.listItems.length > 0 ? (
@@ -346,7 +417,7 @@ function SuggestionChip({ user }) {
   return (
     <Link
       to={`/app/profile/${user.username}`}
-      className="flex w-[210px] flex-none items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3 transition-all hover:border-white/[0.14] hover:bg-white/[0.05]"
+      className="flex w-[200px] flex-none items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.018] p-3 transition-colors hover:border-white/[0.14] hover:bg-white/[0.035]"
     >
       <span className="grid h-10 w-10 flex-none place-items-center overflow-hidden rounded-xl bg-zinc-800 text-sm font-black uppercase text-zinc-300 ring-1 ring-white/10">
         {user.userPhoto ? <img src={user.userPhoto} alt="" className="h-full w-full object-cover" loading="lazy" /> : user.username?.[0]}
@@ -362,7 +433,7 @@ function SuggestionChip({ user }) {
 function CommunitySection({ items = [], suggestions = [] }) {
   const communityRef = useRef(null);
   const suggestionsRef = useRef(null);
-  const featuredItems = items.slice(0, 6);
+  const featuredItems = items.filter((item) => item.type === "list_share").slice(0, 6);
   const visibleSuggestions = suggestions.slice(0, 8);
   const communityKey = featuredItems.map((item) => `${item.type}-${item.id}`).join("|");
   const suggestionsKey = visibleSuggestions.map((user) => user.username).join("|");
@@ -413,6 +484,10 @@ export default function HomeExperience({ variant, data, socialItems = [], sugges
 
   if (variant === "library") {
     return <LibrarySection lists={lists} />;
+  }
+
+  if (variant === "reviews") {
+    return <ReviewSpotlight items={socialItems} />;
   }
 
   if (variant === "community") {

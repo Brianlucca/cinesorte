@@ -118,25 +118,25 @@ function renderRichText(text, spoilersRevealed = false) {
 
 const ELITE_THEME = {
   "Divindade do Cinema": {
-    card: "border-cyan-500/35 bg-[linear-gradient(180deg,rgba(8,145,178,0.12),rgba(9,9,11,0.92))] shadow-[0_0_38px_rgba(6,182,212,0.12)]",
+    card: "border-cyan-400/25 bg-cyan-400/[0.035]",
     accent: "bg-cyan-400",
     chip: "border-cyan-400/25 bg-cyan-400/10 text-cyan-200",
     text: "text-cyan-200",
   },
   "Entidade Cinematografica": {
-    card: "border-fuchsia-500/35 bg-[linear-gradient(180deg,rgba(147,51,234,0.12),rgba(9,9,11,0.92))] shadow-[0_0_38px_rgba(168,85,247,0.12)]",
+    card: "border-fuchsia-400/25 bg-fuchsia-400/[0.035]",
     accent: "bg-fuchsia-400",
     chip: "border-fuchsia-400/25 bg-fuchsia-400/10 text-fuchsia-200",
     text: "text-fuchsia-200",
   },
   "Oraculo da Setima Arte": {
-    card: "border-emerald-500/35 bg-[linear-gradient(180deg,rgba(16,185,129,0.12),rgba(9,9,11,0.92))] shadow-[0_0_38px_rgba(16,185,129,0.12)]",
+    card: "border-emerald-400/25 bg-emerald-400/[0.035]",
     accent: "bg-emerald-400",
     chip: "border-emerald-400/25 bg-emerald-400/10 text-emerald-200",
     text: "text-emerald-200",
   },
   "Mestre da Critica": {
-    card: "border-amber-500/35 bg-[linear-gradient(180deg,rgba(245,158,11,0.12),rgba(9,9,11,0.92))] shadow-[0_0_38px_rgba(245,158,11,0.12)]",
+    card: "border-amber-400/25 bg-amber-400/[0.035]",
     accent: "bg-amber-400",
     chip: "border-amber-400/25 bg-amber-400/10 text-amber-200",
     text: "text-amber-200",
@@ -189,7 +189,7 @@ export default function ReviewItem({
   const hasRating = review.rating !== null && review.rating !== undefined;
   const reviewHasSpoiler = hasSpoilerMarkup(review.text);
   const eliteTheme = ELITE_THEME[normalizeLevelTitle(review.levelTitle)] || {
-    card: "border-violet-500/35 bg-[linear-gradient(180deg,rgba(139,92,246,0.1),rgba(9,9,11,0.92))] shadow-[0_0_38px_rgba(139,92,246,0.12)]",
+    card: "border-violet-400/25 bg-violet-400/[0.035]",
     accent: "bg-violet-400",
     chip: "border-violet-400/25 bg-violet-400/10 text-violet-200",
     text: "text-violet-200",
@@ -255,11 +255,11 @@ export default function ReviewItem({
   };
 
   const renderReplyComposer = () => (
-    <div className="mt-4 w-full animate-in slide-in-from-top-2 space-y-4 rounded-2xl border border-violet-400/10 bg-gradient-to-br from-violet-950/20 to-black/15 p-4">
+    <div className="mt-4 w-full animate-in slide-in-from-top-2 space-y-3 rounded-xl border border-violet-400/10 bg-black/15 p-4">
       {replyTarget && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-violet-500/15 bg-violet-500/8 px-3 py-2">
+        <div className="flex items-center justify-between gap-3 border-l-2 border-violet-400/50 px-3 py-1">
           <span className="text-xs font-semibold text-violet-200">
-            Respondendo para <span className="font-black">@{replyTarget}</span>
+            Respondendo para <span className="font-semibold">@{replyTarget}</span>
           </span>
           <button
             type="button"
@@ -292,12 +292,12 @@ export default function ReviewItem({
           placeholder="Escreva sua resposta..."
           inputRefExternal={replyEditorRef}
           maxLength={400}
-          className="min-h-[100px] w-full rounded-2xl border border-white/[0.07] bg-black/20 px-4 py-3 text-sm text-white transition-colors focus:border-violet-400/50 focus:outline-none"
+          className="min-h-[96px] w-full rounded-xl border border-white/[0.07] bg-black/20 px-4 py-3 text-sm text-white transition-colors focus:border-violet-400/40 focus:outline-none"
         />
         <button
           type="button"
           onClick={handleSubmitReply}
-          className="shrink-0 rounded-2xl bg-white p-3 text-zinc-950 transition-all hover:bg-violet-100"
+          className="shrink-0 rounded-full bg-white p-3 text-zinc-950 transition-colors hover:bg-violet-100"
         >
           <Send size={18} />
         </button>
@@ -332,14 +332,14 @@ export default function ReviewItem({
     <div
       className={`group w-full border transition-all duration-300 ${
         isElite
-          ? `rounded-[1.75rem] p-5 md:p-6 ${eliteTheme.card}`
-          : "rounded-[1.75rem] border-white/[0.07] bg-gradient-to-br from-white/[0.035] to-white/[0.012] p-5 hover:border-white/15 md:p-6"
+          ? `mb-4 rounded-xl p-5 md:p-6 ${eliteTheme.card}`
+          : "border-x-0 border-b border-t-0 border-white/[0.07] px-0 py-6"
       }`}
     >
       <div className="flex w-full gap-3.5 md:gap-4">
         <Link to={`/app/profile/${review.username}`} className="shrink-0 self-start">
           <div
-            className={`h-11 w-11 overflow-hidden rounded-2xl ring-1 transition-transform duration-300 group-hover:scale-105 md:h-12 md:w-12 ${
+            className={`h-10 w-10 overflow-hidden rounded-full ring-1 md:h-11 md:w-11 ${
               isElite ? "ring-white/20" : "bg-zinc-800 ring-white/10"
             }`}
           >
@@ -356,17 +356,17 @@ export default function ReviewItem({
         <div className="min-w-0 flex-1">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div className="min-w-0 w-full space-y-2">
-              {isElite && <div className={`h-1.5 w-14 rounded-full ${eliteTheme.accent}`} />}
+              {isElite && <div className={`h-1 w-10 rounded-full ${eliteTheme.accent}`} />}
               <div className="flex flex-wrap items-center gap-3">
                 <Link
                   to={`/app/profile/${review.username}`}
-                  className={`text-base font-black transition-colors hover:text-violet-300 md:text-lg ${isElite ? "text-zinc-100" : "text-white"}`}
+                  className={`text-sm font-semibold transition-colors hover:text-violet-300 md:text-base ${isElite ? "text-zinc-100" : "text-white"}`}
                 >
                   @{review.username}
                 </Link>
                 <LevelBadge title={review.levelTitle} size="md" />
                 {isElite && (
-                  <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] ${eliteTheme.chip}`}>
+                  <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] ${eliteTheme.chip}`}>
                     <Pin size={12} /> Fixado
                   </span>
                 )}
@@ -384,9 +384,9 @@ export default function ReviewItem({
                   </button>
                 )}
                 {!isEditing && hasText && hasRating && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-yellow-300/10 bg-yellow-300/[0.07] px-2.5 py-1">
+                  <span className="inline-flex items-center gap-1.5 text-yellow-200">
                     <Star size={12} className="fill-yellow-300 text-yellow-300" />
-                    <span className="font-black text-yellow-200">{review.rating.toFixed(1)}</span>
+                    <span className="font-semibold text-yellow-200">{review.rating.toFixed(1)}</span>
                   </span>
                 )}
               </div>
@@ -396,14 +396,14 @@ export default function ReviewItem({
               <div className="shrink-0 flex items-center gap-2">
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="rounded-xl border border-white/[0.05] bg-white/[0.035] p-2 text-zinc-500 transition-colors hover:bg-blue-500/10 hover:text-blue-400"
+                  className="rounded-full p-2 text-zinc-500 transition-colors hover:bg-blue-500/10 hover:text-blue-400"
                   title="Editar"
                 >
                   <Edit2 size={16} />
                 </button>
                 <button
                   onClick={() => onDelete(review.id)}
-                  className="rounded-xl border border-white/[0.05] bg-white/[0.035] p-2 text-zinc-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                  className="rounded-full p-2 text-zinc-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
                   title="Excluir"
                 >
                   <Trash2 size={16} />
@@ -413,7 +413,7 @@ export default function ReviewItem({
           </div>
 
           {isEditing ? (
-            <div className="relative mb-4 w-full animate-in fade-in zoom-in space-y-4 rounded-2xl border border-violet-400/15 bg-black/25 p-4 duration-200">
+            <div className="relative mb-4 w-full animate-in fade-in zoom-in space-y-4 rounded-xl border border-violet-400/15 bg-black/20 p-4 duration-200">
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -465,30 +465,30 @@ export default function ReviewItem({
                 <button
                   type="button"
                   onClick={handleSaveReviewEdit}
-                  className="rounded-full bg-white px-4 py-2 text-xs font-black text-zinc-950 transition-colors hover:bg-violet-100"
+                  className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-zinc-950 transition-colors hover:bg-violet-100"
                 >
                   Salvar
                 </button>
               </div>
             </div>
           ) : !hasText && hasRating ? (
-            <div className="mb-4 flex w-full flex-col gap-2 rounded-2xl border border-yellow-300/10 bg-yellow-300/[0.04] p-5">
+            <div className="mb-4 flex w-full flex-col gap-2 border-l-2 border-yellow-300/30 py-2 pl-4">
               <div className="flex items-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
-                    size={28}
-                    className={`${star <= review.rating ? "fill-yellow-400 text-yellow-400" : "fill-zinc-800 text-zinc-700"} drop-shadow-md`}
+                    size={22}
+                    className={star <= review.rating ? "fill-yellow-400 text-yellow-400" : "fill-zinc-800 text-zinc-700"}
                   />
                 ))}
-                <span className="ml-2 text-2xl font-bold text-white">{review.rating.toFixed(1)}</span>
+                <span className="ml-2 text-xl font-semibold text-white">{review.rating.toFixed(1)}</span>
               </div>
               <p className="pl-1 text-xs font-medium uppercase tracking-wider text-zinc-500">Avaliação sem comentário</p>
             </div>
           ) : null}
 
           {hasText && !isEditing && (
-            <div className={`mb-5 w-full break-words space-y-4 leading-relaxed ${isElite ? `text-base md:text-lg ${eliteTheme.text}` : "text-sm text-zinc-300 md:text-base"}`}>
+            <div className={`mb-5 w-full break-words space-y-3 leading-7 ${isElite ? `text-[15px] md:text-base ${eliteTheme.text}` : "text-sm text-zinc-300 md:text-[15px]"}`}>
               <div>
                 {renderRichText(displayText, reviewSpoilerDisabled)}
                 {review.text.length > MAX_TEXT_LENGTH && (
@@ -504,10 +504,10 @@ export default function ReviewItem({
             </div>
           )}
 
-          <div className="flex items-center gap-2 border-t border-white/[0.05] pt-4">
+          <div className="flex items-center gap-1 border-t border-white/[0.05] pt-3">
             <button
               onClick={() => onLike(review.id)}
-              className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-bold transition-colors ${isLiked ? "bg-red-500/10 text-red-400" : "bg-white/[0.03] text-zinc-500 hover:bg-white/[0.06] hover:text-white"}`}
+              className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium transition-colors ${isLiked ? "bg-red-500/10 text-red-400" : "text-zinc-500 hover:bg-white/[0.05] hover:text-white"}`}
             >
               <Heart size={18} className={isLiked ? "fill-red-500" : ""} />
               {review.likesCount > 0 && <span className="text-xs font-bold">{review.likesCount}</span>}
@@ -520,7 +520,7 @@ export default function ReviewItem({
                 }
                 openReplyComposer(review.username, "review");
               }}
-              className="inline-flex items-center gap-2 rounded-full bg-white/[0.03] px-3 py-2 text-[10px] font-black uppercase tracking-wider text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-200"
+              className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 transition-colors hover:bg-white/[0.05] hover:text-zinc-200"
             >
               <MessageCircle size={18} /> {isReplying && replyAnchorId === "review" ? "Cancelar" : "Responder"}
             </button>
@@ -538,7 +538,7 @@ export default function ReviewItem({
               ) : (
                 <div className="ml-1 animate-in slide-in-from-top-2 space-y-3 border-l border-violet-400/20 pl-4 pt-4 md:ml-2 md:pl-5">
                   {replyList.map((reply) => (
-                    <div key={reply.id} className="group/reply w-full rounded-2xl border border-white/[0.06] bg-black/15 p-4 transition-colors hover:border-white/10">
+                    <div key={reply.id} className="group/reply w-full border-b border-white/[0.05] py-4 last:border-0">
                       <div className="flex gap-3">
                         <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-zinc-800 ring-1 ring-white/10">
                           {reply.userPhoto ? (
@@ -612,7 +612,7 @@ export default function ReviewItem({
                                 followingList={followingList}
                                 inputRefExternal={editReplyRef}
                                 maxLength={400}
-                                className="min-h-[96px] w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3 py-3 text-sm text-white focus:border-violet-500 focus:outline-none"
+                                className="min-h-[96px] w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-3 text-sm text-white focus:border-violet-500 focus:outline-none"
                               />
                               <div className="flex justify-end gap-2">
                                 <button

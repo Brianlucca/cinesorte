@@ -1,9 +1,8 @@
-import { Calendar, ChevronDown, Clapperboard, Globe, Library, RefreshCw, Sparkles, Star } from "lucide-react";
+import { ArrowRight, ChevronDown, Globe, Library, RefreshCw, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useRouletteLogic } from "@features/roulette/hooks/useRouletteLogic";
 import GenreSelector from "@features/roulette/components/GenreSelector";
 import RouletteHeader from "@features/roulette/components/RouletteHeader";
-import Modal from "@shared/components/ui/Modal";
 
 const getImageUrl = (path, size = "w780") => (path ? `https://image.tmdb.org/t/p/${size}${path}` : null);
 
@@ -15,63 +14,77 @@ function SourceButton({ active, disabled, icon: Icon, label, description, onClic
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`group flex min-h-[74px] flex-1 items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${
+      className={`group flex min-w-0 flex-1 items-center gap-2 border-b-2 px-2 py-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${
         active
-          ? "border-violet-400/20 bg-violet-500/12 text-white"
-          : "border-white/[0.07] bg-white/[0.025] text-zinc-400 hover:border-white/[0.11] hover:bg-white/[0.045] hover:text-zinc-100"
+          ? "border-violet-400 text-white"
+          : "border-transparent text-zinc-500 hover:text-zinc-200"
       }`}
     >
       <span
-        className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border transition-colors ${
+        className={`grid h-7 w-7 shrink-0 place-items-center transition-colors ${
           active
-            ? "border-violet-400/20 bg-violet-500/15 text-violet-200"
-            : "border-white/[0.06] bg-black/20 text-zinc-500 group-hover:text-violet-300"
+            ? "text-violet-300"
+            : "text-zinc-600 group-hover:text-violet-300"
         }`}
       >
-        <SourceIcon size={18} />
+        <SourceIcon size={15} />
       </span>
       <span className="min-w-0">
-        <span className="block text-sm font-semibold">{label}</span>
-        <span className="mt-1 block text-xs leading-4 text-zinc-600">{description}</span>
+        <span className="block text-xs font-semibold">{label}</span>
+        <span className="sr-only">{description}</span>
       </span>
     </button>
   );
 }
 
-function PreviewCard({ previewMedia, isSpinning }) {
-  const posterUrl = getImageUrl(previewMedia?.poster_path);
+function PreviewCard({ previewMedia, isSpinning, isWinner }) {
+  const imageUrl = getImageUrl(previewMedia?.backdrop_path || previewMedia?.poster_path, "w1280");
+  const year = (previewMedia?.release_date || previewMedia?.first_air_date || "").slice(0, 4);
+  const mediaType = previewMedia?.media_type || (previewMedia?.first_air_date ? "tv" : "movie");
 
   return (
-    <section className="relative mx-auto w-full max-w-[380px]">
-      <div className="relative overflow-hidden rounded-[1.75rem] border border-white/[0.08] bg-[#0d0d11] shadow-[0_30px_90px_rgba(0,0,0,0.42)]">
-        <div className="aspect-[2/3]">
-          {posterUrl ? (
+    <section className="relative w-full">
+      <div className="relative aspect-[16/10] min-h-[380px] overflow-hidden rounded-xl border border-white/[0.06] bg-[#181a20] md:aspect-[16/9] md:min-h-[470px] xl:min-h-[560px]">
+          {imageUrl ? (
             <div className="relative h-full w-full animate-in fade-in zoom-in-95 duration-500">
-              <img src={posterUrl} className="h-full w-full object-cover" alt={previewMedia?.title || previewMedia?.name || "Preview"} />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d11] via-transparent to-transparent" />
+              <img src={imageUrl} className={`h-full w-full object-cover transition duration-300 ${isSpinning ? "scale-[1.03] blur-[1px]" : ""}`} alt={previewMedia?.title || previewMedia?.name || "Preview"} />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#111216] via-[#111216]/15 to-black/5" />
             </div>
           ) : (
-            <div className="grid h-full place-items-center bg-[radial-gradient(circle_at_50%_20%,rgba(124,58,237,0.20),transparent_35%),linear-gradient(145deg,#111116,#08080b)] p-8 text-center">
+            <div className="grid h-full place-items-center bg-[radial-gradient(circle_at_50%_35%,rgba(124,58,237,0.16),transparent_32%),linear-gradient(145deg,#14151a,#090a0d)] p-8 text-center">
               <div>
-                <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-violet-400/15 bg-violet-500/10 text-violet-300">
-                  <Sparkles size={28} className={isSpinning ? "animate-pulse" : ""} />
+                <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-white/[0.05] text-violet-300">
+                  <Sparkles size={23} className={isSpinning ? "animate-pulse" : ""} />
                 </span>
-                <h2 className="mt-6 text-2xl font-black tracking-normal text-zinc-100">Gire a sorte</h2>
-                <p className="mt-2 text-sm leading-6 text-zinc-500">O pôster sorteado aparece aqui durante a roleta.</p>
+                <h2 className="mt-5 text-xl font-semibold tracking-[-0.02em] text-zinc-100 md:text-2xl">O que vamos assistir?</h2>
+                <p className="mt-2 text-sm text-zinc-500">A escolha aparece aqui quando a roleta começar.</p>
               </div>
             </div>
           )}
-        </div>
 
-        <div className="absolute inset-x-0 bottom-0 p-5">
+        <div className="absolute inset-x-0 bottom-0 p-5 md:p-7">
           {previewMedia ? (
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-violet-200">
-                {isSpinning ? "Sorteando agora" : "Último preview"}
+              <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-violet-200">
+                {isSpinning ? "A roleta está girando" : isWinner ? "Resultado da roleta" : "Na tela agora"}
               </p>
-              <h3 className="mt-1 line-clamp-2 text-lg font-semibold leading-tight text-white">
+              <h3 className="mt-2 line-clamp-2 max-w-3xl text-4xl font-semibold leading-[0.98] tracking-[-0.045em] text-white sm:text-5xl xl:text-[3.4rem]">
                 {previewMedia.title || previewMedia.name}
               </h3>
+              <div className="mt-3 flex items-center gap-2 text-xs text-zinc-300/80">
+                {year && <span>{year}</span>}
+                {year && <span className="h-1 w-1 rounded-full bg-violet-400" />}
+                <span>{mediaType === "tv" ? "Série" : "Filme"}</span>
+              </div>
+              {isWinner && (
+                <Link
+                  to={`/app/${mediaType}/${previewMedia.id}`}
+                  className="mt-5 inline-flex items-center gap-2.5 rounded-full bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100"
+                >
+                  Ver detalhes
+                  <ArrowRight size={18} />
+                </Link>
+              )}
             </div>
           ) : null}
         </div>
@@ -80,133 +93,38 @@ function PreviewCard({ previewMedia, isSpinning }) {
   );
 }
 
-function ResultModal({ winner, isOpen, onClose, onTryAnother }) {
-  const backdropUrl = getImageUrl(winner?.backdrop_path || winner?.poster_path, "w1280");
-  const posterUrl = getImageUrl(winner?.poster_path, "w500");
-  const title = winner?.title || winner?.name;
-  const year = winner?.release_date?.split("-")[0] || winner?.first_air_date?.split("-")[0];
-  const mediaType = winner?.media_type === "tv" ? "Série" : "Filme";
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
-      {winner && (
-        <div className="relative min-h-[560px] overflow-hidden rounded-[1.75rem] border border-white/[0.08] bg-[#0d0d11] shadow-2xl">
-          {backdropUrl && (
-            <img
-              src={backdropUrl}
-              className="absolute inset-0 h-full w-full object-cover opacity-25 blur-sm"
-              alt={title}
-            />
-          )}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(139,92,246,0.18),transparent_34%),linear-gradient(90deg,#0d0d11_0%,rgba(13,13,17,0.94)_48%,rgba(13,13,17,0.82)_100%)]" />
-
-          <div className="relative z-10 grid min-h-[560px] grid-cols-1 md:grid-cols-[300px_minmax(0,1fr)]">
-            <div className="border-b border-white/[0.07] bg-black/20 p-5 md:border-b-0 md:border-r md:p-6">
-              <div className="mx-auto max-w-[240px] md:max-w-none">
-                <div className="overflow-hidden rounded-[1.25rem] border border-white/[0.10] bg-zinc-900 shadow-[0_24px_70px_rgba(0,0,0,0.42)]">
-                  <div className="aspect-[2/3]">
-                    {posterUrl ? (
-                      <img src={posterUrl} alt={title} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="grid h-full place-items-center bg-white/[0.035] text-zinc-600">
-                        <Clapperboard size={34} />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col justify-between p-5 md:p-8">
-              <div>
-                <div className="mb-5 flex flex-wrap items-center gap-2.5">
-                  <span className="inline-flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-500/15 px-3.5 py-2 text-[9px] font-semibold uppercase tracking-[0.1em] text-violet-200">
-                    <Sparkles size={13} />
-                    Resultado da roleta
-                  </span>
-                  <span className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2 text-[9px] font-semibold uppercase tracking-[0.1em] text-zinc-500">
-                    Escolha sorteada
-                  </span>
-                </div>
-
-                <h2 className="max-w-3xl text-3xl font-black leading-[1.02] tracking-[-0.035em] text-white sm:text-4xl md:text-5xl">
-                  {title}
-                </h2>
-
-                <div className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-                  <span className="inline-flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-black/25 px-4 py-3 text-sm font-medium text-zinc-300 backdrop-blur-xl">
-                    <Star size={16} className="fill-yellow-400 text-yellow-400" />
-                    {winner.vote_average?.toFixed(1) || "N/A"}
-                  </span>
-                  {year && (
-                    <span className="inline-flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-black/25 px-4 py-3 text-sm font-medium text-zinc-300 backdrop-blur-xl">
-                      <Calendar size={16} className="text-violet-300" />
-                      {year}
-                    </span>
-                  )}
-                  <span className="inline-flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-black/25 px-4 py-3 text-sm font-medium text-zinc-300 backdrop-blur-xl">
-                    <Clapperboard size={16} className="text-cyan-300" />
-                    {mediaType}
-                  </span>
-                </div>
-
-                <div className="mt-6 rounded-2xl border border-white/[0.07] bg-black/20 p-4 md:p-5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-600">Sinopse</p>
-                  <p className="mt-3 line-clamp-6 text-sm font-medium leading-7 text-zinc-300 md:text-base">
-                    {winner.overview || "Nenhuma sinopse disponível para este título no momento."}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Link
-                  to={`/app/${winner.media_type || "movie"}/${winner.id}`}
-                  className="rounded-xl bg-white px-5 py-3.5 text-center text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-950 transition-colors hover:bg-violet-100"
-                >
-                  Ver detalhes
-                </Link>
-                <button
-                  type="button"
-                  onClick={onTryAnother}
-                  className="rounded-xl border border-white/[0.09] bg-white/[0.045] px-5 py-3.5 text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-100 transition-colors hover:bg-white/[0.08]"
-                >
-                  Tentar outro
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </Modal>
-  );
-}
-
 export default function MovieRoulette() {
   const { state, actions } = useRouletteLogic();
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#08080b] pb-24 text-white animate-in fade-in duration-700">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(124,58,237,0.10),transparent_30%),radial-gradient(circle_at_88%_18%,rgba(14,165,233,0.055),transparent_28%)]" />
-
-      <div className="relative mx-auto w-full max-w-[1600px] px-4 pt-8 sm:px-6 md:px-10 md:pt-10 xl:px-14">
+    <div className="relative min-h-screen overflow-hidden bg-[#111216] pb-24 text-white animate-in fade-in duration-700">
+      <div className="relative mx-auto w-full max-w-[1680px] px-4 pt-7 sm:px-6 md:px-10 md:pt-10 xl:px-14 2xl:px-16">
         <RouletteHeader isSpinning={state.loading} />
 
-        <div className="mt-8 grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_420px] xl:gap-10">
-          <main className="min-w-0 space-y-5">
-            <section className="rounded-[1.5rem] border border-white/[0.07] bg-[#0d0d11]/92 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.22)] backdrop-blur-xl md:p-5">
-              <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_390px] xl:items-start xl:gap-8">
+          <main className="min-w-0">
+            <PreviewCard
+              previewMedia={state.previewMedia}
+              isSpinning={state.loading}
+              isWinner={Boolean(state.winner && state.winner.id === state.previewMedia?.id)}
+            />
+          </main>
+
+          <aside className="space-y-6 rounded-xl border border-white/[0.06] bg-[#181a20] p-4 md:p-5 xl:sticky xl:top-6">
+            <section>
+              <div className="mb-3 flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Origem do sorteio</p>
-                  <h2 className="mt-1 text-lg font-black text-zinc-100">Escolha o catálogo</h2>
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Origem</p>
+                  <h2 className="mt-1 text-base font-semibold text-zinc-100">Escolha o catálogo</h2>
                 </div>
                 {state.source === "user" && (
-                  <span className="hidden rounded-xl border border-violet-400/15 bg-violet-500/10 px-3 py-2 text-[9px] font-bold uppercase tracking-[0.1em] text-violet-200 sm:inline-flex">
+                  <span className="hidden rounded-full bg-violet-500/10 px-2.5 py-1.5 text-[9px] font-semibold text-violet-200 sm:inline-flex">
                     {state.userLists.length} listas
                   </span>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="grid grid-cols-2 border-b border-white/[0.08]">
                 <SourceButton
                   active={state.source === "global"}
                   icon={Globe}
@@ -225,15 +143,15 @@ export default function MovieRoulette() {
               </div>
 
               {state.source === "user" && (
-                <div className="mt-4 max-w-md">
-                  <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                <div className="mt-3">
+                  <label className="mb-2 block text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
                     Lista
                   </label>
                   <div className="relative">
                     <select
                       value={state.selectedListId}
                       onChange={(event) => actions.setSelectedListId(event.target.value)}
-                      className="w-full cursor-pointer appearance-none rounded-2xl border border-white/[0.08] bg-black/20 px-4 py-3.5 pr-11 text-sm font-medium text-white outline-none transition-colors focus:border-violet-400/50 focus:bg-white/[0.035]"
+                      className="w-full cursor-pointer appearance-none rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3 pr-10 text-xs font-medium text-white outline-none transition-colors focus:border-violet-400/50"
                     >
                       <option value="all" className="bg-zinc-900">Todas as listas</option>
                       {state.userLists.map((list) => (
@@ -252,37 +170,24 @@ export default function MovieRoulette() {
               type="button"
               onClick={actions.spinRoulette}
               disabled={state.loading}
-              className="group flex min-h-[86px] w-full items-center justify-between gap-4 rounded-[1.5rem] border border-violet-400/20 bg-[linear-gradient(145deg,rgba(139,92,246,0.20),rgba(255,255,255,0.035)_48%)] p-4 text-left shadow-[0_24px_80px_rgba(0,0,0,0.22)] transition-colors hover:bg-violet-500/15 disabled:cursor-not-allowed disabled:opacity-55 sm:px-5"
+              className="group flex w-full items-center justify-between gap-4 rounded-xl bg-white px-4 py-3.5 text-left text-zinc-950 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-55"
             >
               <span>
-                <span className="block text-[10px] font-bold uppercase tracking-[0.1em] text-violet-200">
-                  {state.loading ? "Sorteando" : "Pronto para girar"}
+                <span className="block text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                  {state.loading ? "Sorteando agora" : "Sua próxima escolha"}
                 </span>
-                <span className="mt-1 block text-xl font-black text-white sm:text-2xl">
+                <span className="mt-0.5 block text-base font-semibold sm:text-lg">
                   {state.loading ? "Misturando opções..." : "Girar roleta"}
                 </span>
               </span>
-              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-zinc-950 transition-transform group-hover:scale-105">
-                <RefreshCw size={20} className={state.loading ? "animate-spin" : "transition-transform duration-700 group-hover:rotate-180"} />
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-zinc-950 text-white transition-transform group-hover:scale-105">
+                <RefreshCw size={16} className={state.loading ? "animate-spin" : "transition-transform duration-700 group-hover:rotate-180"} />
               </span>
             </button>
-          </main>
-
-          <aside className="xl:sticky xl:top-6 xl:self-start">
-            <PreviewCard previewMedia={state.previewMedia} isSpinning={state.loading} />
           </aside>
         </div>
       </div>
 
-      <ResultModal
-        winner={state.winner}
-        isOpen={state.isModalOpen}
-        onClose={actions.closeModal}
-        onTryAnother={() => {
-          actions.closeModal();
-          actions.spinRoulette();
-        }}
-      />
     </div>
   );
 }

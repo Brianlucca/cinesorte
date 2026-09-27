@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
   Loader2,
-  MessageCircle,
   MessageSquarePlus,
   Search,
   UserPlus,
@@ -13,7 +12,6 @@ import {
   getConversationMessages,
   getHiddenOwnedMessageGroups,
   getMessageConversations,
-  getMessageUnreadCount,
   deleteMessageConversation,
   deleteMessageGroup,
   markConversationRead,
@@ -31,7 +29,6 @@ import MessageThreadList from "@features/messages/components/MessageThreadList";
 import { buildConversationView, cleanMessageMedia } from "@features/messages/utils/messageUtils";
 import Modal from "@shared/components/ui/Modal";
 
-const FALLBACK_REFRESH_MS = 120000;
 const MESSAGE_FILTERS = [
   { id: "all", label: "Tudo" },
   { id: "direct", label: "Privado" },
@@ -58,7 +55,6 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
   const [loadingConversations, setLoadingConversations] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
-  const [unreadTotal, setUnreadTotal] = useState(0);
   const [query, setQuery] = useState("");
   const [blockedUsers, setBlockedUsers] = useState([]);
   const [loadingBlocked, setLoadingBlocked] = useState(false);
@@ -99,16 +95,6 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
     });
   }, [displayThreads, filter, query]);
 
-  const refreshUnread = useCallback(async () => {
-    if (!authenticated) return;
-    try {
-      const response = await getMessageUnreadCount();
-      setUnreadTotal(Number(response?.count) || 0);
-    } catch {
-      setUnreadTotal(0);
-    }
-  }, [authenticated]);
-
   const loadConversations = useCallback(async ({ silent = false } = {}) => {
     if (!authenticated) return;
     if (!silent) setLoadingConversations(true);
@@ -121,7 +107,6 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
       const hiddenList = Array.isArray(hiddenData) ? hiddenData : [];
       setConversations(list);
       setHiddenConversations(hiddenList);
-      setUnreadTotal(list.reduce((total, item) => total + (Number(item.unreadCount) || 0), 0));
     } catch (error) {
       if (!silent) toast.error("Mensagens indisponíveis", error.message || "Não foi possível carregar as conversas.");
     } finally {
@@ -174,12 +159,11 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
           conversation.id === conversationId ? { ...conversation, unreadCount: 0 } : conversation,
         ),
       );
-      await refreshUnread();
       window.dispatchEvent(new CustomEvent("cinesorte:notifications-refresh"));
     } catch {
       // Read receipts are best-effort and should not block the chat.
     }
-  }, [allThreads, loadMessages, refreshUnread, toast]);
+  }, [allThreads, loadMessages, toast]);
 
   useEffect(() => {
     if (defaultOpen) setIsOpen(true);
@@ -303,17 +287,6 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
       danger: true,
     });
   };
-
-  useEffect(() => {
-    if (!authenticated) return undefined;
-
-    refreshUnread();
-    const interval = window.setInterval(() => {
-      if (!document.hidden) refreshUnread();
-    }, FALLBACK_REFRESH_MS);
-
-    return () => window.clearInterval(interval);
-  }, [authenticated, refreshUnread]);
 
   useEffect(() => {
     if (isOpen) loadConversations();
@@ -449,13 +422,7 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
     if (!authenticated) return undefined;
 
     const source = new EventSource(streamUrl("/stream"), { withCredentials: true });
-    source.addEventListener("conversations", (event) => {
-      try {
-        const payload = JSON.parse(event.data);
-        setUnreadTotal(Number(payload.unreadCount) || 0);
-      } catch {
-        // Ignore malformed stream packets.
-      }
+    source.addEventListener("conversations", () => {
       loadConversations({ silent: true });
       window.dispatchEvent(new CustomEvent("cinesorte:notifications-refresh"));
     });
@@ -487,26 +454,7 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
 
   if (!authenticated) return null;
 
-  if (!isOpen) {
-    return (
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-5 right-5 z-[100050] flex h-14 min-w-[210px] items-center justify-between gap-4 rounded-2xl border border-white/[0.09] bg-[#0d0d11]/95 px-4 text-left text-white shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-transform hover:-translate-y-0.5 md:bottom-6 md:right-8"
-      >
-        <span className="flex items-center gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-xl border border-violet-400/15 bg-violet-500/10 text-violet-200">
-            <MessageCircle size={18} />
-          </span>
-          <span>
-            <span className="block text-sm font-semibold text-zinc-100">Mensagens</span>
-            <span className="block text-[10px] text-zinc-600">Privadas, grupos e cards</span>
-          </span>
-        </span>
-        {unreadTotal > 0 && <span className="grid h-6 min-w-6 place-items-center rounded-full bg-violet-500 px-2 text-xs font-bold text-white">{unreadTotal}</span>}
-      </button>
-    );
-  }
+  if (!isOpen) return null;
 
   return (
     <div
@@ -516,7 +464,7 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
           : "inset-x-3 bottom-3 flex-col-reverse md:inset-x-auto md:bottom-6 md:right-8 md:flex-row-reverse md:items-end"
       }`}
     >
-      <section className={`${activeThread ? "hidden md:flex" : "flex"} max-h-[82vh] w-full flex-col overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-[#0d0d11] shadow-[0_24px_90px_rgba(0,0,0,0.45)] md:flex md:h-[620px] md:w-[380px]`}>
+      <section className={`${activeThread ? "hidden md:flex" : "flex"} max-h-[82vh] w-full flex-col overflow-hidden rounded-xl border border-white/[0.06] bg-[#111216] shadow-[0_24px_80px_rgba(0,0,0,0.4)] md:flex md:h-[600px] md:w-[360px]`}>
         <header className="border-b border-white/[0.06] p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -546,7 +494,7 @@ export default function MessagesDock({ defaultOpen = false, initialConversationI
             </div>
           </div>
 
-          <div className="mt-4 flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-black/25 px-3 py-2.5">
+          <div className="mt-4 flex h-11 items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.018] px-3">
             <Search size={16} className="text-zinc-600" />
             <input
               value={query}

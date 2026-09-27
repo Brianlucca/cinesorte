@@ -11,7 +11,7 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import MediaImages from "@features/media/components/MediaImages";
 import ReviewsSection from "@features/media/components/reviews/ReviewsSection";
@@ -33,7 +33,7 @@ function EpisodeNavigationCard({ episode, direction, tvId, seasonNumber }) {
   return (
     <Link
       to={`/app/tv/${tvId}/season/${seasonNumber}/episode/${episode.episode_number}`}
-      className={`group flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3 transition-all hover:border-violet-300/25 hover:bg-white/[0.05] ${
+      className={`group flex items-center gap-3 rounded-xl bg-white/[0.025] p-3 transition-colors hover:bg-white/[0.05] ${
         isPrevious ? "text-left" : "justify-end text-right"
       }`}
     >
@@ -74,6 +74,7 @@ export default function EpisodeDetails() {
     actions,
   } = useEpisodeDetailsLogic();
   const [trailerOpen, setTrailerOpen] = useState(false);
+  const guestCastRef = useRef(null);
 
   useEffect(() => {
     if (!loading && location.hash === "#avaliacoes") window.setTimeout(() => document.querySelector("#avaliacoes")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
@@ -124,9 +125,16 @@ export default function EpisodeDetails() {
   const watchedMinutes = Math.floor((Number(watchProgress?.positionSeconds) || 0) / 60);
   const remainingMinutes = Math.max(0, Math.ceil(((Number(watchProgress?.durationSeconds) || 0) - (Number(watchProgress?.positionSeconds) || 0)) / 60));
   const providerNames = { netflix: "Netflix", "prime-video": "Prime Video", "disney-plus": "Disney+", max: "Max", globoplay: "Globoplay", "paramount-plus": "Paramount+", "apple-tv-plus": "Apple TV+", crunchyroll: "Crunchyroll" };
+  const slideGuestCast = (direction) => {
+    if (!guestCastRef.current) return;
+    guestCastRef.current.scrollBy({
+      left: direction === "left" ? -guestCastRef.current.clientWidth * 0.8 : guestCastRef.current.clientWidth * 0.8,
+      behavior: "smooth",
+    });
+  };
 
   return (
-    <div className="relative isolate -mt-24 min-h-screen overflow-x-hidden bg-zinc-950 pb-24 text-white md:-mt-8">
+    <div className="relative isolate -mt-24 min-h-screen overflow-x-hidden bg-[#101115] pb-24 text-white md:-mt-8">
       <TrailerModal
         isOpen={trailerOpen}
         onClose={() => setTrailerOpen(false)}
@@ -134,14 +142,12 @@ export default function EpisodeDetails() {
         title={`${tvShow?.name || "Série"} — ${title}`}
       />
 
-      <header className="relative h-[78svh] min-h-[650px] max-h-[820px]">
+      <header className="relative h-[72svh] min-h-[590px] max-h-[740px]">
         <div
           className="pointer-events-none absolute inset-x-0 top-0 -bottom-52"
           style={{
-            WebkitMaskImage:
-              "linear-gradient(to bottom, black 0%, black 60%, rgba(0,0,0,0.8) 78%, rgba(0,0,0,0.24) 92%, transparent 100%)",
-            maskImage:
-              "linear-gradient(to bottom, black 0%, black 60%, rgba(0,0,0,0.8) 78%, rgba(0,0,0,0.24) 92%, transparent 100%)",
+            WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 70%, transparent 100%)",
+            maskImage: "linear-gradient(to bottom, black 0%, black 70%, transparent 100%)",
           }}
         >
           {banner ? (
@@ -149,52 +155,51 @@ export default function EpisodeDetails() {
           ) : (
             <div className="h-full w-full bg-gradient-to-br from-violet-950/30 to-zinc-950" />
           )}
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,9,11,0.98)_0%,rgba(9,9,11,0.8)_40%,rgba(9,9,11,0.2)_78%,rgba(9,9,11,0.08)_100%)]" />
-          <div className="absolute inset-0 bg-[linear-gradient(0deg,#09090b_0%,rgba(9,9,11,0.86)_12%,transparent_56%,rgba(9,9,11,0.34)_100%)]" />
-          <div className="absolute -bottom-16 left-[18%] h-80 w-[38rem] rounded-full bg-violet-700/10 blur-[125px]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(16,17,21,0.96)_0%,rgba(16,17,21,0.7)_42%,rgba(16,17,21,0.1)_80%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(0deg,#101115_0%,rgba(16,17,21,0.72)_18%,transparent_58%,rgba(16,17,21,0.25)_100%)]" />
         </div>
-        <div className="pointer-events-none absolute inset-x-0 -bottom-48 z-[1] h-80 bg-gradient-to-b from-transparent via-zinc-950/75 to-zinc-950" />
+        <div className="pointer-events-none absolute inset-x-0 -bottom-32 z-[1] h-64 bg-gradient-to-b from-transparent via-[#101115]/70 to-[#101115]" />
 
-        <div className="relative z-10 mx-auto flex h-full max-w-[1600px] flex-col px-5 pb-20 pt-28 sm:px-8 md:px-12 md:pb-24 xl:px-16">
+        <div className="relative z-10 mx-auto flex h-full max-w-[1380px] flex-col px-5 pb-12 pt-28 sm:px-8 md:px-10 md:pb-16 xl:px-12">
           <div className="flex flex-wrap items-center gap-2.5">
             <Link
               to={`/app/tv/${tvId}/season/${seasonNumber}`}
-              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/25 px-4 py-2.5 text-xs font-bold text-zinc-200 backdrop-blur-xl transition-all hover:bg-white hover:text-black"
+              className="inline-flex items-center gap-2 rounded-full bg-black/30 px-4 py-2.5 text-xs font-medium text-zinc-200 backdrop-blur-md transition-colors hover:bg-white hover:text-black"
             >
               <ArrowLeft size={16} /> Voltar à temporada
             </Link>
             <Link
               to={`/app/tv/${tvId}`}
-              className="rounded-full border border-white/10 bg-black/20 px-4 py-2.5 text-xs font-bold text-zinc-400 backdrop-blur-xl transition-colors hover:text-white"
+              className="rounded-full bg-black/20 px-4 py-2.5 text-xs font-medium text-zinc-400 backdrop-blur-md transition-colors hover:text-white"
             >
               {tvShow?.name || "Ver série"}
             </Link>
           </div>
 
           <div className="mt-auto w-full max-w-6xl">
-            <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-300">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
               Temporada {seasonNumber} · Episódio {episode.episode_number}
             </span>
-            <h1 className="mt-3 max-w-4xl text-4xl font-black leading-[0.95] tracking-[-0.04em] text-white sm:text-5xl md:text-[3rem] xl:text-[3.45rem]">
+            <h1 className="mt-2 max-w-4xl text-4xl font-semibold leading-[0.98] tracking-[-0.045em] text-white sm:text-5xl xl:text-[3.2rem]">
               {title}
             </h1>
 
-            <div className="mt-6 flex flex-wrap items-center gap-2.5 text-xs font-semibold text-zinc-300">
+            <div className="mt-5 flex flex-wrap items-center gap-4 text-xs font-medium text-zinc-300">
               {episode.vote_average > 0 && (
-                <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-yellow-300/15 bg-yellow-300/[0.08] px-3 py-2 text-yellow-200 backdrop-blur-xl">
+                <span className="inline-flex shrink-0 items-center gap-1.5 text-yellow-200">
                   <Star size={14} className="fill-yellow-300" /> {episode.vote_average.toFixed(1)}
                 </span>
               )}
-              <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+              <span className="inline-flex shrink-0 items-center gap-1.5">
                 <Calendar size={14} /> {formatDate(episode.air_date)}
               </span>
               {episode.runtime && (
-                <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+                <span className="inline-flex shrink-0 items-center gap-1.5">
                   <Clock size={14} /> {episode.runtime} min
                 </span>
               )}
               {watchProgress && (
-                <div className="flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-white/10 bg-black/25 px-4 py-3 backdrop-blur-xl sm:w-[336px] sm:shrink-0">
+                <div className="flex w-full min-w-0 items-center gap-3 border-l border-white/15 pl-4 sm:w-[336px] sm:shrink-0">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-3">
                       <span className="truncate text-[9px] font-black uppercase tracking-[0.16em] text-violet-300/80">
@@ -222,7 +227,7 @@ export default function EpisodeDetails() {
               <button
                 type="button"
                 onClick={() => setTrailerOpen(true)}
-                className="mt-7 inline-flex items-center gap-2.5 rounded-full bg-white px-6 py-3.5 text-sm font-black text-zinc-950 transition-all hover:scale-[1.02] hover:bg-violet-100"
+                className="mt-6 inline-flex items-center gap-2.5 rounded-full bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100"
               >
                 <Play size={17} className="fill-current" /> Assistir vídeo
               </button>
@@ -231,8 +236,8 @@ export default function EpisodeDetails() {
         </div>
       </header>
 
-      <div className="relative z-20 mx-auto -mt-8 grid max-w-[1600px] grid-cols-1 gap-10 px-5 sm:px-8 md:-mt-12 md:px-12 lg:grid-cols-12 lg:gap-12 xl:px-16">
-        <main className="space-y-14 lg:col-span-8 md:space-y-16">
+      <div className="relative z-20 mx-auto grid max-w-[1380px] grid-cols-1 gap-10 px-5 sm:px-8 md:px-10 lg:grid-cols-12 lg:gap-14 xl:px-12">
+        <main className="space-y-12 lg:col-span-8 md:space-y-14">
           {(previousEpisode || nextEpisode) && (
             <nav className="grid gap-3 md:grid-cols-2" aria-label="Navegação entre episódios">
               <EpisodeNavigationCard
@@ -250,13 +255,12 @@ export default function EpisodeDetails() {
             </nav>
           )}
 
-          <section className="relative pl-5 md:pl-8">
-            <span className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-violet-400 via-violet-500/35 to-transparent" />
-            <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
+          <section className="border-t border-white/[0.07] pt-8">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
               Neste episódio
             </span>
-            <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">Sinopse</h2>
-            <p className="mt-5 text-base font-light leading-8 text-zinc-300 md:text-lg md:leading-9">
+            <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">Sinopse</h2>
+            <p className="mt-4 text-[15px] leading-7 text-zinc-300 md:text-base md:leading-8">
               {episode.overview || "Nenhuma descrição disponível para este episódio."}
             </p>
           </section>
@@ -265,23 +269,29 @@ export default function EpisodeDetails() {
             <section>
               <div className="mb-6 flex items-end justify-between gap-4">
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
                     Participações especiais
                   </span>
-                  <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">Elenco convidado</h2>
+                  <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">Elenco convidado</h2>
                 </div>
-                <span className="text-xs font-semibold text-zinc-500">
-                  {episode.guest_stars.length} integrantes
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="mr-1 hidden text-xs font-medium text-zinc-500 sm:inline">{episode.guest_stars.length} integrantes</span>
+                  <button type="button" onClick={() => slideGuestCast("left")} aria-label="Voltar no elenco convidado" className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-400 transition-colors hover:bg-white/[0.09] hover:text-white">
+                    <ChevronLeft size={18} />
+                  </button>
+                  <button type="button" onClick={() => slideGuestCast("right")} aria-label="Avançar no elenco convidado" className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-400 transition-colors hover:bg-white/[0.09] hover:text-white">
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
               </div>
-              <div className="content-scrollbar flex snap-x snap-mandatory gap-3.5 overflow-x-auto pb-4 md:gap-4">
+              <div ref={guestCastRef} className="scrollbar-hide flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-2">
                 {episode.guest_stars.map((person) => (
                   <Link
                     to={`/app/person/${person.id}`}
                     key={person.id}
-                    className="group flex w-[250px] shrink-0 snap-start items-center gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3 transition-all hover:-translate-y-1 hover:border-violet-300/25 hover:bg-white/[0.05] md:w-[285px]"
+                    className="group flex w-[230px] shrink-0 snap-start items-center gap-3 rounded-xl bg-white/[0.025] p-2.5 transition-colors hover:bg-white/[0.05] md:w-[260px]"
                   >
-                    <div className="h-24 w-20 shrink-0 overflow-hidden rounded-xl bg-zinc-800">
+                    <div className="h-20 w-16 shrink-0 overflow-hidden rounded-lg bg-zinc-800">
                       {person.profile_path ? (
                         <img
                           src={`https://image.tmdb.org/t/p/w185${person.profile_path}`}
@@ -313,12 +323,12 @@ export default function EpisodeDetails() {
             <MediaImages images={galleryImages} title={title} />
           )}
 
-          <section id="avaliacoes" className="relative scroll-mt-24 overflow-visible rounded-[2rem] border border-white/[0.07] bg-[radial-gradient(ellipse_at_top_left,rgba(124,58,237,0.08),transparent_38%)] p-5 sm:p-7 md:p-9">
+          <section id="avaliacoes" className="relative scroll-mt-24 overflow-visible border-t border-white/[0.07] pt-8">
             <div className="mb-7">
-              <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
                 Conversa da comunidade
               </span>
-              <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">
+              <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">
                 Avaliações do episódio
               </h2>
             </div>
@@ -337,32 +347,32 @@ export default function EpisodeDetails() {
           </section>
         </main>
 
-        <aside className="space-y-5 lg:col-span-4">
-          <section className="rounded-[2rem] border border-white/[0.07] bg-gradient-to-br from-white/[0.04] to-transparent p-5 sm:p-7 lg:sticky lg:top-24">
+        <aside className="space-y-4 lg:col-span-4 lg:pt-8">
+          <section className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-5 lg:sticky lg:top-24">
             <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-violet-500/10 text-violet-300">
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-violet-500/10 text-violet-300">
                 <Tag size={17} />
               </span>
               <div>
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
+                <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
                   Informações
                 </span>
-                <h2 className="text-lg font-black text-white">Ficha do episódio</h2>
+                <h2 className="text-base font-semibold text-white">Ficha do episódio</h2>
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-white/[0.05] bg-black/10 p-3.5">
+            <div className="mt-4 grid grid-cols-2 gap-x-4">
+              <div className="border-b border-white/[0.05] py-3.5">
                 <span className="text-[9px] font-black uppercase tracking-wider text-zinc-600">Temporada</span>
                 <span className="mt-1.5 block text-sm font-black text-white">{seasonNumber}</span>
               </div>
-              <div className="rounded-2xl border border-white/[0.05] bg-black/10 p-3.5">
+              <div className="border-b border-white/[0.05] py-3.5">
                 <span className="text-[9px] font-black uppercase tracking-wider text-zinc-600">Episódio</span>
                 <span className="mt-1.5 block text-sm font-black text-white">
                   {episode.episode_number}
                 </span>
               </div>
-              <div className="col-span-2 rounded-2xl border border-white/[0.05] bg-black/10 p-3.5">
+              <div className="col-span-2 py-3.5">
                 <span className="text-[9px] font-black uppercase tracking-wider text-zinc-600">Série</span>
                 <Link
                   to={`/app/tv/${tvId}`}
@@ -386,7 +396,7 @@ export default function EpisodeDetails() {
                     <Link
                       to={`/app/person/${person.id}`}
                       key={`${person.id}-${person.job}`}
-                      className="group flex items-center gap-3 rounded-2xl border border-transparent p-2 transition-all hover:border-white/[0.06] hover:bg-white/[0.025]"
+                      className="group flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-white/[0.035]"
                     >
                       <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-zinc-800">
                         {person.profile_path ? (
@@ -416,7 +426,7 @@ export default function EpisodeDetails() {
 
             <Link
               to={`/app/tv/${tvId}/season/${seasonNumber}`}
-              className="mt-7 flex items-center justify-between rounded-2xl border border-violet-400/15 bg-violet-500/[0.07] px-4 py-3 text-xs font-black text-violet-200 transition-all hover:bg-violet-500/15"
+              className="mt-7 flex items-center justify-between rounded-lg bg-violet-500/[0.08] px-4 py-3 text-xs font-semibold text-violet-200 transition-colors hover:bg-violet-500/15"
             >
               Ver todos os episódios <ArrowRight size={16} />
             </Link>

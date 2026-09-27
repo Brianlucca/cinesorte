@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Download,
-  ExternalLink,
   Info,
   Play,
   Plug,
@@ -89,7 +87,7 @@ export default function ContinueWatching() {
       }));
       setExtensionState({
         installed,
-        connected: installed && Boolean(status?.connected),
+        connected: Boolean(status?.connected),
         loading: false,
       });
     };
@@ -137,6 +135,10 @@ export default function ContinueWatching() {
     (item) => realProgress(item) >= 85 && detailsPath(item),
   );
 
+  if (!IS_EDGE_BROWSER || extensionState.loading) return null;
+
+  const showProgress = extensionState.connected && continueItems.length > 0;
+
   function slide(direction) {
     if (!rowRef.current) return;
     rowRef.current.scrollBy({
@@ -146,61 +148,24 @@ export default function ContinueWatching() {
   }
 
   return (
-    <section className="group/row relative z-30 px-5 py-5 sm:px-6 md:px-10 xl:px-14 2xl:px-16">
+    <section className="group/row relative z-30 px-5 sm:px-6 md:px-10 xl:px-14 2xl:px-16">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-300/70">
             Sincronizado pela extensão
           </span>
-          <h2 className="mt-1 flex items-center gap-3 text-xl font-black text-white sm:text-2xl">
-            <span className="h-6 w-1.5 rounded-full bg-gradient-to-b from-violet-400 to-violet-700" />
+          <h2 className="mt-1 flex items-center gap-3 text-lg font-semibold tracking-[-0.02em] text-zinc-100 sm:text-xl md:text-2xl">
             Continue de onde parou
           </h2>
         </div>
         <div className="flex items-center gap-3">
-          {!IS_EDGE_BROWSER ? (
-            <span className="inline-flex items-center gap-2 rounded-xl border border-sky-400/15 bg-sky-500/[0.08] px-4 py-2.5 text-xs font-black text-sky-200">
-              <Info size={15} />
-              Extensão disponível apenas no Microsoft Edge
-            </span>
-          ) : extensionState.loading ? null : !extensionState.installed ? (
-            EXTENSION_STORE_URL ? (
-              <a
-                href={EXTENSION_STORE_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-xs font-black text-white transition hover:bg-violet-500"
-              >
-                <Download size={15} />
-                Instalar no Edge
-              </a>
-            ) : (
-              <span className="inline-flex items-center gap-2 rounded-xl border border-sky-400/15 bg-sky-500/[0.08] px-4 py-2.5 text-xs font-black text-sky-200">
-                <Info size={15} />
-                Em breve no Edge Add-ons
-              </span>
-            )
-          ) : !extensionState.connected ? (
-            <Link
-              to={`/extension/connect?extensionId=${EXTENSION_ID}`}
-              className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-xs font-black text-white transition hover:bg-violet-500"
-            >
-              <Plug size={15} />
-              Conectar extensão
-            </Link>
-          ) : (
-            <span className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/15 bg-emerald-500/10 px-4 py-2.5 text-xs font-black text-emerald-300">
-              <CheckCircle2 size={15} />
-              Extensão conectada
-            </span>
-          )}
-          {continueItems.length > 0 && (
-            <div className="hidden gap-2 opacity-40 transition-opacity duration-300 group-hover/row:opacity-100 md:flex">
+          {showProgress && (
+            <div className="flex gap-2">
               <button
                 type="button"
                 aria-label="Voltar em Continue de onde parou"
                 onClick={() => slide("left")}
-                className="rounded-xl border border-white/10 bg-white/5 p-2.5 text-white shadow-lg transition-all hover:bg-white/10"
+                className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-400 transition-colors hover:bg-white/[0.09] hover:text-white"
               >
                 <ChevronLeft size={20} />
               </button>
@@ -208,7 +173,7 @@ export default function ContinueWatching() {
                 type="button"
                 aria-label="Avançar em Continue de onde parou"
                 onClick={() => slide("right")}
-                className="rounded-xl border border-white/10 bg-white/5 p-2.5 text-white shadow-lg transition-all hover:bg-white/10"
+                className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-400 transition-colors hover:bg-white/[0.09] hover:text-white"
               >
                 <ChevronRight size={20} />
               </button>
@@ -217,7 +182,7 @@ export default function ContinueWatching() {
         </div>
       </div>
 
-      {reviewItem && (
+      {showProgress && reviewItem && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-yellow-300/15 bg-gradient-to-r from-yellow-300/[0.08] to-violet-500/[0.06] px-4 py-3">
           <div className="flex items-center gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-yellow-300/10 text-yellow-200">
@@ -245,7 +210,7 @@ export default function ContinueWatching() {
         </div>
       )}
 
-      {continueItems.length > 0 ? (
+      {showProgress ? (
         <div
           ref={rowRef}
           className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-3 scrollbar-hide md:snap-none"
@@ -256,7 +221,7 @@ export default function ContinueWatching() {
             return (
               <article
                 key={item.id}
-                className="group relative h-48 w-[300px] flex-none snap-start overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-900 shadow-2xl sm:w-[360px]"
+                className="group relative h-44 w-[280px] flex-none snap-start overflow-hidden rounded-xl border border-white/[0.06] bg-[#181a20] sm:w-[330px]"
               >
                 {item.thumbnailUrl || item.backdropPath || item.posterPath ? (
                   <img
@@ -305,11 +270,10 @@ export default function ContinueWatching() {
                       href={item.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-2 rounded-xl bg-white px-3.5 py-2 text-xs font-black text-zinc-950 transition hover:bg-violet-200"
+                      className="inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-xl bg-white px-3 text-[11px] font-semibold text-zinc-950 transition-colors hover:bg-violet-100"
                     >
-                      <Play size={13} fill="currentColor" />
+                      <Play size={12} fill="currentColor" />
                       {percent >= 85 ? "Assistir novamente" : "Continuar"}
-                      <ExternalLink size={12} />
                     </a>
                     {details && (
                       <Link
@@ -335,10 +299,54 @@ export default function ContinueWatching() {
             );
           })}
         </div>
+      ) : extensionState.connected ? (
+        <div className="flex min-h-24 items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.018] px-5 py-4">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-500/10 text-violet-300">
+            <Play size={17} />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-zinc-200">Tudo pronto para sincronizar</p>
+            <p className="mt-1 text-xs leading-5 text-zinc-500">Assista a um título compatível e seu progresso aparecerá aqui.</p>
+          </div>
+        </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-5 py-6 text-sm text-zinc-500">
-          Conecte a extensão e assista em um streaming para seus títulos
-          aparecerem aqui.
+        <div className="flex min-h-24 flex-col justify-between gap-4 rounded-xl border border-white/[0.06] bg-white/[0.018] px-5 py-4 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-4">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-500/10 text-violet-300">
+              <Plug size={17} />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-zinc-200">
+                {extensionState.installed ? "Conecte a extensão ao CineSorte" : "Leve seu progresso para o CineSorte"}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-zinc-500">
+                {extensionState.installed
+                  ? "Autorize a extensão para sincronizar automaticamente o que você está assistindo."
+                  : "Instale a extensão no Edge para continuar seus filmes e séries de onde parou."}
+              </p>
+            </div>
+          </div>
+          {extensionState.installed ? (
+            <Link
+              to={`/extension/connect?extensionId=${EXTENSION_ID}`}
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-3.5 text-xs font-semibold text-zinc-950 transition-colors hover:bg-violet-100"
+            >
+              <Plug size={14} />
+              Conectar extensão
+            </Link>
+          ) : EXTENSION_STORE_URL ? (
+            <a
+              href={EXTENSION_STORE_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-3.5 text-xs font-semibold text-zinc-950 transition-colors hover:bg-violet-100"
+            >
+              <Download size={14} />
+              Instalar no Edge
+            </a>
+          ) : (
+            <span className="shrink-0 text-xs font-medium text-zinc-500">Em breve no Edge Add-ons</span>
+          )}
         </div>
       )}
     </section>

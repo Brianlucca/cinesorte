@@ -7,8 +7,6 @@ export default function StatsOverview({ totalXp, watchedCount, likesCount, revie
       value: watchedCount || 0,
       eyebrow: 'Histórico',
       tone: 'text-emerald-300',
-      bg: 'from-emerald-500/16',
-      border: 'border-emerald-400/15',
       icon: Eye,
     },
     {
@@ -16,8 +14,6 @@ export default function StatsOverview({ totalXp, watchedCount, likesCount, revie
       value: likesCount || 0,
       eyebrow: 'Favoritos',
       tone: 'text-red-300',
-      bg: 'from-red-500/16',
-      border: 'border-red-400/15',
       icon: Heart,
     },
     {
@@ -25,8 +21,6 @@ export default function StatsOverview({ totalXp, watchedCount, likesCount, revie
       value: reviewsCount || 0,
       eyebrow: 'Opinião',
       tone: 'text-violet-300',
-      bg: 'from-violet-500/16',
-      border: 'border-violet-400/15',
       icon: MessageSquare,
     },
     {
@@ -34,33 +28,30 @@ export default function StatsOverview({ totalXp, watchedCount, likesCount, revie
       value: totalXp || 0,
       eyebrow: 'Progressão',
       tone: 'text-amber-300',
-      bg: 'from-amber-500/16',
-      border: 'border-amber-400/15',
       icon: Zap,
     },
   ];
 
   return (
-    <div className="grid h-full grid-cols-2 gap-3 md:grid-cols-4">
+    <div className="grid h-full grid-cols-2 overflow-hidden rounded-xl border border-white/[0.06] bg-[#181a20] md:grid-cols-4">
       {stats.map((stat) => (
         <article
           key={stat.label}
-          className={`group relative min-h-[132px] overflow-hidden rounded-[1.5rem] border bg-gradient-to-br ${stat.bg} via-white/[0.025] to-transparent p-4 shadow-[0_20px_56px_rgba(0,0,0,0.18)] transition-all duration-500 hover:-translate-y-0.5 hover:bg-white/[0.045] ${stat.border}`}
+          className="group relative min-h-[132px] border-b border-r border-white/[0.06] p-4 transition-colors hover:bg-white/[0.025] md:min-h-[160px]"
         >
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.10),transparent_38%)] opacity-60" />
           <div className="relative flex h-full flex-col justify-between">
             <div className="flex items-center justify-between gap-3">
-              <span className={`grid h-9 w-9 place-items-center rounded-xl border border-white/[0.08] bg-black/25 ${stat.tone} transition-transform duration-500 group-hover:scale-105`}>
+              <span className={`grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] ${stat.tone}`}>
                 <stat.icon size={16} />
               </span>
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">{stat.eyebrow}</span>
+              <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-600">{stat.eyebrow}</span>
             </div>
 
             <div>
-              <strong className="block text-2xl font-black tracking-[-0.03em] text-white">
+              <strong className="block text-2xl font-semibold tracking-[-0.03em] text-white">
                 {stat.value.toLocaleString()}
               </strong>
-              <span className="mt-1 block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+              <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
                 {stat.label}
               </span>
             </div>
