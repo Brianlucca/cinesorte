@@ -205,6 +205,9 @@ export default function Hero({
   const backdrop = isLive
     ? item.backdrop_path
     : `https://image.tmdb.org/t/p/original${item.backdrop_path}`;
+  const mobileArtwork = !isLive && item.poster_path
+    ? `https://image.tmdb.org/t/p/w780${item.poster_path}`
+    : backdrop;
 
   const changeSlide = (direction) => {
     setCurrentIndex((previous) => {
@@ -228,21 +231,26 @@ export default function Hero({
       aria-label="Destaques"
     >
       <div key={item.id} className="absolute inset-0 hero-slide-reveal">
-        {backdrop ? <img
-          src={backdrop}
-          alt=""
-          className={`w-full h-full object-cover object-center hero-ken-burns transition-opacity duration-700 ${
-            videoIsReady ? "opacity-0" : "opacity-100"
-          }`}
-          fetchPriority="high"
-        /> : <div className="h-full w-full bg-[radial-gradient(circle_at_70%_30%,rgba(124,58,237,.32),transparent_38%),linear-gradient(135deg,#211638,#09090b)]" />}
+        {backdrop ? (
+          <picture className="block h-full w-full">
+            <source media="(max-width: 767px)" srcSet={mobileArtwork} />
+            <img
+              src={backdrop}
+              alt=""
+              className={`h-full w-full object-cover object-center hero-ken-burns transition-opacity duration-700 ${
+                videoIsReady ? "opacity-100 md:opacity-0" : "opacity-100"
+              }`}
+              fetchPriority="high"
+            />
+          </picture>
+        ) : <div className="h-full w-full bg-[radial-gradient(circle_at_70%_30%,rgba(124,58,237,.32),transparent_38%),linear-gradient(135deg,#211638,#09090b)]" />}
         {videoKey && (
           <iframe
             ref={videoIframeRef}
             key={videoKey}
             src={`https://www.youtube.com/embed/${videoKey}?enablejsapi=1&autoplay=1&mute=1&controls=0&disablekb=1&fs=0&modestbranding=1&playsinline=1&rel=0&iv_load_policy=3&autohide=1&start=2`}
             title={`Trailer de ${name}`}
-            className={`pointer-events-none absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2 scale-[1.03] transition-opacity duration-700 ${
+            className={`pointer-events-none absolute left-1/2 top-1/2 hidden h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2 scale-[1.03] transition-opacity duration-700 md:block ${
               videoIsReady ? "opacity-100" : "opacity-0"
             }`}
             allow="autoplay; encrypted-media; picture-in-picture"
