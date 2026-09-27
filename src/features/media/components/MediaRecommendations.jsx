@@ -39,15 +39,15 @@ export default function MediaRecommendations({ items }) {
               Você também pode gostar
             </h2>
           </div>
-          <div className="hidden items-center gap-2 md:flex">
-            <span className="mr-2 text-xs font-semibold text-zinc-500">
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="mr-2 hidden text-xs font-semibold text-zinc-500 sm:inline">
               {visibleItems.length} sugestões
             </span>
             <button
               type="button"
               onClick={() => slide("left")}
               aria-label="Voltar nas recomendações"
-              className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-300 transition-colors hover:bg-white/[0.08] hover:text-white"
+              className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
             >
               <ChevronLeft size={19} />
             </button>
@@ -55,7 +55,7 @@ export default function MediaRecommendations({ items }) {
               type="button"
               onClick={() => slide("right")}
               aria-label="Avançar nas recomendações"
-              className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-300 transition-colors hover:bg-white/[0.08] hover:text-white"
+              className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
             >
               <ChevronRight size={19} />
             </button>
