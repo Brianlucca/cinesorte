@@ -67,6 +67,13 @@ export default function Hero({
   const item = items[currentIndex] || items[0];
   const isLive = item?.kind === "watch-party";
   const videoKey = isLive ? null : item?.trailerKey || item?.key;
+  const upcomingSlides = Array.from(
+    { length: Math.min(3, Math.max(items.length - 1, 0)) },
+    (_, offset) => {
+      const index = (currentIndex + offset + 1) % items.length;
+      return { slide: items[index], index };
+    },
+  );
 
   const closeCinemaMode = useCallback(
     (advanceToNext = false, resumeAt = cinemaMode.startAt) => {
@@ -217,7 +224,7 @@ export default function Hero({
 
   return (
     <section
-      className="relative w-full h-[88svh] min-h-[620px] max-h-[920px] mb-8 md:mb-12 overflow-hidden bg-zinc-950 isolate"
+      className="relative isolate mb-6 h-[64svh] min-h-[500px] max-h-[680px] w-full overflow-hidden bg-[#111216] md:mb-10"
       aria-label="Destaques"
     >
       <div key={item.id} className="absolute inset-0 hero-slide-reveal">
@@ -253,50 +260,49 @@ export default function Hero({
         )}
       </div>
 
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,9,11,0.98)_0%,rgba(9,9,11,0.84)_34%,rgba(9,9,11,0.30)_67%,rgba(9,9,11,0.08)_100%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(0deg,#09090b_0%,rgba(9,9,11,0.78)_12%,transparent_52%,rgba(9,9,11,0.35)_100%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_68%_42%,transparent_0%,rgba(9,9,11,0.12)_38%,rgba(9,9,11,0.45)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,18,22,0.94)_0%,rgba(17,18,22,0.68)_40%,rgba(17,18,22,0.06)_78%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(0deg,#111216_0%,rgba(17,18,22,0.52)_20%,transparent_62%)]" />
 
-      <div className="relative z-20 h-full flex items-center px-5 sm:px-8 md:px-12 xl:px-16 pt-24 pb-28 md:pb-32">
-        <div key={`copy-${item.id}`} className="w-full max-w-3xl hero-copy-reveal">
-          <div className="flex items-center gap-3 mb-5">
-            <span className="h-px w-8 md:w-12 bg-violet-400" />
-            <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.28em] text-violet-300">
+      <div className="relative z-20 mx-auto flex h-full max-w-[1380px] items-center px-5 pb-20 pt-20 sm:px-8 md:px-10 xl:px-12">
+        <div key={`copy-${item.id}`} className="w-full max-w-xl hero-copy-reveal xl:max-w-2xl">
+          <div className="mb-4 flex items-center gap-2.5">
+            <span className="h-px w-7 bg-violet-400" />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-violet-300">
               {isLive ? "CineParty · Ao vivo" : "Seleção CineSorte"}
             </span>
           </div>
 
-          <h1 className="max-w-3xl text-4xl sm:text-5xl md:text-[3rem] xl:text-[3.45rem] 2xl:text-[4rem] font-black text-white leading-[0.94] tracking-[-0.04em] drop-shadow-2xl text-balance">
+          <h1 className="max-w-3xl text-4xl font-semibold leading-[0.98] tracking-[-0.045em] text-white text-balance sm:text-5xl xl:text-[3.35rem]">
             {name}
           </h1>
 
-          <div className="mt-5 md:mt-7 flex flex-wrap items-center gap-2.5 md:gap-3 text-xs md:text-sm font-semibold text-zinc-200">
-            {isLive ? <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 text-white"><Radio size={13} /> Ao vivo</span> : <span className="inline-flex items-center gap-1.5 rounded-full border border-yellow-300/20 bg-yellow-300/10 px-3 py-1.5 text-yellow-200 backdrop-blur-md">
+          <div className="mt-5 flex flex-wrap items-center gap-4 text-xs font-medium text-zinc-300 md:text-sm">
+            {isLive ? <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 text-white"><Radio size={13} /> Ao vivo</span> : <span className="inline-flex items-center gap-1.5 text-yellow-200">
               <Star size={14} className="fill-yellow-300 text-yellow-300" />
               {rating}
             </span>}
             {isLive && <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/30 px-3 py-1.5"><UsersRound size={14} /> {item.participantCount} assistindo</span>}
             {!isLive && year && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/20 px-3 py-1.5 backdrop-blur-md">
+              <span className="inline-flex items-center gap-1.5">
                 <Calendar size={14} /> {year}
               </span>
             )}
-            {!isLive && <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 uppercase tracking-wider backdrop-blur-md">
+            {!isLive && <span className="uppercase tracking-wider text-zinc-400">
               {mediaType === "tv" ? "Série" : "Filme"}
             </span>}
             {isLive && <span className="text-sm font-bold text-zinc-300">@{item.host?.username}</span>}
           </div>
 
           {item.overview && (
-            <p className="mt-5 md:mt-6 max-w-2xl text-sm sm:text-base md:text-lg text-zinc-300 line-clamp-3 leading-relaxed drop-shadow-lg">
+            <p className="mt-5 max-w-xl text-sm leading-7 text-zinc-300 line-clamp-2 sm:text-base">
               {item.overview}
             </p>
           )}
 
-          <div className="mt-7 md:mt-9 flex items-center gap-3">
+          <div className="mt-7 flex items-center gap-2.5">
             <Link
               to={isLive ? "/app/watch-party/" + item.roomId : `/app/${mediaType}/${item.id}`}
-              className="group/button inline-flex items-center gap-3 rounded-full bg-white px-6 md:px-8 py-3 md:py-3.5 text-sm font-black text-zinc-950 shadow-xl shadow-black/20 transition-all hover:bg-violet-100 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+              className="group/button inline-flex items-center gap-3 rounded-full bg-white px-6 py-3 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
             >
               {isLive ? "Assistir agora" : "Ver detalhes"}
               <ArrowRight
@@ -309,7 +315,7 @@ export default function Hero({
               <button
                 type="button"
                 onClick={openCinemaMode}
-                className="group/trailer inline-flex h-11 md:h-12 items-center gap-2.5 rounded-full border border-white/15 bg-black/30 px-4 md:px-5 text-xs md:text-sm font-bold text-white backdrop-blur-md transition-all hover:border-violet-300/40 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                className="group/trailer inline-flex h-11 items-center gap-2.5 rounded-full bg-black/30 px-4 text-xs font-medium text-white backdrop-blur-md transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 md:text-sm"
               >
                 <Volume2 size={17} className="text-violet-300" />
                 <span className="hidden sm:inline">Assistir trailer</span>
@@ -326,7 +332,7 @@ export default function Hero({
                   type="button"
                   onClick={() => changeSlide("previous")}
                   aria-label="Destaque anterior"
-                  className="grid h-11 w-11 md:h-12 md:w-12 place-items-center rounded-full border border-white/15 bg-black/20 text-white backdrop-blur-md transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                  className="grid h-10 w-10 place-items-center rounded-full bg-black/25 text-white backdrop-blur-md transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
                 >
                   <ChevronLeft size={20} />
                 </button>
@@ -334,7 +340,7 @@ export default function Hero({
                   type="button"
                   onClick={() => changeSlide("next")}
                   aria-label="Próximo destaque"
-                  className="grid h-11 w-11 md:h-12 md:w-12 place-items-center rounded-full border border-white/15 bg-black/20 text-white backdrop-blur-md transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                  className="grid h-10 w-10 place-items-center rounded-full bg-black/25 text-white backdrop-blur-md transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
                 >
                   <ChevronRight size={20} />
                 </button>
@@ -345,56 +351,53 @@ export default function Hero({
       </div>
 
       {items.length > 1 && (
-        <div className="absolute right-6 xl:right-10 top-1/2 z-30 hidden lg:flex -translate-y-1/2 flex-col items-end gap-2.5">
-          <span className="mb-1 text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">
-            A seguir
-          </span>
-          {items.map((slide, index) => {
-            const isActive = index === currentIndex;
+        <div className="absolute bottom-7 right-12 z-30 hidden w-[460px] max-w-[46%] xl:block">
+          <div className="mb-2 flex items-center justify-between text-[9px] font-semibold uppercase tracking-[0.18em] text-white/45">
+            <span>A seguir</span>
+            <span className="tabular-nums text-white/30">
+              {String(currentIndex + 1).padStart(2, "0")} / {String(items.length).padStart(2, "0")}
+            </span>
+          </div>
+          <div className="relative flex gap-2 border-t border-white/10 pt-3">
+            <span
+              key={`progress-${currentIndex}-${progressRevision}`}
+              className="absolute -top-px left-0 h-px w-full origin-left bg-white/80 hero-progress"
+              style={{
+                animationDuration: videoKey
+                  ? `${videoProgress.duration}s`
+                  : `${SLIDE_DURATION / 1000}s`,
+                animationPlayState:
+                  videoKey &&
+                  (videoProgress.key !== videoKey || !videoProgress.running)
+                    ? "paused"
+                    : "running",
+              }}
+            />
+          {upcomingSlides.map(({ slide, index }) => {
             return (
               <button
                 type="button"
                 key={`${slide.id}-${index}`}
                 onClick={() => setCurrentIndex(index)}
                 aria-label={`Exibir ${slide.title || slide.name}`}
-                aria-current={isActive ? "true" : undefined}
-                className={`relative overflow-hidden rounded-xl border text-left shadow-xl transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 ${
-                  isActive
-                    ? "w-52 xl:w-60 border-violet-400/70 opacity-100"
-                    : "w-40 xl:w-44 border-white/10 opacity-55 hover:w-48 hover:opacity-90"
-                }`}
+                className="group/preview min-w-0 flex-1 overflow-hidden rounded-lg text-left transition-opacity duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
               >
-                <div className="relative aspect-[16/5]">
+                <div className="relative aspect-[16/7] overflow-hidden rounded-lg bg-white/[0.04]">
                   {slide.backdrop_path ? <img
                     src={slide.kind === "watch-party" ? slide.backdrop_path : `https://image.tmdb.org/t/p/w300${slide.backdrop_path}`}
                     alt=""
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover opacity-65 transition duration-300 group-hover/preview:scale-[1.03] group-hover/preview:opacity-90"
                     loading="lazy"
                   /> : <div className="h-full w-full bg-violet-950" />}
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/35 to-transparent" />
-                  <span className="absolute inset-y-0 left-3 flex max-w-[75%] items-center text-[11px] font-bold text-white line-clamp-2">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
+                  <span className="absolute inset-x-0 bottom-0 truncate px-2.5 pb-2 text-[10px] font-semibold text-white/90">
                     {slide.title || slide.name}
                   </span>
-                  {isActive && (
-                    <span
-                      key={`progress-${currentIndex}-${progressRevision}`}
-                      className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-violet-400 hero-progress"
-                      style={{
-                        animationDuration: videoKey
-                          ? `${videoProgress.duration}s`
-                          : `${SLIDE_DURATION / 1000}s`,
-                        animationPlayState:
-                          videoKey &&
-                          (videoProgress.key !== videoKey || !videoProgress.running)
-                            ? "paused"
-                            : "running",
-                      }}
-                    />
-                  )}
                 </div>
               </button>
             );
           })}
+          </div>
         </div>
       )}
 
