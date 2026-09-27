@@ -247,6 +247,43 @@ export default function Dashboard() {
 
   useEffect(() => {
     let cancelled = false;
+    let followingItems = [];
+    let globalItems = [];
+
+    const publishSocialItems = () => {
+      if (cancelled) return;
+      const seenSocialItems = new Set();
+      const items = [...followingItems, ...globalItems].filter((item) => {
+        const key = item.uniqueKey || `${item.type}-${item.id}`;
+        if (seenSocialItems.has(key)) return false;
+        seenSocialItems.add(key);
+        return true;
+      });
+
+      setSocialPreview((previous) => ({ ...previous, items }));
+    };
+
+    getFollowingFeed()
+      .then((result) => {
+        followingItems = Array.isArray(result?.items) ? result.items : [];
+        publishSocialItems();
+      })
+      .catch(publishSocialItems);
+
+    getGlobalFeed()
+      .then((result) => {
+        globalItems = Array.isArray(result?.items) ? result.items : [];
+        publishSocialItems();
+      })
+      .catch(publishSocialItems);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.uid, user?.username]);
+
+  useEffect(() => {
+    let cancelled = false;
 
     async function loadHomeExperience() {
       try {
