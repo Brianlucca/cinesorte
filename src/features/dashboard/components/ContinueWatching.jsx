@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import {
   ChevronLeft,
   ChevronRight,
+  Download,
   Info,
   Play,
+  Plug,
   Star,
   X,
 } from "lucide-react";
@@ -26,6 +28,7 @@ const PROVIDERS = {
   crunchyroll: "Crunchyroll",
 };
 const EXTENSION_ID = "mpkpfhbinipldbhpemhmpkdinmikfjoh";
+const EXTENSION_STORE_URL = import.meta.env.VITE_EXTENSION_STORE_URL || "";
 const IS_EDGE_BROWSER =
   typeof navigator !== "undefined" &&
   /Edg(?:A|iOS)?\//.test(navigator.userAgent);
@@ -84,7 +87,7 @@ export default function ContinueWatching() {
       }));
       setExtensionState({
         installed,
-        connected: installed && Boolean(status?.connected),
+        connected: Boolean(status?.connected),
         loading: false,
       });
     };
@@ -132,14 +135,9 @@ export default function ContinueWatching() {
     (item) => realProgress(item) >= 85 && detailsPath(item),
   );
 
-  const canShowContinueWatching =
-    IS_EDGE_BROWSER &&
-    !extensionState.loading &&
-    extensionState.installed &&
-    extensionState.connected &&
-    continueItems.length > 0;
+  if (!IS_EDGE_BROWSER || extensionState.loading) return null;
 
-  if (!canShowContinueWatching) return null;
+  const showProgress = extensionState.connected && continueItems.length > 0;
 
   function slide(direction) {
     if (!rowRef.current) return;
@@ -161,7 +159,7 @@ export default function ContinueWatching() {
           </h2>
         </div>
         <div className="flex items-center gap-3">
-          {continueItems.length > 0 && (
+          {showProgress && (
             <div className="flex gap-2">
               <button
                 type="button"
@@ -184,7 +182,7 @@ export default function ContinueWatching() {
         </div>
       </div>
 
-      {reviewItem && (
+      {showProgress && reviewItem && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-yellow-300/15 bg-gradient-to-r from-yellow-300/[0.08] to-violet-500/[0.06] px-4 py-3">
           <div className="flex items-center gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-yellow-300/10 text-yellow-200">
@@ -212,7 +210,7 @@ export default function ContinueWatching() {
         </div>
       )}
 
-      {continueItems.length > 0 ? (
+      {showProgress ? (
         <div
           ref={rowRef}
           className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-3 scrollbar-hide md:snap-none"
@@ -301,10 +299,54 @@ export default function ContinueWatching() {
             );
           })}
         </div>
+      ) : extensionState.connected ? (
+        <div className="flex min-h-24 items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.018] px-5 py-4">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-500/10 text-violet-300">
+            <Play size={17} />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-zinc-200">Tudo pronto para sincronizar</p>
+            <p className="mt-1 text-xs leading-5 text-zinc-500">Assista a um título compatível e seu progresso aparecerá aqui.</p>
+          </div>
+        </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-5 py-6 text-sm text-zinc-500">
-          Conecte a extensão e assista em um streaming para seus títulos
-          aparecerem aqui.
+        <div className="flex min-h-24 flex-col justify-between gap-4 rounded-xl border border-white/[0.06] bg-white/[0.018] px-5 py-4 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-4">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-500/10 text-violet-300">
+              <Plug size={17} />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-zinc-200">
+                {extensionState.installed ? "Conecte a extensão ao CineSorte" : "Leve seu progresso para o CineSorte"}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-zinc-500">
+                {extensionState.installed
+                  ? "Autorize a extensão para sincronizar automaticamente o que você está assistindo."
+                  : "Instale a extensão no Edge para continuar seus filmes e séries de onde parou."}
+              </p>
+            </div>
+          </div>
+          {extensionState.installed ? (
+            <Link
+              to={`/extension/connect?extensionId=${EXTENSION_ID}`}
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-3.5 text-xs font-semibold text-zinc-950 transition-colors hover:bg-violet-100"
+            >
+              <Plug size={14} />
+              Conectar extensão
+            </Link>
+          ) : EXTENSION_STORE_URL ? (
+            <a
+              href={EXTENSION_STORE_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-3.5 text-xs font-semibold text-zinc-950 transition-colors hover:bg-violet-100"
+            >
+              <Download size={14} />
+              Instalar no Edge
+            </a>
+          ) : (
+            <span className="shrink-0 text-xs font-medium text-zinc-500">Em breve no Edge Add-ons</span>
+          )}
         </div>
       )}
     </section>
