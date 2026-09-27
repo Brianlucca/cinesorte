@@ -96,27 +96,6 @@ function RoulettePreview({ items, totalItems }) {
   );
 }
 
-function MessagesLauncher({ unreadTotal, onOpen }) {
-  return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="fixed bottom-5 right-5 z-[100050] flex h-14 min-w-[210px] items-center justify-between gap-4 rounded-2xl border border-white/[0.09] bg-[#0d0d11]/95 px-4 text-left text-white shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-transform hover:-translate-y-0.5 md:bottom-6 md:right-8"
-    >
-      <span className="flex items-center gap-3">
-        <span className="grid h-9 w-9 place-items-center rounded-xl border border-violet-400/15 bg-violet-500/10 text-violet-200">
-          <MessageCircle size={18} />
-        </span>
-        <span>
-          <span className="block text-sm font-semibold text-zinc-100">Mensagens</span>
-          <span className="block text-[10px] text-zinc-600">Privadas, grupos e cards</span>
-        </span>
-      </span>
-      {unreadTotal > 0 && <span className="grid h-6 min-w-6 place-items-center rounded-full bg-violet-500 px-2 text-xs font-bold text-white">{unreadTotal}</span>}
-    </button>
-  );
-}
-
 export default function AppLayout() {
   const { logout, user, showTermsModal } = useAuth();
   const location = useLocation();
@@ -208,7 +187,16 @@ export default function AppLayout() {
   const isActive = (path) =>
     path === "/app" ? location.pathname === path : location.pathname === path || location.pathname.startsWith(`${path}/`);
 
-  const NavItem = ({ to, icon, label, onClick, isMobileItem, preview }) => {
+  const openMessages = () => {
+    setPendingMessageConversationId(null);
+    if (isMessagesLoaded) {
+      window.dispatchEvent(new CustomEvent("cinesorte:open-messages"));
+    } else {
+      setIsMessagesLoaded(true);
+    }
+  };
+
+  const NavItem = ({ to, icon, label, onClick, isMobileItem, preview, badge = 0 }) => {
     const Icon = icon;
     const active = to ? isActive(to) : false;
     const collapsed = isSidebarCollapsed && !isMobileItem;
@@ -216,6 +204,7 @@ export default function AppLayout() {
       <div className={`relative z-10 flex min-w-0 items-center ${isMobileItem ? "gap-3" : collapsed ? "justify-center" : "gap-3"}`}>
         <Icon size={19} className={`shrink-0 transition-colors ${active ? "text-white" : "text-zinc-500 group-hover:text-violet-300"}`} />
         <span className={`${isMobileItem ? "" : collapsed ? "max-w-0 translate-x-2 opacity-0" : "max-w-[180px] translate-x-0 opacity-100"} overflow-hidden whitespace-nowrap text-[13px] font-semibold transition-[max-width,opacity,transform] duration-500`}>{label}</span>
+        {badge > 0 && <span className={`${collapsed ? "absolute -right-1 -top-1" : ""} grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-violet-500 px-1.5 text-[10px] font-semibold text-white`}>{badge > 99 ? "99+" : badge}</span>}
       </div>
     );
     const className = `group relative flex items-center overflow-hidden rounded-xl border transition-colors duration-200 ${collapsed ? "mx-auto h-11 w-11 justify-center p-0" : "h-11 w-full justify-between px-3"} ${active ? "border-white/[0.06] bg-white/[0.06] text-white" : "border-transparent text-zinc-500 hover:bg-white/[0.025] hover:text-white"}`;
@@ -265,6 +254,7 @@ export default function AppLayout() {
             <NavItem to="/app" icon={Home} label="Início" />
             <NavItem to="/app/feed" icon={Globe} label="Feed Social" preview={<FeedPreview user={user} />} />
             <NavItem icon={Search} label="Buscar" onClick={() => setIsSearchOpen(true)} />
+            <NavItem icon={MessageCircle} label="Mensagens" onClick={openMessages} badge={messageUnreadTotal} />
           </div>
 
           <div className={`my-4 h-px bg-white/[0.06] ${isSidebarCollapsed ? "mx-2" : "mx-3"}`} />
@@ -307,7 +297,13 @@ export default function AppLayout() {
 
       <div className="fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-white/[0.06] bg-[#111216]/90 px-4 py-3 backdrop-blur-xl md:hidden">
         <span className="flex items-center gap-2 text-lg font-semibold tracking-tight"><Film className="h-5 w-5 text-violet-500" /> CineSorte</span>
-        <button type="button" onClick={() => setIsMobileMenuOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] text-zinc-400"><Menu size={20} /></button>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={openMessages} className="relative grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] text-zinc-400" aria-label="Abrir mensagens">
+            <MessageCircle size={18} />
+            {messageUnreadTotal > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-violet-500 px-1 text-[9px] font-semibold text-white">{messageUnreadTotal > 9 ? "9+" : messageUnreadTotal}</span>}
+          </button>
+          <button type="button" onClick={() => setIsMobileMenuOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] text-zinc-400"><Menu size={20} /></button>
+        </div>
       </div>
 
       {isMobileMenuOpen && (
@@ -317,6 +313,7 @@ export default function AppLayout() {
             <NavItem to="/app" icon={Home} label="Início" isMobileItem />
             <NavItem to="/app/feed" icon={Globe} label="Feed Social" isMobileItem />
             <NavItem icon={Search} label="Buscar" onClick={() => { setIsSearchOpen(true); setIsMobileMenuOpen(false); }} isMobileItem />
+            <NavItem icon={MessageCircle} label="Mensagens" onClick={() => { openMessages(); setIsMobileMenuOpen(false); }} badge={messageUnreadTotal} isMobileItem />
             <div className="my-3 h-px bg-white/[0.06]" />
             <NavItem to="/app/roulette" icon={Dices} label="Roleta" isMobileItem />
             <NavItem to="/app/watch-party" icon={UsersRound} label="Assistir juntos" isMobileItem />
@@ -333,18 +330,10 @@ export default function AppLayout() {
       </main>
 
       <NotificationBell />
-      {isMessagesLoaded ? (
+      {isMessagesLoaded && (
         <Suspense fallback={null}>
           <MessagesDock defaultOpen initialConversationId={pendingMessageConversationId} />
         </Suspense>
-      ) : (
-        <MessagesLauncher
-          unreadTotal={messageUnreadTotal}
-          onOpen={() => {
-            setPendingMessageConversationId(null);
-            setIsMessagesLoaded(true);
-          }}
-        />
       )}
       {isSearchOpen && (
         <Suspense fallback={null}>
