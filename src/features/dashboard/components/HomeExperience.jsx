@@ -200,7 +200,15 @@ function TopRail({ items = [] }) {
 
 function ReviewSpotlight({ items = [] }) {
   const reviews = items
-    .filter((item) => item.type !== "list_share" && item.mediaTitle)
+    .filter(
+      (item) =>
+        item.type !== "list_share" &&
+        item.mediaTitle &&
+        item.rating !== null &&
+        item.rating !== undefined &&
+        item.rating !== "" &&
+        Number.isFinite(Number(item.rating)),
+    )
     .sort((a, b) => {
       const aHasText = Boolean(a.text?.trim());
       const bHasText = Boolean(b.text?.trim());
