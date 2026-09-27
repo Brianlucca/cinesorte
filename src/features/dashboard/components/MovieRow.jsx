@@ -11,8 +11,8 @@ const variants = {
   poster: {
     section: "",
     background: undefined,
-    rail: "gap-4 md:gap-5",
-    card: "w-[150px] sm:w-[170px] md:w-[210px] xl:w-[226px] 2xl:w-[238px]",
+    rail: "gap-3 md:gap-4",
+    card: "w-[142px] sm:w-[158px] md:w-[184px] xl:w-[196px] 2xl:w-[204px]",
     frame: "aspect-[2/3]",
     imageSize: "w500",
   },
@@ -65,32 +65,27 @@ export default function MovieRow({ title, items, variant = "poster" }) {
 
   return (
     <section
-      className={`relative w-full group/row z-10 ${layout.section}`}
+      className={`group/row relative z-10 w-full ${layout.section}`}
       style={{ background: layout.background }}
     >
-      <div className="flex justify-between items-end px-5 sm:px-6 md:px-10 xl:px-14 2xl:px-16">
+      <div className="flex items-end justify-between px-5 sm:px-6 md:px-10 xl:px-14 2xl:px-16">
         <div>
           {variant !== "poster" && (
-            <span className="mb-2 block text-[10px] md:text-xs font-black uppercase tracking-[0.24em] text-violet-300/70">
+            <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300/70">
               {isLandscape ? "Seleção panorâmica" : "Em destaque"}
             </span>
           )}
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
-            <span
-              className={`w-1.5 rounded-full bg-gradient-to-b from-violet-400 to-violet-700 ${
-                variant === "spotlight" ? "h-8" : "h-6"
-              }`}
-            />
+          <h2 className="flex items-center gap-3 text-lg font-semibold tracking-[-0.02em] text-zinc-100 sm:text-xl md:text-2xl">
             {title}
           </h2>
         </div>
 
-        <div className="hidden md:flex gap-2 opacity-40 group-hover/row:opacity-100 transition-opacity duration-300">
+        <div className="flex gap-2">
           <button
             type="button"
             aria-label={`Voltar na seção ${title}`}
             onClick={() => slide("left")}
-            className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all shadow-lg"
+            className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-400 transition-colors hover:bg-white/[0.09] hover:text-white"
           >
             <ChevronLeft size={20} />
           </button>
@@ -98,7 +93,7 @@ export default function MovieRow({ title, items, variant = "poster" }) {
             type="button"
             aria-label={`Avançar na seção ${title}`}
             onClick={() => slide("right")}
-            className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all shadow-lg"
+            className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-400 transition-colors hover:bg-white/[0.09] hover:text-white"
           >
             <ChevronRight size={20} />
           </button>
@@ -107,7 +102,7 @@ export default function MovieRow({ title, items, variant = "poster" }) {
 
       <div
         ref={rowRef}
-        className={`flex ${layout.rail} overflow-x-auto scroll-smooth snap-x snap-mandatory md:snap-none pt-5 md:pt-6 pb-4 md:pb-6 px-5 sm:px-6 md:px-10 xl:px-14 2xl:px-16 scrollbar-hide w-full`}
+        className={`flex ${layout.rail} w-full snap-x snap-mandatory overflow-x-auto px-5 pb-2 pt-4 scroll-smooth scrollbar-hide sm:px-6 md:snap-none md:px-10 md:pt-5 xl:px-14 2xl:px-16`}
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {visibleItems.map((item, index) => {
@@ -126,15 +121,15 @@ export default function MovieRow({ title, items, variant = "poster" }) {
               onMouseLeave={() => cancelMovieDetailsPrefetch(mediaType, item.id)}
               onFocus={() => prefetchMovieDetails(mediaType, item.id)}
               onPointerDown={() => prefetchMovieDetails(mediaType, item.id)}
-              className={`flex-none snap-start ${layout.card} group/card transition-transform duration-300 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 rounded-2xl`}
+              className={`flex-none snap-start ${layout.card} group/card rounded-xl transition-opacity duration-200 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400`}
             >
               <article
-                className={`${layout.frame} rounded-2xl md:rounded-[1.25rem] overflow-hidden bg-white/[0.03] border border-white/[0.07] relative shadow-2xl group-hover/card:border-violet-300/30 transition-all duration-300`}
+                className={`${layout.frame} relative overflow-hidden rounded-xl bg-white/[0.025]`}
               >
                 <img
                   src={`https://image.tmdb.org/t/p/${layout.imageSize}${imagePath}`}
                   alt={name}
-                  className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover/card:scale-[1.045]"
+                  className="h-full w-full object-cover"
                   loading="lazy"
                 />
 
@@ -146,9 +141,9 @@ export default function MovieRow({ title, items, variant = "poster" }) {
                   } transition-opacity duration-300`}
                 />
 
-                <div className="absolute top-2.5 right-2.5 md:top-3 md:right-3 bg-black/55 backdrop-blur-xl px-2 py-1 rounded-lg flex items-center gap-1.5 border border-white/10 shadow-lg">
+                <div className="absolute right-2.5 top-2.5 flex items-center gap-1.5 rounded-full bg-black/55 px-2 py-1 backdrop-blur-md md:right-3 md:top-3">
                   <Star size={10} className="text-yellow-400 fill-yellow-400" />
-                  <span className="text-[10px] font-black text-white">
+                  <span className="text-[10px] font-semibold text-white">
                     {Number(item.vote_average || 0).toFixed(1)}
                   </span>
                 </div>
@@ -169,22 +164,16 @@ export default function MovieRow({ title, items, variant = "poster" }) {
                   </div>
                 )}
 
-                {isPoster && (
-                  <div className="absolute inset-0 hidden md:flex flex-col justify-end p-5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300">
-                    <span className="font-bold text-white text-sm mb-3 line-clamp-2 leading-tight">
-                      {name}
-                    </span>
-                    <div className="w-full py-2 bg-white text-black text-[10px] font-black uppercase tracking-widest text-center rounded-lg shadow-lg">
-                      Ver detalhes
-                    </div>
-                  </div>
-                )}
               </article>
 
               {isPoster && (
-                <div className="md:hidden pt-2.5 px-0.5">
+                <div className="px-0.5 pt-2.5">
                   <h3 className="text-sm font-semibold text-zinc-100 truncate">{name}</h3>
-                  {year && <span className="text-xs text-zinc-500">{year}</span>}
+                  <div className="mt-0.5 flex items-center gap-2 text-[11px] text-zinc-500">
+                    {year && <span>{year}</span>}
+                    {year && <span>•</span>}
+                    <span>{mediaType === "tv" ? "Série" : "Filme"}</span>
+                  </div>
                 </div>
               )}
             </Link>
