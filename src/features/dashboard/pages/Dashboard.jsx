@@ -6,6 +6,7 @@ import HomeExperience from "@features/dashboard/components/HomeExperience";
 import MovieRow from "@features/dashboard/components/MovieRow";
 import TrailerRow from "@features/dashboard/components/TrailerRow";
 import ContinueWatching from "@features/dashboard/components/ContinueWatching";
+import InTheaters from "@features/dashboard/components/InTheaters";
 import { useAuth } from "@shared/context/useAuth";
 
 const HERO_SET_CACHE_PREFIX = "cinesorte_dashboard_hero_set_v2";
@@ -343,21 +344,15 @@ export default function Dashboard() {
     );
 
   const sections = [
-    { id: 'recommendedMovies', title: "Escolhidos para Você", type: 'movie', variant: 'spotlight' },
-    { id: 'streaming', title: "Populares no Streaming", type: 'movie', variant: 'landscape' },
-    { id: 'trendingDay', title: "Tendências de Hoje", type: 'movie', variant: 'poster' },
-    { id: 'recommendedSeries', title: "Séries que Você Pode Gostar", type: 'movie', variant: 'spotlight' },
-    { id: 'onTv', title: "Populares na TV", type: 'movie', variant: 'landscape' },
-    { id: 'trailers', title: "Últimos Trailers", type: 'trailer' },
-    { id: 'series', title: "Séries Populares", type: 'movie', variant: 'poster' },
-    { id: 'animes', title: "Lançamentos de Animes", type: 'movie', variant: 'landscape' },
-    { id: 'inTheaters', title: "Nos Cinemas", type: 'movie', variant: 'spotlight' },
-    { id: 'movies', title: "Filmes Populares", type: 'movie', variant: 'poster' },
+    { id: "recommendedMovies", title: "Escolhidos para você", type: "movie", variant: "poster" },
+    { id: "trendingDay", title: "Em alta hoje", type: "movie", variant: "poster" },
+    { id: "recommendedSeries", title: "Séries para a sua próxima maratona", type: "movie", variant: "poster" },
+    { id: "trailers", title: "Estreias em cena", type: "trailer" },
   ];
   const displayedHeroItems = [...liveHeroItems, ...heroItems].slice(0, 6);
 
   return (
-    <div className="-mt-24 md:-mt-8 pb-20 w-full max-w-full overflow-x-hidden bg-zinc-950 animate-in fade-in duration-700">
+    <div className="-mt-16 w-full max-w-full overflow-x-hidden bg-[#111216] pb-24 md:mt-0 animate-in fade-in duration-500">
 
       <Hero
         key={`${heroExpiresAt || "hero-loading"}-${liveHeroItems.map(({ id }) => id).join("-")}`}
@@ -367,7 +362,7 @@ export default function Dashboard() {
         onSlideChange={handleHeroSlideChange}
       />
 
-      <div className="flex flex-col gap-3 md:gap-4 relative z-20 -mt-12 md:-mt-32 pt-20 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent">
+      <div className="relative z-20 -mt-10 flex flex-col gap-10 bg-gradient-to-t from-[#111216] via-[#111216]/98 to-transparent pt-16 md:-mt-16 md:gap-14 md:pt-24">
         <ContinueWatching />
         {(data.trendingWeek || []).length > 0 && (
           <div className="space-y-1 md:space-y-2">
@@ -380,16 +375,6 @@ export default function Dashboard() {
             />
           </div>
         )}
-
-        <div className="space-y-1 md:space-y-2">
-          <HomeExperience
-            variant="library"
-            data={data}
-            socialItems={socialPreview.items}
-            suggestions={socialPreview.suggestions}
-            lists={userLists}
-          />
-        </div>
 
         {sections.map((section) => {
           const items = data[section.id];
@@ -419,6 +404,16 @@ export default function Dashboard() {
             </div>
           );
         })}
+        <InTheaters items={data.inTheaters} />
+        <div>
+          <HomeExperience
+            variant="library"
+            data={data}
+            socialItems={socialPreview.items}
+            suggestions={socialPreview.suggestions}
+            lists={userLists}
+          />
+        </div>
       </div>
     </div>
   );
