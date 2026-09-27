@@ -168,7 +168,10 @@ export default function MediaDetails() {
           }}
         >
           {banner ? (
-            <img src={banner} alt="" className="h-full w-full object-cover object-top" />
+            <picture className="block h-full w-full">
+              {poster && <source media="(max-width: 767px)" srcSet={poster} />}
+              <img src={banner} alt="" className="h-full w-full object-cover object-top" />
+            </picture>
           ) : (
             <div className="h-full w-full bg-zinc-900" />
           )}
