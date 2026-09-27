@@ -8,6 +8,7 @@ import {
   Layers3,
   MessageCircle,
   Plus,
+  Quote,
   Star,
 } from "lucide-react";
 import { useAuth } from "@shared/context/useAuth";
@@ -201,6 +202,12 @@ function TopRail({ items = [] }) {
 function ReviewSpotlight({ items = [] }) {
   const reviews = items
     .filter((item) => item.type !== "list_share" && item.mediaTitle)
+    .sort((a, b) => {
+      const aHasText = Boolean(a.text?.trim());
+      const bHasText = Boolean(b.text?.trim());
+      if (aHasText !== bHasText) return bHasText - aHasText;
+      return (b.likesCount || 0) + (b.commentsCount || 0) - (a.likesCount || 0) - (a.commentsCount || 0);
+    })
     .slice(0, 4);
   const [featuredReview, ...recentReviews] = reviews;
 
@@ -216,19 +223,20 @@ function ReviewSpotlight({ items = [] }) {
       <div className={`space-y-3 pt-5 md:pt-6 ${PAGE_X}`}>
         <Link
           to={mediaPath(featuredReview)}
-          className="group/review relative block min-h-[380px] overflow-hidden rounded-xl border border-white/[0.06] bg-[#181a20] sm:min-h-[430px]"
+          className="group/review relative block min-h-[400px] overflow-hidden rounded-xl border border-white/[0.06] bg-[#181a20]"
         >
           <MediaImage
             item={{ poster_path: featuredReview.posterPath, backdrop_path: featuredReview.backdropPath }}
             size="w1280"
             preferred="backdrop"
-            className="absolute inset-0 h-full w-full opacity-75 transition duration-700 group-hover/review:scale-[1.025] group-hover/review:opacity-85"
+            className="absolute inset-0 h-full w-full scale-[1.02] opacity-30 saturate-[0.7] transition duration-700 group-hover/review:scale-[1.04] group-hover/review:opacity-38"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,18,22,0.92)_0%,rgba(17,18,22,0.66)_44%,rgba(17,18,22,0.10)_82%),linear-gradient(0deg,#111216_0%,rgba(17,18,22,0.72)_24%,rgba(17,18,22,0.08)_72%)]" />
-          <div className="absolute inset-x-0 bottom-0 max-w-4xl p-6 sm:p-9 lg:p-11">
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,#111216_0%,rgba(17,18,22,0.96)_50%,rgba(17,18,22,0.60)_100%),linear-gradient(0deg,#111216_0%,transparent_70%)]" />
+          <div className="relative z-10 flex min-h-[400px] max-w-5xl flex-col justify-center p-6 sm:p-9 lg:px-12 lg:py-10">
             <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-zinc-800 text-sm font-semibold uppercase text-zinc-300">
-                {featuredReview.userPhoto ? <img src={featuredReview.userPhoto} alt="" className="h-full w-full object-cover" /> : (featuredReview.username || "C")[0]}
+              <span className="relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-zinc-800 text-sm font-semibold uppercase text-zinc-300">
+                {(featuredReview.username || "C")[0]}
+                {featuredReview.userPhoto && <img src={featuredReview.userPhoto} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(event) => event.currentTarget.remove()} />}
               </span>
               <span className="text-base font-semibold text-zinc-100">@{featuredReview.username || "cinesorte"}</span>
               {featuredReview.rating !== null && featuredReview.rating !== undefined && (
@@ -238,13 +246,21 @@ function ReviewSpotlight({ items = [] }) {
                 </span>
               )}
             </div>
-            <p className="mt-7 text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">Review em destaque sobre</p>
-            <h3 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-white sm:text-4xl">{featuredReview.mediaTitle}</h3>
-            <p className="mt-4 line-clamp-3 max-w-3xl text-base leading-7 text-zinc-200 sm:text-lg sm:leading-8">{reviewExcerpt(featuredReview.text)}</p>
-            <div className="mt-7 flex items-center gap-5 text-xs text-zinc-300">
+            <div className="mt-8 flex items-start gap-4 sm:gap-6">
+              <Quote size={34} className="mt-1 shrink-0 fill-violet-400/15 text-violet-300 sm:h-11 sm:w-11" />
+              <blockquote className="line-clamp-4 max-w-4xl text-2xl font-medium leading-[1.25] tracking-[-0.025em] text-white sm:text-3xl sm:leading-[1.22] lg:text-[2.25rem]">
+                {reviewExcerpt(featuredReview.text)}
+              </blockquote>
+            </div>
+            <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-white/[0.08] pt-5">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">Review sobre</span>
+              <h3 className="text-base font-semibold text-zinc-200 sm:text-lg">{featuredReview.mediaTitle}</h3>
+              <span className="hidden h-1 w-1 rounded-full bg-zinc-600 sm:block" />
+              <span className="inline-flex items-center gap-2 text-xs font-semibold text-white">Ler completa <ArrowRight size={14} /></span>
+            </div>
+            <div className="mt-4 flex items-center gap-5 text-xs text-zinc-400">
               <span className="inline-flex items-center gap-1.5"><Heart size={14} /> {featuredReview.likesCount || 0}</span>
               <span className="inline-flex items-center gap-1.5"><MessageCircle size={14} /> {featuredReview.commentsCount || 0}</span>
-              <span className="ml-2 inline-flex items-center gap-2 font-semibold text-white">Ler review completa <ArrowRight size={14} /></span>
             </div>
           </div>
         </Link>
