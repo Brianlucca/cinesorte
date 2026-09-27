@@ -28,28 +28,28 @@ export default function SeasonInfo({ tvId, seasons }) {
 
   return (
     <section>
-      <div className="mb-6 flex items-end justify-between gap-4">
+      <div className="mb-5 flex items-end justify-between gap-4">
         <div>
-          <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
             Guia da série
           </span>
-          <h2 className="mt-2 text-2xl md:text-3xl font-black text-white">Temporadas</h2>
+          <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">Temporadas</h2>
         </div>
         <span className="text-xs font-semibold text-zinc-500">
           {availableSeasons.length} {availableSeasons.length === 1 ? "temporada" : "temporadas"}
         </span>
       </div>
 
-      <div className="relative overflow-hidden rounded-[1.75rem] border border-white/[0.08] bg-gradient-to-br from-violet-950/35 via-zinc-900/70 to-zinc-950 p-5 md:p-7">
+      <div className="relative overflow-hidden rounded-xl bg-white/[0.025] p-4 md:p-5">
         {selectedSeason.poster_path && (
           <img
             src={`https://image.tmdb.org/t/p/w500${selectedSeason.poster_path}`}
             alt=""
-            className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-2/5 object-cover opacity-10 blur-sm md:block"
+            className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-2/5 object-cover opacity-[0.06] md:block"
           />
         )}
-        <div className="relative flex gap-5 md:gap-7">
-          <div className="h-36 w-24 md:h-48 md:w-32 shrink-0 overflow-hidden rounded-2xl bg-zinc-800 shadow-2xl">
+        <div className="relative flex gap-4 md:gap-5">
+          <div className="h-32 w-[86px] shrink-0 overflow-hidden rounded-lg bg-zinc-800 md:h-40 md:w-[108px]">
             {selectedSeason.poster_path ? (
               <img
                 src={`https://image.tmdb.org/t/p/w300${selectedSeason.poster_path}`}
@@ -64,8 +64,8 @@ export default function SeasonInfo({ tvId, seasons }) {
           </div>
 
           <div className="min-w-0 flex-1 py-1">
-            <div className="flex flex-wrap items-center gap-2 text-[10px] md:text-xs font-bold text-zinc-300">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-400/10 px-2.5 py-1 text-yellow-300">
+            <div className="flex flex-wrap items-center gap-3 text-[10px] font-medium text-zinc-400 md:text-xs">
+              <span className="inline-flex items-center gap-1.5 text-yellow-300">
                 <Star size={12} className="fill-yellow-300" />
                 {selectedSeason.vote_average > 0
                   ? selectedSeason.vote_average.toFixed(1)
@@ -79,7 +79,7 @@ export default function SeasonInfo({ tvId, seasons }) {
               </span>
             </div>
 
-            <h3 className="mt-3 text-xl md:text-3xl font-black text-white">
+            <h3 className="mt-2.5 text-lg font-semibold text-white md:text-2xl">
               {selectedSeason.name}
             </h3>
             <p className="mt-3 hidden max-w-2xl text-sm leading-relaxed text-zinc-400 sm:line-clamp-3 sm:block">
@@ -87,7 +87,7 @@ export default function SeasonInfo({ tvId, seasons }) {
             </p>
             <Link
               to={`/app/tv/${tvId}/season/${selectedSeason.season_number}`}
-              className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-xs font-black text-zinc-950 transition-all hover:bg-violet-100 hover:gap-3 md:mt-5 md:px-5"
+              className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-xs font-semibold text-zinc-950 transition-colors hover:bg-violet-100 md:mt-5"
             >
               Ver episódios <ArrowRight size={15} />
             </Link>
@@ -95,7 +95,7 @@ export default function SeasonInfo({ tvId, seasons }) {
         </div>
       </div>
 
-      <div className="content-scrollbar mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4">
+      <div className="scrollbar-hide mt-4 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2">
         {availableSeasons.map((season) => {
           const selected = season.season_number === selectedSeason.season_number;
           return (
@@ -103,7 +103,7 @@ export default function SeasonInfo({ tvId, seasons }) {
               type="button"
               key={season.id}
               onClick={() => setSelectedNumber(season.season_number)}
-              className={`group flex w-40 md:w-48 shrink-0 snap-start items-center gap-3 rounded-2xl border p-2 text-left transition-all ${
+              className={`group flex w-40 shrink-0 snap-start items-center gap-3 rounded-lg border p-2 text-left transition-colors md:w-44 ${
                 selected
                   ? "border-violet-400/60 bg-violet-500/10"
                   : "border-white/[0.06] bg-white/[0.025] hover:border-white/15 hover:bg-white/[0.05]"
