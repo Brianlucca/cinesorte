@@ -311,11 +311,11 @@ export default function AppLayout() {
       }`}>
         <span className="flex items-center gap-2 text-lg font-semibold tracking-tight"><Film className="h-5 w-5 text-violet-500" /> CineSorte</span>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={openMessages} className="relative grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] text-zinc-400" aria-label="Abrir mensagens">
+          <button type="button" onClick={openMessages} className="relative grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-black/45 text-zinc-200 backdrop-blur-md transition-colors hover:bg-black/65 hover:text-white" aria-label="Abrir mensagens">
             <MessageCircle size={18} />
             {messageUnreadTotal > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-violet-500 px-1 text-[9px] font-semibold text-white">{messageUnreadTotal > 9 ? "9+" : messageUnreadTotal}</span>}
           </button>
-          <button type="button" onClick={() => setIsMobileMenuOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] text-zinc-400"><Menu size={20} /></button>
+          <button type="button" onClick={() => setIsMobileMenuOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-black/45 text-zinc-200 backdrop-blur-md transition-colors hover:bg-black/65 hover:text-white"><Menu size={20} /></button>
         </div>
       </div>
 
