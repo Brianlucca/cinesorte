@@ -15,6 +15,11 @@ import {
 } from "lucide-react";
 import { getDiscover, searchUsers } from "@shared/api/api";
 import { useSearchLogic } from "@shared/hooks/useSearchLogic";
+import {
+  cancelMovieDetailsPrefetch,
+  prefetchMovieDetails,
+  scheduleMovieDetailsPrefetch,
+} from "@shared/lib/mediaDetailsPrefetch";
 
 const ARTWORK_ROTATION_MS = 10 * 60 * 1000;
 
@@ -107,9 +112,68 @@ const getType = (item) => {
 const getYear = (item) =>
   (item.release_date || item.first_air_date || "").toString().split("-")[0];
 
+function MediaSearchResultCard({ item, onClose }) {
+  const type = getType(item);
+  const title = item.title || item.name;
+  const year = getYear(item);
+  const imagePath = item.poster_path;
+  const rating = Number(item.vote_average || 0).toFixed(1);
+
+  return (
+    <Link
+      to={`/app/${type}/${item.id}`}
+      onClick={onClose}
+      onMouseEnter={() => scheduleMovieDetailsPrefetch(type, item.id)}
+      onMouseLeave={() => cancelMovieDetailsPrefetch(type, item.id)}
+      onFocus={() => prefetchMovieDetails(type, item.id)}
+      onPointerDown={() => prefetchMovieDetails(type, item.id)}
+      className="group/card min-w-0 rounded-xl transition-opacity duration-200 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+    >
+      <article className="relative aspect-[2/3] overflow-hidden rounded-xl bg-white/[0.025]">
+        {imagePath ? (
+          <img
+            src={`https://image.tmdb.org/t/p/w500${imagePath}`}
+            className="h-full w-full object-cover"
+            alt={title}
+            loading="lazy"
+          />
+        ) : (
+          <div className="grid h-full place-items-center text-zinc-700">
+            <Film size={30} />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-40 transition-opacity duration-300 md:opacity-0 md:group-hover/card:opacity-100" />
+        <div className="absolute right-2.5 top-2.5 flex items-center gap-1.5 rounded-full bg-black/55 px-2 py-1 backdrop-blur-md md:right-3 md:top-3">
+          <Star size={10} className="fill-yellow-400 text-yellow-400" />
+          <span className="text-[10px] font-semibold text-white">{rating}</span>
+        </div>
+      </article>
+
+      <div className="px-0.5 pt-2.5">
+        <h3 className="truncate text-sm font-semibold text-zinc-100">{title}</h3>
+        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-zinc-500">
+          {year && <span>{year}</span>}
+          {year && <span>&bull;</span>}
+          <span>{type === "tv" ? <>S&eacute;rie</> : "Filme"}</span>
+        </div>
+        <div className="hidden">
+          {year && <span>{year}</span>}
+          {year && <span className="order-2">&bull;</span>}
+          <span className="order-3">{type === "tv" ? <>S&eacute;rie</> : "Filme"}</span>
+          {year && <span>Â·</span>}
+          <span>{type === "tv" ? "SÃ©rie" : "Filme"}</span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 function SearchResultCard({ item, onClose }) {
   const type = getType(item);
   const isPerson = type === "person";
+
+  if (!isPerson) return <MediaSearchResultCard item={item} onClose={onClose} />;
+
   const title = item.title || item.name;
   const imagePath = isPerson ? item.profile_path : item.poster_path;
   const route = isPerson ? `/app/person/${item.id}` : `/app/${type}/${item.id}`;
