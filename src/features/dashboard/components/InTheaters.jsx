@@ -166,7 +166,7 @@ export default function InTheaters({ items = [] }) {
             </h2>
           </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
           <div className="flex min-w-0 flex-1 gap-2 sm:w-[360px] sm:flex-none">
             <SelectField
               label="Estado"
@@ -193,6 +193,14 @@ export default function InTheaters({ items = [] }) {
               ))}
             </SelectField>
           </div>
+          <div className="flex shrink-0 gap-2 sm:hidden">
+            <button type="button" onClick={() => slide("left")} aria-label="Voltar filmes em cartaz" className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white">
+              <ChevronLeft size={18} />
+            </button>
+            <button type="button" onClick={() => slide("right")} aria-label="Avançar filmes em cartaz" className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white">
+              <ChevronRight size={18} />
+            </button>
+          </div>
           <div className="hidden shrink-0 gap-1.5 sm:flex">
             <button type="button" onClick={() => slide("left")} aria-label="Voltar filmes em cartaz" className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-500 transition hover:bg-white/[0.08] hover:text-white">
               <ChevronLeft size={18} />
@@ -206,7 +214,7 @@ export default function InTheaters({ items = [] }) {
 
       {locationError && <p className="px-5 pt-2 text-xs text-rose-300 sm:px-6 md:px-10 xl:px-14 2xl:px-16">{locationError}</p>}
 
-        <div ref={railRef} className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-1 pt-4 scroll-smooth scrollbar-hide sm:px-6 md:snap-none md:px-10 xl:px-14 2xl:px-16" style={{ scrollbarWidth: "none" }}>
+        <div ref={railRef} className="flex snap-x snap-mandatory scroll-px-6 gap-3 overflow-x-auto px-6 pb-1 pt-4 scroll-smooth scrollbar-hide md:snap-none md:scroll-px-10 md:px-10 xl:scroll-px-14 xl:px-14 2xl:scroll-px-16 2xl:px-16" style={{ scrollbarWidth: "none" }}>
           {visibleItems.map((item) => {
             const title = item.title || item.name;
             const imagePath = item.backdrop_path || item.poster_path;
