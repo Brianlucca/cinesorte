@@ -167,7 +167,7 @@ export default function InTheaters({ items = [] }) {
           </div>
 
         <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
-          <div className="flex min-w-0 flex-1 gap-2 sm:w-[360px] sm:flex-none">
+          <div className="order-2 flex w-full min-w-0 flex-1 gap-2 sm:order-none sm:w-[360px] sm:flex-none">
             <SelectField
               label="Estado"
               value={location.stateId}
@@ -193,7 +193,7 @@ export default function InTheaters({ items = [] }) {
               ))}
             </SelectField>
           </div>
-          <div className="flex shrink-0 gap-2 sm:hidden">
+          <div className="order-1 flex shrink-0 gap-2 sm:hidden">
             <button type="button" onClick={() => slide("left")} aria-label="Voltar filmes em cartaz" className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white">
               <ChevronLeft size={18} />
             </button>
