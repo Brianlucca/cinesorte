@@ -276,10 +276,15 @@ export default function Dashboard() {
           ? liveResult.value
           : [];
 
-        setSocialPreview({
-          items: followingItems.length > 0 ? followingItems : globalItems,
-          suggestions,
+        const seenSocialItems = new Set();
+        const socialItems = [...followingItems, ...globalItems].filter((item) => {
+          const key = item.uniqueKey || `${item.type}-${item.id}`;
+          if (seenSocialItems.has(key)) return false;
+          seenSocialItems.add(key);
+          return true;
         });
+
+        setSocialPreview({ items: socialItems, suggestions });
         setUserLists(lists);
         setLiveHeroItems(liveRooms.map((room) => ({
           id: "live-" + room.id,
@@ -363,6 +368,13 @@ export default function Dashboard() {
       />
 
       <div className="relative z-20 -mt-10 flex flex-col gap-10 bg-gradient-to-t from-[#111216] via-[#111216]/98 to-transparent pt-16 md:-mt-16 md:gap-14 md:pt-24">
+        <HomeExperience
+          variant="reviews"
+          data={data}
+          socialItems={socialPreview.items}
+          suggestions={socialPreview.suggestions}
+          lists={userLists}
+        />
         <ContinueWatching />
         {(data.trendingWeek || []).length > 0 && (
           <div className="space-y-1 md:space-y-2">
