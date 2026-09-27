@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Bookmark,
@@ -101,6 +101,8 @@ export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileHeaderScrolled, setIsMobileHeaderScrolled] = useState(false);
+  const mainScrollRef = useRef(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [sidebarLists, setSidebarLists] = useState([]);
@@ -109,6 +111,13 @@ export default function AppLayout() {
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
   const [messageUnreadTotal, setMessageUnreadTotal] = useState(0);
   const [pendingMessageConversationId, setPendingMessageConversationId] = useState(null);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setIsMobileHeaderScrolled((mainScrollRef.current?.scrollTop || 0) > 12);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (isSidebarCollapsed || !user || Date.now() - listsLoadedAt < 60000) return undefined;
@@ -295,7 +304,11 @@ export default function AppLayout() {
         </div>
       </aside>
 
-      <div className="fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-white/[0.06] bg-[#111216]/90 px-4 py-3 backdrop-blur-xl md:hidden">
+      <div className={`fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b px-4 py-3 transition-[background-color,border-color,backdrop-filter] duration-300 md:hidden ${
+        isMobileHeaderScrolled
+          ? "border-white/[0.06] bg-[#111216]/90 backdrop-blur-xl"
+          : "border-transparent bg-transparent backdrop-blur-none"
+      }`}>
         <span className="flex items-center gap-2 text-lg font-semibold tracking-tight"><Film className="h-5 w-5 text-violet-500" /> CineSorte</span>
         <div className="flex items-center gap-2">
           <button type="button" onClick={openMessages} className="relative grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] text-zinc-400" aria-label="Abrir mensagens">
@@ -325,7 +338,11 @@ export default function AppLayout() {
         </div>
       )}
 
-      <main className="relative h-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-zinc-950">
+      <main
+        ref={mainScrollRef}
+        onScroll={(event) => setIsMobileHeaderScrolled(event.currentTarget.scrollTop > 12)}
+        className="relative h-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-zinc-950"
+      >
         <div className="h-full w-full pt-16 md:pt-0"><Outlet /></div>
       </main>
 
