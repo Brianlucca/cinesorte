@@ -114,11 +114,11 @@ function SectionShell({ title, eyebrow, children, actionTo, actionLabel, rowRef,
           </h2>
         </div>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="flex shrink-0 items-center gap-2">
           {actionTo && actionLabel && (
             <Link
               to={actionTo}
-              className="inline-flex items-center gap-2 px-1 py-2 text-[11px] font-bold text-zinc-400 transition-colors hover:text-white"
+              className="hidden items-center gap-2 px-1 py-2 text-[11px] font-bold text-zinc-400 transition-colors hover:text-white sm:inline-flex"
             >
               {actionLabel}
               <ArrowRight size={14} />
@@ -126,22 +126,22 @@ function SectionShell({ title, eyebrow, children, actionTo, actionLabel, rowRef,
           )}
 
           {hasControls && (
-            <div className="flex gap-2 opacity-40 transition-opacity duration-300 group-hover/row:opacity-100">
+            <div className="flex gap-2 opacity-100 transition-opacity duration-300 md:opacity-40 md:group-hover/row:opacity-100">
               <button
                 type="button"
                 aria-label={`Voltar na seção ${title}`}
                 onClick={() => slideRail(rowRef, "left")}
-                className="rounded-xl border border-white/10 bg-white/5 p-2.5 text-white shadow-lg transition-all hover:bg-white/10"
+                className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
               >
-                <ChevronLeft size={20} />
+                <ChevronLeft size={18} />
               </button>
               <button
                 type="button"
                 aria-label={`Avançar na seção ${title}`}
                 onClick={() => slideRail(rowRef, "right")}
-                className="rounded-xl border border-white/10 bg-white/5 p-2.5 text-white shadow-lg transition-all hover:bg-white/10"
+                className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
               >
-                <ChevronRight size={20} />
+                <ChevronRight size={18} />
               </button>
             </div>
           )}
