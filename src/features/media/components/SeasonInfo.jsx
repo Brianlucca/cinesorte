@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Calendar, ListVideo, Star } from "lucide-react";
+import { ArrowRight, Calendar, ChevronLeft, ChevronRight, ListVideo, Star } from "lucide-react";
 
 export default function SeasonInfo({ tvId, seasons }) {
   const availableSeasons = useMemo(
@@ -11,6 +11,7 @@ export default function SeasonInfo({ tvId, seasons }) {
     availableSeasons.find((season) => season.season_number > 0)?.season_number ??
       availableSeasons[0]?.season_number,
   );
+  const seasonsRailRef = useRef(null);
 
   useEffect(() => {
     if (availableSeasons.some((season) => season.season_number === selectedNumber)) return;
@@ -25,6 +26,23 @@ export default function SeasonInfo({ tvId, seasons }) {
   const selectedSeason =
     availableSeasons.find((season) => season.season_number === selectedNumber) ||
     availableSeasons[0];
+  const selectedIndex = availableSeasons.findIndex(
+    (season) => season.season_number === selectedSeason.season_number,
+  );
+
+  const selectAdjacentSeason = (direction) => {
+    const nextIndex = Math.min(
+      Math.max(selectedIndex + direction, 0),
+      availableSeasons.length - 1,
+    );
+    const nextSeason = availableSeasons[nextIndex];
+    if (!nextSeason || nextIndex === selectedIndex) return;
+
+    setSelectedNumber(nextSeason.season_number);
+    seasonsRailRef.current
+      ?.querySelector(`[data-season-number="${nextSeason.season_number}"]`)
+      ?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  };
 
   return (
     <section>
@@ -35,9 +53,33 @@ export default function SeasonInfo({ tvId, seasons }) {
           </span>
           <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">Temporadas</h2>
         </div>
-        <span className="text-xs font-semibold text-zinc-500">
-          {availableSeasons.length} {availableSeasons.length === 1 ? "temporada" : "temporadas"}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="mr-1 hidden text-xs font-semibold text-zinc-500 sm:inline">
+            {availableSeasons.length} {availableSeasons.length === 1 ? "temporada" : "temporadas"}
+          </span>
+          {availableSeasons.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => selectAdjacentSeason(-1)}
+                disabled={selectedIndex <= 0}
+                aria-label="Temporada anterior"
+                className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => selectAdjacentSeason(1)}
+                disabled={selectedIndex >= availableSeasons.length - 1}
+                aria-label="Próxima temporada"
+                className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="relative overflow-hidden rounded-xl bg-white/[0.025] p-4 md:p-5">
@@ -95,13 +137,14 @@ export default function SeasonInfo({ tvId, seasons }) {
         </div>
       </div>
 
-      <div className="scrollbar-hide mt-4 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2">
+      <div ref={seasonsRailRef} className="scrollbar-hide mt-4 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2">
         {availableSeasons.map((season) => {
           const selected = season.season_number === selectedSeason.season_number;
           return (
             <button
               type="button"
               key={season.id}
+              data-season-number={season.season_number}
               onClick={() => setSelectedNumber(season.season_number)}
               className={`group flex w-40 shrink-0 snap-start items-center gap-3 rounded-lg border p-2 text-left transition-colors md:w-44 ${
                 selected
