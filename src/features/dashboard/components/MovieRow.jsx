@@ -102,7 +102,7 @@ export default function MovieRow({ title, items, variant = "poster" }) {
 
       <div
         ref={rowRef}
-        className={`flex ${layout.rail} w-full snap-x snap-mandatory overflow-x-auto px-5 pb-2 pt-4 scroll-smooth scrollbar-hide sm:px-6 md:snap-none md:px-10 md:pt-5 xl:px-14 2xl:px-16`}
+        className={`flex ${layout.rail} w-full snap-x snap-mandatory scroll-px-6 overflow-x-auto px-6 pb-2 pt-4 scroll-smooth scrollbar-hide md:snap-none md:scroll-px-10 md:px-10 md:pt-5 xl:scroll-px-14 xl:px-14 2xl:scroll-px-16 2xl:px-16`}
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {visibleItems.map((item, index) => {
