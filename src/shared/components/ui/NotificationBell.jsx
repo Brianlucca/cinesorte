@@ -287,7 +287,7 @@ export default function NotificationBell() {
         <button
           ref={buttonRef}
           onClick={handleOpen}
-          className="relative grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white md:h-10 md:w-10 md:rounded-full md:border-white/10 md:bg-zinc-900/80 md:shadow-lg md:backdrop-blur-md"
+          className="relative grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-black/45 text-zinc-200 backdrop-blur-md transition-colors hover:bg-black/65 hover:text-white md:h-10 md:w-10 md:rounded-full md:border-white/10 md:bg-zinc-900/80 md:shadow-lg"
           aria-label="Abrir notificações"
         >
           <Bell size={20} />
