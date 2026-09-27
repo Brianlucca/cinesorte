@@ -40,12 +40,10 @@ export default function AuthShell({
   onHelp,
 }) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#08080b] px-4 py-6 text-white sm:px-6 lg:px-8">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_14%_0%,rgba(124,58,237,0.12),transparent_30%),radial-gradient(circle_at_88%_20%,rgba(14,165,233,0.055),transparent_28%)]" />
-
-      <div className="relative mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-[1180px] items-center justify-center">
-        <div className="grid w-full overflow-hidden rounded-[1.5rem] border border-white/[0.07] bg-[#0d0d11] shadow-[0_34px_110px_rgba(0,0,0,0.48)] lg:min-h-[690px] lg:grid-cols-[56%_44%]">
-          <aside className="relative hidden min-h-[690px] overflow-hidden bg-[#050507] lg:block">
+    <div className="min-h-screen bg-[#111216] px-4 py-4 text-white sm:px-6 sm:py-6 lg:px-8">
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-[1240px] items-center justify-center sm:min-h-[calc(100vh-3rem)]">
+        <div className="grid w-full overflow-hidden rounded-xl border border-white/[0.06] bg-[#181a20] lg:min-h-[700px] lg:grid-cols-[52%_48%]">
+          <aside className="relative hidden min-h-[700px] overflow-hidden bg-[#111216] lg:block">
             <div className="absolute inset-0 overflow-hidden bg-[#101014]">
               {POSTER_COLLAGE.map((poster, index) => (
                 <div
@@ -56,38 +54,42 @@ export default function AuthShell({
                 </div>
               ))}
             </div>
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,11,0.02)_0%,rgba(8,8,11,0.10)_52%,rgba(13,13,17,0.88)_100%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_8%,rgba(124,58,237,0.18),transparent_34%),linear-gradient(0deg,rgba(8,8,11,0.78)_0%,transparent_32%,rgba(8,8,11,0.08)_100%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,18,22,0.08)_0%,rgba(17,18,22,0.18)_52%,#181a20_100%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(17,18,22,0.96)_0%,rgba(17,18,22,0.16)_56%,rgba(17,18,22,0.05)_100%)]" />
+            <div className="absolute inset-x-0 bottom-0 z-[70] p-10 xl:p-12">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-violet-300">Sua história começa aqui</span>
+              <h2 className="mt-3 max-w-md text-3xl font-semibold leading-tight tracking-[-0.035em] text-white">Descubra, registre e compartilhe o que vale assistir.</h2>
+              <p className="mt-3 max-w-md text-sm leading-6 text-zinc-400">Um espaço para suas listas, reviews e conversas sobre cinema e televisão.</p>
+            </div>
           </aside>
 
-          <section className="relative flex min-h-[calc(100vh-3rem)] items-center justify-center border-l border-white/[0.07] bg-[#0d0d11] px-5 py-8 sm:px-8 lg:min-h-[690px] lg:px-12">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(124,58,237,0.10),transparent_34%)]" />
-            <div className="w-full max-w-[390px] animate-in fade-in slide-in-from-bottom-3 duration-500">
-              <div className="mb-8 flex items-center justify-between gap-4 lg:justify-center">
+          <section className="flex min-h-[calc(100vh-2rem)] items-center justify-center bg-[#181a20] px-5 py-8 sm:min-h-[calc(100vh-3rem)] sm:px-10 lg:min-h-[700px] lg:border-l lg:border-white/[0.06] lg:px-14">
+            <div className="w-full max-w-[420px] animate-in fade-in slide-in-from-bottom-3 duration-500">
+              <div className="mb-9 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3" aria-label="CineSorte">
                   <Clapperboard size={27} strokeWidth={2.25} className="text-violet-400" />
-                  <span className="text-2xl font-black tracking-[-0.05em] text-white">
+                  <span className="text-xl font-semibold tracking-[-0.04em] text-white">
                     Cine<span className="text-violet-400">Sorte</span>
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={onHelp}
-                  className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-zinc-500 transition-colors hover:bg-white/[0.08] hover:text-white lg:hidden"
+                  className="grid h-10 w-10 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-white lg:hidden"
                   aria-label="Preciso de ajuda"
                 >
                   <HelpCircle size={18} />
                 </button>
               </div>
 
-              <div className="mb-7 text-center">
-                <div className="mb-3 text-[10px] font-black uppercase tracking-[0.24em] text-violet-300">
+              <div className="mb-7 text-left">
+                <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-violet-300">
                   {eyebrow}
                 </div>
-                <h2 className="text-3xl font-black leading-tight tracking-[-0.04em] text-white">
+                <h1 className="text-3xl font-semibold leading-tight tracking-[-0.035em] text-white sm:text-4xl">
                   {title}
-                </h2>
-                <p className="mx-auto mt-3 max-w-[350px] text-sm font-medium leading-6 text-zinc-400">{description}</p>
+                </h1>
+                <p className="mt-3 max-w-[390px] text-sm leading-6 text-zinc-400">{description}</p>
               </div>
 
               <div>{children}</div>
@@ -98,7 +100,7 @@ export default function AuthShell({
                 <button
                   type="button"
                   onClick={onHelp}
-                  className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-zinc-500 transition-colors hover:text-white"
+                  className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-500 transition-colors hover:text-white"
                 >
                   <HelpCircle size={16} />
                   Preciso de ajuda
