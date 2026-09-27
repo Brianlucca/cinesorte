@@ -20,7 +20,7 @@ export default function SupportContactPanel({
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <div>
-        <label className="mb-2.5 block text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
+        <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
           Seu email
         </label>
         <div className="relative flex items-center">
@@ -29,14 +29,14 @@ export default function SupportContactPanel({
             type="email"
             value={email || ""}
             readOnly
-            className="w-full cursor-not-allowed rounded-2xl border border-white/[0.08] bg-black/20 py-3.5 pl-11 pr-11 text-sm font-medium text-zinc-500 outline-none"
+            className="h-12 w-full cursor-not-allowed rounded-xl border border-white/[0.06] bg-white/[0.018] pl-11 pr-11 text-sm font-medium text-zinc-500 outline-none"
           />
           <Lock size={15} className="absolute right-4 text-zinc-600" />
         </div>
       </div>
 
       <div>
-        <label className="mb-2.5 block text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
+        <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
           Assunto
         </label>
         <div className="relative flex items-center">
@@ -44,7 +44,7 @@ export default function SupportContactPanel({
             value={subject}
             onChange={(event) => onSubjectChange(event.target.value)}
             required
-            className="w-full cursor-pointer appearance-none rounded-2xl border border-white/[0.08] bg-black/20 px-4 py-3.5 pr-11 text-sm font-medium text-white outline-none transition-colors focus:border-violet-400/50 focus:bg-white/[0.035]"
+            className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-white/[0.06] bg-white/[0.018] px-4 pr-11 text-sm font-medium text-white outline-none transition-colors focus:border-violet-400/40 focus:bg-white/[0.03]"
           >
             {SUBJECT_OPTIONS.map((option) => (
               <option key={option.value} value={option.value} className="bg-zinc-900">
@@ -57,7 +57,7 @@ export default function SupportContactPanel({
       </div>
 
       <div>
-        <label className="mb-2.5 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
+        <label className="mb-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
           Mensagem
           <span className="font-bold normal-case tracking-normal text-zinc-600">({message.length}/1000)</span>
         </label>
@@ -68,18 +68,18 @@ export default function SupportContactPanel({
           value={message}
           onChange={(event) => onMessageChange(event.target.value)}
           placeholder="Descreva como podemos ajudar..."
-          className="w-full resize-none rounded-2xl border border-white/[0.08] bg-black/20 px-4 py-3.5 text-sm font-medium leading-6 text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-violet-400/50 focus:bg-white/[0.035]"
+          className="w-full resize-none rounded-xl border border-white/[0.06] bg-white/[0.018] px-4 py-3 text-sm font-medium leading-6 text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-violet-400/40 focus:bg-white/[0.03]"
         />
       </div>
 
-      <div className="rounded-2xl border border-violet-400/15 bg-violet-500/10 px-4 py-3 text-sm leading-6 text-violet-100/90">
+      <div className="rounded-xl border border-violet-400/15 bg-violet-500/[0.07] px-4 py-3 text-sm leading-6 text-violet-100/90">
         O protocolo é gerado automaticamente quando você envia. Também mandamos uma confirmação para o seu email.
       </div>
 
       <button
         type="submit"
         disabled={isSubmitting || message.trim().length < 10}
-        className="inline-flex w-full items-center justify-center gap-2.5 rounded-xl bg-white px-5 py-3.5 text-[10px] font-black uppercase tracking-[0.13em] text-black transition-colors hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-xl bg-white px-5 text-sm font-semibold text-black transition-colors hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Send size={16} />
         {isSubmitting ? "Enviando" : "Enviar chamado"}
