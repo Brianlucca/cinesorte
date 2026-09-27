@@ -8,7 +8,6 @@ import {
   Layers3,
   MessageCircle,
   Plus,
-  Quote,
   Star,
 } from "lucide-react";
 import { useAuth } from "@shared/context/useAuth";
@@ -220,55 +219,35 @@ function ReviewSpotlight({ items = [] }) {
       actionTo="/app/feed"
       actionLabel="Ver todas"
     >
-      <div className={`space-y-3 pt-5 md:pt-6 ${PAGE_X}`}>
-        <Link
-          to={mediaPath(featuredReview)}
-          className="group/review relative block min-h-[400px] overflow-hidden rounded-xl border border-white/[0.06] bg-[#181a20]"
-        >
-          <MediaImage
-            item={{ poster_path: featuredReview.posterPath, backdrop_path: featuredReview.backdropPath }}
-            size="w1280"
-            preferred="backdrop"
-            className="absolute inset-0 h-full w-full scale-[1.02] opacity-30 saturate-[0.7] transition duration-700 group-hover/review:scale-[1.04] group-hover/review:opacity-38"
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,#111216_0%,rgba(17,18,22,0.96)_50%,rgba(17,18,22,0.60)_100%),linear-gradient(0deg,#111216_0%,transparent_70%)]" />
-          <div className="relative z-10 flex min-h-[400px] max-w-5xl flex-col justify-center p-6 sm:p-9 lg:px-12 lg:py-10">
-            <div className="flex items-center gap-3">
-              <span className="relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-zinc-800 text-sm font-semibold uppercase text-zinc-300">
+      <div className={`mt-5 grid border-y border-white/[0.06] md:mt-6 md:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.6fr)] ${PAGE_X}`}>
+        <Link to={mediaPath(featuredReview)} className="group/review grid min-h-[220px] grid-cols-[92px_minmax(0,1fr)] gap-5 py-5 md:pr-8 sm:grid-cols-[108px_minmax(0,1fr)]">
+          <MediaImage item={{ poster_path: featuredReview.posterPath, backdrop_path: featuredReview.backdropPath }} size="w342" className="aspect-[2/3] w-full self-start rounded-lg bg-zinc-900 transition-transform duration-300 group-hover/review:-translate-y-1" />
+          <span className="min-w-0 self-center">
+            <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="text-xl font-semibold tracking-[-0.02em] text-white transition-colors group-hover/review:text-violet-200 sm:text-2xl">{featuredReview.mediaTitle}</span>
+              {featuredReview.mediaYear && <span className="text-sm text-zinc-500">{featuredReview.mediaYear}</span>}
+            </span>
+            <span className="mt-3 flex flex-wrap items-center gap-2.5">
+              <span className="relative grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-zinc-800 text-[10px] font-semibold uppercase text-zinc-300">
                 {(featuredReview.username || "C")[0]}
                 {featuredReview.userPhoto && <img src={featuredReview.userPhoto} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(event) => event.currentTarget.remove()} />}
               </span>
-              <span className="text-base font-semibold text-zinc-100">@{featuredReview.username || "cinesorte"}</span>
-              {featuredReview.rating !== null && featuredReview.rating !== undefined && (
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-black/45 px-3 py-2 text-sm font-semibold text-yellow-300 backdrop-blur-md">
-                  <Star size={14} className="fill-current" />
-                  {Number(featuredReview.rating).toFixed(1)}
-                </span>
-              )}
-            </div>
-            <div className="mt-8 flex items-start gap-4 sm:gap-6">
-              <Quote size={34} className="mt-1 shrink-0 fill-violet-400/15 text-violet-300 sm:h-11 sm:w-11" />
-              <blockquote className="line-clamp-4 max-w-4xl text-2xl font-medium leading-[1.25] tracking-[-0.025em] text-white sm:text-3xl sm:leading-[1.22] lg:text-[2.25rem]">
-                {reviewExcerpt(featuredReview.text)}
-              </blockquote>
-            </div>
-            <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-white/[0.08] pt-5">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">Review sobre</span>
-              <h3 className="text-base font-semibold text-zinc-200 sm:text-lg">{featuredReview.mediaTitle}</h3>
-              <span className="hidden h-1 w-1 rounded-full bg-zinc-600 sm:block" />
-              <span className="inline-flex items-center gap-2 text-xs font-semibold text-white">Ler completa <ArrowRight size={14} /></span>
-            </div>
-            <div className="mt-4 flex items-center gap-5 text-xs text-zinc-400">
-              <span className="inline-flex items-center gap-1.5"><Heart size={14} /> {featuredReview.likesCount || 0}</span>
-              <span className="inline-flex items-center gap-1.5"><MessageCircle size={14} /> {featuredReview.commentsCount || 0}</span>
-            </div>
-          </div>
+              <span className="text-xs font-semibold text-zinc-300">@{featuredReview.username || "cinesorte"}</span>
+              {featuredReview.rating !== null && featuredReview.rating !== undefined && <span className="inline-flex items-center gap-1 text-xs font-semibold text-yellow-300"><Star size={12} className="fill-current" /> {Number(featuredReview.rating).toFixed(1)}</span>}
+            </span>
+            <span className="mt-4 line-clamp-3 block max-w-3xl text-sm leading-6 text-zinc-300 sm:text-base sm:leading-7">{reviewExcerpt(featuredReview.text)}</span>
+            <span className="mt-4 flex items-center gap-4 text-xs text-zinc-500">
+              <span className="inline-flex items-center gap-1.5"><Heart size={13} /> {featuredReview.likesCount || 0}</span>
+              <span className="inline-flex items-center gap-1.5"><MessageCircle size={13} /> {featuredReview.commentsCount || 0}</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-zinc-300">Ler review <ArrowRight size={13} /></span>
+            </span>
+          </span>
         </Link>
 
-        <div className="grid border-y border-white/[0.06] sm:grid-cols-2 lg:grid-cols-3 lg:divide-x lg:divide-white/[0.06]">
+        <div className="divide-y divide-white/[0.06] border-t border-white/[0.06] md:border-l md:border-t-0 md:border-white/[0.06] md:pl-6">
           {recentReviews.map((review) => (
-            <Link key={review.uniqueKey || review.id} to={mediaPath(review)} className="group/item grid grid-cols-[58px_minmax(0,1fr)] gap-3 border-b border-white/[0.06] px-0 py-4 sm:px-4 lg:border-b-0 lg:first:pl-0 lg:last:pr-0">
-              <MediaImage item={{ poster_path: review.posterPath, backdrop_path: review.backdropPath }} size="w342" className="aspect-[2/3] w-[58px] rounded-lg bg-zinc-900" />
+            <Link key={review.uniqueKey || review.id} to={mediaPath(review)} className="group/item grid grid-cols-[44px_minmax(0,1fr)] gap-3 py-3">
+              <MediaImage item={{ poster_path: review.posterPath, backdrop_path: review.backdropPath }} size="w342" className="aspect-[2/3] w-11 rounded-md bg-zinc-900" />
               <span className="min-w-0 self-center">
                 <span className="flex items-center gap-2">
                   <span className="truncate text-xs font-semibold text-zinc-300">@{review.username || "cinesorte"}</span>
@@ -280,7 +259,7 @@ function ReviewSpotlight({ items = [] }) {
             </Link>
           ))}
           {recentReviews.length === 0 && (
-            <div className="flex min-h-24 items-center text-sm leading-6 text-zinc-500">As próximas reviews da comunidade aparecerão aqui.</div>
+            <div className="flex min-h-[220px] items-center text-sm leading-6 text-zinc-500">As próximas reviews da comunidade aparecerão aqui.</div>
           )}
         </div>
       </div>
