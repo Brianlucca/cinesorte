@@ -28,14 +28,14 @@ export default function MediaRecommendations({ items }) {
   };
 
   return (
-    <section className="mx-auto max-w-[1600px] px-5 sm:px-8 md:px-12 xl:px-16">
-      <div className="overflow-hidden rounded-[2rem] border border-white/[0.07] bg-[radial-gradient(ellipse_at_top_left,rgba(124,58,237,0.12),transparent_48%)] py-7 md:py-9">
-        <div className="flex items-end justify-between gap-4 px-5 md:px-8">
+    <section className="mx-auto max-w-[1380px] px-5 sm:px-8 md:px-10 xl:px-12">
+      <div className="border-t border-white/[0.07] py-8 md:py-10">
+        <div className="flex items-end justify-between gap-4">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
               Continue explorando
             </span>
-            <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">
+            <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">
               Você também pode gostar
             </h2>
           </div>
@@ -47,7 +47,7 @@ export default function MediaRecommendations({ items }) {
               type="button"
               onClick={() => slide("left")}
               aria-label="Voltar nas recomendações"
-              className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-white transition-all hover:bg-white/10"
+              className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-300 transition-colors hover:bg-white/[0.08] hover:text-white"
             >
               <ChevronLeft size={19} />
             </button>
@@ -55,7 +55,7 @@ export default function MediaRecommendations({ items }) {
               type="button"
               onClick={() => slide("right")}
               aria-label="Avançar nas recomendações"
-              className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-white transition-all hover:bg-white/10"
+              className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-300 transition-colors hover:bg-white/[0.08] hover:text-white"
             >
               <ChevronRight size={19} />
             </button>
@@ -64,7 +64,7 @@ export default function MediaRecommendations({ items }) {
 
         <div
           ref={rowRef}
-          className="mt-6 flex snap-x snap-mandatory gap-3.5 overflow-x-auto scroll-smooth px-5 pb-2 scrollbar-hide md:snap-none md:gap-5 md:px-8"
+          className="mt-5 flex snap-x snap-mandatory gap-3.5 overflow-x-auto scroll-smooth pb-2 scrollbar-hide md:snap-none md:gap-4"
         >
           {visibleItems.map((item) => {
             const name = item.title || item.name;
@@ -80,9 +80,9 @@ export default function MediaRecommendations({ items }) {
                 onMouseLeave={() => cancelMovieDetailsPrefetch(mediaType, item.id)}
                 onFocus={() => prefetchMovieDetails(mediaType, item.id)}
                 onPointerDown={() => prefetchMovieDetails(mediaType, item.id)}
-                className="group w-[78vw] max-w-[310px] shrink-0 snap-start sm:w-[340px] sm:max-w-none md:w-[390px]"
+                className="group w-[76vw] max-w-[300px] shrink-0 snap-start sm:w-[320px] sm:max-w-none md:w-[350px]"
               >
-                <article className="relative aspect-video overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-900 shadow-xl transition-all duration-300 group-hover:-translate-y-1 group-hover:border-violet-300/30">
+                <article className="relative aspect-video overflow-hidden rounded-xl bg-zinc-900 transition-opacity duration-300 group-hover:opacity-90">
                   <img
                     src={`https://image.tmdb.org/t/p/w780${imagePath}`}
                     alt={name}
