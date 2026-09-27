@@ -39,8 +39,8 @@ function GalleryRail({ title, count, images, variant, onSelect }) {
     <div>
       <div className="mb-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-black text-white md:text-base">{title}</h3>
-          <span className="rounded-full border border-white/[0.07] bg-white/[0.035] px-2 py-0.5 text-[10px] font-bold text-zinc-500">
+          <h3 className="text-sm font-semibold text-white md:text-base">{title}</h3>
+          <span className="text-[10px] font-medium text-zinc-500">
             {count}
           </span>
         </div>
@@ -51,7 +51,7 @@ function GalleryRail({ title, count, images, variant, onSelect }) {
               type="button"
               onClick={() => slide("left")}
               aria-label={`Voltar em ${title}`}
-              className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/5 text-white transition-all hover:bg-white/10"
+              className="grid h-8 w-8 place-items-center rounded-full bg-white/[0.04] text-zinc-300 transition-colors hover:bg-white/[0.08] hover:text-white"
             >
               <ChevronLeft size={18} />
             </button>
@@ -59,7 +59,7 @@ function GalleryRail({ title, count, images, variant, onSelect }) {
               type="button"
               onClick={() => slide("right")}
               aria-label={`Avançar em ${title}`}
-              className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/5 text-white transition-all hover:bg-white/10"
+              className="grid h-8 w-8 place-items-center rounded-full bg-white/[0.04] text-zinc-300 transition-colors hover:bg-white/[0.08] hover:text-white"
             >
               <ChevronRight size={18} />
             </button>
@@ -77,7 +77,7 @@ function GalleryRail({ title, count, images, variant, onSelect }) {
             key={image.file_path}
             onClick={() => onSelect(image.file_path)}
             aria-label={`Ampliar ${title.toLowerCase()} ${index + 1}`}
-            className={`group relative shrink-0 snap-start overflow-hidden rounded-2xl border border-white/[0.07] bg-zinc-900 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-300/30 ${
+            className={`group relative shrink-0 snap-start overflow-hidden rounded-xl bg-zinc-900 transition-opacity duration-300 hover:opacity-90 ${
               isPoster
                 ? "aspect-[2/3] w-28 sm:w-36 md:w-44"
                 : "aspect-video w-[78vw] max-w-[310px] sm:w-[360px] sm:max-w-none md:w-[420px]"
@@ -124,13 +124,13 @@ export default function MediaImages({ images, title = "Galeria" }) {
   return (
     <section>
       <div className="mb-7">
-        <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
           Arquivo visual
         </span>
-        <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">Galeria</h2>
+        <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">Galeria</h2>
       </div>
 
-      <div className="space-y-9 md:space-y-11">
+      <div className="space-y-8 md:space-y-9">
         {backdrops.length > 0 && (
           <GalleryRail
             title="Cenas"

@@ -8,7 +8,7 @@ const tabs = [
 
 export default function FeedTabs({ activeTab, onChange }) {
   return (
-    <div className="flex w-full items-center gap-1 rounded-2xl border border-white/[0.08] bg-black/20 p-1.5 backdrop-blur-xl sm:w-max">
+    <div className="flex w-full items-center gap-1 border-b border-white/[0.08] sm:w-max">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
 
@@ -17,10 +17,10 @@ export default function FeedTabs({ activeTab, onChange }) {
             key={tab.id}
             type="button"
             onClick={() => onChange(tab.id)}
-            className={`flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] transition-all sm:flex-none sm:px-4 ${
+            className={`flex min-w-0 flex-1 items-center justify-center gap-2 border-b-2 px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] transition-colors sm:flex-none sm:px-4 ${
               isActive
-                ? "bg-white text-zinc-950 shadow-lg"
-                : "text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-200"
+                ? "border-violet-400 text-white"
+                : "border-transparent text-zinc-500 hover:text-zinc-200"
             }`}
           >
             <tab.icon size={14} strokeWidth={2.4} />

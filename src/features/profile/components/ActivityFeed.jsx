@@ -51,13 +51,12 @@ export default function ActivityFeed({ interactions }) {
 
   if (likedItems.length === 0) {
     return (
-      <div className="relative grid min-h-[280px] place-items-center overflow-hidden rounded-[1.5rem] border border-dashed border-white/[0.08] bg-white/[0.015] text-center animate-in zoom-in-95 duration-500">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.10),transparent_45%)]" />
+      <div className="grid min-h-[260px] place-items-center rounded-xl border border-dashed border-white/[0.06] bg-white/[0.012] text-center animate-in fade-in duration-300">
         <div className="relative px-6">
-          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl border border-white/[0.07] bg-white/[0.04] text-red-300">
+          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] text-violet-300">
             <Heart size={22} />
           </div>
-          <p className="mb-2 text-lg font-black tracking-tight text-white">Nenhuma curtida ainda</p>
+          <p className="mb-2 text-lg font-semibold tracking-[-0.02em] text-white">Nenhuma curtida ainda</p>
           <p className="text-sm font-medium text-zinc-500">Os títulos que você curtir vão aparecer por aqui.</p>
         </div>
       </div>
@@ -78,7 +77,7 @@ export default function ActivityFeed({ interactions }) {
             <Link
               key={`${mediaId}-${currentPage}-${idx}`}
               to={`/app/${mediaType}/${mediaId}`}
-              className="group relative min-h-[220px] overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-[#09090b] shadow-[0_20px_56px_rgba(0,0,0,0.20)] transition-all duration-500 hover:-translate-y-0.5 hover:border-red-300/25"
+              className="group relative min-h-[210px] overflow-hidden rounded-xl border border-white/[0.06] bg-[#111216] transition-colors hover:border-violet-300/25"
             >
               {backdrop ? (
                 <img
@@ -91,22 +90,22 @@ export default function ActivityFeed({ interactions }) {
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.14),transparent_55%)]" />
               )}
 
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08)_0%,rgba(9,9,11,0.35)_44%,#09090b_100%)]" />
-              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,9,11,0.86)_0%,rgba(9,9,11,0.42)_58%,rgba(9,9,11,0.18)_100%)]" />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,18,22,0.08)_0%,rgba(17,18,22,0.40)_44%,#111216_100%)]" />
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,18,22,0.88)_0%,rgba(17,18,22,0.44)_58%,rgba(17,18,22,0.18)_100%)]" />
 
               <div className="relative flex h-full min-h-[220px] flex-col justify-between p-4 md:p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-red-300/20 bg-red-500/15 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-red-200 backdrop-blur-xl">
+                    <span className="inline-flex items-center gap-1.5 rounded-lg border border-violet-300/20 bg-violet-500/10 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-violet-200 backdrop-blur-xl">
                       <Heart size={11} className="fill-current" />
                       Curtido
                     </span>
-                    <span className="rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-zinc-200 backdrop-blur-xl">
+                    <span className="rounded-lg border border-white/[0.06] bg-black/35 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-200 backdrop-blur-xl">
                       {getMediaTypeLabel(mediaType)}
                     </span>
                   </div>
 
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/15 bg-black/30 text-white backdrop-blur-xl transition-all group-hover:bg-white group-hover:text-black">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/[0.06] bg-black/30 text-white backdrop-blur-xl transition-colors group-hover:bg-white group-hover:text-black">
                     <ArrowUpRight size={15} />
                   </span>
                 </div>
@@ -123,10 +122,10 @@ export default function ActivityFeed({ interactions }) {
                   </div>
 
                   <div className="min-w-0 pb-1">
-                    <h3 className="line-clamp-2 text-lg font-black leading-[1.08] tracking-[-0.025em] text-white drop-shadow-xl transition-colors group-hover:text-red-100 sm:text-xl">
+                    <h3 className="line-clamp-2 text-lg font-semibold leading-tight tracking-[-0.02em] text-white transition-colors group-hover:text-violet-100 sm:text-xl">
                       {item.mediaTitle || 'Conteúdo sem título'}
                     </h3>
-                    <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400">
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-400">
                       {actionDate && (
                         <span className="inline-flex items-center gap-1.5">
                           <Calendar size={12} /> {actionDate}
@@ -147,7 +146,7 @@ export default function ActivityFeed({ interactions }) {
       </div>
 
       <div className="flex items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
-        <span className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-600">
           Página {currentPage + 1} de {totalPages}
         </span>
         <div className="flex items-center gap-2">
@@ -155,7 +154,7 @@ export default function ActivityFeed({ interactions }) {
             type="button"
             onClick={() => setPage((value) => Math.max(0, value - 1))}
             disabled={currentPage === 0}
-            className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.035] text-zinc-300 transition-colors hover:bg-white/[0.08] disabled:pointer-events-none disabled:opacity-30"
+            className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] text-zinc-300 transition-colors hover:bg-white/[0.06] disabled:pointer-events-none disabled:opacity-30"
             aria-label="Página anterior de curtidas"
           >
             <ChevronLeft size={17} />
@@ -164,7 +163,7 @@ export default function ActivityFeed({ interactions }) {
             type="button"
             onClick={() => setPage((value) => Math.min(totalPages - 1, value + 1))}
             disabled={currentPage >= totalPages - 1}
-            className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.035] text-zinc-300 transition-colors hover:bg-white/[0.08] disabled:pointer-events-none disabled:opacity-30"
+            className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] text-zinc-300 transition-colors hover:bg-white/[0.06] disabled:pointer-events-none disabled:opacity-30"
             aria-label="Próxima página de curtidas"
           >
             <ChevronRight size={17} />

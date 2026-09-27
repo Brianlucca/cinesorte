@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import {
   ArrowRight,
-  Activity,
   Film,
   Flame,
   Layers,
@@ -47,14 +46,6 @@ export default function Feed() {
       (Number(a.commentsCount || 0) + Number(a.likesCount || 0)),
     )
     .slice(0, 3);
-  const communityPulse = state.reviews.reduce(
-    (total, item) => ({
-      reviews: total.reviews + (item.type === "list_share" ? 0 : 1),
-      collections: total.collections + (item.type === "list_share" ? 1 : 0),
-      reactions: total.reactions + Number(item.likesCount || 0) + Number(item.commentsCount || 0),
-    }),
-    { reviews: 0, collections: 0, reactions: 0 },
-  );
 
   useEffect(() => {
     const target = observerTarget.current;
@@ -74,30 +65,16 @@ export default function Feed() {
   }, [state.hasMore, state.loading, state.loadingMore, actions]);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#09090b] pb-24 text-white">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[560px] overflow-hidden">
-        {featuredContent?.backdrop_path && (
-          <img
-            src={`https://image.tmdb.org/t/p/original${featuredContent.backdrop_path}`}
-            alt=""
-            className="h-full w-full scale-105 object-cover opacity-[0.09] blur-xl"
-          />
-        )}
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,12,32,0.7)_0%,#09090b_88%)]" />
-        <div className="absolute left-[18%] top-8 h-72 w-72 rounded-full bg-violet-700/10 blur-[120px]" />
-        <div className="absolute right-[12%] top-12 h-72 w-72 rounded-full bg-sky-800/[0.07] blur-[130px]" />
-      </div>
-
-      <div className="relative mx-auto w-full max-w-[1500px] px-4 pt-8 sm:px-7 md:pt-12 xl:px-12">
-        <header className="border-b border-white/[0.07] pb-8 md:pb-10">
+    <div className="min-h-screen bg-[#111216] pb-24 text-white">
+      <div className="mx-auto w-full max-w-[1280px] px-4 pt-7 sm:px-7 md:pt-10 xl:px-10">
+        <header className="border-b border-white/[0.06] pb-6 md:pb-8">
           <div className="flex flex-col justify-between gap-7 lg:flex-row lg:items-end">
             <div className="max-w-2xl">
-              <div className="mb-3 flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.24em] text-violet-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-violet-400 shadow-[0_0_12px_rgba(167,139,250,0.8)]" />
+              <div className="mb-2 flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500">
                 Comunidade CineSorte
               </div>
-              <h1 className="text-3xl font-black leading-tight tracking-[-0.04em] sm:text-4xl">Feed Social</h1>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400 sm:text-base">
+              <h1 className="text-3xl font-semibold leading-tight tracking-[-0.035em] text-zinc-100 sm:text-4xl">Feed Social</h1>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-500">
                 Reviews, coleções e descobertas das pessoas que fazem parte do seu universo cinéfilo.
               </p>
             </div>
@@ -105,7 +82,7 @@ export default function Feed() {
             <FeedTabs activeTab={state.feedType} onChange={actions.setFeedType} />
           </div>
 
-          <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs text-zinc-500">
+          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs text-zinc-500">
             <span className="inline-flex items-center gap-2">
               <Users size={14} className="text-violet-400" />
               <strong className="text-zinc-200">{user?.followingCount || 0}</strong> seguindo
@@ -121,7 +98,7 @@ export default function Feed() {
           </div>
         </header>
 
-        <div className="mt-8 grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-10">
+        <div className="mt-7 grid grid-cols-1 gap-10 xl:grid-cols-[minmax(0,760px)_300px] xl:justify-between xl:gap-12">
           <section className="min-w-0">
             {state.hasNewPosts && (
               <button
@@ -135,9 +112,9 @@ export default function Feed() {
 
             <button
               onClick={actions.handleOpenPostModal}
-              className="group mb-7 flex w-full items-center gap-4 overflow-hidden rounded-[1.75rem] border border-white/[0.08] bg-white/[0.025] p-4 text-left transition-all hover:border-violet-400/20 hover:bg-white/[0.04] sm:p-5"
+              className="group mb-6 flex w-full items-center gap-4 rounded-xl border border-white/[0.07] bg-white/[0.018] p-4 text-left transition-colors hover:border-white/[0.14] hover:bg-white/[0.03]"
             >
-              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-zinc-800">
+              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/[0.08] bg-zinc-800">
                 {user?.photoURL ? (
                   <img src={user.photoURL} className="h-full w-full object-cover" alt="" />
                 ) : (
@@ -150,7 +127,7 @@ export default function Feed() {
                 <span className="block truncate text-sm font-semibold text-zinc-300 sm:text-base">O que você assistiu recentemente?</span>
                 <span className="mt-1 hidden text-xs text-zinc-600 sm:block">Compartilhe uma avaliação com a comunidade</span>
               </div>
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-zinc-950 transition-transform group-hover:scale-105">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-zinc-950">
                 <PenLine size={17} />
               </span>
             </button>
@@ -163,7 +140,7 @@ export default function Feed() {
                 </div>
               </div>
             ) : state.reviews.length > 0 ? (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {state.reviews.map((review) => (
                   <FeedCard
                     key={review.uniqueKey || `${review.type}-${review.id}`}
@@ -213,8 +190,8 @@ export default function Feed() {
             )}
           </section>
 
-          <aside className="space-y-5 xl:sticky xl:top-6 xl:self-start">
-            <div className="rounded-[1.75rem] border border-white/[0.08] bg-white/[0.025] p-5">
+          <aside className="sidebar-scrollbar space-y-5 xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:self-start xl:overflow-y-auto xl:overscroll-contain xl:pr-2">
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.018] p-4">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Encontrar pessoas</span>
                 <Users size={16} className="text-violet-400" />
@@ -223,7 +200,7 @@ export default function Feed() {
             </div>
 
             {featuredContent && (
-              <div className="overflow-hidden rounded-[1.75rem] border border-white/[0.08] bg-[#101014]">
+              <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-[#181a20]">
                 <div className="flex items-center justify-between px-5 pb-4 pt-5">
                   <div className="flex items-center gap-2">
                     <Flame size={15} className="fill-orange-400 text-orange-400" />
@@ -233,7 +210,7 @@ export default function Feed() {
                 </div>
 
                 <Link to={mediaRoute(featuredContent)} className="group block px-3 pb-3">
-                  <div className="relative aspect-[16/10] overflow-hidden rounded-[1.25rem] bg-zinc-900">
+                  <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-zinc-900">
                     {featuredContent.backdrop_path || featuredContent.poster_path ? (
                       <img
                         src={`https://image.tmdb.org/t/p/w780${featuredContent.backdrop_path || featuredContent.poster_path}`}
@@ -280,33 +257,8 @@ export default function Feed() {
               </div>
             )}
 
-            {!state.loading && state.reviews.length > 0 && (
-              <div className="overflow-hidden rounded-[1.75rem] border border-white/[0.08] bg-[linear-gradient(145deg,rgba(139,92,246,0.09),rgba(255,255,255,0.018)_48%)] p-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-400">Pulso do feed</span>
-                    <h3 className="mt-1 text-base font-black">A comunidade agora</h3>
-                  </div>
-                  <Activity size={17} className="text-violet-400" />
-                </div>
-                <div className="mt-5 grid grid-cols-3 gap-2">
-                  {[
-                    { value: communityPulse.reviews, label: "Reviews" },
-                    { value: communityPulse.collections, label: "Listas" },
-                    { value: communityPulse.reactions, label: "Interações" },
-                  ].map((metric) => (
-                    <div key={metric.label} className="rounded-2xl border border-white/[0.06] bg-black/20 px-2 py-3 text-center">
-                      <strong className="block text-lg font-black text-white">{metric.value}</strong>
-                      <span className="mt-1 block text-[8px] font-black uppercase tracking-[0.12em] text-zinc-600">{metric.label}</span>
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-4 text-[10px] leading-5 text-zinc-600">Dados das publicações carregadas nesta sessão.</p>
-              </div>
-            )}
-
             {activeDiscussions.length > 0 && (
-              <div className="rounded-[1.75rem] border border-white/[0.08] bg-white/[0.025] p-5">
+              <div className="rounded-xl border border-white/[0.06] bg-white/[0.018] p-4">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Em discussão</span>
@@ -343,7 +295,7 @@ export default function Feed() {
             )}
 
             {state.suggestions?.users?.length > 0 && (
-              <div className="rounded-[1.75rem] border border-white/[0.08] bg-white/[0.025] p-5">
+              <div className="rounded-xl border border-white/[0.06] bg-white/[0.018] p-4">
                 <div className="mb-1 flex items-center justify-between">
                   <div>
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Novos círculos</span>

@@ -82,13 +82,12 @@ export default function ReviewsList({ reviews, hasMore = false, loadingMore = fa
 
   if (reviewItems.length === 0) {
     return (
-      <div className="relative grid min-h-[280px] place-items-center overflow-hidden rounded-[1.5rem] border border-dashed border-white/[0.08] bg-white/[0.015] text-center animate-in zoom-in-95 duration-500">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.10),transparent_45%)]" />
+      <div className="grid min-h-[260px] place-items-center rounded-xl border border-dashed border-white/[0.06] bg-white/[0.012] text-center animate-in fade-in duration-300">
         <div className="relative px-6">
-          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl border border-white/[0.07] bg-white/[0.04] text-violet-300">
+          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] text-violet-300">
             <MessageSquare size={22} />
           </div>
-          <p className="mb-2 text-lg font-black tracking-tight text-white">Nenhuma review</p>
+          <p className="mb-2 text-lg font-semibold tracking-[-0.02em] text-white">Nenhuma review</p>
           <p className="text-sm font-medium text-zinc-500">Suas avaliações publicadas vão aparecer aqui.</p>
         </div>
       </div>
@@ -107,7 +106,7 @@ export default function ReviewsList({ reviews, hasMore = false, loadingMore = fa
         return (
           <article
             key={`${review.id}-${idx}`}
-            className="group relative overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-[#0d0d10]/95 shadow-[0_20px_56px_rgba(0,0,0,0.22)] transition-all duration-500 hover:-translate-y-0.5 hover:border-violet-300/25"
+            className="group relative overflow-hidden rounded-xl border border-white/[0.06] bg-[#111216] transition-colors hover:border-violet-300/25"
           >
             <Link to={mediaLink} className="group/media relative block h-52 overflow-hidden sm:h-60">
               {backdrop ? (
@@ -130,12 +129,12 @@ export default function ReviewsList({ reviews, hasMore = false, loadingMore = fa
                 </div>
               )}
 
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08)_10%,rgba(9,9,11,0.30)_45%,#0d0d10_100%)]" />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08)_10%,rgba(17,18,22,0.34)_45%,#111216_100%)]" />
               <div className="absolute left-4 top-4 flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-white/15 bg-black/40 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-zinc-200 backdrop-blur-xl">
+                <span className="rounded-lg border border-white/[0.06] bg-black/40 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-200 backdrop-blur-xl">
                   {getTypeLabel(review.mediaType)}
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-yellow-300/20 bg-black/40 px-3 py-1.5 text-[10px] font-black text-yellow-300 backdrop-blur-xl">
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-yellow-300/20 bg-black/40 px-3 py-1.5 text-[10px] font-semibold text-yellow-300 backdrop-blur-xl">
                   <Star size={11} className="fill-current" />
                   {rating.toFixed(1)}
                 </span>
@@ -148,9 +147,9 @@ export default function ReviewsList({ reviews, hasMore = false, loadingMore = fa
                   </div>
                 )}
                 <div className="min-w-0 pb-1">
-                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-violet-300">Review sobre</span>
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-violet-300">Review sobre</span>
                   <div className="mt-1.5 flex items-start gap-2">
-                    <h3 className="line-clamp-2 flex-1 text-lg font-black leading-[1.08] tracking-[-0.025em] text-white drop-shadow-xl sm:text-xl">
+                    <h3 className="line-clamp-2 flex-1 text-lg font-semibold leading-tight tracking-[-0.02em] text-white sm:text-xl">
                       {review.mediaTitle || 'Título desconhecido'}
                     </h3>
                     <ArrowUpRight size={18} className="mt-1 shrink-0 text-white/60 transition-transform group-hover/media:-translate-y-0.5 group-hover/media:translate-x-0.5" />
@@ -170,11 +169,11 @@ export default function ReviewsList({ reviews, hasMore = false, loadingMore = fa
               )}
 
               <div className="mt-5 flex items-center justify-between border-t border-white/[0.06] pt-4">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/[0.06] bg-white/[0.035] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">
+                <span className="inline-flex items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.018] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
                   <Calendar size={13} />
                   {formatDate(review.createdAt)}
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-violet-300">
+                <span className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-violet-300">
                   <MessageSquare size={13} />
                   Publicada
                 </span>
@@ -186,7 +185,7 @@ export default function ReviewsList({ reviews, hasMore = false, loadingMore = fa
       </div>
 
       <div className="flex items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
-        <span className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-600">
           Página {currentPage + 1} de {totalPagesLabel} - {reviewItems.length} reviews carregadas
         </span>
         <div className="flex items-center gap-2">
@@ -194,7 +193,7 @@ export default function ReviewsList({ reviews, hasMore = false, loadingMore = fa
             type="button"
             onClick={() => setPage((value) => Math.max(0, value - 1))}
             disabled={currentPage === 0}
-            className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.035] text-zinc-300 transition-colors hover:bg-white/[0.08] disabled:pointer-events-none disabled:opacity-30"
+            className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] text-zinc-300 transition-colors hover:bg-white/[0.06] disabled:pointer-events-none disabled:opacity-30"
             aria-label="Página anterior de reviews"
           >
             <ChevronLeft size={17} />
@@ -203,7 +202,7 @@ export default function ReviewsList({ reviews, hasMore = false, loadingMore = fa
             type="button"
             onClick={goToNextPage}
             disabled={!canGoNext || loadingMore}
-            className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.035] text-zinc-300 transition-colors hover:bg-white/[0.08] disabled:pointer-events-none disabled:opacity-30"
+            className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] text-zinc-300 transition-colors hover:bg-white/[0.06] disabled:pointer-events-none disabled:opacity-30"
             aria-label="Próxima página de reviews"
           >
             {loadingMore ? (

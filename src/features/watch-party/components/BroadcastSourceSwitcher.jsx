@@ -3,7 +3,7 @@ import { WATCH_PARTY_SOURCES } from "@features/watch-party/data/watchPartyOption
 
 export default function BroadcastSourceSwitcher({ service, switching, onChange, onSettings }) {
   return (
-    <div className="flex min-h-11 items-center justify-between gap-2 rounded-xl border border-white/[0.07] bg-[#0d0d11] p-1.5">
+    <div className="flex min-h-11 items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-[#181a20] p-1.5">
       <div className="flex min-w-0 items-center gap-1">
         <span className="hidden shrink-0 px-2 text-[9px] font-black uppercase tracking-[0.14em] text-zinc-600 sm:block">Fonte</span>
         {WATCH_PARTY_SOURCES.map((source) => {

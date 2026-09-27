@@ -31,26 +31,26 @@ export default function WatchPartyRoom() {
 
   if (state.loading)
     return (
-      <div className="grid min-h-screen place-items-center bg-[#08080b]">
+      <div className="grid min-h-screen place-items-center bg-[#111216]">
         <span className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500/20 border-t-violet-400" />
       </div>
     );
 
   if (!room) {
     return (
-      <div className="grid min-h-screen place-items-center bg-[#08080b] p-6 text-center text-white">
+      <div className="grid min-h-screen place-items-center bg-[#111216] p-6 text-center text-white">
         <div>
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-white/[0.08] bg-white/[0.035] text-zinc-600">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] text-zinc-600">
             <Radio size={22} />
           </span>
-          <h1 className="mt-5 text-2xl font-black">Sala não encontrada</h1>
+          <h1 className="mt-5 text-2xl font-semibold tracking-[-0.02em]">Sala não encontrada</h1>
           <p className="mt-2 text-sm text-zinc-600">
             O convite pode ter expirado ou a sessão foi encerrada.
           </p>
           <button
             type="button"
             onClick={actions.leave}
-            className="mt-6 rounded-xl bg-white px-5 py-3 text-[10px] font-black uppercase tracking-wider text-zinc-950"
+            className="mt-6 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100"
           >
             Voltar às salas
           </button>
@@ -84,37 +84,37 @@ export default function WatchPartyRoom() {
   );
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#08080b] pb-8 text-white animate-in fade-in duration-300">
-      <div className="relative mx-auto w-full max-w-[1900px] px-3 pt-3 sm:px-5 md:px-6">
-        <header className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] pb-3 pr-16 md:pr-20">
+    <div className="relative min-h-screen overflow-hidden bg-[#111216] pb-10 text-white animate-in fade-in duration-300">
+      <div className="relative mx-auto w-full max-w-[1680px] px-4 pt-4 sm:px-6 md:px-10">
+        <header className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-4 pr-16 md:pr-20">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
               onClick={actions.leave}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/[0.07] bg-white/[0.03] text-zinc-500 hover:text-white"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] text-zinc-500 transition-colors hover:bg-white/[0.04] hover:text-white"
             >
               <ArrowLeft size={17} />
             </button>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-emerald-300">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-emerald-300">
                   Estúdio
                 </p>
               </div>
-              <h1 className="truncate text-base font-black tracking-[-0.025em] sm:text-lg">
+              <h1 className="truncate text-base font-semibold tracking-[-0.02em] sm:text-lg">
                 {room.name}
               </h1>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="hidden items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-2.5 text-[9px] font-black uppercase tracking-wider text-zinc-500 sm:inline-flex">
+            <span className="hidden items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.018] px-3 py-2.5 text-[9px] font-semibold text-zinc-500 sm:inline-flex">
               <Wifi size={13} className={state.connected ? "text-emerald-400" : "text-amber-400"} /> {state.connected ? "Sincronizado" : "Reconectando"}
             </span>
             <button
               type="button"
               onClick={actions.openParticipants}
-              className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 text-[10px] font-bold text-zinc-300"
+              className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.018] px-3 text-xs font-semibold text-zinc-300 transition-colors hover:bg-white/[0.04]"
             >
               <UsersRound size={15} />
               <span>{state.participants.length}</span>
@@ -123,7 +123,7 @@ export default function WatchPartyRoom() {
               <button
                 type="button"
                 onClick={actions.copyInvite}
-                className="inline-flex h-10 items-center gap-2 rounded-xl bg-white px-3 text-[9px] font-black uppercase tracking-wider text-zinc-950"
+                className="inline-flex h-10 items-center gap-2 rounded-xl bg-white px-4 text-xs font-semibold text-zinc-950 transition-colors hover:bg-violet-100"
               >
                 <Copy size={14} />{" "}
                 <span className="hidden sm:inline">Convidar</span>
@@ -132,7 +132,7 @@ export default function WatchPartyRoom() {
             <button
               type="button"
               onClick={() => setIsHelpOpen(true)}
-              className="grid h-10 w-10 place-items-center rounded-xl border border-white/[0.07] bg-white/[0.03] text-zinc-500 hover:text-white"
+              className="grid h-10 w-10 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] text-zinc-500 hover:text-white"
               title="Como funciona"
             >
               <CircleHelp size={16} />
@@ -141,7 +141,7 @@ export default function WatchPartyRoom() {
               <button
                 type="button"
                 onClick={actions.openSettings}
-                className="grid h-10 w-10 place-items-center rounded-xl border border-white/[0.07] bg-white/[0.03] text-zinc-500 hover:text-white"
+                className="grid h-10 w-10 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] text-zinc-500 hover:text-white"
               title="Configurações da transmissão"
               >
                 <Settings2 size={16} />
@@ -161,19 +161,19 @@ export default function WatchPartyRoom() {
         <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
           <main className="min-w-0">
             {broadcastStage}
-            <section className="mt-3 rounded-[1.5rem] border border-white/[0.07] bg-[#0d0d11] px-4 py-4 sm:px-5">
+            <section className="mt-4 rounded-xl border border-white/[0.06] bg-[#181a20] px-4 py-4 sm:px-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex min-w-0 items-center gap-3">
-                  {(room.host?.photoURL || (isHost && user?.photoURL)) ? <img src={room.host?.photoURL || user.photoURL} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-red-500/70" /> : <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-violet-500/20 font-black text-violet-200">{(room.host?.username || (isHost && user?.username))?.[0]?.toUpperCase() || "C"}</span>}
+                  {(room.host?.photoURL || (isHost && user?.photoURL)) ? <img src={room.host?.photoURL || user.photoURL} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-white/[0.1]" /> : <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-violet-500/10 font-semibold text-violet-200">{(room.host?.username || (isHost && user?.username))?.[0]?.toUpperCase() || "C"}</span>}
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2"><span className="rounded bg-red-600 px-2 py-0.5 text-[8px] font-black uppercase tracking-wide">Ao vivo</span><span className="inline-flex items-center gap-1 text-[10px] text-zinc-500"><UsersRound size={12} /> {state.participants.length || 1}</span></div>
-                    <h2 className="mt-1 truncate text-base font-black text-white sm:text-lg">{room.name}</h2>
+                    <div className="flex items-center gap-2"><span className="rounded-lg bg-red-600 px-2.5 py-1 text-[9px] font-semibold">Ao vivo</span><span className="inline-flex items-center gap-1 text-[10px] text-zinc-500"><UsersRound size={12} /> {state.participants.length || 1}</span></div>
+                    <h2 className="mt-1.5 truncate text-base font-semibold tracking-[-0.02em] text-white sm:text-lg">{room.name}</h2>
                     <p className="mt-0.5 truncate text-xs text-zinc-500">@{room.host?.username || (isHost ? user?.username : "cinesorte")} · {room.media?.title || (room.service === "local" ? "Filmes e séries" : "Compartilhamento de tela")}</p>
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <button type="button" onClick={actions.copyInvite} className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 text-[9px] font-black uppercase tracking-wide text-zinc-300 hover:bg-white/[0.08]"><Copy size={13} /> Compartilhar</button>
-                  {isHost && <button type="button" onClick={actions.openSettings} className="inline-flex h-9 items-center gap-2 rounded-lg bg-violet-500 px-3 text-[9px] font-black uppercase tracking-wide text-white hover:bg-violet-400"><Settings2 size={13} /> Editar live</button>}
+                  <button type="button" onClick={actions.copyInvite} className="inline-flex h-9 items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.018] px-3.5 text-xs font-semibold text-zinc-300 transition-colors hover:bg-white/[0.06]"><Copy size={13} /> Compartilhar</button>
+                  {isHost && <button type="button" onClick={actions.openSettings} className="inline-flex h-9 items-center gap-2 rounded-xl bg-white px-3.5 text-xs font-semibold text-zinc-950 transition-colors hover:bg-violet-100"><Settings2 size={13} /> Editar live</button>}
                 </div>
               </div>
               {isHost && <div className="mt-4 border-t border-white/[0.06] pt-3"><BroadcastSourceSwitcher service={room.service} switching={state.switchingSource} onChange={actions.switchSource} onSettings={actions.openSettings} /></div>}

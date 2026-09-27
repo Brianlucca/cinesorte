@@ -15,6 +15,11 @@ import {
 } from "lucide-react";
 import { getDiscover, searchUsers } from "@shared/api/api";
 import { useSearchLogic } from "@shared/hooks/useSearchLogic";
+import {
+  cancelMovieDetailsPrefetch,
+  prefetchMovieDetails,
+  scheduleMovieDetailsPrefetch,
+} from "@shared/lib/mediaDetailsPrefetch";
 
 const ARTWORK_ROTATION_MS = 10 * 60 * 1000;
 
@@ -107,9 +112,68 @@ const getType = (item) => {
 const getYear = (item) =>
   (item.release_date || item.first_air_date || "").toString().split("-")[0];
 
+function MediaSearchResultCard({ item, onClose }) {
+  const type = getType(item);
+  const title = item.title || item.name;
+  const year = getYear(item);
+  const imagePath = item.poster_path;
+  const rating = Number(item.vote_average || 0).toFixed(1);
+
+  return (
+    <Link
+      to={`/app/${type}/${item.id}`}
+      onClick={onClose}
+      onMouseEnter={() => scheduleMovieDetailsPrefetch(type, item.id)}
+      onMouseLeave={() => cancelMovieDetailsPrefetch(type, item.id)}
+      onFocus={() => prefetchMovieDetails(type, item.id)}
+      onPointerDown={() => prefetchMovieDetails(type, item.id)}
+      className="group/card min-w-0 rounded-xl transition-opacity duration-200 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+    >
+      <article className="relative aspect-[2/3] overflow-hidden rounded-xl bg-white/[0.025]">
+        {imagePath ? (
+          <img
+            src={`https://image.tmdb.org/t/p/w500${imagePath}`}
+            className="h-full w-full object-cover"
+            alt={title}
+            loading="lazy"
+          />
+        ) : (
+          <div className="grid h-full place-items-center text-zinc-700">
+            <Film size={30} />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-40 transition-opacity duration-300 md:opacity-0 md:group-hover/card:opacity-100" />
+        <div className="absolute right-2.5 top-2.5 flex items-center gap-1.5 rounded-full bg-black/55 px-2 py-1 backdrop-blur-md md:right-3 md:top-3">
+          <Star size={10} className="fill-yellow-400 text-yellow-400" />
+          <span className="text-[10px] font-semibold text-white">{rating}</span>
+        </div>
+      </article>
+
+      <div className="px-0.5 pt-2.5">
+        <h3 className="truncate text-sm font-semibold text-zinc-100">{title}</h3>
+        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-zinc-500">
+          {year && <span>{year}</span>}
+          {year && <span>&bull;</span>}
+          <span>{type === "tv" ? <>S&eacute;rie</> : "Filme"}</span>
+        </div>
+        <div className="hidden">
+          {year && <span>{year}</span>}
+          {year && <span className="order-2">&bull;</span>}
+          <span className="order-3">{type === "tv" ? <>S&eacute;rie</> : "Filme"}</span>
+          {year && <span>Â·</span>}
+          <span>{type === "tv" ? "SÃ©rie" : "Filme"}</span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 function SearchResultCard({ item, onClose }) {
   const type = getType(item);
   const isPerson = type === "person";
+
+  if (!isPerson) return <MediaSearchResultCard item={item} onClose={onClose} />;
+
   const title = item.title || item.name;
   const imagePath = isPerson ? item.profile_path : item.poster_path;
   const route = isPerson ? `/app/person/${item.id}` : `/app/${type}/${item.id}`;
@@ -125,7 +189,7 @@ function SearchResultCard({ item, onClose }) {
     <Link
       to={route}
       onClick={onClose}
-      className="group min-w-0 overflow-hidden rounded-[1.4rem] border border-white/[0.07] bg-white/[0.025] transition-all duration-500 hover:-translate-y-1 hover:border-violet-400/25 hover:bg-white/[0.045]"
+      className="group min-w-0 overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.018] transition-colors hover:border-white/[0.13] hover:bg-white/[0.03]"
     >
       <div
         className={`relative overflow-hidden bg-zinc-900 ${
@@ -145,11 +209,11 @@ function SearchResultCard({ item, onClose }) {
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/10 opacity-70" />
-        <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/40 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.14em] text-zinc-200 backdrop-blur-xl">
+        <span className="absolute left-2.5 top-2.5 rounded-lg bg-black/55 px-2 py-1 text-[8px] font-semibold uppercase tracking-[0.12em] text-zinc-200 backdrop-blur-md">
           {isPerson ? "Artista" : type === "tv" ? "Série" : "Filme"}
         </span>
         {!isPerson && item.vote_average > 0 && (
-          <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full border border-yellow-300/15 bg-black/40 px-2.5 py-1 text-[9px] font-black text-yellow-300 backdrop-blur-xl">
+          <span className="absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-lg bg-black/55 px-2 py-1 text-[9px] font-semibold text-yellow-300 backdrop-blur-md">
             <Star size={9} className="fill-current" />
             {Number(item.vote_average).toFixed(1)}
           </span>
@@ -160,11 +224,11 @@ function SearchResultCard({ item, onClose }) {
         />
       </div>
 
-      <div className="p-3.5 sm:p-4">
-        <h3 className="line-clamp-2 text-sm font-black leading-5 tracking-[-0.015em] text-zinc-100 transition-colors group-hover:text-violet-200">
+      <div className="p-3">
+        <h3 className="line-clamp-2 text-sm font-semibold leading-5 tracking-[-0.015em] text-zinc-100 transition-colors group-hover:text-violet-200">
           {title}
         </h3>
-        <p className="mt-2 truncate text-[9px] font-bold uppercase tracking-[0.1em] text-zinc-600">
+        <p className="mt-1 truncate text-[10px] font-medium text-zinc-600">
           {isPerson
             ? knownFor || "Cinema e televisão"
             : getYear(item) || "Ano não informado"}
@@ -183,9 +247,9 @@ function UserResultCard({ user, onClose }) {
     <Link
       to={username ? `/app/profile/${username}` : "/app/profile"}
       onClick={onClose}
-      className="group flex min-h-[96px] items-center gap-3 rounded-[1.4rem] border border-white/[0.07] bg-white/[0.025] p-3.5 transition-all duration-500 hover:-translate-y-1 hover:border-violet-400/25 hover:bg-white/[0.045]"
+      className="group flex min-h-20 items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.018] p-3 transition-colors hover:border-white/[0.13] hover:bg-white/[0.03]"
     >
-      <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl border border-white/[0.08] bg-violet-500/10 text-lg font-black uppercase text-violet-200">
+      <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl border border-white/[0.08] bg-violet-500/10 text-sm font-semibold uppercase text-violet-200">
         {avatar ? (
           <img src={avatar} alt={displayName} className="h-full w-full object-cover" loading="lazy" />
         ) : (
@@ -193,7 +257,7 @@ function UserResultCard({ user, onClose }) {
         )}
       </span>
       <span className="min-w-0">
-        <span className="block truncate text-sm font-black leading-5 text-zinc-100 transition-colors group-hover:text-violet-200">
+        <span className="block truncate text-sm font-semibold leading-5 text-zinc-100 transition-colors group-hover:text-violet-200">
           {displayName}
         </span>
         {username && (
@@ -384,8 +448,6 @@ export default function SearchModal({ isOpen, onClose }) {
   const hasResults = totalResults > 0;
   const isSearching = loading || usersLoading;
 
-  const atmosphere = results.find((item) => item.backdrop_path)?.backdrop_path;
-
   const handleQueryChange = (value) => {
     setQuery(value);
     setActiveGenre("");
@@ -418,41 +480,26 @@ export default function SearchModal({ isOpen, onClose }) {
       <button
         type="button"
         aria-label="Fechar busca"
-        className="absolute inset-0 cursor-default bg-black/85 backdrop-blur-xl"
+        className="absolute inset-0 cursor-default bg-black/75 backdrop-blur-md"
         onClick={onClose}
       />
 
       <section
-        className={`relative flex max-h-[94svh] min-h-[72svh] w-full max-w-6xl flex-col overflow-hidden rounded-t-[2rem] border border-white/10 bg-[#0b0b0e]/98 shadow-[0_40px_120px_rgba(0,0,0,0.75)] backdrop-blur-2xl transition-all duration-500 sm:rounded-[2rem] ${
+        className={`relative flex max-h-[88svh] w-full max-w-5xl flex-col overflow-hidden rounded-t-xl border border-white/[0.06] bg-[#111216] shadow-[0_28px_90px_rgba(0,0,0,0.55)] transition-all duration-300 sm:rounded-xl ${
           isActive ? "translate-y-0 scale-100" : "translate-y-8 scale-[0.985]"
         }`}
       >
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.018)_0%,rgba(255,255,255,0.006)_28%,transparent_55%,rgba(0,0,0,0.18)_100%)]" />
-
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          {atmosphere && (
-            <img
-              src={`https://image.tmdb.org/t/p/w1280${atmosphere}`}
-              className="h-full w-full scale-110 object-cover opacity-[0.02] grayscale blur-2xl"
-              alt=""
-            />
-          )}
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,15,19,0.20),rgba(10,10,13,0.12)_45%,rgba(5,5,7,0.06)_100%)]" />
-          <div className="absolute inset-x-0 top-0 h-72 bg-[linear-gradient(180deg,rgba(255,255,255,0.01),transparent)]" />
-          <div className="absolute bottom-0 left-0 right-0 h-80 bg-[linear-gradient(180deg,transparent,rgba(8,8,11,0.1))]" />
-        </div>
-
-        <header className="relative shrink-0 border-b border-white/[0.07] bg-transparent px-5 pb-5 pt-5 sm:px-7 sm:pb-6 sm:pt-6">
-          <div className="mb-5 flex items-center justify-between">
+        <header className="relative shrink-0 border-b border-white/[0.06] px-4 py-4 sm:px-5">
+          <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="grid h-9 w-9 place-items-center text-violet-400">
-                <Clapperboard size={21} />
+              <span className="grid h-8 w-8 place-items-center text-violet-400">
+                <Clapperboard size={19} />
               </span>
               <div>
-                <h2 className="text-sm font-black text-white sm:text-base">
+                <h2 className="text-sm font-semibold text-white sm:text-base">
                   Explorar CineSorte
                 </h2>
-                <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.15em] text-zinc-600">
+                <p className="mt-0.5 text-[9px] font-medium text-zinc-600">
                   Filmes, séries, artistas e usuários
                 </p>
               </div>
@@ -460,7 +507,7 @@ export default function SearchModal({ isOpen, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="grid h-10 w-10 place-items-center rounded-full border border-white/[0.08] bg-white/[0.035] text-zinc-500 transition-colors hover:bg-white/[0.08] hover:text-white"
+              className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-white"
             >
               <X size={18} />
             </button>
@@ -468,8 +515,8 @@ export default function SearchModal({ isOpen, onClose }) {
 
           <div className="group relative">
             <SearchIcon
-              size={21}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 transition-colors group-focus-within:text-violet-300 sm:left-5"
+              size={19}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 transition-colors group-focus-within:text-violet-300"
             />
             <input
               autoFocus
@@ -477,7 +524,7 @@ export default function SearchModal({ isOpen, onClose }) {
               value={query}
               onChange={(event) => handleQueryChange(event.target.value)}
               placeholder="Busque filmes, séries, artistas ou usuários do CineSorte..."
-              className="w-full rounded-[1.25rem] border border-white/[0.09] bg-black/25 py-4 pl-12 pr-12 text-sm font-semibold text-white outline-none transition-all placeholder:font-normal placeholder:text-zinc-600 focus:border-violet-400/30 focus:bg-black/35 sm:py-5 sm:pl-14 sm:text-lg"
+              className="h-12 w-full rounded-xl border border-white/[0.08] bg-white/[0.018] pl-11 pr-11 text-sm font-medium text-white outline-none transition-colors placeholder:font-normal placeholder:text-zinc-600 focus:border-violet-400/35 focus:bg-white/[0.03] sm:text-base"
             />
             {query && (
               <button
@@ -491,7 +538,7 @@ export default function SearchModal({ isOpen, onClose }) {
           </div>
         </header>
 
-        <div className="content-scrollbar relative min-h-0 flex-1 overflow-y-auto bg-transparent px-5 py-6 sm:px-7 sm:py-7">
+        <div className="content-scrollbar relative min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-5">
           {isSearching ? (
             <LoadingState />
           ) : hasResults ? (
@@ -603,27 +650,23 @@ export default function SearchModal({ isOpen, onClose }) {
             </div>
           ) : (
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-2 sm:grid-cols-3">
                 {QUICK_CATEGORIES.map((category) => (
                   <button
                     key={category.id}
                     type="button"
                     onClick={() => handleCategory(category.id)}
-                    className="group relative overflow-hidden rounded-[1.4rem] border border-white/[0.07] bg-white/[0.025] p-4 text-left transition-all duration-500 hover:-translate-y-1 hover:border-white/15 hover:bg-white/[0.04] sm:p-5"
+                    className="group flex h-16 items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.018] px-3.5 text-left transition-colors hover:border-white/[0.13] hover:bg-white/[0.035]"
                   >
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-br ${category.overlay} to-transparent opacity-75 transition-opacity duration-500 group-hover:opacity-100`}
-                    />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.12),transparent_40%)] opacity-70" />
-                    <div className="relative flex items-center gap-4">
+                    <div className="flex w-full items-center gap-3">
                       <span
-                        className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/10 bg-black/25 backdrop-blur-xl ${category.tone}`}
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-violet-500/10 text-violet-300"
                       >
-                        <category.icon size={19} />
+                        <category.icon size={17} />
                       </span>
                       <div>
-                        <h3 className="text-sm font-black text-white">{category.label}</h3>
-                        <p className="mt-1 text-[10px] text-zinc-300/80">
+                        <h3 className="text-sm font-semibold text-white">{category.label}</h3>
+                        <p className="mt-0.5 text-[10px] text-zinc-500">
                           {category.description}
                         </p>
                       </div>
@@ -636,44 +679,43 @@ export default function SearchModal({ isOpen, onClose }) {
                 ))}
               </div>
 
-              <div className="mt-8">
+              <div className="mt-6">
                 <div className="flex items-end justify-between gap-4">
                   <div>
-                    <span className="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-violet-400">
+                    <span className="inline-flex items-center gap-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-violet-400">
                       <Sparkles size={11} /> Explore por atmosfera
                     </span>
-                    <h3 className="mt-2 text-xl font-black tracking-tight text-white sm:text-2xl">
+                    <h3 className="mt-1.5 text-lg font-semibold tracking-[-0.02em] text-white sm:text-xl">
                       Que tipo de história combina com hoje?
                     </h3>
                   </div>
                 </div>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {SUGGESTED_GENRES.map((genre) => (
                     <button
                       key={genre.id}
                       type="button"
                       onClick={() => handleGenre(genre)}
-                      className="group relative overflow-hidden rounded-[1.35rem] border border-white/[0.07] bg-[#0f0f16] p-4 text-left transition-all duration-500 hover:-translate-y-1 hover:border-white/15"
+                      className="group relative min-h-20 overflow-hidden rounded-xl border border-white/[0.06] bg-[#181a20] p-3.5 text-left transition-colors hover:border-white/[0.13]"
                     >
                       {activeGenreArtwork[genre.id]?.image && (
                         <img
                           src={`https://image.tmdb.org/t/p/w780${activeGenreArtwork[genre.id].image}`}
                           alt=""
-                          className="absolute inset-0 h-full w-full object-cover opacity-60 transition-[transform,opacity] duration-700 group-hover:scale-[1.06] group-hover:opacity-70"
+                          className="absolute inset-0 h-full w-full object-cover opacity-25 transition-opacity duration-500 group-hover:opacity-35"
                           loading="lazy"
                         />
                       )}
-                      <div className={`absolute inset-0 bg-gradient-to-br ${genre.tone} to-black/65`} />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/20 to-black/55" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#181a20] via-[#181a20]/90 to-[#181a20]/45" />
                       <div className="relative pr-10">
-                        <span className="text-sm font-black text-zinc-100 transition-colors group-hover:text-white">
+                        <span className="text-sm font-semibold text-zinc-100 transition-colors group-hover:text-violet-200">
                           {genre.name}
                         </span>
                         <span className="mt-1 block text-[10px] text-zinc-300/75">
                           {genre.description}
                         </span>
                         {activeGenreArtwork[genre.id]?.title && (
-                          <span className="mt-3 inline-flex max-w-full rounded-full border border-white/10 bg-black/30 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.1em] text-zinc-200/85 backdrop-blur-xl">
+                          <span className="mt-2 block max-w-full truncate text-[9px] font-medium text-zinc-500">
                             Inspirado por {activeGenreArtwork[genre.id].title}
                           </span>
                         )}

@@ -17,7 +17,7 @@ const clearNotificationCache = () => {
   notificationCache.fetchedAt = 0;
 };
 
-export default function NotificationBell() {
+export default function NotificationBell({ mobileHeaderScrolled = false }) {
   const [notifications, setNotifications] = useState([]);
   const [badgeCount, setBadgeCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -283,13 +283,14 @@ export default function NotificationBell() {
 
   return (
     <>
-      <div className="fixed right-16 top-3 z-[100060] md:right-8 md:top-6">
+      <div className="fixed right-[6.5rem] top-3 z-[100060] md:right-8 md:top-6">
         <button
           ref={buttonRef}
           onClick={handleOpen}
-          className="relative rounded-full bg-zinc-900/50 p-2 text-zinc-400 transition-colors hover:text-white md:border md:border-white/10 md:bg-zinc-900/80 md:shadow-lg md:backdrop-blur-md"
+          className={`relative grid h-9 w-9 place-items-center rounded-xl border transition-colors md:h-10 md:w-10 md:rounded-full md:border-white/10 md:bg-zinc-900/80 md:text-zinc-400 md:shadow-lg md:backdrop-blur-md ${mobileHeaderScrolled ? "border-white/[0.06] bg-transparent text-zinc-400 hover:bg-white/[0.04] hover:text-white" : "border-white/10 bg-black/45 text-zinc-200 backdrop-blur-md hover:bg-black/65 hover:text-white"}`}
+          aria-label="Abrir notificações"
         >
-          <Bell size={24} />
+          <Bell size={20} />
           {badgeCount > 0 && <span className="absolute right-1 top-1 h-2.5 w-2.5 animate-pulse rounded-full bg-red-500 ring-2 ring-zinc-950" />}
         </button>
       </div>
