@@ -79,7 +79,7 @@ function TechnicalPanel({ stats }) {
     ["Conexões", stats.peers],
   ];
   return (
-    <div className="border-t border-white/[0.07] bg-[#0a0a0d] px-4 py-3">
+    <div className="border-t border-white/[0.06] bg-[#181a20] px-4 py-3">
       <p className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.13em] text-violet-300">
         <Activity size={13} /> Dados da transmissão ·{" "}
         {stats.direction === "upload" ? "Host" : "Visitante"}
@@ -544,7 +544,7 @@ export default function LocalVideoStage({
   return (
     <CinemaViewport
       ref={cinemaRef}
-      className="rounded-[1.5rem] border border-white/[0.08] shadow-[0_30px_100px_rgba(0,0,0,0.5)]"
+      className="rounded-xl border border-white/[0.06]"
     >
       <CineSortePlayer
         title={displayTitle || "Transmissão da sala"}
@@ -630,10 +630,10 @@ export default function LocalVideoStage({
         {((isHost && !current) || (!isHost && !session.remoteStream)) && (
           <div className="absolute inset-0 grid place-items-center p-8 text-center">
             <div>
-              <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-violet-400/15 bg-violet-500/10 text-violet-300">
+              <span className="mx-auto grid h-16 w-16 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] text-violet-300">
                 <MonitorPlay size={28} />
               </span>
-              <h2 className="mt-5 text-xl font-black text-white">
+              <h2 className="mt-5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">
                 {isHost
                   ? "Escolha a pasta de vídeos"
                   : "Aguardando o anfitrião"}
@@ -644,7 +644,7 @@ export default function LocalVideoStage({
                   : "O vídeo aparecerá quando a transmissão começar."}
               </p>
               {isHost && (
-                <button type="button" onClick={() => setConfirmingFolderAccess(true)} className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-white px-5 py-3 text-[10px] font-black uppercase tracking-wider text-zinc-950">
+                <button type="button" onClick={() => setConfirmingFolderAccess(true)} className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100">
                   <FolderOpen size={15} /> Abrir pasta
                 </button>
               )}
@@ -673,10 +673,10 @@ export default function LocalVideoStage({
         {((isHost && !current) || (!isHost && !session.remoteStream)) && (
           <div className="absolute inset-0 grid place-items-center p-8 text-center">
             <div>
-              <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-violet-400/15 bg-violet-500/10 text-violet-300">
+              <span className="mx-auto grid h-16 w-16 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] text-violet-300">
                 <MonitorPlay size={28} />
               </span>
-              <h2 className="mt-5 text-xl font-black text-white">
+              <h2 className="mt-5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">
                 {isHost
                   ? "Escolha a pasta de vídeos"
                   : "Aguardando o anfitrião"}
@@ -687,7 +687,7 @@ export default function LocalVideoStage({
                   : "O vídeo aparecerá quando a transmissão começar."}
               </p>
               {isHost && (
-                <button type="button" onClick={() => setConfirmingFolderAccess(true)} className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-white px-5 py-3 text-[10px] font-black uppercase tracking-wider text-zinc-950">
+                <button type="button" onClick={() => setConfirmingFolderAccess(true)} className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100">
                   <FolderOpen size={15} /> Abrir pasta
                 </button>
               )}
@@ -796,7 +796,7 @@ export default function LocalVideoStage({
         onConfirm={chooseFolder}
       />
       {isHost && current && (
-        <div className="border-t border-white/[0.07] bg-[#0d0d11] p-4">
+        <div className="border-t border-white/[0.06] bg-[#181a20] p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="flex items-center gap-2 text-[9px] font-black uppercase tracking-wider text-violet-300">
@@ -865,7 +865,7 @@ export default function LocalVideoStage({
         </div>
       )}
       {isHost && current && (
-        <div className="border-t border-white/[0.07] bg-[#0d0d11] p-4">
+        <div className="border-t border-white/[0.06] bg-[#181a20] p-4">
           <div className="grid gap-4 lg:grid-cols-3">
             <label className="text-[9px] font-black uppercase tracking-wider text-zinc-500">
               Resolução
@@ -1028,7 +1028,7 @@ export default function LocalVideoStage({
         </div>
       )}
       {allowGuestControl === null && !isHost && session.remoteStream && (
-        <div className="flex items-center justify-center gap-2 border-t border-white/[0.07] bg-[#0d0d11] px-4 py-3">
+        <div className="flex items-center justify-center gap-2 border-t border-white/[0.06] bg-[#181a20] px-4 py-3">
           {allowGuestControl ? (
             <>
               <button
