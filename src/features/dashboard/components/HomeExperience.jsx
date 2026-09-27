@@ -100,8 +100,7 @@ function SectionShell({ title, eyebrow, children, actionTo, actionLabel, rowRef,
               {eyebrow}
             </span>
           )}
-          <h2 className="flex items-center gap-3 text-xl font-bold text-white sm:text-2xl md:text-3xl">
-            <span className="h-6 w-1.5 rounded-full bg-gradient-to-b from-violet-400 to-violet-700" />
+          <h2 className="flex items-center gap-3 text-lg font-semibold tracking-[-0.02em] text-zinc-100 sm:text-xl md:text-2xl">
             {title}
           </h2>
         </div>
@@ -110,7 +109,7 @@ function SectionShell({ title, eyebrow, children, actionTo, actionLabel, rowRef,
           {actionTo && actionLabel && (
             <Link
               to={actionTo}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-zinc-200 transition-all hover:bg-white hover:text-zinc-950"
+              className="inline-flex items-center gap-2 px-1 py-2 text-[11px] font-bold text-zinc-400 transition-colors hover:text-white"
             >
               {actionLabel}
               <ArrowRight size={14} />
@@ -149,7 +148,7 @@ function TopItemCard({ item, index }) {
   return (
     <Link
       to={mediaPath(item)}
-      className="group/card flex h-20 w-[260px] flex-none items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-2.5 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-300/25 sm:w-[300px]"
+      className="group/card flex h-20 w-[250px] flex-none items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.018] p-2.5 transition-colors hover:border-white/[0.13] hover:bg-white/[0.035] sm:w-[280px]"
     >
       <span className="w-8 flex-none text-center text-lg font-black tabular-nums text-zinc-500">
         {index + 1}
@@ -219,7 +218,7 @@ function LibraryEmptyCard() {
   return (
     <Link
       to="/app/lists"
-      className="flex h-[220px] w-[280px] flex-none flex-col justify-between rounded-2xl border border-dashed border-white/[0.12] bg-white/[0.02] p-4 transition-all hover:border-violet-300/30 hover:bg-white/[0.04] sm:w-[320px]"
+      className="flex h-[190px] w-[270px] flex-none flex-col justify-between rounded-xl border border-dashed border-white/[0.1] bg-white/[0.015] p-4 transition-colors hover:border-white/[0.18] hover:bg-white/[0.03] sm:w-[300px]"
     >
       <span className="grid h-11 w-11 place-items-center rounded-xl border border-violet-300/15 bg-violet-500/10 text-violet-300">
         <Plus size={20} />
@@ -242,7 +241,7 @@ function LibraryCard({ list, username }) {
   return (
     <Link
       to={listTo}
-      className="group/card w-[280px] flex-none overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3.5 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-300/25 sm:w-[320px]"
+      className="group/card w-[270px] flex-none overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.018] p-3 transition-colors hover:border-white/[0.14] sm:w-[300px]"
     >
       <ListCoverStack items={items} />
 
@@ -295,7 +294,7 @@ function CommunityCard({ item }) {
   const profileTo = item.username ? `/app/profile/${item.username}` : "/app/feed";
 
   return (
-    <article className="group/card w-[280px] flex-none overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.025] shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-300/25 sm:w-[320px] md:w-[360px]">
+    <article className="group/card w-[270px] flex-none overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.018] transition-colors hover:border-white/[0.14] sm:w-[310px] md:w-[340px]">
       <Link to={detailTo} className="block">
         <div className="relative h-32 overflow-hidden bg-zinc-900 sm:h-36">
           {item.type === "list_share" && Array.isArray(item.listItems) && item.listItems.length > 0 ? (
@@ -346,7 +345,7 @@ function SuggestionChip({ user }) {
   return (
     <Link
       to={`/app/profile/${user.username}`}
-      className="flex w-[210px] flex-none items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3 transition-all hover:border-white/[0.14] hover:bg-white/[0.05]"
+      className="flex w-[200px] flex-none items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.018] p-3 transition-colors hover:border-white/[0.14] hover:bg-white/[0.035]"
     >
       <span className="grid h-10 w-10 flex-none place-items-center overflow-hidden rounded-xl bg-zinc-800 text-sm font-black uppercase text-zinc-300 ring-1 ring-white/10">
         {user.userPhoto ? <img src={user.userPhoto} alt="" className="h-full w-full object-cover" loading="lazy" /> : user.username?.[0]}
