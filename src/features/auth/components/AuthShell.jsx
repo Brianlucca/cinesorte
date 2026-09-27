@@ -44,7 +44,7 @@ export default function AuthShell({
       <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-[1240px] items-center justify-center sm:min-h-[calc(100vh-3rem)]">
         <div className="grid w-full overflow-hidden rounded-xl border border-white/[0.06] bg-[#181a20] lg:min-h-[700px] lg:grid-cols-[52%_48%]">
           <aside className="relative hidden min-h-[700px] overflow-hidden bg-[#111216] lg:block">
-            <div className="absolute inset-x-0 top-0 h-[78%] overflow-hidden bg-[#101014]">
+            <div className="absolute inset-x-0 top-0 h-[72%] overflow-hidden bg-[#101014]">
               {POSTER_COLLAGE.map((poster, index) => (
                 <div
                   key={poster.src}
@@ -54,9 +54,9 @@ export default function AuthShell({
                 </div>
               ))}
             </div>
-            <div className="absolute inset-x-0 top-0 h-[78%] bg-[linear-gradient(90deg,rgba(17,18,22,0.04)_0%,rgba(17,18,22,0.12)_58%,#181a20_100%)]" />
-            <div className="absolute inset-x-0 bottom-0 h-[46%] bg-[linear-gradient(0deg,#111216_48%,rgba(17,18,22,0.94)_68%,rgba(17,18,22,0.5)_84%,transparent_100%)]" />
-            <div className="absolute inset-x-0 bottom-0 z-[70] min-h-[30%] px-10 pb-10 pt-5 xl:px-12 xl:pb-12">
+            <div className="absolute inset-x-0 top-0 h-[72%] bg-[linear-gradient(90deg,rgba(17,18,22,0.04)_0%,rgba(17,18,22,0.12)_58%,#181a20_100%)]" />
+            <div className="absolute inset-x-0 top-[55%] h-[20%] bg-[linear-gradient(0deg,#111216_5%,rgba(17,18,22,0.9)_42%,rgba(17,18,22,0.4)_72%,transparent_100%)]" />
+            <div className="absolute inset-x-0 bottom-0 top-[70%] z-[70] bg-[#111216] px-10 pb-8 pt-3 xl:px-12 xl:pb-10">
               <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-violet-300">Sua história começa aqui</span>
               <h2 className="mt-3 max-w-md text-[1.7rem] font-semibold leading-[1.18] tracking-[-0.035em] text-white">Descubra, registre e compartilhe o que vale assistir.</h2>
               <p className="mt-3 max-w-md text-sm leading-6 text-zinc-400">Um espaço para suas listas, reviews e conversas sobre cinema e televisão.</p>
