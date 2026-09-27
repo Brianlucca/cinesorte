@@ -40,22 +40,21 @@ export default function TrailerRow({ title, items }) {
             title={selectedTrailer?.title || selectedTrailer?.name}
         />
 
-      <div className="flex justify-between items-center px-6 md:px-10 xl:px-14 2xl:px-16 mb-0">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-            <span className="w-1.5 h-6 bg-red-600 rounded-full"></span>
+      <div className="mb-0 flex items-center justify-between px-5 sm:px-6 md:px-10 xl:px-14 2xl:px-16">
+          <h2 className="flex items-center gap-3 text-lg font-semibold tracking-[-0.02em] text-zinc-100 sm:text-xl md:text-2xl">
             {title}
           </h2>
 
-          <div className="flex gap-2 opacity-0 group-hover/row:opacity-100 transition-opacity duration-300">
+          <div className="flex gap-2">
               <button 
                 onClick={() => slide('left')} 
-                className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all shadow-lg"
+                className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-400 transition-colors hover:bg-white/[0.09] hover:text-white"
               >
                   <ChevronLeft size={20} />
               </button>
               <button 
                 onClick={() => slide('right')} 
-                className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all shadow-lg"
+                className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-400 transition-colors hover:bg-white/[0.09] hover:text-white"
               >
                   <ChevronRight size={20} />
               </button>
@@ -64,7 +63,7 @@ export default function TrailerRow({ title, items }) {
       
       <div 
         ref={rowRef} 
-        className="flex gap-4 md:gap-5 overflow-x-auto scroll-smooth pt-6 pb-8 px-6 md:px-10 xl:px-14 2xl:px-16 scrollbar-hide w-full"
+        className="flex w-full gap-4 overflow-x-auto px-5 pb-2 pt-4 scroll-smooth scrollbar-hide sm:px-6 md:gap-5 md:px-10 md:pt-5 xl:px-14 2xl:px-16"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {items.map((item, index) => {
@@ -76,9 +75,9 @@ export default function TrailerRow({ title, items }) {
                     onMouseEnter={() => handleMouseEnter(item.id)}
                     onMouseLeave={handleMouseLeave}
                     onClick={() => item.trailerKey && setSelectedTrailer(item)}
-                    className="flex-none w-[320px] md:w-[480px] xl:w-[520px] group/card cursor-pointer relative transition-all duration-300 hover:-translate-y-1.5"
+                    className="group/card relative w-[290px] flex-none cursor-pointer sm:w-[340px] md:w-[400px] xl:w-[430px]"
                 >
-                    <div className="aspect-video rounded-2xl overflow-hidden bg-white/[0.02] border border-white/5 relative shadow-2xl group-hover/card:border-red-500/50 transition-all duration-300 group-hover/card:shadow-[0_10px_30px_rgba(220,38,38,0.2)]">
+                    <div className="relative aspect-video overflow-hidden rounded-xl bg-white/[0.02] transition-opacity group-hover/card:opacity-90">
                         
                         <img 
                             src={`https://image.tmdb.org/t/p/w780${item.backdrop_path}`} 
@@ -104,16 +103,16 @@ export default function TrailerRow({ title, items }) {
                         )}
 
                         <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 pointer-events-none ${isHovering ? 'opacity-0' : 'opacity-100'}`}>
-                            <div className="w-16 h-16 bg-red-600/90 rounded-full flex items-center justify-center pl-1 shadow-lg shadow-red-900/50 group-hover/card:scale-105 transition-transform duration-300 backdrop-blur-sm">
-                                <Play fill="white" className="text-white" size={28} />
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 pl-0.5 text-zinc-950 transition-colors group-hover/card:bg-white">
+                                <Play fill="currentColor" size={21} />
                             </div>
                         </div>
 
                         <div className={`absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent flex flex-col justify-end p-5 transition-opacity duration-300 pointer-events-none ${isHovering ? 'opacity-0' : 'opacity-100'}`}>
-                            <span className="font-bold text-white text-lg mb-1 line-clamp-1 leading-tight drop-shadow-md">
+                            <span className="mb-1 line-clamp-1 text-base font-semibold leading-tight text-white">
                                 {item.title || item.name}
                             </span>
-                            <p className="text-zinc-300 text-sm line-clamp-2 drop-shadow-sm font-medium">
+                            <p className="line-clamp-1 text-xs text-zinc-300">
                                 {item.overview}
                             </p>
                         </div>
