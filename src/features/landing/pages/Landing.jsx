@@ -52,15 +52,15 @@ export default function Landing() {
       </header>
 
       <main>
-        <section className="relative flex min-h-[820px] items-end overflow-hidden pt-16 lg:min-h-screen">
-          <img src="https://image.tmdb.org/t/p/original/14QbnygCuTO0vl7CAFmPf1fgZfV.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,#111216_0%,rgba(17,18,22,0.9)_28%,rgba(17,18,22,0.25)_70%,rgba(17,18,22,0.55)_100%)]" />
-          <div className="absolute inset-0 bg-[linear-gradient(0deg,#111216_0%,rgba(17,18,22,0.92)_18%,transparent_62%,rgba(17,18,22,0.45)_100%)]" />
+        <section className="relative flex min-h-[760px] items-end overflow-hidden pt-16 lg:min-h-[820px]">
+          <img src="https://image.tmdb.org/t/p/original/14QbnygCuTO0vl7CAFmPf1fgZfV.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-center opacity-70" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,#111216_0%,rgba(17,18,22,0.96)_35%,rgba(17,18,22,0.62)_62%,rgba(17,18,22,0.35)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(0deg,#111216_0%,rgba(17,18,22,0.96)_22%,rgba(17,18,22,0.08)_68%,rgba(17,18,22,0.4)_100%)]" />
 
-          <div className="relative mx-auto w-full max-w-[1500px] px-5 pb-16 sm:px-8 sm:pb-20 lg:px-12 lg:pb-24">
-            <div className="max-w-[760px]">
+          <div className="relative mx-auto w-full max-w-[1500px] px-5 pb-12 sm:px-8 sm:pb-14 lg:px-12 lg:pb-16">
+            <div className="max-w-[650px]">
               <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-violet-300"><span className="h-px w-8 bg-violet-400" /> Uma comunidade movida por histórias</p>
-              <h1 className="mt-5 text-5xl font-semibold leading-[0.96] tracking-[-0.055em] sm:text-6xl lg:text-7xl">O filme termina.<br />A conversa começa.</h1>
+              <h1 className="mt-5 text-4xl font-semibold leading-[0.98] tracking-[-0.05em] sm:text-5xl lg:text-6xl">O filme termina.<br />A conversa começa.</h1>
               <p className="mt-6 max-w-[590px] text-base leading-7 text-zinc-300 sm:text-lg sm:leading-8">Descubra o que assistir, registre o que sentiu e construa uma vida inteira em filmes e séries.</p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link to="/register" className="inline-flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100">Começar gratuitamente <ArrowRight size={16} /></Link>
@@ -68,9 +68,9 @@ export default function Landing() {
               </div>
             </div>
 
-            <div className="mt-14 flex max-w-[920px] gap-3 overflow-hidden sm:gap-4">
+            <div className="mt-10 grid max-w-3xl grid-cols-3 gap-3 sm:grid-cols-5 sm:gap-4">
               {posters.map((poster, index) => (
-                <article key={poster.title} className={`relative w-[118px] shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#181a20] sm:w-[142px] ${index > 3 ? 'hidden lg:block' : ''}`}>
+                <article key={poster.title} className={`relative min-w-0 overflow-hidden rounded-xl border border-white/10 bg-[#181a20] ${index > 2 ? 'hidden sm:block' : ''}`}>
                   <img src={poster.image} alt={poster.title} className="aspect-[2/3] w-full object-cover" />
                   <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-lg bg-black/75 px-2 py-1 text-[10px] font-semibold"><Star size={10} fill="currentColor" className="text-amber-300" />{poster.rating}</span>
                 </article>
