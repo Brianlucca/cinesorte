@@ -62,11 +62,11 @@ function CinematicShowcase() {
       {trailerKey && (
         <iframe
           key={trailerKey}
-          src={`https://www.youtube-nocookie.com/embed/${trailerKey}?autoplay=1&mute=1&controls=0&loop=1&playlist=${trailerKey}&rel=0&modestbranding=1&playsinline=1&disablekb=1`}
+          src={`https://www.youtube-nocookie.com/embed/${trailerKey}?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1&disablekb=1&fs=0&iv_load_policy=3`}
           title={`Trailer de ${title}`}
           allow="autoplay; encrypted-media"
           onLoad={() => setVideoReady(true)}
-          className={`pointer-events-none absolute left-1/2 top-1/2 h-[115%] w-[205%] -translate-x-1/2 -translate-y-1/2 border-0 transition-opacity duration-1000 ${videoReady ? 'opacity-100' : 'opacity-0'}`}
+          className={`pointer-events-none absolute left-1/2 top-1/2 h-[130%] w-[232%] -translate-x-1/2 -translate-y-1/2 border-0 transition-opacity duration-1000 ${videoReady ? 'opacity-100' : 'opacity-0'}`}
           tabIndex="-1"
         />
       )}
