@@ -515,6 +515,10 @@ export default function LocalVideoStage({
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) {
+      if (!session.localStream) {
+        startBroadcast();
+        return;
+      }
       playbackIntentRef.current = true;
       video
         .play()
@@ -523,7 +527,7 @@ export default function LocalVideoStage({
       playbackIntentRef.current = false;
       video.pause();
     }
-  }, []);
+  }, [session.localStream, startBroadcast]);
   const seekTo = useCallback((event) => {
     if (videoRef.current)
       videoRef.current.currentTime = Number(event.target.value);
