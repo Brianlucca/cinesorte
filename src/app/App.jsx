@@ -32,7 +32,7 @@ const Privacy = lazy(() => import('@features/legal/pages/Privacy'));
 const Terms = lazy(() => import('@features/legal/pages/Terms'));
 
 const RouteFallback = () => (
-  <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-violet-500">
+  <div className="min-h-screen bg-[#111216] flex items-center justify-center text-violet-500">
     <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-600/30 border-t-violet-400" />
   </div>
 );
@@ -40,7 +40,7 @@ const RouteFallback = () => (
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
-  if (loading) return <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-violet-500">Carregando...</div>;
+  if (loading) return <div className="min-h-screen bg-[#111216] flex items-center justify-center text-violet-500">Carregando...</div>;
   return user ? children : <Navigate to={`/login?redirect=${encodeURIComponent(`${location.pathname}${location.search}`)}`} />;
 };
 

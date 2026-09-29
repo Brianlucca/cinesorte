@@ -48,7 +48,7 @@ export default function SeasonInfo({ tvId, seasons }) {
     <section>
       <div className="mb-5 flex items-end justify-between gap-4">
         <div>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--media-accent-text)]">
             Guia da série
           </span>
           <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">Temporadas</h2>
@@ -82,7 +82,7 @@ export default function SeasonInfo({ tvId, seasons }) {
         </div>
       </div>
 
-      <div className="relative overflow-hidden rounded-xl bg-white/[0.025] p-4 md:p-5">
+      <div className="relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.025] p-4 md:p-5">
         {selectedSeason.poster_path && (
           <img
             src={`https://image.tmdb.org/t/p/w500${selectedSeason.poster_path}`}
@@ -129,7 +129,7 @@ export default function SeasonInfo({ tvId, seasons }) {
             </p>
             <Link
               to={`/app/tv/${tvId}/season/${selectedSeason.season_number}`}
-              className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-xs font-semibold text-zinc-950 transition-colors hover:bg-violet-100 md:mt-5"
+              className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--media-accent)] px-4 py-2.5 text-xs font-semibold text-[var(--media-accent-contrast)] transition-colors hover:bg-[var(--media-accent-hover)] md:mt-5"
             >
               Ver episódios <ArrowRight size={15} />
             </Link>
@@ -148,7 +148,7 @@ export default function SeasonInfo({ tvId, seasons }) {
               onClick={() => setSelectedNumber(season.season_number)}
               className={`group flex w-40 shrink-0 snap-start items-center gap-3 rounded-lg border p-2 text-left transition-colors md:w-44 ${
                 selected
-                  ? "border-violet-400/60 bg-violet-500/10"
+                  ? "border-[var(--media-accent-border)] bg-[var(--media-accent-soft)]"
                   : "border-white/[0.06] bg-white/[0.025] hover:border-white/15 hover:bg-white/[0.05]"
               }`}
             >

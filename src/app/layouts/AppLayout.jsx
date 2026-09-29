@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Clapperboard,
   Dices,
+  Download,
   Film,
   Globe,
   Home,
@@ -29,6 +30,7 @@ const SearchModal = lazy(() => import("@shared/components/ui/SearchModal"));
 const TermsModal = lazy(() => import("@shared/components/ui/TermsModal"));
 const MessagesDock = lazy(() => import("@features/messages/components/MessagesDock"));
 const MESSAGES_UNREAD_REFRESH_MS = 120000;
+const EDGE_EXTENSION_URL = import.meta.env.VITE_EXTENSION_STORE_URL || "";
 
 function FeedPreview({ user }) {
   return (
@@ -274,6 +276,13 @@ export default function AppLayout() {
             <NavItem to="/app/lists" icon={List} label="Minhas Listas" preview={<SavedPreview items={savedItems} totalItems={totalSavedItems} loading={sidebarListsLoading} />} />
             <NavItem to="/app/profile" icon={User} label="Perfil" />
             <NavItem to="/app/settings" icon={Settings} label="Configurações" />
+            {EDGE_EXTENSION_URL && (
+              <NavItem
+                icon={Download}
+                label="Instalar extensão"
+                onClick={() => window.open(EDGE_EXTENSION_URL, "_blank", "noopener,noreferrer")}
+              />
+            )}
           </div>
         </nav>
 
@@ -341,7 +350,7 @@ export default function AppLayout() {
       <main
         ref={mainScrollRef}
         onScroll={(event) => setIsMobileHeaderScrolled(event.currentTarget.scrollTop > 12)}
-        className="relative h-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-zinc-950"
+        className="relative h-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-[#111216]"
       >
         <div className="h-full w-full pt-16 md:pt-0"><Outlet /></div>
       </main>

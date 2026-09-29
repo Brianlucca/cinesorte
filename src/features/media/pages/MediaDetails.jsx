@@ -19,8 +19,9 @@ import {
   User,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMediaDetailsLogic } from "@features/media/hooks/useMediaDetailsLogic";
+import { useMediaTheme } from "@features/media/hooks/useMediaTheme";
 import AddToListModal from "@features/media/components/AddToListModal";
 import MediaImages from "@features/media/components/MediaImages";
 import ReviewsSection from "@features/media/components/reviews/ReviewsSection";
@@ -32,7 +33,7 @@ const SectionHeading = ({ eyebrow, children, aside }) => (
   <div className="mb-5 flex items-end justify-between gap-4">
     <div>
       {eyebrow && (
-        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--media-accent-text)]">
           {eyebrow}
         </span>
       )}
@@ -75,9 +76,58 @@ export default function MediaDetails() {
     if (!loading && location.hash === "#avaliacoes") window.setTimeout(() => document.querySelector("#avaliacoes")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
   }, [loading, location.hash]);
 
-  if (loading) {
+  const paletteImage = media?.backdrop_path
+    ? `https://image.tmdb.org/t/p/w780${media.backdrop_path}`
+    : media?.poster_path
+      ? `https://image.tmdb.org/t/p/w500${media.poster_path}`
+      : null;
+  const mediaTheme = useMediaTheme({
+    imageUrl: paletteImage,
+    genres: media?.genres,
+    seed: media?.id,
+  });
+  const banner = media?.backdrop_path
+    ? `https://image.tmdb.org/t/p/original${media.backdrop_path}`
+    : null;
+  const [readyBanner, setReadyBanner] = useState(null);
+
+  useEffect(() => {
+    if (!banner) {
+      setReadyBanner(null);
+      return undefined;
+    }
+
+    let active = true;
+    let settled = false;
+    const image = new Image();
+    image.decoding = "async";
+
+    const finish = () => {
+      if (!active || settled) return;
+      settled = true;
+      setReadyBanner(banner);
+    };
+    const decode = () => {
+      if (typeof image.decode === "function") {
+        image.decode().catch(() => undefined).then(finish);
+      } else {
+        finish();
+      }
+    };
+
+    image.onload = decode;
+    image.onerror = finish;
+    image.src = banner;
+    if (image.complete) decode();
+
+    return () => {
+      active = false;
+    };
+  }, [banner]);
+
+  if (loading || (banner && readyBanner !== banner)) {
     return (
-      <div className="grid h-screen place-items-center bg-zinc-950">
+      <div className="grid h-screen place-items-center bg-[#111216]">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-violet-600 border-t-transparent" />
       </div>
     );
@@ -85,16 +135,13 @@ export default function MediaDetails() {
 
   if (!media) {
     return (
-      <div className="grid h-screen place-items-center bg-zinc-950 text-white">
+      <div className="grid h-screen place-items-center bg-[#111216] text-white">
         Conteúdo não encontrado.
       </div>
     );
   }
 
   const title = media.title || media.name;
-  const banner = media.backdrop_path
-    ? `https://image.tmdb.org/t/p/original${media.backdrop_path}`
-    : null;
   const poster = media.poster_path
     ? `https://image.tmdb.org/t/p/w500${media.poster_path}`
     : null;
@@ -141,7 +188,10 @@ export default function MediaDetails() {
   };
 
   return (
-    <div className="relative isolate -mt-24 w-full overflow-x-hidden bg-[#101115] pb-32 text-white md:-mt-8 md:pb-20">
+    <div
+      className="relative isolate -mt-24 w-full overflow-x-hidden bg-[#111216] pb-32 text-white md:-mt-8 md:pb-20"
+      style={mediaTheme}
+    >
       <TrailerModal
         isOpen={modals.trailer}
         onClose={() => setModals((previous) => ({ ...previous, trailer: false }))}
@@ -160,13 +210,7 @@ export default function MediaDetails() {
       />
 
       <header className="relative h-[78svh] min-h-[620px] max-h-[790px]">
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 -bottom-48 md:-bottom-64"
-          style={{
-            WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 70%, transparent 100%)",
-            maskImage: "linear-gradient(to bottom, black 0%, black 70%, transparent 100%)",
-          }}
-        >
+        <div className="pointer-events-none absolute inset-x-0 top-0 -bottom-24 overflow-hidden md:-bottom-28">
           {banner ? (
             <picture className="block h-full w-full">
               {poster && <source media="(max-width: 767px)" srcSet={poster} />}
@@ -175,21 +219,21 @@ export default function MediaDetails() {
           ) : (
             <div className="h-full w-full bg-zinc-900" />
           )}
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(16,17,21,0.96)_0%,rgba(16,17,21,0.72)_40%,rgba(16,17,21,0.12)_78%,rgba(16,17,21,0.06)_100%)]" />
-          <div className="absolute inset-0 bg-[linear-gradient(0deg,#101115_0%,rgba(16,17,21,0.75)_18%,transparent_58%,rgba(16,17,21,0.25)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,18,22,0.97)_0%,rgba(17,18,22,0.74)_40%,rgba(17,18,22,0.14)_78%,rgba(17,18,22,0.07)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(0deg,#111216_0%,#111216_4%,rgba(17,18,22,0.97)_7%,rgba(17,18,22,0.84)_11%,rgba(17,18,22,0.64)_16%,rgba(17,18,22,0.42)_21%,rgba(17,18,22,0.22)_27%,rgba(17,18,22,0.08)_33%,transparent_39%,rgba(17,18,22,0.20)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_22%,var(--media-backdrop-glow),transparent_38%)] mix-blend-screen opacity-[0.55]" />
         </div>
-
-        <div className="pointer-events-none absolute inset-x-0 -bottom-32 z-[1] h-64 bg-[linear-gradient(to_bottom,transparent_0%,rgba(16,17,21,0.65)_45%,#101115_100%)]" />
 
         <div className="relative z-10 mx-auto flex h-full w-full max-w-[1380px] items-end px-5 pb-12 pt-28 sm:px-8 md:px-10 md:pb-16 xl:px-12">
           <div className="flex w-full items-end gap-7 xl:gap-9">
             {poster && (
-              <div className="hidden w-[190px] shrink-0 overflow-hidden rounded-xl bg-zinc-900 shadow-[0_18px_48px_rgba(0,0,0,0.45)] lg:block xl:w-[215px]">
+              <div className="hidden w-[190px] shrink-0 overflow-hidden rounded-xl border border-[var(--media-accent-border)] bg-zinc-900 [box-shadow:0_20px_65px_var(--media-accent-glow)] transition-[border-color,box-shadow] duration-700 lg:block xl:w-[215px]">
                 <img src={poster} alt={`Pôster de ${title}`} className="aspect-[2/3] w-full object-cover" />
               </div>
             )}
 
             <div className="max-w-3xl min-w-0 pb-1">
+              <span className="mb-4 block h-1 w-12 rounded-full bg-[var(--media-accent)] shadow-[0_0_24px_var(--media-accent-glow)] transition-colors duration-700" />
               <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1.5">
                 {media.genres?.slice(0, 4).map((genre) => (
                   <span
@@ -227,13 +271,13 @@ export default function MediaDetails() {
 
               <div className="mt-5 flex flex-wrap items-center gap-5">
                 {communityAverage && (
-                  <div className="border-l-2 border-violet-400 pl-3">
+                  <div className="border-l-2 border-[var(--media-accent)] pl-3 transition-colors duration-700">
                     <div className="flex items-center gap-2">
-                      <Star size={16} className="fill-violet-300 text-violet-300" />
+                      <Star size={16} className="fill-[var(--media-accent-text)] text-[var(--media-accent-text)]" />
                       <span className="text-lg font-semibold">{communityAverage}</span>
                       <span className="text-xs text-zinc-500">/ 5</span>
                     </div>
-                    <span className="mt-0.5 block text-[9px] font-semibold uppercase tracking-[0.14em] text-violet-300/80">
+                    <span className="mt-0.5 block text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--media-accent-text)] opacity-80">
                       Comunidade
                     </span>
                   </div>
@@ -252,20 +296,20 @@ export default function MediaDetails() {
                   <div className="flex min-w-[240px] max-w-[330px] flex-1 items-center gap-3 border-l border-white/15 pl-4 sm:flex-none">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="truncate text-[9px] font-semibold uppercase tracking-[0.14em] text-violet-300/80">
+                        <span className="truncate text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--media-accent-text)] opacity-80">
                           Continuar · {providerNames[watchProgress.provider] || watchProgress.provider}
                         </span>
                         <span className="shrink-0 text-[10px] font-bold text-zinc-300">{progressPercent}%</span>
                       </div>
                       <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
-                        <span className="block h-full rounded-full bg-violet-400" style={{ width: `${progressPercent}%` }} />
+                        <span className="block h-full rounded-full bg-[var(--media-accent)] shadow-[0_0_12px_var(--media-accent-glow)]" style={{ width: `${progressPercent}%` }} />
                       </div>
                       <p className="mt-1.5 truncate text-[10px] text-zinc-400">
                         {watchedMinutes} min assistidos{Number(watchProgress.durationSeconds) <= 0 ? " · duração sendo corrigida" : remainingMinutes > 0 ? ` · ${remainingMinutes} min restantes` : " · concluído"}
                       </p>
                     </div>
                     {watchProgress.url && (
-                      <a href={watchProgress.url} target="_blank" rel="noreferrer" aria-label="Continuar no streaming" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-violet-300/20 bg-violet-400/15 text-violet-200 transition hover:scale-105 hover:bg-violet-400/25">
+                      <a href={watchProgress.url} target="_blank" rel="noreferrer" aria-label="Continuar no streaming" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[var(--media-accent-border)] bg-[var(--media-accent-soft)] text-[var(--media-accent-text)] transition hover:scale-105 hover:bg-[var(--media-accent-glow)]">
                         <Play size={13} fill="currentColor" />
                       </a>
                     )}
@@ -278,7 +322,7 @@ export default function MediaDetails() {
                   <button
                     type="button"
                     onClick={openTrailer}
-                    className="inline-flex items-center gap-2.5 rounded-full bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100"
+                    className="inline-flex items-center gap-2.5 rounded-full bg-[var(--media-accent)] px-5 py-3 text-sm font-semibold text-[var(--media-accent-contrast)] shadow-[0_12px_34px_var(--media-accent-glow)] transition-all hover:-translate-y-0.5 hover:bg-[var(--media-accent-hover)]"
                   >
                     <Play size={18} className="fill-current" /> Assistir trailer
                   </button>
@@ -289,7 +333,7 @@ export default function MediaDetails() {
                   className={`inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-semibold backdrop-blur-md transition-colors ${
                     interactions.watched
                       ? "border-emerald-400/40 bg-emerald-500/20 text-emerald-200"
-                      : "border-white/12 bg-black/20 hover:bg-white/[0.08]"
+                      : "border-white/12 bg-black/20 hover:border-[var(--media-accent-border)] hover:bg-[var(--media-accent-soft)]"
                   }`}
                 >
                   <Check size={17} /> {interactions.watched ? "Assistido" : "Já assisti"}
@@ -300,7 +344,7 @@ export default function MediaDetails() {
                   className={`inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-semibold backdrop-blur-md transition-colors ${
                     interactions.liked
                       ? "border-red-400/40 bg-red-500/20 text-red-200"
-                      : "border-white/12 bg-black/20 hover:bg-white/[0.08]"
+                      : "border-white/12 bg-black/20 hover:border-[var(--media-accent-border)] hover:bg-[var(--media-accent-soft)]"
                   }`}
                 >
                   <Heart size={17} fill={interactions.liked ? "currentColor" : "none"} />
@@ -309,14 +353,14 @@ export default function MediaDetails() {
                 <button
                   type="button"
                   onClick={openList}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/20 px-4 py-2.5 text-xs font-semibold backdrop-blur-md transition-colors hover:bg-white/[0.08]"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/20 px-4 py-2.5 text-xs font-semibold backdrop-blur-md transition-colors hover:border-[var(--media-accent-border)] hover:bg-[var(--media-accent-soft)]"
                 >
                   <Plus size={17} /> Adicionar à lista
                 </button>
                 <button
                   type="button"
                   onClick={actions.handleShare}
-                  className="grid h-10 w-10 place-items-center rounded-full border border-white/12 bg-black/20 backdrop-blur-md transition-colors hover:bg-white/[0.08]"
+                  className="grid h-10 w-10 place-items-center rounded-full border border-white/12 bg-black/20 backdrop-blur-md transition-colors hover:border-[var(--media-accent-border)] hover:bg-[var(--media-accent-soft)]"
                   aria-label="Compartilhar"
                 >
                   <Share2 size={17} />
@@ -330,7 +374,7 @@ export default function MediaDetails() {
       <div className="relative z-20 mx-auto grid max-w-[1380px] grid-cols-1 gap-10 px-5 sm:px-8 md:px-10 lg:grid-cols-12 lg:gap-14 xl:px-12">
         <main className="space-y-12 lg:col-span-8 md:space-y-14">
           <section className="max-w-4xl border-t border-white/[0.07] pt-8">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--media-accent-text)]">
               A história
             </span>
             <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">Sinopse</h2>
@@ -395,7 +439,7 @@ export default function MediaDetails() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <h3 className="truncate text-sm font-bold text-white group-hover:text-violet-300">
+                      <h3 className="truncate text-sm font-bold text-white transition-colors group-hover:text-[var(--media-accent-text)]">
                         {person.name}
                       </h3>
                       <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-500">
@@ -435,7 +479,7 @@ export default function MediaDetails() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <h3 className="truncate text-sm font-bold text-white group-hover:text-violet-300">
+                      <h3 className="truncate text-sm font-bold text-white transition-colors group-hover:text-[var(--media-accent-text)]">
                         {person.name}
                       </h3>
                       <span className="mt-1 block text-xs text-zinc-500">
@@ -471,11 +515,11 @@ export default function MediaDetails() {
         <aside className="space-y-4 lg:col-span-4 lg:pt-8">
           <section className="relative overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.025] p-5">
             <div className="relative flex items-center gap-3">
-              <span className="grid h-9 w-9 place-items-center rounded-full bg-violet-500/10 text-violet-300">
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-[var(--media-accent-soft)] text-[var(--media-accent-text)]">
                 <Play size={17} className="fill-current" />
               </span>
               <div>
-                <span className="block text-[9px] font-semibold uppercase tracking-[0.16em] text-violet-300">
+                <span className="block text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--media-accent-text)]">
                   Disponibilidade
                 </span>
                 <h2 className="mt-0.5 text-base font-semibold text-white">Onde assistir</h2>
@@ -668,7 +712,7 @@ export default function MediaDetails() {
                   </a>
                 )}
                 {media.homepage && (
-                  <a href={media.homepage} target="_blank" rel="noreferrer" aria-label="Site oficial" className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.05] text-zinc-400 transition-colors hover:bg-violet-600 hover:text-white">
+                  <a href={media.homepage} target="_blank" rel="noreferrer" aria-label="Site oficial" className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.05] text-zinc-400 transition-colors hover:bg-[var(--media-accent)] hover:text-[var(--media-accent-contrast)]">
                     <Globe size={16} />
                   </a>
                 )}
@@ -689,7 +733,7 @@ export default function MediaDetails() {
           <button
             type="button"
             onClick={openTrailer}
-            className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-white px-3 text-xs font-black text-black"
+            className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--media-accent)] px-3 text-xs font-semibold text-[var(--media-accent-contrast)] shadow-[0_8px_24px_var(--media-accent-glow)]"
           >
             <Play size={16} className="fill-current" /> Trailer
           </button>

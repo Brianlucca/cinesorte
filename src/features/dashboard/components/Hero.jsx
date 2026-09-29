@@ -227,7 +227,7 @@ export default function Hero({
 
   return (
     <section
-      className="relative isolate h-[64svh] min-h-[500px] max-h-[680px] w-full overflow-hidden bg-[#111216]"
+      className="relative z-10 isolate h-[88svh] min-h-[620px] max-h-[920px] w-full overflow-hidden bg-[#111216]"
       aria-label="Destaques"
     >
       <div key={item.id} className="absolute inset-0 hero-slide-reveal">
@@ -268,8 +268,8 @@ export default function Hero({
         )}
       </div>
 
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,18,22,0.94)_0%,rgba(17,18,22,0.68)_40%,rgba(17,18,22,0.06)_78%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(0deg,#111216_0%,rgba(17,18,22,0.94)_9%,rgba(17,18,22,0.68)_24%,rgba(17,18,22,0.24)_48%,transparent_76%)]" />
+      <div className="absolute inset-0 z-10 bg-[linear-gradient(90deg,rgba(17,18,22,0.94)_0%,rgba(17,18,22,0.68)_40%,rgba(17,18,22,0.06)_78%)]" />
+      <div className="absolute inset-0 z-10 bg-[linear-gradient(0deg,#111216_0%,#111216_7%,rgba(17,18,22,0.96)_16%,rgba(17,18,22,0.82)_28%,rgba(17,18,22,0.52)_44%,rgba(17,18,22,0.2)_62%,transparent_80%)]" />
 
       <div className="relative z-20 mx-auto flex h-full max-w-[1380px] items-center px-5 pb-20 pt-20 sm:px-8 md:px-10 xl:px-12">
         <div key={`copy-${item.id}`} className="w-full max-w-xl hero-copy-reveal xl:max-w-2xl">

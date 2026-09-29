@@ -404,7 +404,7 @@ export default function Dashboard() {
         onSlideChange={handleHeroSlideChange}
       />
 
-      <div className="relative z-20 -mt-10 flex flex-col gap-10 bg-gradient-to-t from-[#111216] via-[#111216]/98 to-transparent pt-16 md:-mt-16 md:gap-14 md:pt-24">
+      <div className="relative z-0 -mt-10 flex flex-col gap-10 bg-[#111216] pt-16 md:-mt-16 md:gap-14 md:pt-24">
         <ContinueWatching />
         {(data.trendingWeek || []).length > 0 && (
           <div className="space-y-1 md:space-y-2">

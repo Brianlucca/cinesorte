@@ -3,18 +3,13 @@ import { Link } from "react-router-dom";
 import {
   ChevronLeft,
   ChevronRight,
-  Download,
   Info,
   Play,
-  Plug,
   Star,
   X,
 } from "lucide-react";
-import {
-  deleteWatchProgress,
-  getExtensionStatus,
-  getWatchProgress,
-} from "@shared/api/api";
+import { deleteWatchProgress, getWatchProgress } from "@shared/api/api";
+import { useAuth } from "@shared/context/useAuth";
 
 const IMAGE = "https://image.tmdb.org/t/p/w780";
 const PROVIDERS = {
@@ -28,10 +23,39 @@ const PROVIDERS = {
   crunchyroll: "Crunchyroll",
 };
 const EXTENSION_ID = "mpkpfhbinipldbhpemhmpkdinmikfjoh";
-const EXTENSION_STORE_URL = import.meta.env.VITE_EXTENSION_STORE_URL || "";
-const IS_EDGE_BROWSER =
-  typeof navigator !== "undefined" &&
-  /Edg(?:A|iOS)?\//.test(navigator.userAgent);
+const PROGRESS_CACHE_PREFIX = "cinesorte_watch_progress";
+const PROGRESS_CACHE_TTL = 30 * 60 * 1000;
+
+function readCachedProgress(cacheKey) {
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(cacheKey));
+    if (
+      !cached ||
+      !Array.isArray(cached.items) ||
+      !Number.isFinite(cached.timestamp) ||
+      Date.now() - cached.timestamp > PROGRESS_CACHE_TTL
+    ) {
+      sessionStorage.removeItem(cacheKey);
+      return null;
+    }
+
+    return cached.items;
+  } catch {
+    sessionStorage.removeItem(cacheKey);
+    return null;
+  }
+}
+
+function writeCachedProgress(cacheKey, items) {
+  try {
+    sessionStorage.setItem(
+      cacheKey,
+      JSON.stringify({ timestamp: Date.now(), items }),
+    );
+  } catch {
+    // The latest progress still remains available in memory for this visit.
+  }
+}
 
 function time(seconds = 0) {
   const minutes = Math.floor(seconds / 60);
@@ -59,62 +83,51 @@ function realProgress(item) {
 }
 
 export default function ContinueWatching() {
+  const { user } = useAuth();
   const rowRef = useRef(null);
-  const [items, setItems] = useState([]);
-  const [extensionState, setExtensionState] = useState({
-    installed: false,
-    connected: false,
-    loading: true,
-  });
+  const cacheScope = user?.uid || user?.username || "guest";
+  const cacheKey = `${PROGRESS_CACHE_PREFIX}:${cacheScope}`;
+  const initialItems = readCachedProgress(cacheKey);
+  const [items, setItems] = useState(initialItems || []);
 
   useEffect(() => {
-    const loadProgress = () =>
-      getWatchProgress()
-        .then((data) => setItems(Array.isArray(data) ? data : []))
-        .catch(() => setItems([]));
-    const loadExtensionState = async () => {
-      const installed = await new Promise((resolve) => {
-        if (!window.chrome?.runtime?.sendMessage) return resolve(false);
-        window.chrome.runtime.sendMessage(
-          EXTENSION_ID,
-          { type: "CINESORTE_PING" },
-          (result) =>
-            resolve(Boolean(result?.ok && !window.chrome.runtime.lastError)),
-        );
-      });
-      const status = await getExtensionStatus().catch(() => ({
-        connected: false,
-      }));
-      setExtensionState({
-        installed,
-        connected: Boolean(status?.connected),
-        loading: false,
-      });
-    };
-    loadProgress();
-    if (IS_EDGE_BROWSER) loadExtensionState();
-    const progressTimer = window.setInterval(loadProgress, 30000);
-    const statusTimer = IS_EDGE_BROWSER
-      ? window.setInterval(loadExtensionState, 15000)
-      : null;
-    const refresh = () =>
-      document.visibilityState === "visible" && loadExtensionState();
-    if (IS_EDGE_BROWSER) {
-      document.addEventListener("visibilitychange", refresh);
-      window.addEventListener("focus", refresh);
-    }
-    return () => {
-      window.clearInterval(progressTimer);
-      if (statusTimer) window.clearInterval(statusTimer);
-      if (IS_EDGE_BROWSER) {
-        document.removeEventListener("visibilitychange", refresh);
-        window.removeEventListener("focus", refresh);
+    let active = true;
+    const cachedItems = readCachedProgress(cacheKey);
+    setItems(cachedItems || []);
+
+    const loadProgress = async () => {
+      try {
+        const data = await getWatchProgress();
+        if (!active) return;
+        const nextItems = Array.isArray(data) ? data : [];
+        setItems(nextItems);
+        writeCachedProgress(cacheKey, nextItems);
+      } catch {
+        // Keep the cached progress visible during temporary connection issues.
       }
     };
-  }, []);
+    loadProgress();
+    const progressTimer = window.setInterval(loadProgress, 30000);
+    const refresh = () => {
+      if (document.visibilityState !== "visible") return;
+      loadProgress();
+    };
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      active = false;
+      window.clearInterval(progressTimer);
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [cacheKey]);
 
   async function remove(id) {
-    setItems((current) => current.filter((item) => item.id !== id));
+    setItems((current) => {
+      const nextItems = current.filter((item) => item.id !== id);
+      writeCachedProgress(cacheKey, nextItems);
+      return nextItems;
+    });
     try {
       await deleteWatchProgress(id);
       if (window.chrome?.runtime?.sendMessage)
@@ -124,7 +137,11 @@ export default function ContinueWatching() {
           () => void window.chrome.runtime.lastError,
         );
     } catch {
-      getWatchProgress().then(setItems);
+      getWatchProgress().then((data) => {
+        const nextItems = Array.isArray(data) ? data : [];
+        setItems(nextItems);
+        writeCachedProgress(cacheKey, nextItems);
+      });
     }
   }
 
@@ -135,9 +152,7 @@ export default function ContinueWatching() {
     (item) => realProgress(item) >= 85 && detailsPath(item),
   );
 
-  if (!IS_EDGE_BROWSER || extensionState.loading) return null;
-
-  const showProgress = extensionState.connected && continueItems.length > 0;
+  if (continueItems.length === 0) return null;
 
   function slide(direction) {
     if (!rowRef.current) return;
@@ -159,30 +174,28 @@ export default function ContinueWatching() {
           </h2>
         </div>
         <div className="flex items-center gap-3">
-          {showProgress && (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                aria-label="Voltar em Continue de onde parou"
-                onClick={() => slide("left")}
-                className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-400 transition-colors hover:bg-white/[0.09] hover:text-white"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <button
-                type="button"
-                aria-label="Avançar em Continue de onde parou"
-                onClick={() => slide("right")}
-                className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-400 transition-colors hover:bg-white/[0.09] hover:text-white"
-              >
-                <ChevronRight size={20} />
-              </button>
-            </div>
-          )}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              aria-label="Voltar em Continue de onde parou"
+              onClick={() => slide("left")}
+              className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-400 transition-colors hover:bg-white/[0.09] hover:text-white"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              type="button"
+              aria-label="Avançar em Continue de onde parou"
+              onClick={() => slide("right")}
+              className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-zinc-400 transition-colors hover:bg-white/[0.09] hover:text-white"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
         </div>
       </div>
 
-      {showProgress && reviewItem && (
+      {reviewItem && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-yellow-300/15 bg-gradient-to-r from-yellow-300/[0.08] to-violet-500/[0.06] px-4 py-3">
           <div className="flex items-center gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-yellow-300/10 text-yellow-200">
@@ -210,11 +223,10 @@ export default function ContinueWatching() {
         </div>
       )}
 
-      {showProgress ? (
-        <div
-          ref={rowRef}
-          className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-3 scrollbar-hide md:snap-none"
-        >
+      <div
+        ref={rowRef}
+        className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-3 scrollbar-hide md:snap-none"
+      >
           {continueItems.slice(0, 10).map((item) => {
             const percent = realProgress(item);
             const details = detailsPath(item);
@@ -297,58 +309,8 @@ export default function ContinueWatching() {
                 </div>
               </article>
             );
-          })}
-        </div>
-      ) : extensionState.connected ? (
-        <div className="flex min-h-24 items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.018] px-5 py-4">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-500/10 text-violet-300">
-            <Play size={17} />
-          </span>
-          <div>
-            <p className="text-sm font-semibold text-zinc-200">Tudo pronto para sincronizar</p>
-            <p className="mt-1 text-xs leading-5 text-zinc-500">Assista a um título compatível e seu progresso aparecerá aqui.</p>
-          </div>
-        </div>
-      ) : (
-        <div className="flex min-h-24 flex-col justify-between gap-4 rounded-xl border border-white/[0.06] bg-white/[0.018] px-5 py-4 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-4">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-500/10 text-violet-300">
-              <Plug size={17} />
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-zinc-200">
-                {extensionState.installed ? "Conecte a extensão ao CineSorte" : "Leve seu progresso para o CineSorte"}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-zinc-500">
-                {extensionState.installed
-                  ? "Autorize a extensão para sincronizar automaticamente o que você está assistindo."
-                  : "Instale a extensão no Edge para continuar seus filmes e séries de onde parou."}
-              </p>
-            </div>
-          </div>
-          {extensionState.installed ? (
-            <Link
-              to={`/extension/connect?extensionId=${EXTENSION_ID}`}
-              className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-3.5 text-xs font-semibold text-zinc-950 transition-colors hover:bg-violet-100"
-            >
-              <Plug size={14} />
-              Conectar extensão
-            </Link>
-          ) : EXTENSION_STORE_URL ? (
-            <a
-              href={EXTENSION_STORE_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-3.5 text-xs font-semibold text-zinc-950 transition-colors hover:bg-violet-100"
-            >
-              <Download size={14} />
-              Instalar no Edge
-            </a>
-          ) : (
-            <span className="shrink-0 text-xs font-medium text-zinc-500">Em breve no Edge Add-ons</span>
-          )}
-        </div>
-      )}
+        })}
+      </div>
     </section>
   );
 }
