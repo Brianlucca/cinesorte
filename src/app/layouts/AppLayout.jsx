@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  Clapperboard,
   ChevronDown,
   Dices,
   Download,
@@ -25,11 +24,13 @@ import NotificationBell from "@shared/components/ui/NotificationBell";
 const SearchModal = lazy(() => import("@shared/components/ui/SearchModal"));
 const TermsModal = lazy(() => import("@shared/components/ui/TermsModal"));
 const MessagesDock = lazy(() => import("@features/messages/components/MessagesDock"));
+const Login = lazy(() => import("@features/auth/pages/Login"));
+const Register = lazy(() => import("@features/auth/pages/Register"));
 const MESSAGES_UNREAD_REFRESH_MS = 120000;
 const EDGE_EXTENSION_URL = import.meta.env.VITE_EXTENSION_STORE_URL || "";
 
 const privateNavigation = [
-  { to: "/app", label: "Início", icon: Home },
+  { to: "/", label: "Início", icon: Home },
   { to: "/app/feed", label: "Feed", icon: Globe },
   { to: "/app/roulette", label: "Roleta", icon: Dices },
   { to: "/app/watch-party", label: "CineParty", icon: UsersRound },
@@ -38,9 +39,9 @@ const privateNavigation = [
 
 function Brand() {
   return (
-    <Link to="/app" className="flex shrink-0 items-center gap-2.5">
-      <span className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.08] bg-black/25 text-violet-300 backdrop-blur-md">
-        <Clapperboard size={21} />
+    <Link to="/" className="flex shrink-0 items-center gap-2.5">
+      <span className="grid h-10 w-10 shrink-0 place-items-center">
+        <img src="/icons/cinesorte-transparent.png" alt="" className="h-10 w-10 object-contain" />
       </span>
       <span className="text-lg font-semibold tracking-[-0.035em] sm:text-xl">
         Cine<span className="text-violet-400">Sorte</span>
@@ -61,6 +62,10 @@ export default function AppLayout() {
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
   const [messageUnreadTotal, setMessageUnreadTotal] = useState(0);
   const [pendingMessageConversationId, setPendingMessageConversationId] = useState(null);
+  const requestedAuthMode = new URLSearchParams(location.search).get("auth");
+  const authMode = requestedAuthMode === "login" || requestedAuthMode === "register"
+    ? requestedAuthMode
+    : null;
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -136,7 +141,7 @@ export default function AppLayout() {
   }, [isMobileMenuOpen]);
 
   const isActive = (path) =>
-    path === "/app"
+    path === "/"
       ? location.pathname === path
       : location.pathname === path || location.pathname.startsWith(`${path}/`);
 
@@ -151,7 +156,7 @@ export default function AppLayout() {
 
   const handleLogout = async () => {
     await logout();
-    navigate("/login");
+    navigate("/");
   };
 
   const openSearch = () => {
@@ -160,7 +165,19 @@ export default function AppLayout() {
     setIsProfileMenuOpen(false);
   };
 
+  const openAuth = (mode) => {
+    const params = new URLSearchParams();
+    params.set("auth", mode);
+    if (location.pathname !== "/") {
+      params.set("redirect", `${location.pathname}${location.search}`);
+    }
+    navigate(`/?${params.toString()}`);
+  };
+
+  const closeAuth = () => navigate("/", { replace: true });
+
   const immersiveRoute =
+    location.pathname === "/" ||
     location.pathname === "/app" ||
     /^\/app\/(movie|tv|person)\//.test(location.pathname);
 
@@ -179,10 +196,6 @@ export default function AppLayout() {
   }
 
   if (!user) {
-    const currentPath = `${location.pathname}${location.search}`;
-    const loginPath = `/login?redirect=${encodeURIComponent(currentPath)}`;
-    const registerPath = `/register?redirect=${encodeURIComponent(currentPath)}`;
-
     return (
       <div className="fixed inset-0 overflow-hidden bg-[#111216] text-white">
         <header className={headerClassName}>
@@ -190,7 +203,7 @@ export default function AppLayout() {
             <Brand />
 
             <nav className="ml-2 hidden items-center gap-1 sm:flex md:ml-6">
-              <Link to="/app" className="hidden rounded-xl px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/[0.06] md:inline-flex">
+              <Link to="/" className="hidden rounded-xl px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/[0.06] md:inline-flex">
                 Início
               </Link>
               <button
@@ -211,12 +224,12 @@ export default function AppLayout() {
               >
                 <Search size={18} />
               </button>
-              <Link to={loginPath} className="rounded-xl px-3 py-2 text-sm font-semibold text-zinc-200 transition-colors hover:bg-white/[0.06] hover:text-white">
+              <button type="button" onClick={() => openAuth("login")} className="rounded-xl px-3 py-2 text-sm font-semibold text-zinc-200 transition-colors hover:bg-white/[0.06] hover:text-white">
                 Entrar
-              </Link>
-              <Link to={registerPath} className="hidden rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100 sm:inline-flex">
+              </button>
+              <button type="button" onClick={() => openAuth("register")} className="hidden rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100 sm:inline-flex">
                 Criar conta
-              </Link>
+              </button>
             </div>
           </div>
         </header>
@@ -234,6 +247,13 @@ export default function AppLayout() {
             <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
           </Suspense>
         )}
+        {authMode && (
+          <Suspense fallback={null}>
+            {authMode === "login"
+              ? <Login modal onClose={closeAuth} />
+              : <Register modal onClose={closeAuth} />}
+          </Suspense>
+        )}
       </div>
     );
   }
@@ -241,10 +261,14 @@ export default function AppLayout() {
   return (
     <div className="fixed inset-0 overflow-hidden bg-[#111216] text-white">
       <header className={headerClassName}>
-        <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center gap-3 px-4 sm:px-6 md:h-[72px] md:px-8 xl:px-12">
+        <div className="mx-auto flex h-16 w-full max-w-[1760px] items-center gap-3 px-4 sm:px-6 md:h-[72px] md:px-8 xl:px-10">
           <Brand />
-          <nav className="ml-2 hidden items-center gap-1 sm:flex md:ml-6" aria-label="Navegação inicial">
-            <Link to="/app" className="hidden rounded-xl px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/[0.06] md:inline-flex">
+
+          <nav className="ml-2 hidden items-center gap-1 sm:flex md:ml-6" aria-label="Navegação principal">
+            <Link
+              to="/"
+              className={`rounded-xl px-3 py-2 text-sm font-semibold transition-colors hover:bg-white/[0.06] hover:text-white ${isActive("/") ? "text-white" : "text-zinc-300"}`}
+            >
               Início
             </Link>
             <button
@@ -252,7 +276,6 @@ export default function AppLayout() {
               onClick={openSearch}
               className="inline-flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-zinc-300 transition-colors hover:bg-white/[0.06] hover:text-white"
               aria-label="Explorar catálogo"
-              title="Explorar"
             >
               <Search size={16} /> Explorar
             </button>
@@ -276,7 +299,7 @@ export default function AppLayout() {
                 title="Baixar extensão CineSorte Sync"
               >
                 <Download size={17} />
-                <span className="hidden 2xl:inline">Extensão</span>
+                <span className="hidden min-[1240px]:inline">Extensão</span>
               </a>
             )}
             <button
@@ -313,7 +336,7 @@ export default function AppLayout() {
               </button>
 
               {isProfileMenuOpen && (
-                <div className="absolute right-0 top-[calc(100%+12px)] max-h-[calc(100dvh-5rem)] w-64 overflow-y-auto rounded-xl border border-white/[0.08] bg-[#181a20] p-2 shadow-[0_24px_70px_rgba(0,0,0,0.55)]">
+                <div className="absolute right-0 top-[calc(100%+12px)] max-h-[calc(100dvh-5rem)] w-72 overflow-y-auto rounded-xl border border-white/[0.08] bg-[#181a20] p-2 shadow-[0_24px_70px_rgba(0,0,0,0.55)]">
                   <div className="px-3 pb-3 pt-2">
                     <p className="truncate text-sm font-semibold text-white">{user.name || user.username}</p>
                     <p className="mt-0.5 truncate text-[11px] text-zinc-500">@{user.username?.toLowerCase()}</p>
@@ -330,7 +353,6 @@ export default function AppLayout() {
                       <item.icon size={17} className={isActive(item.to) ? "text-violet-300" : "text-zinc-500"} /> {item.label}
                     </Link>
                   ))}
-                  <button type="button" onClick={() => { openMessages(); setIsProfileMenuOpen(false); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-zinc-300 transition-colors hover:bg-white/[0.05] hover:text-white"><MessageCircle size={17} className="text-zinc-500" /> Mensagens {messageUnreadTotal > 0 && <span className="ml-auto rounded-full bg-violet-500 px-2 py-0.5 text-[10px] text-white">{messageUnreadTotal > 99 ? "99+" : messageUnreadTotal}</span>}</button>
                   <div className="my-2 h-px bg-white/[0.06]" />
                   <Link to="/app/profile" onClick={() => setIsProfileMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/[0.05] hover:text-white"><User size={17} /> Perfil</Link>
                   <Link to="/app/settings" onClick={() => setIsProfileMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/[0.05] hover:text-white"><Settings size={17} /> Configurações</Link>

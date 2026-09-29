@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Clapperboard, HelpCircle, Play, ShieldCheck, VolumeX } from 'lucide-react';
+import { HelpCircle, Play, ShieldCheck, VolumeX, X } from 'lucide-react';
 import { getLatestTrailers } from '@shared/api/api';
 
 const FALLBACK_FEATURE = {
@@ -106,7 +106,91 @@ export default function AuthShell({
   children,
   footer,
   onHelp,
+  modal = false,
+  onClose,
 }) {
+  useEffect(() => {
+    if (!modal) return undefined;
+
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') onClose?.();
+    };
+
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [modal, onClose]);
+
+  if (modal) {
+    return (
+      <div
+        className="fixed inset-0 z-[90000] overflow-y-auto bg-black/75 px-3 py-4 text-white backdrop-blur-md sm:px-5 sm:py-8"
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) onClose?.();
+        }}
+      >
+        <div
+          className="flex min-h-full items-center justify-center"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) onClose?.();
+          }}
+        >
+          <section className="relative my-auto w-full max-w-[620px] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#181a20] shadow-[0_32px_120px_rgba(0,0,0,0.72)]">
+            <div className="pointer-events-none absolute -right-28 -top-32 h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-40 -left-32 h-80 w-80 rounded-full bg-fuchsia-500/[0.05] blur-3xl" />
+
+            <div className="relative flex items-center justify-between px-5 pb-3 pt-5 sm:px-8 sm:pt-7">
+              <div className="flex items-center gap-3" aria-label="CineSorte">
+                <span className="grid h-10 w-10 shrink-0 place-items-center">
+                  <img src="/icons/cinesorte-transparent.png" alt="" className="h-10 w-10 object-contain" />
+                </span>
+                <span className="text-xl font-semibold tracking-[-0.04em] text-white">
+                  Cine<span className="text-violet-400">Sorte</span>
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="grid h-10 w-10 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
+                aria-label="Fechar"
+              >
+                <X size={19} />
+              </button>
+            </div>
+
+            <div className="relative max-h-[calc(100svh-8rem)] overflow-y-auto px-5 pb-6 pt-3 sm:px-8 sm:pb-8">
+              <div className="mx-auto w-full max-w-[500px]">
+                <div className="mb-7 text-left">
+                  <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-violet-300">
+                    {eyebrow}
+                  </div>
+                  <h1 className="text-3xl font-semibold leading-tight tracking-[-0.035em] text-white sm:text-4xl">
+                    {title}
+                  </h1>
+                  <p className="mt-3 max-w-[460px] text-sm leading-6 text-zinc-400">{description}</p>
+                </div>
+
+                <div>{children}</div>
+                <div className="mt-5">{footer}</div>
+
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
+                  <button type="button" onClick={onHelp} className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-500 transition-colors hover:text-white">
+                    <HelpCircle size={16} /> Preciso de ajuda
+                  </button>
+                  <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-600">
+                    <ShieldCheck size={13} /> Acesso protegido
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#111216] p-3 text-white sm:p-5 lg:p-6">
       <div className="mx-auto flex min-h-[calc(100vh-1.5rem)] w-full max-w-[1480px] items-center justify-center sm:min-h-[calc(100vh-2.5rem)] lg:min-h-[calc(100vh-3rem)]">
@@ -117,7 +201,9 @@ export default function AuthShell({
             <div className="w-full max-w-[420px] animate-in fade-in slide-in-from-bottom-3 duration-500">
               <div className="mb-9 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3" aria-label="CineSorte">
-                  <Clapperboard size={27} strokeWidth={2.25} className="text-violet-400" />
+                  <span className="grid h-10 w-10 shrink-0 place-items-center">
+                    <img src="/icons/cinesorte-transparent.png" alt="" className="h-10 w-10 object-contain" />
+                  </span>
                   <span className="text-xl font-semibold tracking-[-0.04em] text-white">
                     Cine<span className="text-violet-400">Sorte</span>
                   </span>

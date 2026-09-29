@@ -20,7 +20,7 @@ import GoogleIcon from '@features/auth/components/GoogleIcon';
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function Login() {
+export default function Login({ modal = false, onClose }) {
   const [step, setStep] = useState('email');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,8 +40,14 @@ export default function Login() {
   const redirectTo = useMemo(() => {
     const params = new URLSearchParams(location.search);
     const path = params.get('redirect');
-    return path ? decodeURIComponent(path) : '/app';
+    return path ? decodeURIComponent(path) : '/';
   }, [location.search]);
+
+  const getAuthPath = (mode) => {
+    const params = new URLSearchParams(location.search);
+    params.set('auth', mode);
+    return `/?${params.toString()}`;
+  };
 
   useEffect(() => {
     if (user) navigate(redirectTo);
@@ -68,7 +74,7 @@ export default function Login() {
     try {
       const result = await loginWithGoogle();
       if (result?.requiresProfile) {
-        navigate(`/register${location.search}`, {
+        navigate(modal ? getAuthPath('register') : `/register${location.search}`, {
           state: { googleCompletion: result },
         });
         return;
@@ -118,7 +124,7 @@ export default function Login() {
     <div className="text-center">
       <p className="text-sm font-medium text-zinc-500">
         Novo por aqui?{' '}
-        <Link to={`/register${location.search}`} className="font-semibold text-white transition-colors hover:text-violet-300">
+        <Link to={modal ? getAuthPath('register') : `/register${location.search}`} className="font-semibold text-white transition-colors hover:text-violet-300">
           Criar conta gratuita
         </Link>
       </p>
@@ -137,6 +143,8 @@ export default function Login() {
         }
         footer={footer}
         onHelp={() => setShowHelpModal(true)}
+        modal={modal}
+        onClose={onClose}
       >
         {error && (
           <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-400/15 bg-red-500/10 p-4 text-sm font-medium leading-6 text-red-200">

@@ -6,8 +6,6 @@ import { WatchPartyBroadcastProvider } from '@features/watch-party/context/Watch
 
 const AuthLayout = lazy(() => import('@app/layouts/AuthLayout'));
 const AppLayout = lazy(() => import('@app/layouts/AppLayout'));
-const Login = lazy(() => import('@features/auth/pages/Login'));
-const Register = lazy(() => import('@features/auth/pages/Register'));
 const VerifyEmail = lazy(() => import('@features/auth/pages/VerifyEmail'));
 const EmailChangeComplete = lazy(() => import('@features/auth/pages/EmailChangeComplete'));
 const EmailChangePending = lazy(() => import('@features/auth/pages/EmailChangePending'));
@@ -40,30 +38,46 @@ const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
   if (loading) return <div className="min-h-screen bg-[#111216] flex items-center justify-center text-violet-500">Carregando...</div>;
-  return user ? children : <Navigate to={`/login?redirect=${encodeURIComponent(`${location.pathname}${location.search}`)}`} />;
+  if (user) return children;
+
+  const params = new URLSearchParams({
+    auth: 'login',
+    redirect: `${location.pathname}${location.search}`,
+  });
+  return <Navigate to={`/?${params.toString()}`} replace />;
+};
+
+const LegacyAuthRedirect = ({ mode }) => {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  params.set('auth', mode);
+  return <Navigate to={`/?${params.toString()}`} replace state={location.state} />;
 };
 
 function AppRoutes() {
   return (
     <Suspense fallback={<RouteFallback />}>
       <Routes>
-        <Route path="/" element={<Navigate to="/app" replace />} />
+        <Route path="/" element={<AppLayout />}>
+          <Route index element={<Dashboard />} />
+        </Route>
         
         <Route path="/share/:type/:id" element={<SharedMediaPreview />} />
         <Route path="/privacidade" element={<Privacy />} />
         <Route path="/termos" element={<Terms />} />
         <Route path="/extension/connect" element={<PrivateRoute><ExtensionConnect /></PrivateRoute>} />
         
+        <Route path="/login" element={<LegacyAuthRedirect mode="login" />} />
+        <Route path="/register" element={<LegacyAuthRedirect mode="register" />} />
+
         <Route element={<AuthLayout />}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/email-change-pending" element={<EmailChangePending />} />
           <Route path="/email-change-complete" element={<EmailChangeComplete />} />
         </Route>
 
         <Route path="/app" element={<AppLayout />}>
-          <Route index element={<Dashboard />} />
+          <Route index element={<Navigate to="/" replace />} />
 
           <Route path="feed" element={<PrivateRoute><Feed /></PrivateRoute>} />
           <Route path="watch-party" element={<PrivateRoute><WatchParty /></PrivateRoute>} />

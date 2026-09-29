@@ -237,16 +237,14 @@ export default function Hero({
             <img
               src={backdrop}
               alt=""
-              className={`h-full w-full object-cover object-center hero-ken-burns transition-opacity duration-700 ${
-                videoIsReady ? "opacity-100 md:opacity-0" : "opacity-100"
-              }`}
+              className="h-full w-full object-cover object-center opacity-100 hero-ken-burns"
               fetchPriority="high"
             />
           </picture>
         ) : <div className="h-full w-full bg-[radial-gradient(circle_at_70%_30%,rgba(124,58,237,.32),transparent_38%),linear-gradient(135deg,#211638,#09090b)]" />}
         {videoKey && (
           <div
-            className={`pointer-events-none absolute right-0 top-1/2 hidden h-[86%] aspect-video -translate-y-1/2 overflow-hidden transition-opacity duration-700 [mask-image:linear-gradient(to_right,transparent_0%,black_18%)] md:block lg:h-full ${
+            className={`pointer-events-none absolute right-0 top-1/2 hidden h-[86%] aspect-video -translate-y-1/2 overflow-hidden transition-opacity duration-700 [-webkit-mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.08)_8%,rgba(0,0,0,0.65)_24%,black_38%)] [mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.08)_8%,rgba(0,0,0,0.65)_24%,black_38%)] md:block lg:h-full ${
               videoIsReady ? "opacity-100" : "opacity-0"
             }`}
           >
