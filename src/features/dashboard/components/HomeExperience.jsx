@@ -154,45 +154,86 @@ function SectionShell({ title, eyebrow, children, actionTo, actionLabel, rowRef,
 }
 
 function TopItemCard({ item, index }) {
+  const rating = Number(item.vote_average || item.rating || 0);
+  const isTopThree = index < 3;
+
   return (
     <Link
       to={mediaPath(item)}
-      className="group/card flex h-20 w-[250px] flex-none items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.018] p-2.5 transition-colors hover:border-white/[0.13] hover:bg-white/[0.035] sm:w-[280px]"
+      className="group/card w-[168px] flex-none snap-start sm:w-[250px]"
     >
-      <span className="w-8 flex-none text-center text-lg font-black tabular-nums text-zinc-500">
-        {index + 1}
-      </span>
-      <MediaImage item={item} size="w342" className="h-14 w-10 flex-none rounded-xl border border-white/[0.08]" />
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-black text-white">{getMediaName(item)}</span>
-        <span className="mt-1 block truncate text-xs text-zinc-500">
-          {getMediaType(item) === "tv" ? "Série" : "Filme"} {getMediaYear(item)}
+      <span className="relative flex h-[235px] items-end sm:h-[285px]">
+        <span
+          aria-hidden="true"
+          className={`absolute bottom-0 left-0 z-0 hidden select-none text-[10rem] font-black leading-[0.72] tracking-[-0.12em] text-transparent sm:block ${
+            isTopThree
+              ? "[-webkit-text-stroke:2px_rgba(167,139,250,0.42)]"
+              : "[-webkit-text-stroke:2px_rgba(255,255,255,0.20)]"
+          }`}
+        >
+          {index + 1}
+        </span>
+
+        <span className="relative z-10 h-full w-full overflow-hidden rounded-xl border border-white/[0.08] bg-[#111216] shadow-xl shadow-black/30 transition-transform duration-500 group-hover/card:-translate-y-1 sm:ml-[70px] sm:w-[180px]">
+          <MediaImage item={item} size="w500" className="h-full w-full transition-transform duration-700 group-hover/card:scale-[1.035]" />
+          <span className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/10" />
+
+          <span
+            aria-hidden="true"
+            className={`absolute bottom-2 left-2.5 text-[2.75rem] font-black leading-none tracking-[-0.08em] drop-shadow-xl sm:hidden ${isTopThree ? "text-violet-200" : "text-white"}`}
+          >
+            {index + 1}
+          </span>
+
+          {rating > 0 && (
+            <span className="absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-lg border border-white/10 bg-black/60 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-md">
+              <Star size={10} className="fill-current text-yellow-300" />
+              {rating.toFixed(1)}
+            </span>
+          )}
+
+          {isTopThree && (
+            <span className="absolute bottom-2.5 right-2.5 rounded-lg bg-violet-500/15 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-violet-200 backdrop-blur-md sm:left-2.5 sm:right-auto">
+              Top {index + 1}
+            </span>
+          )}
         </span>
       </span>
-      <ArrowRight size={15} className="mr-1 flex-none text-zinc-600 transition-all group-hover/card:translate-x-0.5 group-hover/card:text-white" />
+
+      <span className="mt-3 block sm:pl-[70px]">
+        <span className="block truncate text-sm font-semibold text-white transition-colors group-hover/card:text-violet-300">
+          {getMediaName(item)}
+        </span>
+        <span className="mt-1 flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.12em] text-zinc-600">
+          <span>{getMediaType(item) === "tv" ? "Série" : "Filme"}</span>
+          {getMediaYear(item) && <span>{getMediaYear(item)}</span>}
+        </span>
+      </span>
     </Link>
   );
 }
 
 function TopRail({ items = [] }) {
   const topRef = useRef(null);
-  const topItems = items.filter((item) => getImagePath(item)).slice(0, 8);
+  const topItems = items.filter((item) => getImagePath(item)).slice(0, 10);
   const itemsKey = topItems.map((item) => `${getMediaType(item)}-${item.id || item.mediaId}`).join("|");
   const hasOverflow = useRailOverflow(topRef, itemsKey);
 
   if (topItems.length === 0) return null;
 
   return (
-    <SectionShell title="Top em destaque" eyebrow="Semana" rowRef={topRef} hasOverflow={hasOverflow}>
-      <div
-        ref={topRef}
-        className={`flex gap-3 overflow-x-auto scroll-smooth pt-5 pb-4 md:pt-6 md:pb-6 ${PAGE_X} scrollbar-hide`}
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-      >
-        {topItems.map((item, index) => (
-          <TopItemCard key={`${getMediaType(item)}-${item.id || item.mediaId}`} item={item} index={index} />
-        ))}
-        <div className="w-1 flex-none md:w-6" aria-hidden="true" />
+    <SectionShell title="Top em destaque" eyebrow="Mais assistidos da semana" rowRef={topRef} hasOverflow={hasOverflow}>
+      <div className="mt-5 border-y border-white/[0.06] bg-[#181a20] py-6 md:mt-6 md:py-8">
+        <div
+          ref={topRef}
+          className={`flex snap-x snap-proximity gap-3 overflow-x-auto overscroll-x-contain scroll-smooth pb-2 pt-1 sm:gap-4 md:gap-6 ${PAGE_X} scrollbar-hide`}
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {topItems.map((item, index) => (
+            <TopItemCard key={`${getMediaType(item)}-${item.id || item.mediaId}`} item={item} index={index} />
+          ))}
+          <div className="w-1 flex-none md:w-6" aria-hidden="true" />
+        </div>
       </div>
     </SectionShell>
   );
