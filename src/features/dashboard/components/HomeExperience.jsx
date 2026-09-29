@@ -160,7 +160,7 @@ function TopItemCard({ item, index }) {
   return (
     <Link
       to={mediaPath(item)}
-      className="group/card w-[168px] flex-none snap-start sm:w-[250px]"
+      className="group/card w-[168px] flex-none snap-start sm:first:ml-6 sm:w-[250px] md:first:ml-8 xl:first:ml-10"
     >
       <span className="relative flex h-[235px] items-end sm:h-[285px]">
         <span

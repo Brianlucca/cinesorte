@@ -32,7 +32,7 @@ export default function MediaRecommendations({ items }) {
       <div className="border-t border-white/[0.07] py-8 md:py-10">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--media-accent-text)]">
               Continue explorando
             </span>
             <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">
@@ -47,7 +47,7 @@ export default function MediaRecommendations({ items }) {
               type="button"
               onClick={() => slide("left")}
               aria-label="Voltar nas recomendações"
-              className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
+              className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:border-[var(--media-accent-border)] hover:bg-[var(--media-accent-soft)] hover:text-white"
             >
               <ChevronLeft size={19} />
             </button>
@@ -55,7 +55,7 @@ export default function MediaRecommendations({ items }) {
               type="button"
               onClick={() => slide("right")}
               aria-label="Avançar nas recomendações"
-              className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
+              className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-zinc-400 transition-colors hover:border-[var(--media-accent-border)] hover:bg-[var(--media-accent-soft)] hover:text-white"
             >
               <ChevronRight size={19} />
             </button>
@@ -93,7 +93,7 @@ export default function MediaRecommendations({ items }) {
                   <div className="absolute inset-x-0 bottom-0 p-4">
                     <div className="mb-1.5 flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-300">
                       {year && <span>{year}</span>}
-                      {year && <span className="h-1 w-1 rounded-full bg-violet-400" />}
+                      {year && <span className="h-1 w-1 rounded-full bg-[var(--media-accent)]" />}
                       <span>{mediaType === "tv" ? "Série" : "Filme"}</span>
                     </div>
                     <div className="flex items-end justify-between gap-3">

@@ -77,7 +77,7 @@ function GalleryRail({ title, count, images, variant, onSelect }) {
             key={image.file_path}
             onClick={() => onSelect(image.file_path)}
             aria-label={`Ampliar ${title.toLowerCase()} ${index + 1}`}
-            className={`group relative shrink-0 snap-start overflow-hidden rounded-xl bg-zinc-900 transition-opacity duration-300 hover:opacity-90 ${
+            className={`group relative shrink-0 snap-start overflow-hidden rounded-xl border border-transparent bg-zinc-900 transition-[border-color,opacity] duration-300 hover:border-[var(--media-accent-border)] hover:opacity-90 ${
               isPoster
                 ? "aspect-[2/3] w-28 sm:w-36 md:w-44"
                 : "aspect-video w-[78vw] max-w-[310px] sm:w-[360px] sm:max-w-none md:w-[420px]"
@@ -124,7 +124,7 @@ export default function MediaImages({ images, title = "Galeria" }) {
   return (
     <section>
       <div className="mb-7">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--media-accent-text)]">
           Arquivo visual
         </span>
         <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">Galeria</h2>
