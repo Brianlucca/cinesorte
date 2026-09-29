@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   getMovieDetails,
   getProviders,
@@ -25,6 +25,8 @@ import { useAuth } from "@shared/context/useAuth";
 
 export function useMediaDetailsLogic() {
   const { type, id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const toast = useToast();
   const { user } = useAuth();
 
@@ -48,6 +50,12 @@ export function useMediaDetailsLogic() {
 
   const likeTimeouts = useRef({});
   const likeClickCounts = useRef({});
+
+  const requireLogin = (message = "Entre para usar este recurso.") => {
+    toast.error("Login necessário", message);
+    const redirect = `${location.pathname}${location.search}${location.hash}`;
+    navigate(`/login?redirect=${encodeURIComponent(redirect)}`);
+  };
 
   const isEliteUser = (levelTitle) => {
     const eliteTitles = [
@@ -150,7 +158,7 @@ export function useMediaDetailsLogic() {
   }, [type, id, user?.username]);
 
   const handleInteract = async (action) => {
-    if (!user) return toast.error("Login necessário", "Entre para interagir.");
+    if (!user) return requireLogin("Entre para interagir com este título.");
 
     const key = action === "like" ? "liked" : "watched";
     const previousState = interactions[key];
@@ -179,7 +187,7 @@ export function useMediaDetailsLogic() {
   };
 
   const handlePostReview = async (rating, text, isElite = false) => {
-    if (!user) return toast.error("Login necessário", "Entre para avaliar.");
+    if (!user) return requireLogin("Entre para avaliar este título.");
     try {
       await postReview({
         mediaId: id.toString(),
@@ -225,7 +233,7 @@ export function useMediaDetailsLogic() {
   };
 
   const handlePostReply = async (reviewId, text, parentId = null) => {
-    if (!user) return toast.error("Login necessário", "Entre para responder.");
+    if (!user) return requireLogin("Entre para responder à comunidade.");
     try {
       await postComment({ reviewId, text, parentId });
       toast.success("Sucesso", "Resposta enviada!");
@@ -290,6 +298,7 @@ export function useMediaDetailsLogic() {
   };
 
   const handleAddToList = async (listId) => {
+    if (!user) return requireLogin("Entre para adicionar títulos às suas listas.");
     setAddingToListId(listId);
     try {
       await addMediaToList(listId, {
@@ -315,6 +324,7 @@ export function useMediaDetailsLogic() {
   };
 
   const handleCreateList = async (listName) => {
+    if (!user) return requireLogin("Entre para criar uma lista.");
     try {
       const listRes = await createOrUpdateList({
         listName,
@@ -328,7 +338,7 @@ export function useMediaDetailsLogic() {
   };
 
   const handleLikeReview = async (reviewId) => {
-    if (!user) return toast.error("Login necessário", "Entre para curtir.");
+    if (!user) return requireLogin("Entre para curtir uma review.");
     likeClickCounts.current[reviewId] = (likeClickCounts.current[reviewId] || 0) + 1;
     setReviews(prev => prev.map(r => {
         if (r.id === reviewId) {
@@ -396,6 +406,7 @@ export function useMediaDetailsLogic() {
       handleCreateList,
       handleLikeReview,
       handleLoadReplies,
+      requireLogin,
       handleShare: () => {
         const shareUrl = `${window.location.origin}/share/${type}/${id}`;
         navigator.clipboard.writeText(shareUrl);

@@ -322,8 +322,8 @@ export function useDashboardLogic() {
           getLatestTrailers(),
           getAnimeReleases(),
           getAnimations(),
-          getRecommendations("movie"),
-          getRecommendations("tv"),
+          user ? getRecommendations("movie") : Promise.resolve([]),
+          user ? getRecommendations("tv") : Promise.resolve([]),
           getDiscover({ provider_id: "8|119|337", monetization_types: "flatrate" }),
           getDiscover({ media_type: "tv", sort_by: "popularity.desc" }),
           getDiscover({ monetization_types: "rent" }),
@@ -448,7 +448,7 @@ export function useDashboardLogic() {
     return () => {
       isMounted.current = false;
     };
-  }, [buildCompleteSection, excludeExisting, getPreferredGenreString, prioritizeContent, uniqueById, userGenreCountsKey, user?.uid, user?.username]);
+  }, [buildCompleteSection, excludeExisting, getPreferredGenreString, prioritizeContent, uniqueById, user, userGenreCountsKey]);
 
   return { data, currentHero, loading, heroReady };
 }

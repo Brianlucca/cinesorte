@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
-import { Pin, Sparkles, Star, TrendingUp, User } from "lucide-react";
+import { LogIn, Pin, Sparkles, Star, TrendingUp, User } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@shared/context/useAuth";
 import { MentionTextarea } from "@features/media/components/reviews/MentionTextarea";
 import ReviewItem from "@features/media/components/reviews/ReviewItem";
@@ -42,7 +43,9 @@ export default function ReviewsSection({
   followingList = [],
 }) {
   const { user: contextUser } = useAuth();
+  const location = useLocation();
   const user = propUser || contextUser;
+  const loginPath = `/login?redirect=${encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)}`;
   const userLevelKey = normalizeLevelTitle(user?.levelTitle);
   const canUseRichFormatting = PRIVILEGED_LEVELS.has(userLevelKey);
   const currentUserTheme = ELITE_THEME[userLevelKey] || {
@@ -128,6 +131,7 @@ export default function ReviewsSection({
     onEditReply,
     followingList,
     canUseRichFormatting,
+    canInteract: Boolean(user),
   };
 
   return (
@@ -172,6 +176,7 @@ export default function ReviewsSection({
         </div>
       )}
 
+      {user ? (
       <div className="mb-10 flex gap-3 sm:gap-4">
         <div className="hidden shrink-0 sm:block">
           <div className="grid h-11 w-11 place-items-center overflow-hidden rounded-full bg-zinc-800 text-sm font-semibold uppercase text-white ring-1 ring-white/[0.08]">
@@ -297,6 +302,27 @@ export default function ReviewsSection({
           </div>
         </div>
       </div>
+      ) : (
+        <div className="mb-10 flex flex-col gap-4 rounded-xl border border-white/[0.07] bg-white/[0.025] p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-500/10 text-violet-300">
+              <LogIn size={18} />
+            </span>
+            <div>
+              <h3 className="text-sm font-semibold text-white">Entre para participar</h3>
+              <p className="mt-1 text-xs leading-5 text-zinc-500">
+                Você pode ler as reviews livremente. Para avaliar, comentar ou curtir, entre na sua conta.
+              </p>
+            </div>
+          </div>
+          <Link
+            to={loginPath}
+            className="inline-flex shrink-0 items-center justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100"
+          >
+            Entrar
+          </Link>
+        </div>
+      )}
 
       {topEliteReview && (
         <div className="mb-9">

@@ -43,7 +43,7 @@ export function useEpisodeDetailsLogic() {
       try {
         const basePromises = [
           getEpisodeDetails(tvId, seasonNumber, episodeNumber),
-          getMediaReviews(uniqueMediaId),
+          getMediaReviews(uniqueMediaId).catch(() => []),
           getMovieDetails('tv', tvId),
           getSeasonDetails(tvId, seasonNumber),
         ];

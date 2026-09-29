@@ -245,23 +245,27 @@ export default function Hero({
           </picture>
         ) : <div className="h-full w-full bg-[radial-gradient(circle_at_70%_30%,rgba(124,58,237,.32),transparent_38%),linear-gradient(135deg,#211638,#09090b)]" />}
         {videoKey && (
-          <iframe
-            ref={videoIframeRef}
-            key={videoKey}
-            src={`https://www.youtube.com/embed/${videoKey}?enablejsapi=1&autoplay=1&mute=1&controls=0&disablekb=1&fs=0&modestbranding=1&playsinline=1&rel=0&iv_load_policy=3&autohide=1&start=2`}
-            title={`Trailer de ${name}`}
-            className={`pointer-events-none absolute left-1/2 top-1/2 hidden h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2 scale-[1.03] transition-opacity duration-700 md:block ${
+          <div
+            className={`pointer-events-none absolute right-0 top-1/2 hidden h-[86%] aspect-video -translate-y-1/2 overflow-hidden transition-opacity duration-700 [mask-image:linear-gradient(to_right,transparent_0%,black_18%)] md:block lg:h-full ${
               videoIsReady ? "opacity-100" : "opacity-0"
             }`}
-            allow="autoplay; encrypted-media; picture-in-picture"
-            tabIndex="-1"
-            onLoad={() => {
-              window.clearTimeout(videoRevealTimeoutRef.current);
-              videoRevealTimeoutRef.current = window.setTimeout(() => {
-                setReadyVideoKey(videoKey);
-              }, 2500);
-            }}
-          />
+          >
+            <iframe
+              ref={videoIframeRef}
+              key={videoKey}
+              src={`https://www.youtube.com/embed/${videoKey}?enablejsapi=1&autoplay=1&mute=1&controls=0&disablekb=1&fs=0&modestbranding=1&playsinline=1&rel=0&iv_load_policy=3&autohide=1&start=2`}
+              title={`Trailer de ${name}`}
+              className="h-full w-full"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              tabIndex="-1"
+              onLoad={() => {
+                window.clearTimeout(videoRevealTimeoutRef.current);
+                videoRevealTimeoutRef.current = window.setTimeout(() => {
+                  setReadyVideoKey(videoKey);
+                }, 2500);
+              }}
+            />
+          </div>
         )}
         {videoKey && videoIsReady && (
           <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-zinc-950/80 to-transparent" />

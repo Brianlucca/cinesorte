@@ -17,7 +17,7 @@ const clearNotificationCache = () => {
   notificationCache.fetchedAt = 0;
 };
 
-export default function NotificationBell({ mobileHeaderScrolled = false }) {
+export default function NotificationBell({ mobileHeaderScrolled = false, inline = false }) {
   const [notifications, setNotifications] = useState([]);
   const [badgeCount, setBadgeCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -267,7 +267,7 @@ export default function NotificationBell({ mobileHeaderScrolled = false }) {
 
   return (
     <>
-      <div className="fixed right-[6.5rem] top-3 z-[100060] md:right-8 md:top-6">
+      <div className={inline ? "relative z-[100060]" : "fixed right-[6.5rem] top-3 z-[100060] md:right-8 md:top-6"}>
         <button
           ref={buttonRef}
           onClick={handleOpen}

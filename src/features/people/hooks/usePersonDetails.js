@@ -31,7 +31,7 @@ export const usePersonDetails = (id) => {
 
       const [personData, reviewsData] = await Promise.all([
         getMovieDetails('person', id),
-        getMediaReviews(uniquePersonId),
+        getMediaReviews(uniquePersonId).catch(() => []),
       ]);
 
       let externalIds = {};
