@@ -307,14 +307,14 @@ export default function Hero({
             </p>
           )}
 
-          <div className="mt-7 flex items-center gap-2.5">
+          <div className="mt-6 flex flex-wrap items-center gap-2 sm:mt-7 sm:gap-2.5">
             <Link
               to={isLive ? "/app/watch-party/" + item.roomId : `/app/${mediaType}/${item.id}`}
-              className="group/button inline-flex items-center gap-3 rounded-full bg-white px-6 py-3 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+              className="group/button inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl bg-white px-4 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 sm:h-11 sm:px-5"
             >
               {isLive ? "Assistir agora" : "Ver detalhes"}
               <ArrowRight
-                size={18}
+                size={16}
                 className="transition-transform group-hover/button:translate-x-1"
               />
             </Link>
@@ -323,7 +323,7 @@ export default function Hero({
               <button
                 type="button"
                 onClick={openCinemaMode}
-                className="group/trailer inline-flex h-11 items-center gap-2.5 rounded-full bg-black/30 px-4 text-xs font-medium text-white backdrop-blur-md transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 md:text-sm"
+                className="group/trailer inline-flex h-10 shrink-0 items-center gap-2 rounded-xl bg-black/30 px-3 text-xs font-medium text-white backdrop-blur-md transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 sm:h-11 sm:px-4 md:text-sm"
               >
                 <Volume2 size={17} className="text-violet-300" />
                 <span className="hidden sm:inline">Assistir trailer</span>
