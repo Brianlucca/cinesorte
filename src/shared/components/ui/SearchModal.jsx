@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { getDiscover, searchUsers } from "@shared/api/api";
 import { useSearchLogic } from "@shared/hooks/useSearchLogic";
+import { useAuth } from "@shared/context/useAuth";
 import {
   cancelMovieDetailsPrefetch,
   prefetchMovieDetails,
@@ -294,6 +295,7 @@ function LoadingState() {
 }
 
 export default function SearchModal({ isOpen, onClose }) {
+  const { user } = useAuth();
   const {
     query,
     setQuery,
@@ -402,7 +404,7 @@ export default function SearchModal({ isOpen, onClose }) {
 
   useEffect(() => {
     const trimmedQuery = query.trim();
-    if (!isOpen || trimmedQuery.length < 3) {
+    if (!user || !isOpen || trimmedQuery.length < 3) {
       setUserResults([]);
       setUsersLoading(false);
       return;
@@ -425,7 +427,7 @@ export default function SearchModal({ isOpen, onClose }) {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [isOpen, query]);
+  }, [isOpen, query, user]);
 
   const activeGenreArtwork = useMemo(() => {
     return Object.fromEntries(
@@ -441,10 +443,10 @@ export default function SearchModal({ isOpen, onClose }) {
     [filter, results],
   );
   const filteredUsers = useMemo(
-    () => (filter === "all" || filter === "user" ? userResults : []),
-    [filter, userResults],
+    () => (user && (filter === "all" || filter === "user") ? userResults : []),
+    [filter, user, userResults],
   );
-  const totalResults = results.length + userResults.length;
+  const totalResults = results.length + (user ? userResults.length : 0);
   const hasResults = totalResults > 0;
   const isSearching = loading || usersLoading;
 
@@ -500,7 +502,7 @@ export default function SearchModal({ isOpen, onClose }) {
                   Explorar CineSorte
                 </h2>
                 <p className="mt-0.5 text-[9px] font-medium text-zinc-600">
-                  Filmes, séries, artistas e usuários
+                  {user ? "Filmes, séries, artistas e usuários" : "Filmes, séries e artistas"}
                 </p>
               </div>
             </div>
@@ -523,7 +525,9 @@ export default function SearchModal({ isOpen, onClose }) {
               type="text"
               value={query}
               onChange={(event) => handleQueryChange(event.target.value)}
-              placeholder="Busque filmes, séries, artistas ou usuários do CineSorte..."
+              placeholder={user
+                ? "Busque filmes, séries, artistas ou usuários do CineSorte..."
+                : "Busque filmes, séries ou artistas..."}
               className="h-12 w-full rounded-xl border border-white/[0.08] bg-white/[0.018] pl-11 pr-11 text-sm font-medium text-white outline-none transition-colors placeholder:font-normal placeholder:text-zinc-600 focus:border-violet-400/35 focus:bg-white/[0.03] sm:text-base"
             />
             {query && (
@@ -556,7 +560,7 @@ export default function SearchModal({ isOpen, onClose }) {
                   </h3>
                 </div>
                 <div className="scrollbar-hide flex max-w-full gap-1 overflow-x-auto rounded-2xl border border-white/[0.07] bg-black/20 p-1">
-                  {FILTERS.map((item) => {
+                  {FILTERS.filter((item) => user || item.id !== "user").map((item) => {
                     const count =
                       item.id === "all"
                         ? totalResults

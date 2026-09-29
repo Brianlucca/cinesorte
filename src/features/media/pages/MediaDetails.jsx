@@ -70,6 +70,7 @@ export default function MediaDetails() {
     communityStats,
     actions,
     watchProgress,
+    user,
   } = useMediaDetailsLogic();
 
   useEffect(() => {
@@ -177,8 +178,13 @@ export default function MediaDetails() {
 
   const openTrailer = () =>
     setModals((previous) => ({ ...previous, trailer: true }));
-  const openList = () =>
+  const openList = () => {
+    if (!user) {
+      actions.requireLogin("Entre para adicionar títulos às suas listas.");
+      return;
+    }
     setModals((previous) => ({ ...previous, addToList: true }));
+  };
   const slideCast = (direction) => {
     if (!castRailRef.current) return;
     castRailRef.current.scrollBy({

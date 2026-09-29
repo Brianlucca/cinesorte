@@ -6,7 +6,6 @@ import { WatchPartyBroadcastProvider } from '@features/watch-party/context/Watch
 
 const AuthLayout = lazy(() => import('@app/layouts/AuthLayout'));
 const AppLayout = lazy(() => import('@app/layouts/AppLayout'));
-const Landing = lazy(() => import('@features/landing/pages/Landing'));
 const Login = lazy(() => import('@features/auth/pages/Login'));
 const Register = lazy(() => import('@features/auth/pages/Register'));
 const VerifyEmail = lazy(() => import('@features/auth/pages/VerifyEmail'));
@@ -45,12 +44,10 @@ const PrivateRoute = ({ children }) => {
 };
 
 function AppRoutes() {
-  const { user } = useAuth();
-
   return (
     <Suspense fallback={<RouteFallback />}>
       <Routes>
-        <Route path="/" element={user ? <Navigate to="/app" /> : <Landing />} />
+        <Route path="/" element={<Navigate to="/app" replace />} />
         
         <Route path="/share/:type/:id" element={<SharedMediaPreview />} />
         <Route path="/privacidade" element={<Privacy />} />
@@ -65,25 +62,19 @@ function AppRoutes() {
           <Route path="/email-change-complete" element={<EmailChangeComplete />} />
         </Route>
 
-        <Route path="/app" element={
-          <PrivateRoute>
-            <AppLayout />
-          </PrivateRoute>
-        }>
+        <Route path="/app" element={<AppLayout />}>
           <Route index element={<Dashboard />} />
-          
-          <Route path="feed" element={<Feed />} />
-          <Route path="watch-party" element={<WatchParty />} />
-          <Route path="watch-party/:roomId" element={<WatchPartyRoom />} />
-          <Route path="profile/:username" element={<PublicProfile />} /> 
 
-          <Route path="lists" element={<MyLists />} />
-          <Route path="lists/:username/:listId" element={<ListDetails />} />
-          
-          <Route path="profile" element={<Profile />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="roulette" element={<MovieRoulette />} />
-          
+          <Route path="feed" element={<PrivateRoute><Feed /></PrivateRoute>} />
+          <Route path="watch-party" element={<PrivateRoute><WatchParty /></PrivateRoute>} />
+          <Route path="watch-party/:roomId" element={<PrivateRoute><WatchPartyRoom /></PrivateRoute>} />
+          <Route path="profile/:username" element={<PrivateRoute><PublicProfile /></PrivateRoute>} />
+          <Route path="lists" element={<PrivateRoute><MyLists /></PrivateRoute>} />
+          <Route path="lists/:username/:listId" element={<PrivateRoute><ListDetails /></PrivateRoute>} />
+          <Route path="profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+          <Route path="settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+          <Route path="roulette" element={<PrivateRoute><MovieRoulette /></PrivateRoute>} />
+
           <Route path="person/:id" element={<PersonDetails />} />
           <Route path="tv/:id/season/:seasonNumber/episode/:episodeNumber" element={<EpisodeDetails />} />
           <Route path="tv/:id/season/:seasonNumber" element={<SeasonDetails />} />

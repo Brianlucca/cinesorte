@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { Star, MessageCircle, Send, Trash2, User, CornerDownRight, ChevronUp, Edit2, X, Check } from "lucide-react";
+import { Star, MessageCircle, Send, Trash2, User, CornerDownRight, ChevronUp, Edit2, X, Check, LogIn } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@shared/context/useAuth";
 
 export default function PersonReviewsSection({ reviews, onPostReview, onEditReview, onReply, onEditReply, onDelete, onDeleteComment }) {
   const { user } = useAuth();
+  const location = useLocation();
+  const loginPath = `/login?redirect=${encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)}`;
   const [newRating, setNewRating] = useState(5);
   const [newReviewText, setNewReviewText] = useState("");
   const [isPosting, setIsPosting] = useState(false);
@@ -31,6 +34,7 @@ export default function PersonReviewsSection({ reviews, onPostReview, onEditRevi
         </span>
       </div>
 
+      {user ? (
       <div className="flex gap-5 mb-12">
         <div className="shrink-0 hidden sm:block">
           <div className="w-14 h-14 rounded-full bg-zinc-800 ring-4 ring-zinc-900/50 overflow-hidden flex items-center justify-center text-white font-bold uppercase text-xl shadow-lg">
@@ -100,6 +104,22 @@ export default function PersonReviewsSection({ reviews, onPostReview, onEditRevi
           </div>
         </div>
       </div>
+      ) : (
+        <div className="mb-12 flex flex-col gap-4 rounded-xl border border-white/[0.07] bg-white/[0.025] p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-500/10 text-violet-300">
+              <LogIn size={18} />
+            </span>
+            <div>
+              <h3 className="text-sm font-semibold text-white">Entre para participar</h3>
+              <p className="mt-1 text-xs leading-5 text-zinc-500">A discussão é pública, mas publicar e responder exige uma conta.</p>
+            </div>
+          </div>
+          <Link to={loginPath} className="inline-flex shrink-0 items-center justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-violet-100">
+            Entrar
+          </Link>
+        </div>
+      )}
 
       <div className="space-y-4">
         {reviews.map((review, index) => (
@@ -248,12 +268,14 @@ function PersonReviewCard({ review, currentUser, onReply, onEditReview, onEditRe
 
         {!isEditing && (
           <div className="flex items-center gap-6">
-            <button 
-              onClick={() => setIsReplying(!isReplying)}
-              className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider"
-            >
-              <MessageCircle size={16} /> Responder
-            </button>
+            {currentUser && (
+              <button
+                onClick={() => setIsReplying(!isReplying)}
+                className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider"
+              >
+                <MessageCircle size={16} /> Responder
+              </button>
+            )}
             {replies.length > 0 && !showReplies && (
               <button 
                 onClick={() => setShowReplies(true)}

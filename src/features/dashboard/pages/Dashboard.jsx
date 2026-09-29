@@ -246,6 +246,11 @@ export default function Dashboard() {
   }, [heroCacheKey, heroExpiresAt, heroItems]);
 
   useEffect(() => {
+    if (!user) {
+      setSocialPreview({ items: [], suggestions: [] });
+      return undefined;
+    }
+
     let cancelled = false;
     let followingItems = [];
     let globalItems = [];
@@ -280,9 +285,16 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [user?.uid, user?.username]);
+  }, [user]);
 
   useEffect(() => {
+    if (!user) {
+      setSocialPreview({ items: [], suggestions: [] });
+      setUserLists([]);
+      setLiveHeroItems([]);
+      return undefined;
+    }
+
     let cancelled = false;
 
     async function loadHomeExperience() {
@@ -347,9 +359,14 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [loading]);
+  }, [loading, user]);
 
   useEffect(() => {
+    if (!user) {
+      setLiveHeroItems([]);
+      return undefined;
+    }
+
     if (loading) return undefined;
     let active = true;
     const refreshLives = async () => {
@@ -376,7 +393,7 @@ export default function Dashboard() {
       active = false;
       window.clearInterval(timer);
     };
-  }, [loading]);
+  }, [loading, user]);
 
   if (loading || heroItems.length === 0)
     return (
@@ -386,12 +403,14 @@ export default function Dashboard() {
     );
 
   const sections = [
-    { id: "recommendedMovies", title: "Escolhidos para você", type: "movie", variant: "poster" },
+    { id: "recommendedMovies", title: user ? "Escolhidos para você" : "Filmes para descobrir", type: "movie", variant: "poster" },
     { id: "trendingDay", title: "Em alta hoje", type: "movie", variant: "poster" },
-    { id: "recommendedSeries", title: "Séries para a sua próxima maratona", type: "movie", variant: "poster" },
+    { id: "recommendedSeries", title: user ? "Séries para a sua próxima maratona" : "Séries para maratonar", type: "movie", variant: "poster" },
     { id: "trailers", title: "Estreias em cena", type: "trailer" },
   ];
-  const displayedHeroItems = [...liveHeroItems, ...heroItems].slice(0, 6);
+  const displayedHeroItems = user
+    ? [...liveHeroItems, ...heroItems].slice(0, 6)
+    : heroItems.slice(0, 6);
 
   return (
     <div className="-mt-16 w-full max-w-full overflow-x-hidden bg-[#111216] pb-24 md:mt-0 animate-in fade-in duration-500">
@@ -405,7 +424,7 @@ export default function Dashboard() {
       />
 
       <div className="relative z-0 -mt-10 flex flex-col gap-10 bg-[#111216] pt-16 md:-mt-16 md:gap-14 md:pt-24">
-        <ContinueWatching />
+        {user && <ContinueWatching />}
         {(data.trendingWeek || []).length > 0 && (
           <div className="space-y-1 md:space-y-2">
             <HomeExperience
@@ -417,13 +436,15 @@ export default function Dashboard() {
             />
           </div>
         )}
-        <HomeExperience
-          variant="reviews"
-          data={data}
-          socialItems={socialPreview.items}
-          suggestions={socialPreview.suggestions}
-          lists={userLists}
-        />
+        {user && (
+          <HomeExperience
+            variant="reviews"
+            data={data}
+            socialItems={socialPreview.items}
+            suggestions={socialPreview.suggestions}
+            lists={userLists}
+          />
+        )}
 
         {sections.map((section) => {
           const items = data[section.id];
@@ -440,7 +461,7 @@ export default function Dashboard() {
               </RowWrapper>
 
 
-              {section.id === "trendingDay" && (
+              {user && section.id === "trendingDay" && (
                 <HomeExperience
                   variant="community"
                   data={data}
@@ -454,15 +475,17 @@ export default function Dashboard() {
           );
         })}
         <InTheaters items={data.inTheaters} />
-        <div>
-          <HomeExperience
-            variant="library"
-            data={data}
-            socialItems={socialPreview.items}
-            suggestions={socialPreview.suggestions}
-            lists={userLists}
-          />
-        </div>
+        {user && (
+          <div>
+            <HomeExperience
+              variant="library"
+              data={data}
+              socialItems={socialPreview.items}
+              suggestions={socialPreview.suggestions}
+              lists={userLists}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

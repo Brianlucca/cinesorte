@@ -162,6 +162,7 @@ export default function ReviewItem({
   isElite,
   followingList,
   canUseRichFormatting,
+  canInteract = true,
 }) {
   const [isReplying, setIsReplying] = useState(false);
   const [replyText, setReplyText] = useState("");
@@ -505,25 +506,34 @@ export default function ReviewItem({
           )}
 
           <div className="flex items-center gap-1 border-t border-white/[0.05] pt-3">
-            <button
-              onClick={() => onLike(review.id)}
-              className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium transition-colors ${isLiked ? "bg-red-500/10 text-red-400" : "text-zinc-500 hover:bg-white/[0.05] hover:text-white"}`}
-            >
-              <Heart size={18} className={isLiked ? "fill-red-500" : ""} />
-              {review.likesCount > 0 && <span className="text-xs font-bold">{review.likesCount}</span>}
-            </button>
-            <button
-              onClick={() => {
-                if (isReplying && replyAnchorId === "review") {
-                  resetReplyComposer();
-                  return;
-                }
-                openReplyComposer(review.username, "review");
-              }}
-              className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 transition-colors hover:bg-white/[0.05] hover:text-zinc-200"
-            >
-              <MessageCircle size={18} /> {isReplying && replyAnchorId === "review" ? "Cancelar" : "Responder"}
-            </button>
+            {canInteract ? (
+              <>
+                <button
+                  onClick={() => onLike(review.id)}
+                  className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium transition-colors ${isLiked ? "bg-red-500/10 text-red-400" : "text-zinc-500 hover:bg-white/[0.05] hover:text-white"}`}
+                >
+                  <Heart size={18} className={isLiked ? "fill-red-500" : ""} />
+                  {review.likesCount > 0 && <span className="text-xs font-bold">{review.likesCount}</span>}
+                </button>
+                <button
+                  onClick={() => {
+                    if (isReplying && replyAnchorId === "review") {
+                      resetReplyComposer();
+                      return;
+                    }
+                    openReplyComposer(review.username, "review");
+                  }}
+                  className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 transition-colors hover:bg-white/[0.05] hover:text-zinc-200"
+                >
+                  <MessageCircle size={18} /> {isReplying && replyAnchorId === "review" ? "Cancelar" : "Responder"}
+                </button>
+              </>
+            ) : (
+              <span className="inline-flex items-center gap-2 px-3 py-2 text-xs text-zinc-600">
+                <Heart size={18} />
+                {review.likesCount > 0 && <span className="font-semibold">{review.likesCount}</span>}
+              </span>
+            )}
           </div>
 
           {isReplying && replyAnchorId === "review" && renderReplyComposer()}
@@ -641,7 +651,7 @@ export default function ReviewItem({
                             </div>
                           )}
 
-                          {editingReplyId !== reply.id && (
+                          {canInteract && editingReplyId !== reply.id && (
                             <div className="mt-3 flex items-center gap-4">
                               <button
                                 type="button"
