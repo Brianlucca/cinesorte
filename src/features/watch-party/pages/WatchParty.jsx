@@ -9,7 +9,7 @@ import { useAuth } from "@shared/context/useAuth";
 const tabs = [
   { id: "discover", label: "Explorar", icon: Video },
   { id: "channel", label: "Meu perfil", icon: UsersRound },
-  { id: "creator", label: "Painel do criador", icon: BarChart3 },
+  { id: "creator", label: "Painel do criador", mobileLabel: "Painel", icon: BarChart3 },
 ];
 
 export default function WatchParty() {
@@ -59,10 +59,12 @@ export default function WatchParty() {
           </div>
 
           <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <nav className="flex overflow-x-auto border-b border-white/[0.06]">
-              {tabs.map(({ id, label, icon }) => (
-                <button key={id} type="button" onClick={() => setTab(id)} className={`inline-flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.1em] transition-colors ${tab === id ? "border-violet-400 text-white" : "border-transparent text-zinc-500 hover:text-zinc-200"}`}>
-                  {createElement(icon, { size: 14 })} {label}
+            <nav className="grid w-full grid-cols-3 border-b border-white/[0.06] lg:flex lg:w-auto" aria-label="Seções do CineParty">
+              {tabs.map(({ id, label, mobileLabel, icon }) => (
+                <button key={id} type="button" onClick={() => setTab(id)} className={`inline-flex min-w-0 items-center justify-center gap-1.5 border-b-2 px-2 py-3 text-[10px] font-bold uppercase tracking-[0.1em] transition-colors sm:gap-2 sm:px-4 ${tab === id ? "border-violet-400 text-white" : "border-transparent text-zinc-500 hover:text-zinc-200"}`}>
+                  {createElement(icon, { size: 14, className: "shrink-0" })}
+                  <span className="truncate sm:hidden">{mobileLabel || label}</span>
+                  <span className="hidden whitespace-nowrap sm:inline">{label}</span>
                 </button>
               ))}
             </nav>
