@@ -258,24 +258,6 @@ export default function AppLayout() {
             </button>
           </nav>
 
-          <nav className="ml-4 hidden min-w-0 flex-1 items-center justify-center gap-0.5 lg:flex xl:ml-6 xl:gap-1" aria-label="Navegação principal">
-            {privateNavigation.filter((item) => item.to !== "/app").map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                title={item.label}
-                className={`inline-flex items-center gap-2 whitespace-nowrap rounded-xl px-2.5 py-2 text-sm font-semibold transition-colors xl:px-3 ${
-                  isActive(item.to)
-                    ? "bg-white/[0.07] text-white"
-                    : "text-zinc-400 hover:bg-white/[0.045] hover:text-white"
-                }`}
-              >
-                <item.icon size={16} className={isActive(item.to) ? "text-violet-300" : "text-zinc-500"} />
-                <span className="hidden min-[1180px]:inline">{item.label}</span>
-              </Link>
-            ))}
-          </nav>
-
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
