@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Bell, Heart, UserPlus, TrendingUp, Layers, Info, CheckCheck, AtSign, MessageCircle, X } from "lucide-react";
-import { getNotifications, getUnreadCount, markNotificationRead } from "@shared/api/api";
+import { getNotifications, markNotificationRead } from "@shared/api/api";
 
 const NOTIFICATION_CACHE_TTL = 30000;
 const notificationCache = {
@@ -70,50 +70,34 @@ export default function NotificationBell({ mobileHeaderScrolled = false }) {
     } catch {
       setNotifications([]);
       setNotificationsLoaded(true);
+      setBadgeCount(0);
+      clearNotificationCache();
     } finally {
       setNotificationsLoading(false);
     }
   }, [applyNotifications]);
 
-  const loadUnreadCount = useCallback(async ({ force = false } = {}) => {
-    const hasFreshCache = Date.now() - notificationCache.fetchedAt < NOTIFICATION_CACHE_TTL;
-    if (!force && hasFreshCache) {
-      setBadgeCount(notificationCache.badgeCount);
-      return;
-    }
-
-    try {
-      const response = await getUnreadCount();
-      const count = Number(response?.count) || 0;
-      setBadgeCount(count);
-      notificationCache.badgeCount = count;
-    } catch {
-      setBadgeCount(0);
-    }
-  }, []);
+  useEffect(() => {
+    loadNotifications({ force: true, allowPopup: false });
+  }, [loadNotifications]);
 
   useEffect(() => {
-    loadUnreadCount();
     const interval = setInterval(() => {
       if (!document.hidden && !isOpen) {
-        loadUnreadCount();
+        loadNotifications();
       }
     }, 120000);
     return () => clearInterval(interval);
-  }, [isOpen, loadUnreadCount]);
+  }, [isOpen, loadNotifications]);
 
   useEffect(() => {
     const refreshNotifications = () => {
-      if (isOpen) {
-        loadNotifications({ force: true, allowPopup: false });
-      } else {
-        loadUnreadCount({ force: true });
-      }
+      loadNotifications({ force: true, allowPopup: false });
     };
 
     window.addEventListener("cinesorte:notifications-refresh", refreshNotifications);
     return () => window.removeEventListener("cinesorte:notifications-refresh", refreshNotifications);
-  }, [isOpen, loadNotifications, loadUnreadCount]);
+  }, [loadNotifications]);
 
   useEffect(() => {
     if ((!isOpen && !popupNotif) || !buttonRef.current) return undefined;
@@ -143,7 +127,7 @@ export default function NotificationBell({ mobileHeaderScrolled = false }) {
 
     if (nextOpen) {
       setPopupNotif(null);
-      loadNotifications({ allowPopup: false });
+      loadNotifications({ force: true, allowPopup: false });
     }
   };
 

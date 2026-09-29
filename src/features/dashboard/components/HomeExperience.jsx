@@ -454,71 +454,31 @@ function CommunityCard({ item }) {
   );
 }
 
-function SuggestionChip({ user }) {
-  return (
-    <Link
-      to={`/app/profile/${user.username}`}
-      className="flex w-[200px] flex-none items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.018] p-3 transition-colors hover:border-white/[0.14] hover:bg-white/[0.035]"
-    >
-      <span className="grid h-10 w-10 flex-none place-items-center overflow-hidden rounded-xl bg-zinc-800 text-sm font-black uppercase text-zinc-300 ring-1 ring-white/10">
-        {user.userPhoto ? <img src={user.userPhoto} alt="" className="h-full w-full object-cover" loading="lazy" /> : user.username?.[0]}
-      </span>
-      <span className="min-w-0">
-        <span className="block truncate text-sm font-black text-white">@{user.username}</span>
-        <span className="block truncate text-xs text-zinc-500">{user.levelTitle || "Cinéfilo"}</span>
-      </span>
-    </Link>
-  );
-}
-
-function CommunitySection({ items = [], suggestions = [] }) {
+function CommunitySection({ items = [] }) {
   const communityRef = useRef(null);
-  const suggestionsRef = useRef(null);
   const featuredItems = items.filter((item) => item.type === "list_share").slice(0, 6);
-  const visibleSuggestions = suggestions.slice(0, 8);
   const communityKey = featuredItems.map((item) => `${item.type}-${item.id}`).join("|");
-  const suggestionsKey = visibleSuggestions.map((user) => user.username).join("|");
   const hasCommunityOverflow = useRailOverflow(communityRef, communityKey);
-  const hasSuggestionsOverflow = useRailOverflow(suggestionsRef, suggestionsKey);
 
-  if (featuredItems.length === 0 && visibleSuggestions.length === 0) return null;
+  if (featuredItems.length === 0) return null;
 
   return (
-    <>
-      {featuredItems.length > 0 && (
-        <SectionShell title="O que está ganhando conversa" eyebrow="Comunidade" actionTo="/app/feed" actionLabel="Abrir feed" rowRef={communityRef} hasOverflow={hasCommunityOverflow}>
-          <div
-            ref={communityRef}
-            className={`flex gap-4 overflow-x-auto scroll-smooth pt-5 pb-4 md:gap-5 md:pt-6 md:pb-6 ${PAGE_X} scrollbar-hide`}
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {featuredItems.map((item) => (
-              <CommunityCard key={`${item.type}-${item.id}`} item={item} />
-            ))}
-            <div className="w-1 flex-none md:w-6" aria-hidden="true" />
-          </div>
-        </SectionShell>
-      )}
-
-      {visibleSuggestions.length > 0 && (
-        <SectionShell title="Perfis para conhecer" eyebrow="Descoberta" actionTo="/app/feed" actionLabel="Ver mais" rowRef={suggestionsRef} hasOverflow={hasSuggestionsOverflow}>
-          <div
-            ref={suggestionsRef}
-            className={`flex gap-3 overflow-x-auto scroll-smooth pt-5 pb-4 md:pt-6 md:pb-6 ${PAGE_X} scrollbar-hide`}
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {visibleSuggestions.map((user) => (
-              <SuggestionChip key={user.username} user={user} />
-            ))}
-            <div className="w-1 flex-none md:w-6" aria-hidden="true" />
-          </div>
-        </SectionShell>
-      )}
-    </>
+    <SectionShell title="O que está ganhando conversa" eyebrow="Comunidade" actionTo="/app/feed" actionLabel="Abrir feed" rowRef={communityRef} hasOverflow={hasCommunityOverflow}>
+      <div
+        ref={communityRef}
+        className={`flex gap-4 overflow-x-auto scroll-smooth pt-5 pb-4 md:gap-5 md:pt-6 md:pb-6 ${PAGE_X} scrollbar-hide`}
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
+        {featuredItems.map((item) => (
+          <CommunityCard key={`${item.type}-${item.id}`} item={item} />
+        ))}
+        <div className="w-1 flex-none md:w-6" aria-hidden="true" />
+      </div>
+    </SectionShell>
   );
 }
 
-export default function HomeExperience({ variant, data, socialItems = [], suggestions = [], lists = [] }) {
+export default function HomeExperience({ variant, data, socialItems = [], lists = [] }) {
   if (variant === "top") {
     return <TopRail items={data.trendingWeek || []} />;
   }
@@ -532,7 +492,7 @@ export default function HomeExperience({ variant, data, socialItems = [], sugges
   }
 
   if (variant === "community") {
-    return <CommunitySection items={socialItems} suggestions={suggestions} />;
+    return <CommunitySection items={socialItems} />;
   }
 
   return null;

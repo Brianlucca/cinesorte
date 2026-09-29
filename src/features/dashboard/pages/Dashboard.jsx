@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDashboardLogic } from "@features/dashboard/hooks/useDashboardLogic";
-import api, { getAccessibleLiveWatchPartyRooms, getFollowingFeed, getGlobalFeed, getSuggestions } from "@shared/api/api";
+import api, { getAccessibleLiveWatchPartyRooms, getFollowingFeed, getGlobalFeed } from "@shared/api/api";
 import Hero, { HERO_SLIDE_DURATION } from "@features/dashboard/components/Hero";
 import HomeExperience from "@features/dashboard/components/HomeExperience";
 import MovieRow from "@features/dashboard/components/MovieRow";
@@ -158,7 +158,7 @@ export default function Dashboard() {
   const latestCurrentHeroRef = useRef(currentHero);
   const heroInitializedRef = useRef(Boolean(initialHeroState));
   const heroRotationRef = useRef(0);
-  const [socialPreview, setSocialPreview] = useState({ items: [], suggestions: [] });
+  const [socialPreview, setSocialPreview] = useState({ items: [] });
   const [userLists, setUserLists] = useState([]);
   const [liveHeroItems, setLiveHeroItems] = useState([]);
 
@@ -287,25 +287,13 @@ export default function Dashboard() {
 
     async function loadHomeExperience() {
       try {
-        const [followingResult, globalResult, suggestionsResult, listsResult, liveResult] = await Promise.allSettled([
-          getFollowingFeed(),
-          getGlobalFeed(),
-          getSuggestions(),
+        const [listsResult, liveResult] = await Promise.allSettled([
           api.get("/users/lists/me"),
           getAccessibleLiveWatchPartyRooms(),
         ]);
 
         if (cancelled) return;
 
-        const followingItems = followingResult.status === "fulfilled" && Array.isArray(followingResult.value?.items)
-          ? followingResult.value.items
-          : [];
-        const globalItems = globalResult.status === "fulfilled" && Array.isArray(globalResult.value?.items)
-          ? globalResult.value.items
-          : [];
-        const suggestions = suggestionsResult.status === "fulfilled" && Array.isArray(suggestionsResult.value)
-          ? suggestionsResult.value
-          : [];
         const lists = listsResult.status === "fulfilled" && Array.isArray(listsResult.value)
           ? listsResult.value
           : [];
@@ -313,15 +301,6 @@ export default function Dashboard() {
           ? liveResult.value
           : [];
 
-        const seenSocialItems = new Set();
-        const socialItems = [...followingItems, ...globalItems].filter((item) => {
-          const key = item.uniqueKey || `${item.type}-${item.id}`;
-          if (seenSocialItems.has(key)) return false;
-          seenSocialItems.add(key);
-          return true;
-        });
-
-        setSocialPreview({ items: socialItems, suggestions });
         setUserLists(lists);
         setLiveHeroItems(liveRooms.map((room) => ({
           id: "live-" + room.id,
@@ -336,7 +315,6 @@ export default function Dashboard() {
         })));
       } catch {
         if (!cancelled) {
-          setSocialPreview({ items: [], suggestions: [] });
           setUserLists([]);
         }
       }
@@ -412,7 +390,6 @@ export default function Dashboard() {
               variant="top"
               data={data}
               socialItems={socialPreview.items}
-              suggestions={socialPreview.suggestions}
               lists={userLists}
             />
           </div>
@@ -421,7 +398,6 @@ export default function Dashboard() {
           variant="reviews"
           data={data}
           socialItems={socialPreview.items}
-          suggestions={socialPreview.suggestions}
           lists={userLists}
         />
 
@@ -445,7 +421,6 @@ export default function Dashboard() {
                   variant="community"
                   data={data}
                   socialItems={socialPreview.items}
-                  suggestions={socialPreview.suggestions}
                   lists={userLists}
                 />
               )}
@@ -459,7 +434,6 @@ export default function Dashboard() {
             variant="library"
             data={data}
             socialItems={socialPreview.items}
-            suggestions={socialPreview.suggestions}
             lists={userLists}
           />
         </div>
