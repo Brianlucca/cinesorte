@@ -1,11 +1,12 @@
 const CACHE_PREFIX = "cinesorte-shell";
-const CACHE_NAME = `${CACHE_PREFIX}-v1`;
+const CACHE_NAME = `${CACHE_PREFIX}-v2`;
 const CORE_ASSETS = [
   "/",
   "/site.webmanifest",
-  "/icons/cinesorte-app-icon.svg",
+  "/icons/cinesorte-48.png",
   "/icons/cinesorte-192.png",
   "/icons/cinesorte-512.png",
+  "/icons/cinesorte-maskable-512.png",
   "/icons/apple-touch-icon.png",
 ];
 
