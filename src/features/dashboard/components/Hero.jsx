@@ -227,7 +227,7 @@ export default function Hero({
 
   return (
     <section
-      className="relative z-10 isolate h-[88svh] min-h-[620px] max-h-[920px] w-full overflow-hidden bg-[#111216]"
+      className="relative z-10 isolate h-[64svh] min-h-[500px] max-h-[680px] w-full overflow-hidden bg-[#111216]"
       aria-label="Destaques"
     >
       <div key={item.id} className="absolute inset-0 hero-slide-reveal">
