@@ -40,6 +40,18 @@ export const clearApiCache = (prefix = "") => {
   }
 };
 
+const invalidateTasteRecommendations = () => {
+  clearApiCache("/tmdb/recommendations/");
+
+  try {
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith("cinesorte_dashboard_sections"))
+      .forEach((key) => localStorage.removeItem(key));
+  } catch {
+    // Recommendations can still refresh through their normal expiration.
+  }
+};
+
 api.interceptors.response.use(
   (response) => {
     return response.data;
@@ -136,16 +148,28 @@ export const getUserReviews = (username, lastCreatedAt) =>
 export const getUserReviewsOnly = (username, lastCreatedAt) =>
   api.get(`/social/reviews-only/${username}${lastCreatedAt ? `?lastCreatedAt=${lastCreatedAt}` : ""}`);
 
-export const postReview = (reviewData) => api.post("/social/reviews", reviewData);
-export const updateReview = (reviewId, data) => api.put(`/social/reviews/${reviewId}`, data);
-export const deleteReview = (reviewId) => api.delete(`/social/reviews/${reviewId}`);
+export const postReview = (reviewData) => api.post("/social/reviews", reviewData).then((response) => {
+  invalidateTasteRecommendations();
+  return response;
+});
+export const updateReview = (reviewId, data) => api.put(`/social/reviews/${reviewId}`, data).then((response) => {
+  invalidateTasteRecommendations();
+  return response;
+});
+export const deleteReview = (reviewId) => api.delete(`/social/reviews/${reviewId}`).then((response) => {
+  invalidateTasteRecommendations();
+  return response;
+});
 export const toggleLikeReview = (reviewId) => api.post(`/social/reviews/${reviewId}/like`);
 export const getComments = (reviewId) => api.get(`/social/comments/${reviewId}`);
 export const postComment = (data) => api.post("/social/comments", data);
 export const updateComment = (commentId, data) => api.put(`/social/comments/${commentId}`, data);
 export const deleteComment = (commentId) => api.delete(`/social/comments/${commentId}`);
 
-export const recordInteraction = (data) => api.post("/users/interact", data);
+export const recordInteraction = (data) => api.post("/users/interact", data).then((response) => {
+  invalidateTasteRecommendations();
+  return response;
+});
 export const getUserInteractions = () => api.get("/users/interactions");
 export const getMediaInteraction = (mediaId) => api.get(`/users/interactions/${mediaId}`);
 export const getWatchDiary = (year) => api.get("/users/diary", { params: { year } });
