@@ -1,13 +1,13 @@
 const CACHE_PREFIX = "cinesorte-shell";
-const CACHE_NAME = `${CACHE_PREFIX}-v2`;
+const CACHE_NAME = `${CACHE_PREFIX}-v3`;
 const CORE_ASSETS = [
   "/",
   "/site.webmanifest",
-  "/icons/cinesorte-48.png",
-  "/icons/cinesorte-192.png",
-  "/icons/cinesorte-512.png",
+  "/icons/cinesorte-transparent-48.png",
+  "/icons/cinesorte-transparent.png",
+  "/icons/cinesorte-transparent-512.png",
   "/icons/cinesorte-maskable-512.png",
-  "/icons/apple-touch-icon.png",
+  "/icons/apple-touch-icon-transparent.png",
 ];
 
 self.addEventListener("install", (event) => {

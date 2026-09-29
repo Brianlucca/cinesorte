@@ -26,7 +26,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_SPECIAL_REGEX = /[!@#$&*.,?_~-]/;
 const PASSWORD_UPPER_REGEX = /[A-Z]/;
 
-export default function Register() {
+export default function Register({ modal = false, onClose }) {
   const [formData, setFormData] = useState({
     name: '',
     nickname: '',
@@ -55,8 +55,14 @@ export default function Register() {
   const redirectTo = useMemo(() => {
     const params = new URLSearchParams(location.search);
     const path = params.get('redirect');
-    return path ? decodeURIComponent(path) : '/app';
+    return path ? decodeURIComponent(path) : '/';
   }, [location.search]);
+
+  const getAuthPath = (mode) => {
+    const params = new URLSearchParams(location.search);
+    params.set('auth', mode);
+    return `/?${params.toString()}`;
+  };
 
   useEffect(() => {
     if (user) navigate(redirectTo);
@@ -232,7 +238,7 @@ export default function Register() {
     <div className="text-center">
       <p className="text-sm font-medium text-zinc-500">
         Já possui uma conta?{' '}
-        <Link to={`/login${location.search}`} className="font-semibold text-white transition-colors hover:text-violet-300">
+        <Link to={modal ? getAuthPath('login') : `/login${location.search}`} className="font-semibold text-white transition-colors hover:text-violet-300">
           Entrar agora
         </Link>
       </p>
@@ -251,6 +257,8 @@ export default function Register() {
         }
         footer={footer}
         onHelp={() => setShowHelpModal(true)}
+        modal={modal}
+        onClose={onClose}
       >
         {error && (
           <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-400/15 bg-red-500/10 p-4 text-sm font-medium leading-6 text-red-200">

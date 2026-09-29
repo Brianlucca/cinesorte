@@ -160,7 +160,7 @@ function TopItemCard({ item, index }) {
   return (
     <Link
       to={mediaPath(item)}
-      className="group/card w-[168px] flex-none snap-start sm:first:ml-6 sm:w-[250px] md:first:ml-8 xl:first:ml-10"
+      className="group/card w-[168px] flex-none snap-start sm:w-[250px]"
     >
       <span className="relative flex h-[235px] items-end sm:h-[285px]">
         <span
@@ -219,6 +219,11 @@ function TopRail({ items = [] }) {
   const itemsKey = topItems.map((item) => `${getMediaType(item)}-${item.id || item.mediaId}`).join("|");
   const hasOverflow = useRailOverflow(topRef, itemsKey);
 
+  useEffect(() => {
+    if (!topRef.current) return;
+    topRef.current.scrollTo({ left: 0, behavior: "auto" });
+  }, [itemsKey]);
+
   if (topItems.length === 0) return null;
 
   return (
@@ -226,7 +231,7 @@ function TopRail({ items = [] }) {
       <div className="mt-5 border-y border-white/[0.06] bg-[#181a20] py-6 md:mt-6 md:py-8">
         <div
           ref={topRef}
-          className={`flex snap-x snap-proximity gap-3 overflow-x-auto overscroll-x-contain scroll-smooth pb-2 pt-1 sm:gap-4 md:gap-6 ${PAGE_X} scrollbar-hide`}
+          className="flex snap-x snap-proximity gap-3 overflow-x-auto overscroll-x-contain scroll-smooth px-2 pb-2 pt-1 sm:gap-4 sm:px-5 md:gap-6 scrollbar-hide"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {topItems.map((item, index) => (
