@@ -86,10 +86,10 @@ export default function PublicProfile() {
 
   if (loading) {
     return (
-      <div className="grid h-screen place-items-center bg-zinc-950">
+      <div className="grid h-screen place-items-center bg-[#111216]">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-violet-600/30 border-t-violet-400" />
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-600">Carregando perfil</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-600">Carregando perfil</p>
         </div>
       </div>
     );
@@ -97,13 +97,13 @@ export default function PublicProfile() {
 
   if (!profile) {
     return (
-      <div className="grid h-screen place-items-center bg-zinc-950 px-4 text-center text-white">
+      <div className="grid h-screen place-items-center bg-[#111216] px-4 text-center text-white">
         <div>
-          <div className="mx-auto mb-6 grid h-24 w-24 place-items-center rounded-[2rem] border border-white/[0.06] bg-zinc-900/60">
-            <Ghost size={48} className="text-zinc-600" />
+          <div className="mx-auto mb-5 grid h-20 w-20 place-items-center rounded-xl border border-white/[0.06] bg-[#181a20]">
+            <Ghost size={36} className="text-zinc-600" />
           </div>
-          <h2 className="mb-3 text-3xl font-black tracking-tight text-white md:text-4xl">Usuário não encontrado</h2>
-          <p className="text-base font-medium text-zinc-500">O perfil que você procura não está disponível.</p>
+          <h2 className="text-3xl font-semibold leading-tight tracking-[-0.035em] text-white sm:text-4xl">Usuário não encontrado</h2>
+          <p className="mt-3 text-sm leading-6 text-zinc-500">O perfil que você procura não está disponível.</p>
         </div>
       </div>
     );
@@ -114,19 +114,15 @@ export default function PublicProfile() {
   const levelStyle = getLevelStyle(profile.levelTitle);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#08080b] pb-24 text-white animate-in fade-in duration-700">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(124,58,237,0.10),transparent_30%),radial-gradient(circle_at_88%_18%,rgba(14,165,233,0.055),transparent_28%)]" />
-
-      <div className="relative mx-auto w-full max-w-[1600px] space-y-7 px-4 pt-8 sm:px-6 md:px-10 md:pt-10 xl:px-14">
-        <header className="flex flex-col justify-between gap-6 border-b border-white/[0.07] pb-6 md:flex-row md:items-end md:pb-8">
+    <div className="relative min-h-screen overflow-hidden bg-[#111216] pb-24 text-white animate-in fade-in duration-500">
+      <div className="relative mx-auto w-full max-w-[1440px] space-y-6 px-4 pt-8 sm:px-6 md:px-10 md:pt-10 xl:px-12">
+        <header className="flex flex-col justify-between gap-6 border-b border-white/[0.06] pb-6 md:flex-row md:items-end md:pb-7">
           <div>
-            <div className="mb-3 flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.24em] text-violet-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-violet-400 shadow-[0_0_12px_rgba(167,139,250,0.8)]" />
-              Perfil público
+            <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
+              Comunidade CineSorte
             </div>
-            <h1 className="text-3xl font-black leading-tight tracking-[-0.04em] text-white sm:text-4xl">
-              {profile.name || `@${profile.username}`}
-            </h1>
+            <h1 className="text-3xl font-semibold leading-tight tracking-[-0.035em] text-white sm:text-4xl">Perfil público</h1>
           </div>
           <div className="w-full md:w-[360px]">
             <UserSearch />
@@ -148,24 +144,23 @@ export default function PublicProfile() {
 
         <ProfileLiveCard username={profile.username || username} />
 
-        <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-4">
-          <section className={`group relative min-h-[180px] overflow-hidden rounded-[1.5rem] border bg-[#0d0d11]/95 p-4 shadow-2xl md:p-5 ${levelStyle.border}`}>
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(139,92,246,0.16),transparent_45%)]" />
+        <div className="grid grid-cols-1 items-stretch gap-3 lg:grid-cols-4">
+          <section className={`group relative min-h-[160px] overflow-hidden rounded-xl border bg-[#181a20] p-4 md:p-5 ${levelStyle.border}`}>
             <div className="relative flex h-full flex-col justify-between">
               <div>
                 <div className="mb-4 flex items-center justify-between">
-                  <span className={`grid h-10 w-10 place-items-center rounded-xl border border-white/[0.08] bg-white/[0.045] ${levelStyle.text}`}>
+                  <span className={`grid h-10 w-10 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.018] ${levelStyle.text}`}>
                     <Trophy size={19} />
                   </span>
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">Nível {profile.level || 1}</span>
-                <h2 className={`mt-1 break-words pr-5 text-base font-black leading-tight tracking-[-0.015em] sm:text-lg ${levelStyle.text}`}>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-600">Nível {profile.level || 1}</span>
+                <h2 className={`mt-1 break-words pr-5 text-base font-semibold leading-tight tracking-[-0.015em] sm:text-lg ${levelStyle.text}`}>
                   {profile.levelTitle || 'Espectador'}
                 </h2>
               </div>
 
               <div className="mt-5">
-                <div className="mb-2 flex justify-between text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">
+                <div className="mb-2 flex justify-between text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
                   <span>Progresso</span>
                   <span className="text-zinc-300">{profile.xp || 0} / {xpRequired} XP</span>
                 </div>
@@ -176,7 +171,6 @@ export default function PublicProfile() {
                 </div>
               </div>
             </div>
-            <Star className={`absolute -bottom-5 -right-5 h-24 w-24 -rotate-12 opacity-5 transition-transform duration-700 group-hover:scale-110 ${levelStyle.text}`} />
           </section>
 
           <div className="lg:col-span-3">
@@ -190,15 +184,14 @@ export default function PublicProfile() {
         </div>
 
         {profile.trophies?.length > 0 && (
-          <section className="relative overflow-hidden rounded-[1.5rem] border border-white/[0.07] bg-[#0d0d11]/90 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.20)] backdrop-blur-xl md:p-5">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(245,158,11,0.08),transparent_36%)]" />
+          <section className="relative overflow-hidden rounded-xl border border-white/[0.06] bg-[#181a20] p-4 md:p-5">
             <div className="relative mb-4 flex items-center gap-3">
               <span className="grid h-9 w-9 place-items-center rounded-xl border border-violet-400/15 bg-violet-500/10 text-violet-300">
                 <Award size={17} />
               </span>
               <div>
-                <span className="text-[9px] font-black uppercase tracking-[0.22em] text-zinc-500">Conquistas</span>
-                <h2 className="text-base font-black text-white sm:text-lg">Estante de Troféus</h2>
+                <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Conquistas</span>
+                <h2 className="text-base font-semibold text-white sm:text-lg">Estante de Troféus</h2>
               </div>
             </div>
             <div className="relative grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
@@ -209,7 +202,7 @@ export default function PublicProfile() {
                     <div className="mb-2.5 grid h-10 w-10 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.04] text-zinc-400 transition-all duration-300 group-hover:scale-105 group-hover:bg-violet-500/10 group-hover:text-violet-300">
                       <Icon size={18} />
                     </div>
-                    <span className="line-clamp-2 text-[11px] font-bold leading-snug text-zinc-300">{trophy.title}</span>
+                    <span className="line-clamp-2 text-[11px] font-semibold leading-snug text-zinc-300">{trophy.title}</span>
                   </div>
                 );
               })}
@@ -217,11 +210,11 @@ export default function PublicProfile() {
           </section>
         )}
 
-        <section className="min-h-[500px] overflow-hidden rounded-[1.5rem] border border-white/[0.07] bg-[#0d0d11]/90 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.22)] backdrop-blur-xl md:p-5">
+        <section className="min-h-[500px] overflow-hidden rounded-xl border border-white/[0.06] bg-[#181a20] p-4 md:p-5">
           <div className="mb-5 flex flex-col justify-between gap-4 border-b border-white/[0.06] pb-3 md:flex-row md:items-center">
             <div className="scrollbar-hide flex gap-5 overflow-x-auto">
-              <button className="flex items-center gap-2 whitespace-nowrap border-b-2 border-violet-500 pb-3 text-sm font-bold text-white transition-all">
-                <MessageSquare size={18} /> Reviews
+              <button className="flex items-center gap-2 whitespace-nowrap border-b-2 border-violet-400 pb-3 text-sm font-semibold text-white transition-colors">
+                <MessageSquare size={17} /> Reviews <span className="text-[10px] text-zinc-600">{profile.reviewsCount || reviews.length || 0}</span>
               </button>
             </div>
           </div>
