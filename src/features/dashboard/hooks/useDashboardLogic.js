@@ -12,10 +12,10 @@ import { useAuth } from "@shared/context/useAuth";
 
 const CACHE_DAY_KEY = "cinesorte_trending_day";
 const CACHE_WEEK_KEY = "cinesorte_trending_week";
-const DASHBOARD_SECTIONS_CACHE_PREFIX = "cinesorte_dashboard_sections";
+const DASHBOARD_SECTIONS_CACHE_PREFIX = "cinesorte_dashboard_sections_v3";
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
-const DASHBOARD_SECTIONS_TTL = 6 * 60 * 60 * 1000;
+const DASHBOARD_SECTIONS_TTL = 30 * 60 * 1000;
 
 function readCachedSections(cacheKey) {
   try {
@@ -378,15 +378,20 @@ export function useDashboardLogic() {
           ...onTv,
         ];
 
-        const recommendedMoviePool =
-          excludeExisting(recMovies, blockedForRecommendedMovies).length > 0
-            ? excludeExisting(recMovies, blockedForRecommendedMovies)
-            : excludeExisting(fallbackGenreMovies, blockedForRecommendedMovies);
-
-        const recommendedSeriesPool =
-          excludeExisting(recSeries, blockedForRecommendedSeries).length > 0
-            ? excludeExisting(recSeries, blockedForRecommendedSeries)
-            : excludeExisting(fallbackGenreSeries, blockedForRecommendedSeries);
+        const personalizedMoviePool = excludeExisting(
+          recMovies,
+          blockedForRecommendedMovies,
+        );
+        const personalizedSeriesPool = excludeExisting(
+          recSeries,
+          blockedForRecommendedSeries,
+        );
+        const recommendedMoviePool = personalizedMoviePool.length > 0
+          ? personalizedMoviePool
+          : excludeExisting(fallbackGenreMovies, blockedForRecommendedMovies);
+        const recommendedSeriesPool = personalizedSeriesPool.length > 0
+          ? personalizedSeriesPool
+          : excludeExisting(fallbackGenreSeries, blockedForRecommendedSeries);
 
         const smartRecMovies = recommendedMoviePool.slice(0, 20);
         const smartRecSeries = recommendedSeriesPool.slice(0, 20);
