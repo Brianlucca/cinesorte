@@ -77,7 +77,30 @@ export default function PersonInfo({ details }) {
           />
         )}
         {details.place_of_birth && (
-          <InfoItem icon={MapPin} label="Local de nascimento" value={details.place_of_birth} />
+          <>
+            <InfoItem
+              icon={MapPin}
+              label="Local de nascimento"
+              value={details.place_of_birth}
+            />
+            <div className="overflow-hidden rounded-lg border border-white/[0.07] bg-[#181a20]">
+              <iframe
+                title={`Mapa de ${details.place_of_birth}`}
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(details.place_of_birth)}&output=embed`}
+                className="aspect-[16/10] w-full border-0"
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(details.place_of_birth)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="block border-t border-white/[0.06] px-3 py-2 text-xs text-violet-300 transition-colors hover:bg-white/[0.04] hover:text-violet-200"
+              >
+                Abrir no Google Maps
+              </a>
+            </div>
+          </>
         )}
         {details.homepage && (
           <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] pb-3 last:border-0 last:pb-0">
