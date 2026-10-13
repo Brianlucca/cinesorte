@@ -213,6 +213,7 @@ export default function MediaDetails() {
         onCreate={actions.handleCreateList}
         mediaId={media.id}
         addingToListId={addingToListId}
+        mediaTitle={title}
       />
 
       <header className="relative h-[78svh] min-h-[620px] max-h-[790px]">
