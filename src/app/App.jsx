@@ -29,8 +29,16 @@ const Privacy = lazy(() => import('@features/legal/pages/Privacy'));
 const Terms = lazy(() => import('@features/legal/pages/Terms'));
 
 const RouteFallback = () => (
-  <div className="min-h-screen bg-[#111216] flex items-center justify-center text-violet-500">
-    <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-600/30 border-t-violet-400" />
+  <div className="min-h-screen bg-[#111216] px-5 py-6" role="status" aria-label="Carregando página">
+    <div className="mx-auto max-w-[1600px]">
+      <div className="mb-8 h-10 w-44 animate-pulse rounded-xl bg-white/[0.06]" />
+      <div className="h-[48vh] min-h-72 animate-pulse rounded-3xl bg-white/[0.04]" />
+      <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
+        {Array.from({ length: 6 }, (_, index) => (
+          <div key={index} className="aspect-[2/3] animate-pulse rounded-2xl bg-white/[0.04]" />
+        ))}
+      </div>
+    </div>
   </div>
 );
 
