@@ -211,9 +211,22 @@ export default function AppLayout() {
               >
                 <Search size={16} /> Explorar
               </button>
+              <Link
+                to="/app/roulette"
+                className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-zinc-300 transition-colors hover:bg-white/[0.06] hover:text-white"
+              >
+                <Dices size={16} /> Roleta
+              </Link>
             </nav>
 
             <div className="ml-auto flex items-center gap-2">
+              <Link
+                to="/app/roulette"
+                className="grid h-9 w-9 place-items-center rounded-xl bg-black/25 text-zinc-200 backdrop-blur-md transition-colors hover:bg-white/[0.08] hover:text-white sm:hidden"
+                aria-label="Abrir roleta"
+              >
+                <Dices size={18} />
+              </Link>
               <button
                 type="button"
                 onClick={openSearch}
@@ -237,7 +250,7 @@ export default function AppLayout() {
           onScroll={(event) => setIsHeaderScrolled(event.currentTarget.scrollTop > 12)}
           className="relative h-full min-w-0 overflow-x-hidden overflow-y-auto bg-[#111216]"
         >
-          <div className="h-full w-full pt-16 md:pt-0"><Outlet /></div>
+          <div className={`h-full w-full pt-16 ${location.pathname === "/app/roulette" ? "md:pt-[72px]" : "md:pt-0"}`}><Outlet /></div>
         </main>
 
         {isSearchOpen && (

@@ -95,7 +95,7 @@ function AppRoutes() {
           <Route path="lists/:username/:listId" element={<PrivateRoute><ListDetails /></PrivateRoute>} />
           <Route path="profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
-          <Route path="roulette" element={<PrivateRoute><MovieRoulette /></PrivateRoute>} />
+          <Route path="roulette" element={<MovieRoulette />} />
 
           <Route path="person/:id" element={<PersonDetails />} />
           <Route path="tv/:id/season/:seasonNumber/episode/:episodeNumber" element={<EpisodeDetails />} />
