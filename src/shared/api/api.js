@@ -86,7 +86,7 @@ export const googleAuth = (data) => api.post("/users/auth/google", data).then((r
 export const register = (userData) => api.post("/users/register", userData);
 export const resendVerificationEmail = (email) => api.post("/users/resend-verification-email", { email });
 export const logout = () => api.post("/users/logout").finally(() => clearApiCache());
-export const getMe = () => cachedGet("/users/me", {}, 10000);
+export const getMe = () => cachedGet("/users/me", { timeout: 8000 }, 10000);
 export const getSecurityOverview = (params = {}) => api.get("/users/security", { params });
 export const revokeExtensionDevice = (tokenId) => api.delete(`/users/security/extensions/${tokenId}`);
 export const verifyCurrentPassword = (data) => api.post("/users/security/verify-password", data);
@@ -188,7 +188,7 @@ export const getSeasonDetails = (tvId, seasonNumber) => cachedGet(`/tmdb/details
 export const getEpisodeDetails = (tvId, seasonNumber, episodeNumber) =>
   cachedGet(`/tmdb/details/tv/${tvId}/season/${seasonNumber}/episode/${episodeNumber}`, {}, 10 * 60 * 1000);
 export const getProviders = (type, id) => cachedGet(`/tmdb/providers/${type}/${id}`, {}, 10 * 60 * 1000);
-export const getTrending = (timeWindow) => cachedGet(`/tmdb/trending/${timeWindow}`, {}, 5 * 60 * 1000);
+export const getTrending = (timeWindow) => cachedGet(`/tmdb/trending/${timeWindow}`, { timeout: 12000 }, 5 * 60 * 1000);
 export const getDiscover = (params) => cachedGet("/tmdb/discover", { params }, 5 * 60 * 1000);
 export const getNowPlaying = () => cachedGet("/tmdb/now-playing", {}, 5 * 60 * 1000);
 export const getTmdbSearch = (query) => cachedGet("/tmdb/search", { params: { query: query.trim() } }, 2 * 60 * 1000);
