@@ -103,9 +103,6 @@ export const deleteAccount = (confirmText) => api.delete("/users/me", { data: { 
 export const acceptTerms = (version) => api.post("/users/terms", { version });
 export const getPublicProfile = (username) => api.get(`/users/profile/${username}`);
 export const requestPasswordReset = (email) => api.post("/users/reset-password", { email });
-export const createSupportTicket = (data) => api.post("/users/support/tickets", data);
-export const getMySupportTickets = () => api.get("/users/support/tickets");
-
 export const searchUsers = (query, signal) => api.get("/users/search", { params: { query }, signal });
 
 export const getUserLists = (username) => api.get(`/users/lists/${username}`);

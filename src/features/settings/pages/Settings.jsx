@@ -13,7 +13,6 @@ import {
   Save,
   Shield,
   ShieldCheck,
-  Sparkles,
   Trash2,
   User,
 } from "lucide-react";
@@ -23,7 +22,6 @@ import AvatarSelectorModal from "@shared/components/ui/AvatarSelectorModal";
 import { useToast } from "@shared/context/useToast";
 import {
   changePassword,
-  getMySupportTickets,
   getSecurityOverview,
   linkGoogleAccount,
   linkPasswordAccount,
@@ -32,7 +30,6 @@ import {
   verifyCurrentPassword,
 } from "@shared/api/api";
 import SettingsSidebar from "@features/settings/components/SettingsSidebar";
-import SupportTicketTable from "@features/settings/components/SupportTicketTable";
 import GoogleIcon from "@features/auth/components/GoogleIcon";
 
 function SettingPanel({ eyebrow, title, description, icon: Icon, children, tone = "violet" }) {
@@ -164,11 +161,9 @@ export default function Settings() {
   const location = useLocation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("profile");
-  const [isLoadingTickets, setIsLoadingTickets] = useState(false);
   const [isLoadingSecurity, setIsLoadingSecurity] = useState(false);
   const [isLoadingMoreSecurity, setIsLoadingMoreSecurity] = useState(false);
   const [isSecurityActionLoading, setIsSecurityActionLoading] = useState(false);
-  const [supportTickets, setSupportTickets] = useState([]);
   const [securityOverview, setSecurityOverview] = useState(null);
   const [securityNextCursor, setSecurityNextCursor] = useState(null);
   const [securityModal, setSecurityModal] = useState(null);
@@ -220,20 +215,6 @@ export default function Settings() {
     setSecurityModal(null);
     resetSecurityForm();
   }, [resetSecurityForm]);
-
-  const loadSupportTickets = useCallback(async () => {
-    if (!user) return;
-
-    setIsLoadingTickets(true);
-    try {
-      const tickets = await getMySupportTickets();
-      setSupportTickets(Array.isArray(tickets) ? tickets : []);
-    } catch (error) {
-      toast.error("Erro", error.message || "Não foi possível carregar seus protocolos.");
-    } finally {
-      setIsLoadingTickets(false);
-    }
-  }, [toast, user]);
 
   const loadSecurityOverview = useCallback(async ({ cursor = null, append = false } = {}) => {
     if (!user) return;
@@ -386,12 +367,6 @@ export default function Settings() {
   }, [location.search, menuItems]);
 
   useEffect(() => {
-    if (activeTab === "support" && user) {
-      loadSupportTickets();
-    }
-  }, [activeTab, loadSupportTickets, user]);
-
-  useEffect(() => {
     if (activeTab === "security" && user) {
       loadSecurityOverview();
     }
@@ -525,19 +500,19 @@ export default function Settings() {
                       </div>
 
                       <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 lg:col-span-2">
-                        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-zinc-500">Sessão atual</p>
+                        <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Sessão atual</p>
                         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
                           <div>
-                            <p className="text-xs font-bold text-zinc-500">Dispositivo</p>
-                            <p className="mt-1 text-sm font-black text-white">{securityOverview?.currentSession?.device || "Atual"}</p>
+                            <p className="text-xs font-medium text-zinc-500">Dispositivo</p>
+                            <p className="mt-1 text-sm font-medium text-white">{securityOverview?.currentSession?.device || "Atual"}</p>
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-zinc-500">Navegador</p>
-                            <p className="mt-1 text-sm font-black text-white">{securityOverview?.currentSession?.browser || "Navegador"}</p>
+                            <p className="text-xs font-medium text-zinc-500">Navegador</p>
+                            <p className="mt-1 text-sm font-medium text-white">{securityOverview?.currentSession?.browser || "Navegador"}</p>
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-zinc-500">Sistema</p>
-                            <p className="mt-1 text-sm font-black text-white">{securityOverview?.currentSession?.os || "Sistema"}</p>
+                            <p className="text-xs font-medium text-zinc-500">Sistema</p>
+                            <p className="mt-1 text-sm font-medium text-white">{securityOverview?.currentSession?.os || "Sistema"}</p>
                           </div>
                         </div>
                       </div>
@@ -545,7 +520,7 @@ export default function Settings() {
 
                     <div className="rounded-2xl border border-white/[0.07] bg-black/20">
                       <div className="border-b border-white/[0.06] p-4">
-                        <p className="text-sm font-black text-white">Métodos de login</p>
+                        <p className="text-sm font-semibold text-white">Métodos de login</p>
                         <p className="mt-1 text-xs font-medium text-zinc-500">Gerencie como você entra na sua conta.</p>
                       </div>
 
@@ -557,7 +532,7 @@ export default function Settings() {
                             </span>
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-sm font-black text-white">Email e senha</p>
+                                <p className="text-sm font-semibold text-white">Email e senha</p>
                                 <span className={`rounded-xl border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] ${
                                   hasPasswordProvider
                                     ? "border-emerald-400/15 bg-emerald-500/10 text-emerald-300"
@@ -612,7 +587,7 @@ export default function Settings() {
                             </span>
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-sm font-black text-white">Google</p>
+                                <p className="text-sm font-semibold text-white">Google</p>
                                 <span className={`rounded-xl border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] ${
                                   hasGoogleProvider
                                     ? "border-emerald-400/15 bg-emerald-500/10 text-emerald-300"
@@ -643,7 +618,7 @@ export default function Settings() {
                     <div className="rounded-2xl border border-white/[0.07] bg-black/20">
                       <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] p-4">
                         <div>
-                          <p className="text-sm font-black text-white">Últimas atividades</p>
+                          <p className="text-sm font-semibold text-white">Últimas atividades</p>
                           <p className="mt-1 text-xs font-medium text-zinc-500">Eventos registrados nesta conta.</p>
                         </div>
                         {isLoadingSecurity && <span className="text-xs font-bold text-zinc-500">Carregando</span>}
@@ -655,7 +630,7 @@ export default function Settings() {
                             <div key={`${item.kind}-${item.id}`} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                               <div className="flex min-w-0 items-center">
                                 <div>
-                                <p className="text-sm font-black text-white">
+                                <p className="text-sm font-medium text-white">
                                   {item.kind === "extension" ? "Extensão CineSorte conectada" : securityEventLabels[item.event] || "Atividade de segurança"}
                                 </p>
                                 <p className="mt-1 text-xs leading-5 text-zinc-500">
@@ -665,9 +640,9 @@ export default function Settings() {
                               </div>
                               <div className="flex items-center gap-3 sm:justify-end">
                                 <div className="text-left sm:text-right">
-                                <p className="text-xs font-bold text-zinc-400">{formatDateTime(item.sortDate)}</p>
+                                <p className="text-xs font-medium text-zinc-400">{formatDateTime(item.sortDate)}</p>
                                 {item.provider && (
-                                  <p className="mt-1 text-[10px] font-black uppercase tracking-[0.14em] text-zinc-600">
+                                  <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.14em] text-zinc-600">
                                     {item.provider === "google" ? "Google" : "Email"}
                                   </p>
                                 )}
@@ -730,29 +705,30 @@ export default function Settings() {
               <div className="space-y-5 animate-in fade-in slide-in-from-bottom-3 duration-500">
                 <SettingPanel
                   eyebrow="Suporte"
-                  title="Central de chamados"
-                  description="A abertura de chamados pelo site está em manutenção, mas seus protocolos continuam disponíveis para consulta."
+                  title="Fale com o suporte"
+                  description="Entre em contato com a equipe CineSorte pelo e-mail abaixo."
                   icon={Headset}
                   tone="amber"
                 >
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                     <div className="max-w-2xl">
                       <p className="text-sm leading-6 text-zinc-400">
-                        Para falar com o suporte enquanto a central volta ao ar, envie um e-mail para{" "}
-                        <a href="mailto:cinesorte@gmail.com" className="font-bold text-white transition-colors hover:text-violet-300">
+                        Envie sua dúvida ou solicitação para{" "}
+                        <a href="mailto:cinesorte@gmail.com" className="text-violet-300 transition-colors hover:text-violet-200">
                           cinesorte@gmail.com
                         </a>
-                        .
+                        {" "}e nossa equipe responderá assim que possível.
                       </p>
                     </div>
-                    <span className="inline-flex w-fit items-center gap-2 rounded-xl border border-amber-400/15 bg-amber-500/10 px-3.5 py-2.5 text-[9px] font-black uppercase tracking-[0.16em] text-amber-300">
-                      <Sparkles size={13} />
-                      Em manutenção
-                    </span>
+                    <a
+                      href="mailto:cinesorte@gmail.com"
+                      className="inline-flex w-fit items-center gap-2 rounded-xl bg-amber-400 px-4 py-3 text-xs font-black uppercase tracking-[0.13em] text-zinc-950 transition-colors hover:bg-amber-300"
+                    >
+                      <Mail size={15} />
+                      Enviar e-mail
+                    </a>
                   </div>
                 </SettingPanel>
-
-                <SupportTicketTable tickets={supportTickets} isLoading={isLoadingTickets} onRefresh={loadSupportTickets} />
               </div>
             )}
 
@@ -793,13 +769,13 @@ export default function Settings() {
                           <FileText size={18} />
                         </span>
                         <div>
-                          <h3 className="text-sm font-black text-white">Documentos legais</h3>
+                          <h3 className="text-sm font-semibold text-white">Documentos legais</h3>
                           <p className="mt-1 text-xs leading-5 text-zinc-500">Consulte as regras de uso e como seus dados são tratados.</p>
                         </div>
                       </div>
                       <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                        <Link to="/termos" className="rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-center text-xs font-bold text-zinc-300 transition-colors hover:bg-white/[0.07] hover:text-white">Termos de Uso</Link>
-                        <Link to="/privacidade" className="rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-center text-xs font-bold text-zinc-300 transition-colors hover:bg-white/[0.07] hover:text-white">Política de Privacidade</Link>
+                        <Link to="/termos" className="rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-center text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.07] hover:text-white">Termos de Uso</Link>
+                        <Link to="/privacidade" className="rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-center text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.07] hover:text-white">Política de Privacidade</Link>
                       </div>
                     </section>
 
