@@ -7,6 +7,8 @@ import {
   deleteListShare,
   getUserReviewsOnly,
   getTrending,
+  getRecommendations,
+  getLatestTrailers,
   followUser,
   getSuggestions,
   searchUsers,
@@ -38,6 +40,8 @@ export function useFeedLogic() {
 
   const [localUser, setLocalUser] = useState(user || {});
   const [suggestions, setSuggestions] = useState({ users: [], content: [] });
+  const [recommendations, setRecommendations] = useState([]);
+  const [trailers, setTrailers] = useState([]);
 
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, reviewId: null, type: null });
@@ -272,6 +276,66 @@ export function useFeedLogic() {
   }, [loadSidebarData]);
 
   useEffect(() => {
+    if (feedType !== 'following') {
+      setRecommendations([]);
+      setTrailers([]);
+      return undefined;
+    }
+
+    let active = true;
+
+    Promise.allSettled([
+      getRecommendations('movie'),
+      getRecommendations('tv'),
+      getLatestTrailers(),
+    ]).then((results) => {
+      if (!active) return;
+
+      const seen = new Set();
+      const items = results.slice(0, 2).flatMap((result, index) => {
+        if (result.status !== 'fulfilled') return [];
+
+        const value = result.value;
+        const mediaItems = Array.isArray(value)
+          ? value
+          : Array.isArray(value?.results)
+            ? value.results
+            : [];
+        const mediaType = index === 0 ? 'movie' : 'tv';
+
+        return mediaItems
+          .filter((item) => item?.id && (item.poster_path || item.backdrop_path))
+          .map((item) => ({ ...item, media_type: item.media_type || mediaType }))
+          .filter((item) => {
+            const key = `${item.media_type}:${item.id}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+      });
+
+      setRecommendations(items);
+
+      const trailerResult = results[2];
+      if (trailerResult.status !== 'fulfilled') {
+        setTrailers([]);
+        return;
+      }
+
+      const trailerItems = Array.isArray(trailerResult.value)
+        ? trailerResult.value
+        : Array.isArray(trailerResult.value?.results)
+          ? trailerResult.value.results
+          : [];
+      setTrailers(trailerItems.filter((item) => item?.id && item.trailerKey && item.backdrop_path));
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [feedType]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       if (!document.hidden && reviews.length > 0 && feedType !== 'mine') {
         checkForNewPosts();
@@ -423,7 +487,7 @@ export function useFeedLogic() {
   return {
     user: localUser,
     state: {
-      reviews, loading, loadingMore, hasMore, hasNewPosts, feedType, suggestions,
+      reviews, loading, loadingMore, hasMore, hasNewPosts, feedType, suggestions, recommendations, trailers,
       isPostModalOpen, deleteModal,
       postForm: { step: postStep, query: searchQuery, results: searchResults, media: selectedMedia, text: postText, rating, isSubmitting },
       userSearch: { query: userSearchQuery, results: userSearchResults }

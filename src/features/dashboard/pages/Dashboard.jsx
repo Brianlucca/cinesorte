@@ -136,7 +136,7 @@ const buildHeroItems = (data, currentHero, rotation = 0) => {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { data, currentHero, loading, heroReady } = useDashboardLogic();
+  const { data, currentHero, loading, heroReady, retry } = useDashboardLogic();
   const heroCacheScope = user?.username || user?.uid || "guest";
   const heroCacheKey = `${HERO_SET_CACHE_PREFIX}:${heroCacheScope}`;
   const initialHeroStateRef = useRef(undefined);
@@ -373,10 +373,37 @@ export default function Dashboard() {
     };
   }, [loading, user]);
 
-  if (loading || heroItems.length === 0)
+  if (heroItems.length === 0 && loading)
     return (
-      <div className="h-screen flex items-center justify-center bg-zinc-950">
-        <div className="w-16 h-16 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="-mt-16 min-h-screen bg-[#111216] px-4 pb-12 pt-20 md:mt-0 md:px-8 md:pt-24" role="status" aria-label="Carregando catálogo">
+        <div className="h-[48vh] min-h-80 animate-pulse rounded-3xl bg-white/[0.04]" />
+        {[0, 1, 2].map((row) => (
+          <div key={row} className="mt-10">
+            <div className="mb-4 h-6 w-48 animate-pulse rounded bg-white/[0.06]" />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+              {Array.from({ length: 6 }, (_, index) => (
+                <div key={index} className="aspect-[2/3] animate-pulse rounded-2xl bg-white/[0.04]" />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+
+  if (heroItems.length === 0)
+    return (
+      <div className="-mt-16 grid min-h-screen place-items-center bg-[#111216] px-6 pt-16 text-center md:mt-0 md:pt-0">
+        <div>
+          <p className="text-lg font-semibold text-white">Não foi possível carregar o catálogo agora.</p>
+          <p className="mt-2 text-sm text-zinc-400">Verifique sua conexão e tente novamente.</p>
+          <button
+            type="button"
+            onClick={retry}
+            className="mt-5 rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-500"
+          >
+            Tentar novamente
+          </button>
+        </div>
       </div>
     );
 

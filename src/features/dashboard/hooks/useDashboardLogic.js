@@ -62,6 +62,7 @@ export function useDashboardLogic() {
   });
   const [loading, setLoading] = useState(true);
   const [heroReady, setHeroReady] = useState(false);
+  const [reloadVersion, setReloadVersion] = useState(0);
   const isMounted = useRef(true);
   const hasLoadedDashboard = useRef(false);
   const userGenreCountsKey = JSON.stringify(
@@ -200,6 +201,11 @@ export function useDashboardLogic() {
       .join("|");
   }, []);
 
+  const retry = useCallback(() => {
+    setLoading(true);
+    setReloadVersion((version) => version + 1);
+  }, []);
+
   useEffect(() => {
     if (heroQueue.length === 0) return;
     const interval = setInterval(() => {
@@ -300,6 +306,7 @@ export function useDashboardLogic() {
           trendingDay: sortedDay,
           trendingWeek: sortedWeek,
         }));
+        setHeroReady(true);
         if (isMounted.current) {
           hasLoadedDashboard.current = true;
           setLoading(false);
@@ -359,10 +366,16 @@ export function useDashboardLogic() {
 
         if (validHeroes.length > 0) {
           setHeroQueue(validHeroes);
+          setCurrentHero((previousHero) =>
+            previousHero || validHeroes[Math.floor(Math.random() * validHeroes.length)],
+          );
         } else {
           const fallback = [...sortedWeek].filter((i) => i.backdrop_path && !i.trailerKey).slice(0, 20);
           if (fallback.length > 0) {
             setHeroQueue(fallback);
+            setCurrentHero((previousHero) =>
+              previousHero || fallback[Math.floor(Math.random() * fallback.length)],
+            );
           }
         }
 
@@ -448,7 +461,7 @@ export function useDashboardLogic() {
     return () => {
       isMounted.current = false;
     };
-  }, [buildCompleteSection, excludeExisting, getPreferredGenreString, prioritizeContent, uniqueById, user, userGenreCountsKey]);
+  }, [buildCompleteSection, excludeExisting, getPreferredGenreString, prioritizeContent, uniqueById, user, userGenreCountsKey, reloadVersion]);
 
-  return { data, currentHero, loading, heroReady };
+  return { data, currentHero, loading, heroReady, retry };
 }

@@ -51,7 +51,7 @@ function Brand() {
 }
 
 export default function AppLayout() {
-  const { logout, user, loading: authLoading, showTermsModal } = useAuth();
+  const { logout, user, showTermsModal } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const mainScrollRef = useRef(null);
@@ -68,6 +68,11 @@ export default function AppLayout() {
     : null;
 
   useEffect(() => {
+    if (/^\/app\/lists\/[^/]+\/[^/]+$/.test(location.pathname)) {
+      mainScrollRef.current?.scrollTo({ top: 0 });
+      setIsHeaderScrolled(false);
+    }
+
     const frame = window.requestAnimationFrame(() => {
       setIsHeaderScrolled((mainScrollRef.current?.scrollTop || 0) > 12);
     });
@@ -179,21 +184,14 @@ export default function AppLayout() {
   const immersiveRoute =
     location.pathname === "/" ||
     location.pathname === "/app" ||
-    /^\/app\/(movie|tv|person)\//.test(location.pathname);
+    /^\/app\/(movie|tv|person)\//.test(location.pathname) ||
+    /^\/app\/lists\/[^/]+\/[^/]+$/.test(location.pathname);
 
   const headerClassName = `fixed inset-x-0 top-0 z-[70] transition-[background-color,box-shadow,backdrop-filter] duration-300 ${
     isHeaderScrolled
       ? "bg-[#111216]/92 shadow-[0_12px_34px_rgba(0,0,0,0.22)] backdrop-blur-xl"
       : "bg-gradient-to-b from-black/72 via-black/32 to-transparent"
   }`;
-
-  if (authLoading) {
-    return (
-      <div className="grid min-h-screen place-items-center bg-[#111216] text-violet-400">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500/25 border-t-violet-400" />
-      </div>
-    );
-  }
 
   if (!user) {
     return (
@@ -213,9 +211,22 @@ export default function AppLayout() {
               >
                 <Search size={16} /> Explorar
               </button>
+              <Link
+                to="/app/roulette"
+                className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-zinc-300 transition-colors hover:bg-white/[0.06] hover:text-white"
+              >
+                <Dices size={16} /> Roleta
+              </Link>
             </nav>
 
             <div className="ml-auto flex items-center gap-2">
+              <Link
+                to="/app/roulette"
+                className="grid h-9 w-9 place-items-center rounded-xl bg-black/25 text-zinc-200 backdrop-blur-md transition-colors hover:bg-white/[0.08] hover:text-white sm:hidden"
+                aria-label="Abrir roleta"
+              >
+                <Dices size={18} />
+              </Link>
               <button
                 type="button"
                 onClick={openSearch}
@@ -239,7 +250,7 @@ export default function AppLayout() {
           onScroll={(event) => setIsHeaderScrolled(event.currentTarget.scrollTop > 12)}
           className="relative h-full min-w-0 overflow-x-hidden overflow-y-auto bg-[#111216]"
         >
-          <div className="h-full w-full pt-16 md:pt-0"><Outlet /></div>
+          <div className={`h-full w-full pt-16 ${location.pathname === "/app/roulette" ? "md:pt-[72px]" : "md:pt-0"}`}><Outlet /></div>
         </main>
 
         {isSearchOpen && (
@@ -421,7 +432,7 @@ export default function AppLayout() {
         onScroll={(event) => setIsHeaderScrolled(event.currentTarget.scrollTop > 12)}
         className="relative h-full min-w-0 overflow-x-hidden overflow-y-auto bg-[#111216]"
       >
-        <div className={`h-full w-full pt-16 ${immersiveRoute ? "md:pt-0" : "md:pt-[72px]"}`}><Outlet /></div>
+        <div className={`h-full w-full ${immersiveRoute ? "pt-0" : "pt-16 md:pt-[72px]"}`}><Outlet /></div>
       </main>
 
       {isMessagesLoaded && (

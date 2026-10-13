@@ -298,10 +298,55 @@ export function useMediaDetailsLogic() {
   };
 
   const handleAddToList = async (listId) => {
-    if (!user) return requireLogin("Entre para adicionar títulos às suas listas.");
+    if (!user) {
+      requireLogin("Entre para adicionar títulos às suas listas.");
+      return false;
+    }
     setAddingToListId(listId);
+    const mediaItem = {
+      id: media.id,
+      title: media.title || media.name,
+      name: media.name || media.title,
+      poster_path: media.poster_path,
+      backdrop_path: media.backdrop_path,
+      media_type: type,
+      vote_average: media.vote_average || 0,
+      release_date: media.release_date || null,
+      first_air_date: media.first_air_date || null,
+    };
+
     try {
-      await addMediaToList(listId, {
+      await addMediaToList(listId, mediaItem);
+      toast.success("Salvo", "Adicionado à sua lista.");
+      setUserLists((currentLists) => currentLists.map((list) =>
+        String(list.id) === String(listId)
+          ? { ...list, items: [...(list.items || []), mediaItem] }
+          : list,
+      ));
+      return true;
+    } catch (e) {
+      const msg = e.response?.data?.message || "Falha ao adicionar.";
+      toast.error("Aviso", msg);
+      return false;
+    } finally {
+      setAddingToListId(null);
+    }
+  };
+
+  const handleCreateList = async (listName) => {
+    if (!user) {
+      requireLogin("Entre para criar uma lista.");
+      return false;
+    }
+    try {
+      const listRes = await createOrUpdateList({
+        listName,
+        description: "",
+        isPublic: true,
+      });
+      if (!listRes?.listId) throw new Error("A coleção não foi criada corretamente.");
+
+      const mediaItem = {
         id: media.id,
         title: media.title || media.name,
         name: media.name || media.title,
@@ -311,29 +356,21 @@ export function useMediaDetailsLogic() {
         vote_average: media.vote_average || 0,
         release_date: media.release_date || null,
         first_air_date: media.first_air_date || null,
-      });
-      toast.success("Salvo", "Adicionado à sua lista.");
-      const updatedLists = await getUserLists("me");
-      setUserLists(updatedLists);
-    } catch (e) {
-      const msg = e.response?.data?.message || "Falha ao adicionar.";
-      toast.error("Aviso", msg);
+      };
+
+      setAddingToListId(listRes.listId);
+      await addMediaToList(listRes.listId, mediaItem);
+      setUserLists((currentLists) => [
+        { id: listRes.listId, name: listName, isPublic: true, items: [mediaItem] },
+        ...currentLists,
+      ]);
+      toast.success("Coleção criada", "Título adicionado à nova coleção.");
+      return true;
+    } catch (error) {
+      toast.error("Erro", error.message || "Falha ao criar coleção.");
+      return false;
     } finally {
       setAddingToListId(null);
-    }
-  };
-
-  const handleCreateList = async (listName) => {
-    if (!user) return requireLogin("Entre para criar uma lista.");
-    try {
-      const listRes = await createOrUpdateList({
-        listName,
-        description: "",
-        isPublic: true,
-      });
-      await handleAddToList(listRes.listId);
-    } catch {
-      toast.error("Erro", "Falha ao criar lista.");
     }
   };
 

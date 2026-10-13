@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import {
   ArrowRight,
   Film,
@@ -17,6 +17,8 @@ import { Link } from "react-router-dom";
 import { useFeedLogic } from "@features/feed/hooks/useFeedLogic";
 import FeedTabs from "@features/feed/components/FeedTabs";
 import FeedCard from "@features/feed/components/FeedCard";
+import FeedRecommendationCard from "@features/feed/components/FeedRecommendationCard";
+import FeedTrailerCard from "@features/feed/components/FeedTrailerCard";
 import CreatePostModal from "@features/feed/components/CreatePostModal";
 import Modal from "@shared/components/ui/Modal";
 import UserSearch from "@shared/components/UserSearch";
@@ -141,15 +143,44 @@ export default function Feed() {
               </div>
             ) : state.reviews.length > 0 ? (
               <div className="space-y-4">
-                {state.reviews.map((review) => (
-                  <FeedCard
-                    key={review.uniqueKey || `${review.type}-${review.id}`}
-                    item={review}
-                    onDelete={actions.promptDelete}
-                    onLike={actions.handleLike}
-                    onLoadComments={actions.handleLoadComments}
-                  />
-                ))}
+                {state.reviews.map((review, index) => {
+                  const isInterstitialPosition = (index + 1) % 4 === 0;
+                  const interstitialIndex = Math.floor(index / 4);
+                  const useTrailer = interstitialIndex % 2 === 1;
+                  const recommendation = isInterstitialPosition
+                    ? state.recommendations?.[Math.floor(interstitialIndex / 2)]
+                    : null;
+                  const trailer = isInterstitialPosition
+                    ? state.trailers?.[Math.floor(interstitialIndex / 2)]
+                    : null;
+                  const interstitial = useTrailer
+                    ? trailer
+                      ? { type: "trailer", item: trailer }
+                      : recommendation
+                        ? { type: "recommendation", item: recommendation }
+                        : null
+                    : recommendation
+                      ? { type: "recommendation", item: recommendation }
+                      : trailer
+                        ? { type: "trailer", item: trailer }
+                        : null;
+
+                  return (
+                    <Fragment key={review.uniqueKey || `${review.type}-${review.id}`}>
+                      <FeedCard
+                        item={review}
+                        onDelete={actions.promptDelete}
+                        onLike={actions.handleLike}
+                        onLoadComments={actions.handleLoadComments}
+                      />
+                      {state.feedType === "following" && interstitial && (
+                        interstitial.type === "trailer"
+                          ? <FeedTrailerCard item={interstitial.item} />
+                          : <FeedRecommendationCard item={interstitial.item} />
+                      )}
+                    </Fragment>
+                  );
+                })}
 
                 <div ref={observerTarget} className="flex h-24 items-center justify-center">
                   {state.loadingMore && <Loader2 className="h-7 w-7 animate-spin text-violet-500" />}
@@ -190,7 +221,7 @@ export default function Feed() {
             )}
           </section>
 
-          <aside className="sidebar-scrollbar space-y-5 xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:self-start xl:overflow-y-auto xl:overscroll-contain xl:pr-2">
+          <aside className="sidebar-scrollbar space-y-5 xl:sticky xl:top-24 xl:max-h-[calc(100vh-6rem)] xl:self-start xl:overflow-y-auto xl:overscroll-contain xl:pr-2">
             <div className="rounded-xl border border-white/[0.06] bg-white/[0.018] p-4">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Encontrar pessoas</span>

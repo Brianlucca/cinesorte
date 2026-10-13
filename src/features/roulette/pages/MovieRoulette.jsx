@@ -5,7 +5,14 @@ import GenreSelector from "@features/roulette/components/GenreSelector";
 import RouletteHeader from "@features/roulette/components/RouletteHeader";
 
 const getImageUrl = (path, size = "w780") => (path ? `https://image.tmdb.org/t/p/${size}${path}` : null);
-
+const MEDIA_TYPES = [
+  { id: "all", label: "Todos" },
+  { id: "movie", label: "Filmes" },
+  { id: "tv", label: "Séries" },
+  { id: "documentary", label: "Documentários" },
+  { id: "anime", label: "Anime" },
+  { id: "animation", label: "Desenhos" },
+];
 function SourceButton({ active, disabled, icon: Icon, label, description, onClick }) {
   const SourceIcon = Icon;
 
@@ -44,20 +51,20 @@ function PreviewCard({ previewMedia, isSpinning, isWinner }) {
 
   return (
     <section className="relative w-full">
-      <div className="relative aspect-[16/10] min-h-[380px] overflow-hidden rounded-xl border border-white/[0.06] bg-[#181a20] md:aspect-[16/9] md:min-h-[470px] xl:min-h-[560px]">
+      <div className="relative h-[380px] overflow-hidden rounded-xl border border-white/[0.06] bg-[#181a20] sm:aspect-[16/10] sm:h-auto sm:min-h-[380px] md:aspect-[16/9] md:min-h-[470px] xl:min-h-[560px]">
           {imageUrl ? (
             <div className="relative h-full w-full animate-in fade-in zoom-in-95 duration-500">
               <img src={imageUrl} className={`h-full w-full object-cover transition duration-300 ${isSpinning ? "scale-[1.03] blur-[1px]" : ""}`} alt={previewMedia?.title || previewMedia?.name || "Preview"} />
               <div className="absolute inset-0 bg-gradient-to-t from-[#111216] via-[#111216]/15 to-black/5" />
             </div>
           ) : (
-            <div className="grid h-full place-items-center bg-[radial-gradient(circle_at_50%_35%,rgba(124,58,237,0.16),transparent_32%),linear-gradient(145deg,#14151a,#090a0d)] p-8 text-center">
-              <div>
+            <div className="grid h-full w-full min-w-0 place-items-center bg-[radial-gradient(circle_at_50%_35%,rgba(124,58,237,0.16),transparent_32%),linear-gradient(145deg,#14151a,#090a0d)] p-5 text-center sm:p-8">
+              <div className="w-full min-w-0">
                 <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-white/[0.05] text-violet-300">
                   <Sparkles size={23} className={isSpinning ? "animate-pulse" : ""} />
                 </span>
-                <h2 className="mt-5 text-xl font-semibold tracking-[-0.02em] text-zinc-100 md:text-2xl">O que vamos assistir?</h2>
-                <p className="mt-2 text-sm text-zinc-500">A escolha aparece aqui quando a roleta começar.</p>
+                <h2 className="mt-5 break-words text-xl font-semibold tracking-[-0.02em] text-zinc-100 md:text-2xl">O que vamos assistir?</h2>
+                <p className="mx-auto mt-2 max-w-full text-sm text-zinc-500">A escolha aparece aqui quando a roleta começar.</p>
               </div>
             </div>
           )}
@@ -164,7 +171,32 @@ export default function MovieRoulette() {
               )}
             </section>
 
-            <GenreSelector genres={state.genres} selectedGenre={state.selectedGenre} onSelect={actions.setSelectedGenre} />
+            <section>
+              <div className="mb-3 text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                Tipo de conteúdo
+              </div>
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrar por tipo de conteúdo">
+                {MEDIA_TYPES.map((type) => (
+                  <button
+                    key={type.id}
+                    type="button"
+                    onClick={() => actions.setSelectedMediaType(type.id)}
+                    aria-pressed={state.selectedMediaType === type.id}
+                    className={`rounded-full border px-3.5 py-2 text-[11px] font-medium transition-colors ${
+                      state.selectedMediaType === type.id
+                        ? "border-violet-400/35 bg-violet-500/15 text-violet-100"
+                        : "border-white/[0.07] bg-white/[0.025] text-zinc-500 hover:border-white/15 hover:text-white"
+                    }`}
+                  >
+                    {type.label}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {state.source === "global" && (
+              <GenreSelector genres={state.genres} selectedGenre={state.selectedGenre} onSelect={actions.setSelectedGenre} />
+            )}
 
             <button
               type="button"

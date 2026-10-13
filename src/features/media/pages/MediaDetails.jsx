@@ -213,6 +213,7 @@ export default function MediaDetails() {
         onCreate={actions.handleCreateList}
         mediaId={media.id}
         addingToListId={addingToListId}
+        mediaTitle={title}
       />
 
       <header className="relative h-[78svh] min-h-[620px] max-h-[790px]">
@@ -734,7 +735,7 @@ export default function MediaDetails() {
         </div>
       )}
 
-      <div className="fixed bottom-4 left-1/2 z-40 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-center gap-1.5 rounded-2xl border border-white/10 bg-zinc-900/90 p-2 shadow-2xl backdrop-blur-2xl md:hidden">
+      <div className={`fixed bottom-4 left-1/2 z-40 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-center gap-1.5 rounded-2xl border border-white/10 bg-zinc-900/90 p-2 shadow-2xl backdrop-blur-2xl md:hidden ${trailerKey ? "" : "justify-center"}`}>
         {trailerKey && (
           <button
             type="button"
