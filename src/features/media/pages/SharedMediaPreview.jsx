@@ -233,20 +233,6 @@ export default function SharedMediaPreview() {
 
   const contentLink = buildLink(internalRoute, user, encodedRoute);
 
-  const departmentMap = {
-    Acting: "Atuação",
-    Directing: "Direção",
-    Writing: "Roteiro",
-    Production: "Produção",
-    "Visual Effects": "VFX",
-    Camera: "Câmera",
-    Sound: "Som",
-  };
-  const department =
-    isPerson && media.known_for_department
-      ? departmentMap[media.known_for_department] || media.known_for_department
-      : null;
-
   const shareImage = banner || poster || `${window.location.origin}/logo.png`;
 
   return (
@@ -370,21 +356,9 @@ export default function SharedMediaPreview() {
 
           <div className="flex-1 min-w-0 text-center md:text-left pt-2 md:pt-4">
 
-            <div className="flex flex-wrap gap-3 mb-4 justify-center md:justify-start">
-              {department && (
-                <span
-                  className="text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full"
-                  style={{
-                    background: "rgba(139,92,246,0.15)",
-                    border: "1px solid rgba(139,92,246,0.3)",
-                    color: "#c4b5fd",
-                  }}
-                >
-                  {department}
-                </span>
-              )}
-              {!isPerson &&
-                media.genres?.slice(0, 3).map((g) => (
+            {!isPerson && media.genres?.length > 0 && (
+              <div className="mb-4 flex flex-wrap justify-center gap-3 md:justify-start">
+                {media.genres.slice(0, 3).map((g) => (
                   <span
                     key={g.id}
                     className="text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full"
@@ -397,7 +371,8 @@ export default function SharedMediaPreview() {
                     {g.name}
                   </span>
                 ))}
-            </div>
+              </div>
+            )}
 
             <h1
               className="text-white font-black leading-tight mb-4"

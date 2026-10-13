@@ -1,71 +1,118 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ImageIcon, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
-export default function PersonImages({ images, name }) {
-  const [selectedImage, setSelectedImage] = useState(null);
-  const profiles = images?.profiles || [];
+export default function PersonImages({
+  images,
+  name,
+  isOpen,
+  initialIndex = 0,
+  onClose,
+}) {
+  const profiles = (images?.profiles || []).filter((image) => image.file_path);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const touchStartX = useRef(null);
+  const totalImages = profiles.length;
 
-  if (profiles.length === 0) return null;
+  useEffect(() => {
+    if (isOpen) setCurrentIndex(initialIndex);
+  }, [initialIndex, isOpen]);
 
-  const displayImages = profiles.slice(0, 12);
+  useEffect(() => {
+    if (!isOpen) return undefined;
 
-  return (
-    <section id="person-gallery" className="scroll-mt-24">
-      <div className="mb-5">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
-          Registros
-        </span>
-        <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">
-          Galeria de fotos
-        </h2>
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+      if (event.key === "ArrowLeft") {
+        setCurrentIndex((index) => (index - 1 + totalImages) % totalImages);
+      }
+      if (event.key === "ArrowRight") {
+        setCurrentIndex((index) => (index + 1) % totalImages);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose, totalImages]);
+
+  if (!isOpen || totalImages === 0) return null;
+
+  const currentImage = profiles[currentIndex];
+  const move = (direction) => {
+    setCurrentIndex((index) => (index + direction + totalImages) % totalImages);
+  };
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100000] flex flex-col bg-black/95 text-white backdrop-blur-xl animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Galeria de fotos de ${name}`}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <header className="flex shrink-0 items-center justify-between gap-4 border-b border-white/[0.08] px-4 py-3 sm:px-6 sm:py-4">
+        <div className="min-w-0">
+          <h2 className="truncate text-sm font-medium text-white sm:text-base">{name}</h2>
+          <p className="mt-0.5 text-xs text-zinc-500">
+            Foto {currentIndex + 1} de {totalImages}
+          </p>
+        </div>
+        <button
+          type="button"
+          aria-label="Fechar galeria"
+          onClick={onClose}
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/[0.06] text-zinc-300 transition-colors hover:bg-white/[0.12] hover:text-white"
+        >
+          <X size={20} />
+        </button>
+      </header>
+
+      <div
+        className="relative flex min-h-0 flex-1 items-center justify-center px-12 py-4 sm:px-20 sm:py-6"
+        onTouchStart={(event) => {
+          touchStartX.current = event.touches[0].clientX;
+        }}
+        onTouchEnd={(event) => {
+          if (touchStartX.current === null) return;
+          const deltaX = event.changedTouches[0].clientX - touchStartX.current;
+          touchStartX.current = null;
+          if (Math.abs(deltaX) > 50) move(deltaX > 0 ? -1 : 1);
+        }}
+      >
+        <button
+          type="button"
+          aria-label="Foto anterior"
+          onClick={() => move(-1)}
+          className="absolute left-2 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/[0.08] bg-black/55 text-white transition-colors hover:bg-white/[0.15] sm:left-5 sm:h-12 sm:w-12"
+        >
+          <ChevronLeft size={24} />
+        </button>
+
+        <img
+          key={currentImage.file_path}
+          src={`https://image.tmdb.org/t/p/original${currentImage.file_path}`}
+          alt={`${name} — foto ${currentIndex + 1}`}
+          className="max-h-full max-w-full animate-in object-contain fade-in duration-200"
+        />
+
+        <button
+          type="button"
+          aria-label="Próxima foto"
+          onClick={() => move(1)}
+          className="absolute right-2 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/[0.08] bg-black/55 text-white transition-colors hover:bg-white/[0.15] sm:right-5 sm:h-12 sm:w-12"
+        >
+          <ChevronRight size={24} />
+        </button>
       </div>
-
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5">
-        {displayImages.map((img, idx) => (
-          <button
-            key={img.file_path || idx}
-            type="button"
-            onClick={() => setSelectedImage(img.file_path)}
-            aria-label={`Ampliar foto ${idx + 1} de ${name}`}
-            className="group relative aspect-[2/3] cursor-zoom-in overflow-hidden rounded-xl bg-white/[0.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
-          >
-            <img
-              src={`https://image.tmdb.org/t/p/w500${img.file_path}`}
-              className="h-full w-full object-cover transition-opacity duration-200 group-hover:opacity-85"
-              alt={`${name} — foto ${idx + 1}`}
-              loading="lazy"
-            />
-            <span className="absolute inset-0 grid place-items-center bg-black/0 text-white/0 transition-colors group-hover:bg-black/20 group-hover:text-white/80">
-              <ImageIcon size={26} />
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {selectedImage &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-[100000] flex animate-in items-center justify-center bg-black/95 p-4 backdrop-blur-xl fade-in duration-300"
-            onClick={() => setSelectedImage(null)}
-          >
-            <button
-              type="button"
-              aria-label="Fechar foto ampliada"
-              className="absolute right-6 top-6 rounded-xl border border-white/[0.08] bg-white/[0.04] p-2.5 text-zinc-300 transition-colors hover:bg-white/[0.08] hover:text-white md:right-8 md:top-8"
-              onClick={() => setSelectedImage(null)}
-            >
-              <X size={22} />
-            </button>
-            <img
-              src={`https://image.tmdb.org/t/p/original${selectedImage}`}
-              className="max-h-[90vh] max-w-full animate-in rounded-xl object-contain zoom-in-95 duration-300"
-              alt={`Foto ampliada de ${name}`}
-              onClick={(event) => event.stopPropagation()}
-            />
-          </div>,
-          document.body,
-        )}
-    </section>
+    </div>,
+    document.body,
   );
 }

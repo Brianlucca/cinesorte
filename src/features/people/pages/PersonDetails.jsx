@@ -2,7 +2,6 @@ import { useParams } from "react-router-dom";
 import PersonBio from "@features/people/components/PersonBio";
 import PersonFilmography from "@features/people/components/PersonFilmography";
 import PersonHeader from "@features/people/components/PersonHeader";
-import PersonImages from "@features/people/components/PersonImages";
 import PersonInfo from "@features/people/components/PersonInfo";
 import ReviewsSection from "@features/media/components/reviews/ReviewsSection";
 import { usePersonDetails } from "@features/people/hooks/usePersonDetails";
@@ -33,11 +32,10 @@ export default function PersonDetails() {
 
       <nav
         aria-label="Navegação do perfil"
-        className="scrollbar-hide relative z-20 mx-auto flex max-w-[1380px] gap-5 overflow-x-auto border-b border-white/[0.06] px-4 py-3 sm:px-8 md:px-10 xl:px-12"
+        className="scrollbar-hide relative z-20 mx-auto flex max-w-[1380px] gap-3 overflow-x-auto px-4 py-3 after:absolute after:bottom-0 after:left-4 after:right-4 after:h-px after:bg-white/[0.06] sm:gap-5 sm:px-8 md:px-10 md:after:hidden xl:px-12"
       >
         {[
           { href: "#person-filmography", label: "Filmografia", available: details.combined_credits?.cast?.length > 0 },
-          { href: "#person-gallery", label: "Fotos", available: details.images?.profiles?.length > 0 },
           { href: "#person-reviews", label: "Comentários", available: true },
         ]
           .filter((item) => item.available)
@@ -62,9 +60,6 @@ export default function PersonDetails() {
         <main className="order-2 min-w-0 space-y-10 lg:order-1 lg:col-span-8 lg:space-y-14">
           {details.biography && <PersonBio biography={details.biography} />}
           <PersonFilmography credits={details.combined_credits} />
-          {details.images?.profiles?.length > 0 && (
-            <PersonImages images={details.images} name={details.name} />
-          )}
 
           <section id="person-reviews" className="scroll-mt-24 border-t border-white/[0.07] pt-8">
             <div className="mb-7">
