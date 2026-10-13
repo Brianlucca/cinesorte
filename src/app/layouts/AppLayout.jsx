@@ -51,7 +51,7 @@ function Brand() {
 }
 
 export default function AppLayout() {
-  const { logout, user, loading: authLoading, showTermsModal } = useAuth();
+  const { logout, user, showTermsModal } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const mainScrollRef = useRef(null);
@@ -186,14 +186,6 @@ export default function AppLayout() {
       ? "bg-[#111216]/92 shadow-[0_12px_34px_rgba(0,0,0,0.22)] backdrop-blur-xl"
       : "bg-gradient-to-b from-black/72 via-black/32 to-transparent"
   }`;
-
-  if (authLoading) {
-    return (
-      <div className="grid min-h-screen place-items-center bg-[#111216] text-violet-400">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500/25 border-t-violet-400" />
-      </div>
-    );
-  }
 
   if (!user) {
     return (
