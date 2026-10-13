@@ -1,6 +1,5 @@
 import { useMemo, useRef, useState } from "react";
 import {
-  Star,
   MessageCircle,
   Send,
   Trash2,
@@ -14,6 +13,7 @@ import {
 import { Link } from "react-router-dom";
 import LevelBadge from "@shared/components/ui/LevelBadge";
 import { MentionTextarea } from "@features/media/components/reviews/MentionTextarea";
+import RatingStars from "@features/media/components/reviews/RatingStars";
 import RichTextToolbar from "@features/media/components/reviews/RichTextToolbar";
 
 function SpoilerText({ children, isRevealed }) {
@@ -386,7 +386,7 @@ export default function ReviewItem({
                 )}
                 {!isEditing && hasText && hasRating && (
                   <span className="inline-flex items-center gap-1.5 text-yellow-200">
-                    <Star size={12} className="fill-yellow-300 text-yellow-300" />
+                    <RatingStars value={review.rating} size={12} />
                     <span className="font-semibold text-yellow-200">{review.rating.toFixed(1)}</span>
                   </span>
                 )}
@@ -416,16 +416,7 @@ export default function ReviewItem({
           {isEditing ? (
             <div className="relative mb-4 w-full animate-in fade-in zoom-in space-y-4 rounded-xl border border-violet-400/15 bg-black/20 p-4 duration-200">
               <div className="flex flex-wrap items-center gap-2">
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button key={star} type="button" onClick={() => setEditRating(star)}>
-                      <Star
-                        size={18}
-                        className={editRating && star <= editRating ? "fill-yellow-500 text-yellow-500" : "fill-zinc-800 text-zinc-700"}
-                      />
-                    </button>
-                  ))}
-                </div>
+                <RatingStars value={editRating} size={18} onChange={setEditRating} />
                 {editRating !== null && (
                   <button
                     type="button"
@@ -475,13 +466,7 @@ export default function ReviewItem({
           ) : !hasText && hasRating ? (
             <div className="mb-4 flex w-full flex-col gap-2 border-l-2 border-yellow-300/30 py-2 pl-4">
               <div className="flex items-center gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    size={22}
-                    className={star <= review.rating ? "fill-yellow-400 text-yellow-400" : "fill-zinc-800 text-zinc-700"}
-                  />
-                ))}
+                <RatingStars value={review.rating} size={22} />
                 <span className="ml-2 text-xl font-semibold text-white">{review.rating.toFixed(1)}</span>
               </div>
               <p className="pl-1 text-xs font-medium uppercase tracking-wider text-zinc-500">Avaliação sem comentário</p>

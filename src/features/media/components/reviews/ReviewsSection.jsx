@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@shared/context/useAuth";
 import { MentionTextarea } from "@features/media/components/reviews/MentionTextarea";
 import ReviewItem from "@features/media/components/reviews/ReviewItem";
+import RatingStars from "@features/media/components/reviews/RatingStars";
 import RichTextToolbar from "@features/media/components/reviews/RichTextToolbar";
 
 const PRIVILEGED_LEVELS = new Set([
@@ -202,27 +203,14 @@ export default function ReviewsSection({
                 <p className="mt-0.5 text-[11px] text-zinc-500">Uma nota, uma análise ou os dois.</p>
               </div>
               <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    aria-label={`Dar nota ${star}`}
-                    onClick={() => {
-                      setGeneralRating(star);
-                      setIsFocusedGeneral(true);
-                    }}
-                    className="p-0.5 transition-transform hover:scale-110 focus:outline-none"
-                  >
-                    <Star
-                      size={21}
-                      className={
-                        generalRating && star <= generalRating
-                          ? "fill-yellow-300 text-yellow-300"
-                          : "fill-white/[0.04] text-zinc-700 hover:text-zinc-500"
-                      }
-                    />
-                  </button>
-                ))}
+                <RatingStars
+                  value={generalRating}
+                  size={21}
+                  onChange={(rating) => {
+                    setGeneralRating(rating);
+                    setIsFocusedGeneral(true);
+                  }}
+                />
                 {generalRating !== null && (
                   <button
                     type="button"
