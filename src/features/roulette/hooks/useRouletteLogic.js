@@ -12,6 +12,7 @@ export function useRouletteLogic() {
   const [loading, setLoading] = useState(false);
   const [genres, setGenres] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState(null);
+  const [selectedMediaType, setSelectedMediaType] = useState('all');
   const [previewMedia, setPreviewMedia] = useState(null);
   const [source, setSource] = useState('global');
   const [userLists, setUserLists] = useState([]);
@@ -57,8 +58,15 @@ export function useRouletteLogic() {
       let validItems = [];
 
       if (source === 'global') {
-        const type = Math.random() > 0.5 ? 'movie' : 'tv';
-        const maxPage = selectedGenre ? 4 : 20;
+        const type = ['all', 'documentary', 'anime', 'animation'].includes(selectedMediaType)
+          ? (Math.random() > 0.5 ? 'movie' : 'tv')
+          : selectedMediaType;
+        const requiredGenre = selectedMediaType === 'documentary'
+          ? 99
+          : ['anime', 'animation'].includes(selectedMediaType) ? 16
+          : null;
+        const genreFilter = [requiredGenre, selectedGenre].filter(Boolean).join(',');
+        const maxPage = genreFilter ? 4 : 20;
         const pagesToFetch = [
           Math.floor(Math.random() * maxPage) + 1,
           Math.floor(Math.random() * maxPage) + 1,
@@ -67,7 +75,8 @@ export function useRouletteLogic() {
 
         const requests = pagesToFetch.map((page) => {
           const params = { page, media_type: type, language: 'pt-BR', 'vote_average.gte': 6 };
-          if (selectedGenre) params.with_genres = selectedGenre;
+          if (genreFilter) params.with_genres = genreFilter;
+          if (selectedMediaType === 'anime') params.with_original_language = 'ja';
           return api.get('/tmdb/discover', { params });
         });
 
@@ -81,7 +90,23 @@ export function useRouletteLogic() {
           }
         });
 
-        validItems = combinedResults.filter((item) => item && item.poster_path && (item.title || item.name));
+        validItems = combinedResults.filter((item) => {
+          if (!item?.poster_path || !(item.title || item.name)) return false;
+
+          const itemGenres = (item.genre_ids || item.genres?.map((genre) => genre.id) || []).map(Number);
+          if (selectedMediaType === 'documentary' && !itemGenres.includes(99)) return false;
+
+          if (selectedMediaType === 'anime' || selectedMediaType === 'animation') {
+            if (!itemGenres.includes(16)) return false;
+            const originalLanguage = String(item.original_language || item.originalLanguage || '').toLowerCase();
+            const originCountries = item.origin_country || item.originCountry || [];
+            const isJapanese = originalLanguage === 'ja' || originCountries.includes('JP');
+            if (selectedMediaType === 'anime' && !isJapanese) return false;
+            if (selectedMediaType === 'animation' && isJapanese) return false;
+          }
+
+          return true;
+        });
         validItems = Array.from(new Map(validItems.map((item) => [item.id, item])).values());
       } else {
         let pool = [];
@@ -93,12 +118,24 @@ export function useRouletteLogic() {
           pool = targetList?.items || [];
         }
 
-        if (selectedGenre) {
-          pool = pool.filter((item) => {
-            const itemGenres = item.genre_ids || item.genres?.map((genre) => genre.id) || [];
-            return itemGenres.includes(Number(selectedGenre));
-          });
-        }
+        pool = pool.filter((item) => {
+          const itemType = item.media_type || item.mediaType || (item.first_air_date || item.firstAirDate ? 'tv' : 'movie');
+          if (selectedMediaType === 'movie' && itemType !== 'movie') return false;
+          if (selectedMediaType === 'tv' && itemType !== 'tv') return false;
+
+          const itemGenres = (item.genre_ids || item.genres?.map((genre) => genre.id) || []).map(Number);
+          if (selectedMediaType === 'documentary' && !itemGenres.includes(99)) return false;
+          if (selectedMediaType === 'anime' || selectedMediaType === 'animation') {
+            if (!itemGenres.includes(16)) return false;
+            const originalLanguage = String(item.original_language || item.originalLanguage || '').toLowerCase();
+            const originCountries = item.origin_country || item.originCountry || [];
+            const isJapanese = originalLanguage === 'ja' || originCountries.includes('JP');
+            if (selectedMediaType === 'anime' && !isJapanese) return false;
+            if (selectedMediaType === 'animation' && isJapanese) return false;
+          }
+
+          return true;
+        });
 
         validItems = pool.filter((item) => item && item.poster_path && (item.title || item.name));
       }
@@ -138,6 +175,7 @@ export function useRouletteLogic() {
       winner,
       loading,
       selectedGenre,
+      selectedMediaType,
       genres,
       previewMedia,
       source,
@@ -146,8 +184,12 @@ export function useRouletteLogic() {
     },
     actions: {
       setSelectedGenre,
+      setSelectedMediaType,
       spinRoulette,
-      setSource,
+      setSource: (nextSource) => {
+        setSource(nextSource);
+        if (nextSource === 'user') setSelectedGenre(null);
+      },
       setSelectedListId,
     },
   };

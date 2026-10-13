@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import {
   ArrowRight,
   Film,
@@ -17,6 +17,8 @@ import { Link } from "react-router-dom";
 import { useFeedLogic } from "@features/feed/hooks/useFeedLogic";
 import FeedTabs from "@features/feed/components/FeedTabs";
 import FeedCard from "@features/feed/components/FeedCard";
+import FeedRecommendationCard from "@features/feed/components/FeedRecommendationCard";
+import FeedTrailerCard from "@features/feed/components/FeedTrailerCard";
 import CreatePostModal from "@features/feed/components/CreatePostModal";
 import Modal from "@shared/components/ui/Modal";
 import UserSearch from "@shared/components/UserSearch";
@@ -141,15 +143,44 @@ export default function Feed() {
               </div>
             ) : state.reviews.length > 0 ? (
               <div className="space-y-4">
-                {state.reviews.map((review) => (
-                  <FeedCard
-                    key={review.uniqueKey || `${review.type}-${review.id}`}
-                    item={review}
-                    onDelete={actions.promptDelete}
-                    onLike={actions.handleLike}
-                    onLoadComments={actions.handleLoadComments}
-                  />
-                ))}
+                {state.reviews.map((review, index) => {
+                  const isInterstitialPosition = (index + 1) % 4 === 0;
+                  const interstitialIndex = Math.floor(index / 4);
+                  const useTrailer = interstitialIndex % 2 === 1;
+                  const recommendation = isInterstitialPosition
+                    ? state.recommendations?.[Math.floor(interstitialIndex / 2)]
+                    : null;
+                  const trailer = isInterstitialPosition
+                    ? state.trailers?.[Math.floor(interstitialIndex / 2)]
+                    : null;
+                  const interstitial = useTrailer
+                    ? trailer
+                      ? { type: "trailer", item: trailer }
+                      : recommendation
+                        ? { type: "recommendation", item: recommendation }
+                        : null
+                    : recommendation
+                      ? { type: "recommendation", item: recommendation }
+                      : trailer
+                        ? { type: "trailer", item: trailer }
+                        : null;
+
+                  return (
+                    <Fragment key={review.uniqueKey || `${review.type}-${review.id}`}>
+                      <FeedCard
+                        item={review}
+                        onDelete={actions.promptDelete}
+                        onLike={actions.handleLike}
+                        onLoadComments={actions.handleLoadComments}
+                      />
+                      {state.feedType === "following" && interstitial && (
+                        interstitial.type === "trailer"
+                          ? <FeedTrailerCard item={interstitial.item} />
+                          : <FeedRecommendationCard item={interstitial.item} />
+                      )}
+                    </Fragment>
+                  );
+                })}
 
                 <div ref={observerTarget} className="flex h-24 items-center justify-center">
                   {state.loadingMore && <Loader2 className="h-7 w-7 animate-spin text-violet-500" />}
