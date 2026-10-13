@@ -7,6 +7,9 @@ export default function PersonImages({
   name,
   isOpen,
   initialIndex = 0,
+  hasMoreImages = false,
+  loadingMoreImages = false,
+  onLoadMoreImages,
   onClose,
 }) {
   const profiles = (images?.profiles || []).filter((image) => image.file_path);
@@ -17,6 +20,24 @@ export default function PersonImages({
   useEffect(() => {
     if (isOpen) setCurrentIndex(initialIndex);
   }, [initialIndex, isOpen]);
+
+  useEffect(() => {
+    if (
+      isOpen &&
+      hasMoreImages &&
+      !loadingMoreImages &&
+      currentIndex >= totalImages - 3
+    ) {
+      onLoadMoreImages();
+    }
+  }, [
+    currentIndex,
+    hasMoreImages,
+    isOpen,
+    loadingMoreImages,
+    onLoadMoreImages,
+    totalImages,
+  ]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -63,6 +84,7 @@ export default function PersonImages({
           <h2 className="truncate text-sm font-medium text-white sm:text-base">{name}</h2>
           <p className="mt-0.5 text-xs text-zinc-500">
             Foto {currentIndex + 1} de {totalImages}
+            {loadingMoreImages && " · Carregando mais"}
           </p>
         </div>
         <button

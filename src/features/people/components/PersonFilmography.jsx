@@ -1,8 +1,5 @@
-import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
-
-const CREDITS_PER_PAGE = 18;
 
 function getCreditDate(credit) {
   return credit.release_date || credit.first_air_date || "";
@@ -34,7 +31,7 @@ function FilmographyCredit({ credit }) {
   );
 }
 
-function Pagination({ currentPage, totalPages, onPageChange }) {
+function Pagination({ currentPage, totalPages, loading, onPageChange }) {
   if (totalPages <= 1) return null;
 
   return (
@@ -45,7 +42,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
       <button
         type="button"
         onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
+        disabled={loading || currentPage === 1}
         className="inline-flex h-9 items-center gap-1 rounded-lg border border-white/[0.07] px-2.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-40 sm:gap-1.5 sm:px-3"
       >
         <ChevronLeft size={15} />
@@ -57,7 +54,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
       <button
         type="button"
         onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
+        disabled={loading || currentPage === totalPages}
         className="inline-flex h-9 items-center gap-1 rounded-lg border border-white/[0.07] px-2.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-40 sm:gap-1.5 sm:px-3"
       >
         Próxima
@@ -67,47 +64,24 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
   );
 }
 
-export default function PersonFilmography({ credits }) {
-  const [currentPage, setCurrentPage] = useState(1);
-  const uniqueCredits = new Map();
-
-  (credits?.cast || []).forEach((credit) => {
-    if (!credit?.id) return;
-    const type = getCreditType(credit);
-    const key = `${type}-${credit.id}`;
-    if (!uniqueCredits.has(key)) uniqueCredits.set(key, { ...credit, media_type: type });
-  });
-
-  const sortedCredits = Array.from(uniqueCredits.values()).sort((a, b) => {
-    const dateA = getCreditDate(a);
-    const dateB = getCreditDate(b);
-    if (!dateA && dateB) return 1;
-    if (dateA && !dateB) return -1;
-    const dateDifference = dateB.localeCompare(dateA);
-    if (dateDifference !== 0) return dateDifference;
-    return (b.vote_count || 0) - (a.vote_count || 0);
-  });
-
-  const totalPages = Math.ceil(sortedCredits.length / CREDITS_PER_PAGE);
-  const page = Math.min(currentPage, Math.max(totalPages, 1));
-  const pageCredits = sortedCredits.slice(
-    (page - 1) * CREDITS_PER_PAGE,
-    page * CREDITS_PER_PAGE,
-  );
+export default function PersonFilmography({
+  filmography,
+  loading,
+  error,
+  retryPage,
+  onPageChange,
+}) {
+  const credits = filmography?.results || [];
   const years = new Map();
 
-  pageCredits.forEach((credit) => {
+  credits.forEach((credit) => {
     const date = getCreditDate(credit);
     const year = date ? date.slice(0, 4) : "Data não informada";
     if (!years.has(year)) years.set(year, []);
     years.get(year).push(credit);
   });
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [credits]);
-
-  if (sortedCredits.length === 0) return null;
+  if (!filmography?.total_results && !loading && !error) return null;
 
   return (
     <section id="person-filmography" aria-labelledby="person-filmography-title">
@@ -123,36 +97,55 @@ export default function PersonFilmography({ credits }) {
             Filmografia
           </h2>
         </div>
-        <span className="text-xs font-medium text-zinc-500">
-          {sortedCredits.length} {sortedCredits.length === 1 ? "trabalho" : "trabalhos"}
-        </span>
+        {filmography?.total_results > 0 && (
+          <span className="text-xs font-medium text-zinc-500">
+            {filmography.total_results} {filmography.total_results === 1 ? "trabalho" : "trabalhos"}
+          </span>
+        )}
       </div>
 
-      <ol className="space-y-6">
-        {Array.from(years, ([year, yearCredits]) => (
-          <li key={year} className="min-w-0">
-            <div className="mb-3 flex items-baseline gap-2 border-l border-violet-300/50 pl-3">
-              <h3 className="text-sm font-medium text-zinc-300">{year}</h3>
-              <span className="text-[10px] text-zinc-600">
-                {yearCredits.length} {yearCredits.length === 1 ? "título" : "títulos"}
-              </span>
-            </div>
-            <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-              {yearCredits.map((credit) => (
-                <FilmographyCredit
-                  key={`${credit.media_type}-${credit.id}`}
-                  credit={credit}
-                />
-              ))}
-            </div>
-          </li>
-        ))}
-      </ol>
+      {error ? (
+        <div className="rounded-lg border border-white/[0.06] px-4 py-3 text-sm text-zinc-400">
+          <p>Não foi possível carregar a filmografia.</p>
+          <button
+            type="button"
+            onClick={() => onPageChange(retryPage)}
+            disabled={loading}
+            className="mt-2 text-violet-300 transition-colors hover:text-violet-200 disabled:opacity-50"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      ) : loading && credits.length === 0 ? (
+        <p className="text-sm text-zinc-500" role="status">Carregando filmografia...</p>
+      ) : (
+        <ol className="space-y-6" aria-busy={loading}>
+          {Array.from(years, ([year, yearCredits]) => (
+            <li key={year} className="min-w-0">
+              <div className="mb-3 flex items-baseline gap-2 border-l border-violet-300/50 pl-3">
+                <h3 className="text-sm font-medium text-zinc-300">{year}</h3>
+                <span className="text-[10px] text-zinc-600">
+                  {yearCredits.length} {yearCredits.length === 1 ? "título" : "títulos"}
+                </span>
+              </div>
+              <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                {yearCredits.map((credit) => (
+                  <FilmographyCredit
+                    key={`${credit.media_type}-${credit.id}`}
+                    credit={credit}
+                  />
+                ))}
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
 
       <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
+        currentPage={filmography?.page || 1}
+        totalPages={filmography?.total_pages || 0}
+        loading={loading}
+        onPageChange={onPageChange}
       />
     </section>
   );

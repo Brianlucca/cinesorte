@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   deleteComment,
   deleteReview,
   getComments,
   getMediaReviews,
   getMovieDetails,
+  getPersonFilmography,
+  getPersonTaggedImages,
   postComment,
   postReview,
   toggleLikeReview,
@@ -36,11 +38,29 @@ const normalizeReviews = (items, userId, userUid, username) =>
     replies: normalizeReplies(review.replies, userId, userUid, username),
   }));
 
+const mergePersonImages = (currentImages, newImages) => {
+  const seenPaths = new Set();
+  return [...currentImages, ...newImages].filter((image) => {
+    if (!image?.file_path || seenPaths.has(image.file_path)) return false;
+    seenPaths.add(image.file_path);
+    return true;
+  });
+};
+
 export const usePersonDetails = (id) => {
   const [details, setDetails] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [taggedImagesPage, setTaggedImagesPage] = useState(0);
+  const [taggedImagesTotalPages, setTaggedImagesTotalPages] = useState(0);
+  const [loadingMoreImages, setLoadingMoreImages] = useState(false);
+  const loadingMoreImagesRef = useRef(false);
+  const [filmography, setFilmography] = useState(null);
+  const [filmographyLoading, setFilmographyLoading] = useState(true);
+  const [filmographyError, setFilmographyError] = useState(null);
+  const [filmographyRetryPage, setFilmographyRetryPage] = useState(1);
+  const filmographyLoadingRef = useRef(false);
 
   const { user } = useAuth();
   const toast = useToast();
@@ -54,10 +74,23 @@ export const usePersonDetails = (id) => {
     try {
       setLoading(true);
       setError(null);
+      setFilmographyLoading(true);
+      setFilmographyError(null);
+      setFilmographyRetryPage(1);
 
-      const [personData, reviewsData] = await Promise.all([
+      const [personData, reviewsData, taggedImagesData, filmographyData] = await Promise.all([
         getMovieDetails('person', id),
         getMediaReviews(uniquePersonId).catch(() => []),
+        getPersonTaggedImages(id, 1).catch((requestError) => {
+          console.error('Não foi possível carregar as fotos marcadas da pessoa.', requestError);
+          return null;
+        }),
+        getPersonFilmography(id, 1).catch((requestError) => {
+          console.error('Não foi possível carregar a filmografia da pessoa.', requestError);
+          setFilmographyError(requestError);
+          setFilmographyRetryPage(1);
+          return null;
+        }),
       ]);
 
       let externalIds = {};
@@ -67,14 +100,88 @@ export const usePersonDetails = (id) => {
         externalIds = {};
       }
 
-      setDetails({ ...personData, external_ids: externalIds });
+      const profileImages = personData.images?.profiles || [];
+      const taggedImages = taggedImagesData?.results || [];
+      setDetails({
+        ...personData,
+        external_ids: externalIds,
+        images: {
+          ...personData.images,
+          profiles: mergePersonImages(profileImages, taggedImages),
+        },
+      });
+      setTaggedImagesPage(taggedImagesData?.page || 0);
+      setTaggedImagesTotalPages(taggedImagesData?.total_pages || 0);
+      setFilmography(filmographyData);
       setReviews(normalizeReviews(reviewsData, userId, userUid, username));
     } catch (err) {
       setError(err);
     } finally {
       setLoading(false);
+      setFilmographyLoading(false);
     }
   }, [id, uniquePersonId, userId, userUid, username]);
+
+  const loadFilmographyPage = useCallback(async (page) => {
+    if (filmographyLoadingRef.current || !id) return;
+
+    filmographyLoadingRef.current = true;
+    setFilmographyLoading(true);
+    setFilmographyError(null);
+    setFilmographyRetryPage(page);
+    try {
+      const filmographyData = await getPersonFilmography(id, page);
+      setFilmography(filmographyData);
+      setFilmographyRetryPage(filmographyData.page || page);
+    } catch (requestError) {
+      console.error('Não foi possível carregar a página da filmografia.', requestError);
+      setFilmographyError(requestError);
+      toast.error('Erro', 'Não foi possível carregar a filmografia.');
+    } finally {
+      filmographyLoadingRef.current = false;
+      setFilmographyLoading(false);
+    }
+  }, [id, toast]);
+
+  const loadMorePersonImages = useCallback(async () => {
+    if (
+      loadingMoreImagesRef.current ||
+      !id ||
+      taggedImagesPage >= taggedImagesTotalPages
+    ) {
+      return;
+    }
+
+    loadingMoreImagesRef.current = true;
+    setLoadingMoreImages(true);
+    try {
+      const nextPage = taggedImagesPage + 1;
+      const taggedImagesData = await getPersonTaggedImages(id, nextPage);
+      setDetails((previousDetails) => {
+        if (!previousDetails) return previousDetails;
+        return {
+          ...previousDetails,
+          images: {
+            ...previousDetails.images,
+            profiles: mergePersonImages(
+              previousDetails.images?.profiles || [],
+              taggedImagesData.results || [],
+            ),
+          },
+        };
+      });
+      setTaggedImagesPage(taggedImagesData.page || nextPage);
+      setTaggedImagesTotalPages(
+        taggedImagesData.total_pages || taggedImagesTotalPages,
+      );
+    } catch (requestError) {
+      console.error('Não foi possível carregar mais fotos da pessoa.', requestError);
+      toast.error('Erro', 'Não foi possível carregar mais fotos.');
+    } finally {
+      loadingMoreImagesRef.current = false;
+      setLoadingMoreImages(false);
+    }
+  }, [id, taggedImagesPage, taggedImagesTotalPages, toast]);
 
   useEffect(() => {
     if (id) {
@@ -253,6 +360,14 @@ export const usePersonDetails = (id) => {
     reviews,
     loading,
     error,
+    hasMorePersonImages: taggedImagesPage < taggedImagesTotalPages,
+    loadingMoreImages,
+    loadMorePersonImages,
+    filmography,
+    filmographyLoading,
+    filmographyError,
+    filmographyRetryPage,
+    loadFilmographyPage,
     actions: {
       handlePostReview,
       handleEditReview,

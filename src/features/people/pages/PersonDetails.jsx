@@ -8,7 +8,20 @@ import { usePersonDetails } from "@features/people/hooks/usePersonDetails";
 
 export default function PersonDetails() {
   const { id } = useParams();
-  const { details, reviews, loading, actions } = usePersonDetails(id);
+  const {
+    details,
+    reviews,
+    loading,
+    actions,
+    hasMorePersonImages,
+    loadingMoreImages,
+    loadMorePersonImages,
+    filmography,
+    filmographyLoading,
+    filmographyError,
+    filmographyRetryPage,
+    loadFilmographyPage,
+  } = usePersonDetails(id);
 
   if (loading) {
     return (
@@ -28,14 +41,19 @@ export default function PersonDetails() {
 
   return (
     <div className="relative isolate -mt-24 min-h-screen overflow-x-hidden bg-[#111216] pb-24 text-white md:-mt-8">
-      <PersonHeader details={details} />
+      <PersonHeader
+        details={details}
+        hasMoreImages={hasMorePersonImages}
+        loadingMoreImages={loadingMoreImages}
+        onLoadMoreImages={loadMorePersonImages}
+      />
 
       <nav
         aria-label="Navegação do perfil"
         className="scrollbar-hide relative z-20 mx-auto flex max-w-[1380px] gap-3 overflow-x-auto px-4 py-3 after:absolute after:bottom-0 after:left-4 after:right-4 after:h-px after:bg-white/[0.06] sm:gap-5 sm:px-8 md:px-10 md:after:hidden xl:px-12"
       >
         {[
-          { href: "#person-filmography", label: "Filmografia", available: details.combined_credits?.cast?.length > 0 },
+          { href: "#person-filmography", label: "Filmografia", available: filmography?.total_results > 0 || filmographyLoading || Boolean(filmographyError) },
           { href: "#person-reviews", label: "Comentários", available: true },
         ]
           .filter((item) => item.available)
@@ -59,7 +77,13 @@ export default function PersonDetails() {
 
         <main className="order-2 min-w-0 space-y-10 lg:order-1 lg:col-span-8 lg:space-y-14">
           {details.biography && <PersonBio biography={details.biography} />}
-          <PersonFilmography credits={details.combined_credits} />
+          <PersonFilmography
+            filmography={filmography}
+            loading={filmographyLoading}
+            error={filmographyError}
+            retryPage={filmographyRetryPage}
+            onPageChange={loadFilmographyPage}
+          />
 
           <section id="person-reviews" className="scroll-mt-24 border-t border-white/[0.07] pt-8">
             <div className="mb-7">

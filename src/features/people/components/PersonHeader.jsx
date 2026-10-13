@@ -3,7 +3,12 @@ import { MapPin, Share2, TrendingUp } from "lucide-react";
 import PersonImages from "@features/people/components/PersonImages";
 import { useToast } from "@shared/context/useToast";
 
-export default function PersonHeader({ details }) {
+export default function PersonHeader({
+  details,
+  hasMoreImages,
+  loadingMoreImages,
+  onLoadMoreImages,
+}) {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [galleryStartIndex, setGalleryStartIndex] = useState(0);
   const toast = useToast();
@@ -114,7 +119,7 @@ export default function PersonHeader({ details }) {
                 ))}
               </div>
               <span className="pointer-events-none absolute bottom-2 left-2 inline-flex items-center rounded-lg bg-black/65 px-2.5 py-1.5 text-[11px] font-medium text-white backdrop-blur-sm transition-colors group-hover:bg-black/80 sm:bottom-3 sm:left-3 sm:px-3">
-                Abrir galeria · {totalGalleryImages} fotos
+                Abrir galeria · {totalGalleryImages}{hasMoreImages ? "+" : ""} fotos
               </span>
             </div>
           )}
@@ -125,6 +130,9 @@ export default function PersonHeader({ details }) {
         name={details.name}
         isOpen={isGalleryOpen}
         initialIndex={galleryStartIndex}
+        hasMoreImages={hasMoreImages}
+        loadingMoreImages={loadingMoreImages}
+        onLoadMoreImages={onLoadMoreImages}
         onClose={() => setIsGalleryOpen(false)}
       />
     </header>
