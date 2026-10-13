@@ -8,20 +8,19 @@ export default function PersonBio({ biography }) {
   const displayBio = isExpanded || !isLong ? biography : `${biography.slice(0, 700)}…`;
 
   return (
-    <section className="relative pl-5 md:pl-8">
-      <span className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-violet-400 via-violet-500/35 to-transparent" />
-      <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
-        Trajetória
+    <section className="max-w-4xl border-t border-white/[0.07] pt-8">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
+        Sobre a pessoa
       </span>
-      <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">Biografia</h2>
-      <p className="mt-5 whitespace-pre-line text-base font-light leading-8 text-zinc-300 md:text-lg md:leading-9">
+      <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">Biografia</h2>
+      <p className="mt-4 whitespace-pre-line text-[15px] leading-7 text-zinc-300 md:text-base md:leading-8">
         {displayBio}
       </p>
       {isLong && (
         <button
           type="button"
           onClick={() => setIsExpanded((current) => !current)}
-          className="mt-5 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-violet-400 transition-colors hover:text-violet-300"
+          className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-violet-300 transition-colors hover:text-violet-200"
         >
           {isExpanded ? "Ler menos" : "Ler biografia completa"}
           {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}

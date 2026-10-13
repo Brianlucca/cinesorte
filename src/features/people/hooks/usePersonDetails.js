@@ -7,11 +7,34 @@ import {
   getMovieDetails,
   postComment,
   postReview,
+  toggleLikeReview,
   updateComment,
   updateReview,
 } from '@shared/api/api';
 import { useAuth } from '@shared/context/useAuth';
 import { useToast } from '@shared/context/useToast';
+
+const isCurrentUser = (item, userId, userUid, username) =>
+  Boolean(
+    (userUid && userUid === item.userId) ||
+      (userId && userId === item.userId) ||
+      (username && username === item.username),
+  );
+
+const normalizeReplies = (replies, userId, userUid, username) =>
+  (Array.isArray(replies) ? replies : []).map((reply) => ({
+    ...reply,
+    isOwner: isCurrentUser(reply, userId, userUid, username),
+  }));
+
+const normalizeReviews = (items, userId, userUid, username) =>
+  (Array.isArray(items) ? items : []).map((review) => ({
+    ...review,
+    isOwner: isCurrentUser(review, userId, userUid, username),
+    isLikedByCurrentUser: Boolean(review.isLikedByCurrentUser),
+    likesCount: Number(review.likesCount) || 0,
+    replies: normalizeReplies(review.replies, userId, userUid, username),
+  }));
 
 export const usePersonDetails = (id) => {
   const [details, setDetails] = useState(null);
@@ -23,6 +46,9 @@ export const usePersonDetails = (id) => {
   const toast = useToast();
 
   const uniquePersonId = `person-${id}`;
+  const userId = user?.id;
+  const userUid = user?.uid;
+  const username = user?.username;
 
   const fetchDetails = useCallback(async () => {
     try {
@@ -42,13 +68,13 @@ export const usePersonDetails = (id) => {
       }
 
       setDetails({ ...personData, external_ids: externalIds });
-      setReviews(reviewsData);
+      setReviews(normalizeReviews(reviewsData, userId, userUid, username));
     } catch (err) {
       setError(err);
     } finally {
       setLoading(false);
     }
-  }, [id, uniquePersonId]);
+  }, [id, uniquePersonId, userId, userUid, username]);
 
   useEffect(() => {
     if (id) {
@@ -71,12 +97,13 @@ export const usePersonDetails = (id) => {
       });
       toast.success('Publicado', 'Seu comentário foi enviado!');
       const updatedReviews = await getMediaReviews(uniquePersonId);
-      setReviews(updatedReviews);
+      setReviews(normalizeReviews(updatedReviews, userId, userUid, username));
     } catch (requestError) {
       toast.error(
         'Erro',
         requestError.response?.data?.message || 'Não foi possível publicar.',
       );
+      throw requestError;
     }
   };
 
@@ -116,7 +143,7 @@ export const usePersonDetails = (id) => {
           review.id === reviewId
             ? {
                 ...review,
-                replies: comments,
+                replies: normalizeReplies(comments, userId, userUid, username),
                 commentsCount: (review.commentsCount || 0) + 1,
               }
             : review,
@@ -133,7 +160,9 @@ export const usePersonDetails = (id) => {
       const comments = await getComments(reviewId);
       setReviews((prev) =>
         prev.map((review) =>
-          review.id === reviewId ? { ...review, replies: comments } : review,
+          review.id === reviewId
+            ? { ...review, replies: normalizeReplies(comments, userId, userUid, username) }
+            : review,
         ),
       );
       toast.success('Editado', 'Resposta atualizada.');
@@ -173,6 +202,52 @@ export const usePersonDetails = (id) => {
     }
   };
 
+  const handleLikeReview = async (reviewId) => {
+    if (!user) return;
+    const previousReview = reviews.find((review) => review.id === reviewId);
+    if (!previousReview) return;
+
+    setReviews((previous) =>
+      previous.map((review) => {
+        if (review.id !== reviewId) return review;
+        const isLiked = !review.isLikedByCurrentUser;
+        return {
+          ...review,
+          isLikedByCurrentUser: isLiked,
+          likesCount: Math.max(0, review.likesCount + (isLiked ? 1 : -1)),
+        };
+      }),
+    );
+
+    try {
+      await toggleLikeReview(reviewId);
+    } catch {
+      setReviews((previous) =>
+        previous.map((review) =>
+          review.id === reviewId
+            ? previousReview
+            : review,
+        ),
+      );
+      toast.error('Erro', 'Não foi possível curtir esta avaliação.');
+    }
+  };
+
+  const handleLoadReplies = async (reviewId) => {
+    try {
+      const comments = await getComments(reviewId);
+      setReviews((previous) =>
+        previous.map((review) =>
+          review.id === reviewId
+            ? { ...review, replies: normalizeReplies(comments, userId, userUid, username) }
+            : review,
+        ),
+      );
+    } catch {
+      toast.error('Erro', 'Não foi possível carregar as respostas.');
+    }
+  };
+
   return {
     details,
     reviews,
@@ -185,6 +260,8 @@ export const usePersonDetails = (id) => {
       handleEditReply,
       handleDeleteReview,
       handleDeleteComment,
+      handleLikeReview,
+      handleLoadReplies,
     },
   };
 };

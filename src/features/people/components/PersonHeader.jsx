@@ -13,80 +13,82 @@ export default function PersonHeader({ details }) {
   };
 
   return (
-    <header className="relative h-[82svh] min-h-[690px] max-h-[880px]">
+    <header className="relative h-[72svh] min-h-[570px] max-h-[790px] sm:min-h-[650px]">
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 -bottom-52"
+        className="pointer-events-none absolute inset-x-0 top-0 -bottom-28 overflow-hidden"
         style={{
           WebkitMaskImage:
-            "linear-gradient(to bottom, black 0%, black 60%, rgba(0,0,0,0.78) 78%, rgba(0,0,0,0.22) 92%, transparent 100%)",
+            "linear-gradient(to bottom, black 0%, black 56%, rgba(0,0,0,0.78) 76%, rgba(0,0,0,0.22) 92%, transparent 100%)",
           maskImage:
-            "linear-gradient(to bottom, black 0%, black 60%, rgba(0,0,0,0.78) 78%, rgba(0,0,0,0.22) 92%, transparent 100%)",
+            "linear-gradient(to bottom, black 0%, black 56%, rgba(0,0,0,0.78) 76%, rgba(0,0,0,0.22) 92%, transparent 100%)",
         }}
       >
         {image ? (
           <img
             src={image}
             alt=""
-            className="h-full w-full scale-110 object-cover object-top opacity-55 blur-[2px]"
+            className="h-full w-full scale-110 object-cover object-top opacity-40 blur-[3px]"
           />
         ) : (
-          <div className="h-full w-full bg-gradient-to-br from-violet-950/30 to-zinc-950" />
+          <div className="h-full w-full bg-[#181a20]" />
         )}
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,9,11,0.98)_0%,rgba(9,9,11,0.8)_42%,rgba(9,9,11,0.22)_78%,rgba(9,9,11,0.1)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(0deg,#09090b_0%,rgba(9,9,11,0.86)_12%,transparent_56%,rgba(9,9,11,0.36)_100%)]" />
-        <div className="absolute -bottom-12 left-[20%] h-80 w-[38rem] rounded-full bg-violet-700/12 blur-[125px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(0deg,#111216_0%,rgba(17,18,22,0.86)_12%,transparent_56%,rgba(17,18,22,0.36)_100%)]" />
+        <div className="absolute -bottom-12 left-[20%] h-80 w-[38rem] rounded-full bg-violet-700/[0.08] blur-[125px]" />
       </div>
-      <div className="pointer-events-none absolute inset-x-0 -bottom-48 z-[1] h-80 bg-gradient-to-b from-transparent via-zinc-950/75 to-zinc-950" />
+      <div className="pointer-events-none absolute inset-x-0 -bottom-28 z-[1] h-56 bg-gradient-to-b from-transparent via-[#111216]/75 to-[#111216]" />
 
-      <div className="relative z-10 mx-auto flex h-full max-w-[1600px] items-end px-5 pb-20 pt-28 sm:px-8 md:px-12 md:pb-24 xl:px-16">
-        <div className="flex w-full items-end gap-8 xl:gap-12">
+      <div className="relative z-10 mx-auto flex h-full max-w-[1380px] items-end px-4 pb-10 pt-24 sm:px-8 sm:pb-12 md:px-10 md:pb-16 xl:px-12">
+        <div className="flex w-full min-w-0 flex-col items-start gap-5 sm:gap-6 md:flex-row md:items-end md:gap-7 xl:gap-9">
           {image && (
-            <div className="hidden w-[210px] shrink-0 overflow-hidden rounded-[1.75rem] border border-white/15 bg-zinc-900 shadow-[0_30px_80px_rgba(0,0,0,0.7)] md:block xl:w-[250px]">
+            <div className="w-[92px] shrink-0 overflow-hidden rounded-xl border border-white/[0.08] bg-[#181a20] sm:w-[104px] md:w-[170px] xl:w-[190px]">
               <img
                 src={image}
                 alt={details.name}
                 className="aspect-[2/3] w-full object-cover object-top"
+                fetchPriority="high"
               />
             </div>
           )}
 
-          <div className="max-w-4xl pb-1">
-            <div className="flex flex-wrap gap-2">
-              <span className="rounded-full border border-violet-300/20 bg-violet-500/15 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-violet-200 backdrop-blur-xl">
+          <div className="max-w-3xl min-w-0 pb-1">
+            <span className="mb-3 block h-1 w-12 rounded-full bg-violet-400/80 sm:mb-4" />
+            <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1.5">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-200">
                 {details.known_for_department === "Acting"
                   ? "Atuação"
                   : details.known_for_department || "Cinema"}
               </span>
               {details.deathday && (
-                <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-300 backdrop-blur-xl">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
                   In memoriam
                 </span>
               )}
             </div>
 
-            <h1 className="mt-4 max-w-4xl text-3xl font-black leading-[0.98] tracking-[-0.03em] text-white/95 sm:text-4xl md:text-[3rem] xl:text-[3.6rem]">
+            <h1 className="max-w-3xl text-3xl font-semibold leading-tight tracking-[-0.035em] text-white sm:text-4xl md:text-5xl">
               {details.name}
             </h1>
 
-            <div className="mt-6 flex flex-wrap gap-2.5 text-xs font-semibold text-zinc-300">
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium text-zinc-300 sm:mt-4 md:text-sm">
               {details.popularity > 0 && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-500/[0.08] px-3 py-2 text-emerald-300 backdrop-blur-xl">
+                <span className="inline-flex items-center gap-1.5 text-emerald-300">
                   <TrendingUp size={14} /> Popularidade {details.popularity.toFixed(0)}
                 </span>
               )}
               {details.place_of_birth && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
-                  <MapPin size={14} /> {details.place_of_birth}
+                <span className="inline-flex items-center gap-1.5 text-zinc-300">
+                  <MapPin className="shrink-0" size={14} /> {details.place_of_birth}
                 </span>
               )}
             </div>
 
-            <div className="mt-7 flex flex-wrap gap-2.5">
+            <div className="mt-4 flex flex-wrap gap-2 sm:mt-5">
               <button
                 type="button"
                 onClick={handleShare}
                 aria-label="Compartilhar pessoa"
-                className="inline-flex h-11 items-center gap-2.5 rounded-full border border-white/15 bg-black/25 px-4 text-sm font-semibold text-white backdrop-blur-xl transition-all hover:bg-white hover:text-black"
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 text-sm font-semibold text-zinc-100 transition-colors hover:bg-white/[0.08]"
               >
                 <Share2 size={17} />
                 Compartilhar
