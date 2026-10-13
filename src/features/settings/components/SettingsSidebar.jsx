@@ -2,7 +2,7 @@ import { ChevronRight, LogOut } from "lucide-react";
 
 export default function SettingsSidebar({ menuItems, activeTab, onTabChange, onLogout }) {
   return (
-    <aside className="space-y-3 xl:sticky xl:top-6 xl:self-start">
+    <aside className="space-y-3 xl:sticky xl:top-24 xl:self-start">
       <nav className="rounded-xl border border-white/[0.06] bg-white/[0.018] p-2">
         {menuItems.map((item) => {
           const isActive = activeTab === item.id;

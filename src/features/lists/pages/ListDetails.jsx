@@ -110,10 +110,10 @@ export default function ListDetails() {
         <div className="absolute inset-0 bg-[linear-gradient(90deg,#111216_0%,rgba(17,18,22,0.90)_42%,rgba(17,18,22,0.28)_100%)]" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#111216] via-transparent to-black/25" />
 
-        <div className="relative z-10 mx-auto flex min-h-[420px] max-w-[1440px] flex-col justify-between px-4 py-6 sm:px-6 md:min-h-[460px] md:px-10 md:py-8 xl:px-12">
+        <div className="relative z-10 mx-auto flex min-h-[420px] max-w-[1440px] flex-col justify-between px-4 pb-6 pt-20 sm:px-6 md:min-h-[460px] md:px-10 md:pb-8 md:pt-24 xl:px-12">
           <Link
             to="/app/lists"
-            className="inline-flex h-9 w-fit items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.018] px-3.5 text-xs font-semibold text-zinc-300 backdrop-blur-xl transition-colors hover:bg-white/[0.06] hover:text-white"
+            className="inline-flex h-9 w-fit items-center gap-2 rounded-xl border border-white/10 bg-black/35 px-3.5 text-xs font-semibold text-zinc-200 backdrop-blur-xl transition-colors hover:bg-black/55 hover:text-white"
           >
             <ArrowLeft size={14} /> Minhas listas
           </Link>

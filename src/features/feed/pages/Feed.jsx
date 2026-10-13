@@ -190,7 +190,7 @@ export default function Feed() {
             )}
           </section>
 
-          <aside className="sidebar-scrollbar space-y-5 xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:self-start xl:overflow-y-auto xl:overscroll-contain xl:pr-2">
+          <aside className="sidebar-scrollbar space-y-5 xl:sticky xl:top-24 xl:max-h-[calc(100vh-6rem)] xl:self-start xl:overflow-y-auto xl:overscroll-contain xl:pr-2">
             <div className="rounded-xl border border-white/[0.06] bg-white/[0.018] p-4">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Encontrar pessoas</span>

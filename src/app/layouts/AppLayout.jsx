@@ -68,6 +68,11 @@ export default function AppLayout() {
     : null;
 
   useEffect(() => {
+    if (/^\/app\/lists\/[^/]+\/[^/]+$/.test(location.pathname)) {
+      mainScrollRef.current?.scrollTo({ top: 0 });
+      setIsHeaderScrolled(false);
+    }
+
     const frame = window.requestAnimationFrame(() => {
       setIsHeaderScrolled((mainScrollRef.current?.scrollTop || 0) > 12);
     });
@@ -179,7 +184,8 @@ export default function AppLayout() {
   const immersiveRoute =
     location.pathname === "/" ||
     location.pathname === "/app" ||
-    /^\/app\/(movie|tv|person)\//.test(location.pathname);
+    /^\/app\/(movie|tv|person)\//.test(location.pathname) ||
+    /^\/app\/lists\/[^/]+\/[^/]+$/.test(location.pathname);
 
   const headerClassName = `fixed inset-x-0 top-0 z-[70] transition-[background-color,box-shadow,backdrop-filter] duration-300 ${
     isHeaderScrolled
@@ -413,7 +419,7 @@ export default function AppLayout() {
         onScroll={(event) => setIsHeaderScrolled(event.currentTarget.scrollTop > 12)}
         className="relative h-full min-w-0 overflow-x-hidden overflow-y-auto bg-[#111216]"
       >
-        <div className={`h-full w-full pt-16 ${immersiveRoute ? "md:pt-0" : "md:pt-[72px]"}`}><Outlet /></div>
+        <div className={`h-full w-full ${immersiveRoute ? "pt-0" : "pt-16 md:pt-[72px]"}`}><Outlet /></div>
       </main>
 
       {isMessagesLoaded && (
