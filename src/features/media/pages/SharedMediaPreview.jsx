@@ -1,25 +1,28 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
+  ArrowRight,
+  CalendarDays,
+  CirclePlay,
+  Clock3,
   Film,
-  Star,
-  Clock,
-  Calendar,
+  LogIn,
+  MapPin,
   Play,
+  Star,
   User,
+  UserPlus,
   X,
-  Clapperboard,
-  Tv,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import {
+  getPersonFilmography,
   getMovieDetails,
   getEpisodeDetails,
   getSeasonDetails,
 } from "@shared/api/api";
 import { useAuth } from "@shared/context/useAuth";
 import { Helmet } from "react-helmet-async";
+import PersonFilmography from "@features/people/components/PersonFilmography";
 
 function buildInternalRoute(type, id) {
   if (type === "episode") {
@@ -44,118 +47,6 @@ function buildLink(route, user, encodedRoute) {
   return `/login?redirect=${encodeURIComponent(route)}&from=${encodedRoute}`;
 }
 
-function KnownForCarousel({ credits, user, encodedCurrentRoute }) {
-  const scrollRef = useRef(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const items = [...(credits.cast || []), ...(credits.crew || [])];
-  const seen = new Set();
-  const unique = items
-    .filter((item) => {
-      if (!item.poster_path || seen.has(item.id)) return false;
-      seen.add(item.id);
-      return true;
-    })
-    .sort(
-      (a, b) =>
-        (b.vote_count || b.popularity || 0) - (a.vote_count || a.popularity || 0)
-    )
-    .slice(0, 20);
-
-  const checkScroll = () => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 8);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
-  };
-
-  const scroll = (dir) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * 400, behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    checkScroll();
-    el.addEventListener("scroll", checkScroll, { passive: true });
-    const ro = new ResizeObserver(checkScroll);
-    ro.observe(el);
-    return () => {
-      el.removeEventListener("scroll", checkScroll);
-      ro.disconnect();
-    };
-  }, [unique.length]);
-
-  if (unique.length === 0) return null;
-
-  return (
-    <div className="mt-10">
-      <div className="flex items-center justify-between mb-5">
-        <p className="text-sm font-black uppercase tracking-[0.2em] text-zinc-500">
-          Conhecido por
-        </p>
-        <div className="flex gap-2">
-          <button
-            onClick={() => scroll(-1)}
-            disabled={!canScrollLeft}
-            className="p-2 rounded-xl transition-all disabled:opacity-20 hover:bg-white/10"
-            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
-          >
-            <ChevronLeft size={20} className="text-zinc-400" />
-          </button>
-          <button
-            onClick={() => scroll(1)}
-            disabled={!canScrollRight}
-            className="p-2 rounded-xl transition-all disabled:opacity-20 hover:bg-white/10"
-            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
-          >
-            <ChevronRight size={20} className="text-zinc-400" />
-          </button>
-        </div>
-      </div>
-
-      <div
-        ref={scrollRef}
-        className="flex gap-5 overflow-x-auto pb-4 pt-1 [&::-webkit-scrollbar]:hidden"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-      >
-        {unique.map((item) => {
-          const mediaType = item.media_type || (item.first_air_date ? "tv" : "movie");
-          const itemTitle = item.title || item.name;
-          const itemRoute = `/app/${mediaType}/${item.id}`;
-          const href = buildLink(itemRoute, user, encodedCurrentRoute);
-
-          return (
-            <Link
-              key={`${item.id}-${item.media_type}`}
-              to={href}
-              className="shrink-0 w-36 group"
-            >
-              <div className="w-36 aspect-[2/3] rounded-2xl overflow-hidden bg-zinc-800/80 mb-3 ring-1 ring-white/10 group-hover:ring-violet-500/50 transition-all duration-300 group-hover:scale-105 shadow-xl">
-                <img
-                  src={`https://image.tmdb.org/t/p/w342${item.poster_path}`}
-                  alt={itemTitle}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <p className="text-sm font-bold text-zinc-400 group-hover:text-white transition-colors leading-tight truncate">
-                {itemTitle}
-              </p>
-              <p className="text-xs text-zinc-500 flex items-center gap-1.5 mt-1.5 font-medium">
-                {mediaType === "tv" ? <Tv size={14} /> : <Clapperboard size={14} />}
-                {mediaType === "tv" ? "Série" : "Filme"}
-              </p>
-            </Link>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 export default function SharedMediaPreview() {
   const { type, id } = useParams();
   const { user } = useAuth();
@@ -163,11 +54,19 @@ export default function SharedMediaPreview() {
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showTrailer, setShowTrailer] = useState(false);
+  const [filmography, setFilmography] = useState(null);
+  const [filmographyLoading, setFilmographyLoading] = useState(false);
+  const [filmographyError, setFilmographyError] = useState(null);
+  const [filmographyRetryPage, setFilmographyRetryPage] = useState(1);
 
   useEffect(() => {
     async function fetchMedia() {
       try {
         let data;
+        setFilmography(null);
+        setFilmographyError(null);
+        setFilmographyRetryPage(1);
+        setFilmographyLoading(type === "person");
         if (type === "episode") {
           const match = id.match(/^(\d+)-s(\d+)-e(\d+)$/);
           if (match) {
@@ -181,34 +80,74 @@ export default function SharedMediaPreview() {
             data = await getSeasonDetails(tvId, season);
           }
         } else {
-          data = await getMovieDetails(type, id);
+          if (type === "person") {
+            const [personData, filmographyData] = await Promise.all([
+              getMovieDetails(type, id),
+              getPersonFilmography(id, 1).catch((error) => {
+                console.error("Não foi possível carregar a filmografia da pessoa compartilhada.", error);
+                setFilmographyError(error);
+                return null;
+              }),
+            ]);
+            data = personData;
+            setFilmography(filmographyData);
+          } else {
+            data = await getMovieDetails(type, id);
+          }
         }
         setMedia(data);
       } catch {
         setMedia(null);
       } finally {
         setLoading(false);
+        setFilmographyLoading(false);
       }
     }
     fetchMedia();
   }, [type, id]);
 
+  const loadFilmographyPage = async (page) => {
+    setFilmographyLoading(true);
+    setFilmographyError(null);
+    setFilmographyRetryPage(page);
+    try {
+      const pageData = await getPersonFilmography(id, page);
+      setFilmography(pageData);
+      setFilmographyRetryPage(pageData.page || page);
+    } catch (error) {
+      console.error("Não foi possível carregar a página da filmografia compartilhada.", error);
+      setFilmographyError(error);
+    } finally {
+      setFilmographyLoading(false);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#0a0a0f]">
-        <div className="w-16 h-16 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+      <div className="grid min-h-screen place-items-center bg-[#111216]">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
       </div>
     );
   }
 
   if (!media) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#0a0a0f] text-white flex-col gap-6">
-        <Film size={64} className="text-zinc-700" />
-        <h1 className="text-3xl font-bold text-zinc-200">Conteúdo não encontrado</h1>
-        <Link to="/" className="text-violet-400 hover:text-violet-300 text-base font-medium">
-          Voltar para o início
+      <div className="grid min-h-screen place-items-center bg-[#111216] px-5 text-white">
+        <div className="text-center">
+          <Film size={38} className="mx-auto text-zinc-600" />
+          <h1 className="mt-5 text-xl font-semibold tracking-[-0.02em] text-white">
+            Conteúdo não encontrado
+          </h1>
+          <p className="mt-2 text-sm text-zinc-500">
+            Este link pode estar indisponível ou ter sido removido.
+          </p>
+          <Link
+            to="/"
+            className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-zinc-300 transition-colors hover:text-white"
+          >
+            Voltar para o início <ArrowRight size={15} />
         </Link>
+        </div>
       </div>
     );
   }
@@ -234,22 +173,64 @@ export default function SharedMediaPreview() {
   const contentLink = buildLink(internalRoute, user, encodedRoute);
 
   const shareImage = banner || poster || `${window.location.origin}/logo.png`;
+  const engagementSection = (
+    <section className="mt-8 max-w-2xl rounded-xl border border-white/[0.07] bg-white/[0.025] p-4 sm:p-5">
+      <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-500">
+        {user ? "Continue no CineSorte" : "Faça parte da comunidade"}
+      </span>
+      <h2 className="mt-1.5 text-base font-medium tracking-[-0.02em] text-white">
+        {user
+          ? isPerson
+            ? "Explore mais sobre este artista"
+            : "Explore mais sobre este conteúdo"
+          : "Sua próxima descoberta começa aqui"}
+      </h2>
+      <p className="mt-1.5 text-xs leading-5 text-zinc-400 sm:text-sm">
+        {user
+          ? isPerson
+            ? "Acesse o perfil completo, interaja e continue explorando a carreira."
+            : "Acesse o perfil completo, interaja e continue explorando."
+          : "Avalie filmes e séries, crie listas e acompanhe as recomendações da comunidade."}
+      </p>
+      {user ? (
+        <Link
+          to={internalRoute}
+          className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 text-sm font-medium text-white transition-colors hover:bg-violet-500"
+        >
+          <CirclePlay size={16} /> Acessar conteúdo
+        </Link>
+      ) : (
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <Link
+            to={`/register?redirect=${encodedRoute}`}
+            className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 text-sm font-medium text-white transition-colors hover:bg-violet-500"
+          >
+            <UserPlus size={15} /> Criar conta grátis
+          </Link>
+          <Link
+            to={`/login?redirect=${encodedRoute}`}
+            className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-4 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/[0.07]"
+          >
+            <LogIn size={15} /> Já tenho uma conta
+          </Link>
+        </div>
+      )}
+    </section>
+  );
+  const birthDate = isPerson && date
+    ? new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR", { dateStyle: "long" })
+    : null;
 
   return (
-    <div
-      className="min-h-screen flex flex-col relative overflow-x-hidden"
-      style={{ background: "#0a0a0f" }}
-    >
+    <div className="relative isolate min-h-screen overflow-x-hidden bg-[#111216] text-white">
       <Helmet>
         <title>{title} | CineSorte</title>
         <meta name="description" content={overview.substring(0, 150) + "..."} />
-        
         <meta property="og:type" content="website" />
         <meta property="og:url" content={window.location.href} />
         <meta property="og:title" content={`${title} | CineSorte`} />
         <meta property="og:description" content={overview.substring(0, 150) + "..."} />
         <meta property="og:image" content={shareImage} />
-        
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content={window.location.href} />
         <meta property="twitter:title" content={`${title} | CineSorte`} />
@@ -257,14 +238,27 @@ export default function SharedMediaPreview() {
         <meta property="twitter:image" content={shareImage} />
       </Helmet>
 
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[640px] overflow-hidden" aria-hidden="true">
+        {banner && (
+          <img
+            src={banner}
+            alt=""
+            className="h-full w-full object-cover object-top opacity-[0.16]"
+          />
+        )}
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,18,22,0.48)_0%,#111216_88%)]" />
+      </div>
+
       {showTrailer && trailerKey && (
-        <div className="fixed inset-0 z-[100000] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md">
-          <div className="relative w-full max-w-6xl aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/95 p-4 backdrop-blur-md">
+          <div className="relative aspect-video w-full max-w-6xl overflow-hidden rounded-xl bg-black shadow-2xl ring-1 ring-white/10">
             <button
+              type="button"
+              aria-label="Fechar trailer"
               onClick={() => setShowTrailer(false)}
-              className="absolute top-6 right-6 z-10 p-3 bg-black/60 hover:bg-black text-white rounded-full transition-colors"
+              className="absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-black/65 text-white transition-colors hover:bg-black/90"
             >
-              <X size={24} />
+              <X size={20} />
             </button>
             <iframe
               src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1`}
@@ -277,256 +271,157 @@ export default function SharedMediaPreview() {
         </div>
       )}
 
-      {banner && (
-        <div className="absolute inset-0 z-0 pointer-events-none">
+      <header className="relative z-10 mx-auto flex w-full max-w-[1380px] items-center justify-between gap-4 px-4 py-4 sm:px-8 sm:py-5 md:px-10 xl:px-12">
+        <Link to="/" className="inline-flex items-center gap-2.5" aria-label="CineSorte — início">
           <img
-            src={banner}
+            src="/icons/cinesorte-transparent.png"
             alt=""
-            className="w-full h-full object-cover object-top"
-            style={{ opacity: 0.35, filter: "brightness(0.9) saturate(1.1)" }}
+            className="h-9 w-9 object-contain"
           />
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(to bottom, rgba(10,10,15,0.1) 0%, rgba(10,10,15,0.4) 55%, rgba(10,10,15,1) 100%)",
-            }}
-          />
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(to right, rgba(10,10,15,0.7) 0%, rgba(10,10,15,0.2) 50%, transparent 80%)",
-            }}
-          />
-        </div>
-      )}
-
-      <header className="relative z-10 px-6 md:px-12 py-6 flex justify-between items-center">
-        <Link to="/" className="flex items-center gap-2.5">
-          <Film className="text-violet-400 w-6 h-6" />
-          <span
-            className="text-lg font-black text-white uppercase"
-            style={{ letterSpacing: "-0.01em" }}
-          >
+          <span className="text-lg font-semibold tracking-[-0.035em] text-white sm:text-xl">
             Cine<span className="text-violet-400">Sorte</span>
           </span>
         </Link>
-        {user ? (
-          <Link
-            to={internalRoute}
-            className="px-5 py-2.5 text-base font-semibold text-white rounded-xl transition-colors border hover:bg-white/5"
-            style={{
-              background: "rgba(255,255,255,0.06)",
-              borderColor: "rgba(255,255,255,0.1)",
-            }}
-          >
-            Ir para o Conteúdo
-          </Link>
-        ) : (
-          <Link
-            to={`/login?redirect=${encodedRoute}`}
-            className="px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-base font-semibold rounded-xl transition-colors"
-          >
-            Entrar
-          </Link>
-        )}
+        <Link
+          to={contentLink}
+          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 text-xs font-medium text-zinc-200 transition-colors hover:border-white/[0.14] hover:bg-white/[0.07] sm:h-10 sm:px-4 sm:text-sm"
+        >
+          {user ? "Ir para o conteúdo" : "Entrar"}
+          <ArrowRight size={14} />
+        </Link>
       </header>
 
-      <div className="relative z-10 flex-1 flex flex-col justify-center px-6 md:px-12 lg:px-16 pt-4 pb-16 max-w-7xl mx-auto w-full">
-        <div className="flex flex-col md:flex-row gap-10 md:gap-16 items-center md:items-start">
-
-          <div className="shrink-0">
+      <main className="relative z-10 mx-auto w-full max-w-[1380px] px-4 pb-16 pt-5 sm:px-8 sm:pt-8 md:px-10 md:pb-24 md:pt-12 xl:px-12">
+        <section className="grid gap-7 md:grid-cols-[190px_minmax(0,1fr)] md:gap-9 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-12">
+          <div className="mx-auto w-[118px] shrink-0 sm:w-[140px] md:mx-0 md:w-full">
             {poster ? (
-              <div
-                className="w-48 md:w-64 lg:w-80 rounded-3xl overflow-hidden ring-1 ring-white/10"
-                style={{ boxShadow: "0 24px 80px rgba(0,0,0,0.8)" }}
-              >
-                <img src={poster} alt={title} className="w-full h-full object-cover block" />
+              <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[#181a20] shadow-[0_20px_65px_rgba(0,0,0,0.38)]">
+                <img
+                  src={poster}
+                  alt={`${isPerson ? "Foto de" : "Pôster de"} ${title}`}
+                  className="aspect-[2/3] w-full object-cover"
+                  fetchpriority="high"
+                />
               </div>
             ) : (
-              <div
-                className="w-48 md:w-64 lg:w-80 aspect-[2/3] rounded-3xl flex items-center justify-center ring-1 ring-white/10"
-                style={{ background: "rgba(255,255,255,0.04)" }}
-              >
-                <User size={64} className="text-zinc-700" />
+              <div className="grid aspect-[2/3] place-items-center rounded-xl border border-white/[0.08] bg-white/[0.025]">
+                <User size={36} className="text-zinc-600" />
               </div>
             )}
           </div>
 
-          <div className="flex-1 min-w-0 text-center md:text-left pt-2 md:pt-4">
+          <div className="min-w-0">
+            <div className="text-center md:text-left">
+              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-zinc-400">
+                {isPerson ? "Perfil de artista" : type === "tv" ? "Série" : type === "episode" ? "Episódio" : type === "season" ? "Temporada" : "Filme"}
+              </span>
+              {!isPerson && media.genres?.length > 0 && (
+                <div className="mt-3 flex flex-wrap justify-center gap-2 md:justify-start">
+                  {media.genres.slice(0, 3).map((genre) => (
+                    <span
+                      key={genre.id}
+                      className="rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[10px] font-medium text-zinc-400"
+                    >
+                      {genre.name}
+                    </span>
+                  ))}
+                </div>
+              )}
 
-            {!isPerson && media.genres?.length > 0 && (
-              <div className="mb-4 flex flex-wrap justify-center gap-3 md:justify-start">
-                {media.genres.slice(0, 3).map((g) => (
-                  <span
-                    key={g.id}
-                    className="text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full"
-                    style={{
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      color: "#a1a1aa",
-                    }}
-                  >
-                    {g.name}
+              <h1 className="mt-2 text-3xl font-semibold leading-tight tracking-[-0.04em] text-white sm:text-4xl md:mt-3 md:text-5xl">
+                {title}
+              </h1>
+
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs font-medium text-zinc-400 md:justify-start md:text-sm">
+                {!isPerson && media.vote_average > 0 && (
+                  <span className="inline-flex items-center gap-1.5 text-amber-200">
+                    <Star size={14} className="fill-amber-300 text-amber-300" />
+                    <span className="tabular-nums">{media.vote_average.toFixed(1)}</span>
+                    <span className="text-zinc-600">/ 10 no TMDB</span>
                   </span>
-                ))}
+                )}
+                {isPerson && birthDate && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <CalendarDays size={14} /> Nascimento · {birthDate}
+                  </span>
+                )}
+                {!isPerson && date && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <CalendarDays size={14} /> {new Date(date).getFullYear()}
+                  </span>
+                )}
+                {!isPerson && media.runtime > 0 && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Clock3 size={14} />
+                    {Math.floor(media.runtime / 60)}h {media.runtime % 60}min
+                  </span>
+                )}
+                {isPerson && media.place_of_birth && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <MapPin size={14} /> {media.place_of_birth}
+                  </span>
+                )}
               </div>
-            )}
-
-            <h1
-              className="text-white font-black leading-tight mb-4"
-              style={{
-                fontSize: "clamp(2rem, 5vw, 4rem)",
-                letterSpacing: "-0.025em",
-              }}
-            >
-              {title}
-            </h1>
-
-            <div
-              className="flex flex-wrap items-center gap-6 mb-6 justify-center md:justify-start"
-              style={{ color: "#71717a" }}
-            >
-              {!isPerson && media.vote_average > 0 && (
-                <div className="flex items-center gap-2">
-                  <Star size={18} className="fill-amber-400 text-amber-400" />
-                  <span
-                    className="text-base font-bold tabular-nums"
-                    style={{ color: "#fbbf24" }}
-                  >
-                    {media.vote_average.toFixed(1)}
-                  </span>
-                </div>
-              )}
-              {date && (
-                <div className="flex items-center gap-2">
-                  <Calendar size={16} />
-                  <span className="text-base font-medium tabular-nums">
-                    {new Date(date).getFullYear()}
-                  </span>
-                </div>
-              )}
-              {!isPerson && media.runtime > 0 && (
-                <div className="flex items-center gap-2">
-                  <Clock size={16} />
-                  <span className="text-base font-medium tabular-nums">
-                    {Math.floor(media.runtime / 60)}h {media.runtime % 60}m
-                  </span>
-                </div>
-              )}
-              {isPerson && media.place_of_birth && (
-                <span className="text-base font-medium">{media.place_of_birth}</span>
-              )}
             </div>
 
-            <p
-              className="mb-8 leading-relaxed max-w-3xl line-clamp-3 mx-auto md:mx-0 text-zinc-300"
-              style={{ fontSize: "1.0625rem" }}
-            >
-              {overview}
-            </p>
+            <section className="mt-7 border-t border-white/[0.07] pt-5 md:mt-8">
+              <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-500">
+                {isPerson ? "Sobre a pessoa" : "Sinopse"}
+              </span>
+              <p className="mt-2 line-clamp-4 max-w-3xl whitespace-pre-line text-sm leading-6 text-zinc-300 sm:text-[15px] sm:leading-7">
+                {overview}
+              </p>
+            </section>
 
-            <div className="flex flex-wrap gap-4 justify-center md:justify-start mb-8">
+            <div className="mt-6 flex flex-wrap justify-center gap-2.5 md:justify-start">
               {trailerKey && (
                 <button
+                  type="button"
                   onClick={() => setShowTrailer(true)}
-                  className="inline-flex items-center gap-2.5 px-6 py-3 bg-white text-black text-base font-bold rounded-xl hover:bg-zinc-100 transition-all hover:scale-[1.03] shadow-lg"
+                  className="inline-flex h-10 items-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-zinc-950 transition-colors hover:bg-zinc-200"
                 >
-                  <Play size={18} fill="currentColor" /> Ver Trailer
+                  <Play size={15} fill="currentColor" /> Assistir trailer
                 </button>
               )}
               <Link
                 to={contentLink}
-                className="inline-flex items-center gap-2.5 px-6 py-3 text-base font-bold rounded-xl transition-all hover:scale-[1.03]"
-                style={{
-                  background: "rgba(139,92,246,0.15)",
-                  border: "1px solid rgba(139,92,246,0.35)",
-                  color: "#c4b5fd",
-                }}
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/[0.1] bg-white/[0.035] px-4 text-sm font-medium text-zinc-200 transition-colors hover:border-white/[0.16] hover:bg-white/[0.07]"
               >
-                Ver detalhes completos
+                Ver detalhes completos <ArrowRight size={15} />
               </Link>
             </div>
 
-            {isPerson && media.combined_credits && (
-              <KnownForCarousel
-                credits={media.combined_credits}
-                user={user}
-                encodedCurrentRoute={encodedRoute}
-              />
-            )}
-
-            <div
-              className="p-6 md:p-8 rounded-3xl max-w-2xl mx-auto md:mx-0 mt-10"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                backdropFilter: "blur(16px)",
-              }}
-            >
-              {user ? (
-                <>
-                  <p
-                    className="text-xs font-black uppercase tracking-widest mb-2"
-                    style={{ color: "#71717a" }}
-                  >
-                    Você já está logado
-                  </p>
-                  <p
-                    className="text-base mb-5 leading-relaxed"
-                    style={{ color: "#d4d4d8" }}
-                  >
-                    Acesse o conteúdo completo, interaja, comente e adicione às suas listas.
-                  </p>
-                  <Link
-                    to={internalRoute}
-                    className="w-full bg-violet-600 hover:bg-violet-500 text-white text-base font-bold py-3.5 px-5 rounded-xl flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
-                    style={{ boxShadow: "0 8px 24px rgba(124,58,237,0.3)" }}
-                  >
-                    <Play size={18} fill="currentColor" /> Acessar Conteúdo
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <p
-                    className="text-xs font-black uppercase tracking-widest mb-2"
-                    style={{ color: "#71717a" }}
-                  >
-                    Junte-se à comunidade
-                  </p>
-                  <p
-                    className="text-base mb-5 leading-relaxed"
-                    style={{ color: "#d4d4d8" }}
-                  >
-                    Descubra onde assistir, dê sua nota, crie listas e veja a opinião dos
-                    seus amigos.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Link
-                      to={`/register?redirect=${encodedRoute}`}
-                      className="flex-1 bg-violet-600 hover:bg-violet-500 text-white text-base font-bold py-3.5 px-5 rounded-xl flex items-center justify-center gap-2.5 transition-all hover:scale-[1.02]"
-                      style={{ boxShadow: "0 8px 24px rgba(124,58,237,0.3)" }}
-                    >
-                      <User size={18} /> Criar conta grátis
-                    </Link>
-                    <Link
-                      to={`/login?redirect=${encodedRoute}`}
-                      className="flex-1 text-white text-base font-bold py-3.5 px-5 rounded-xl flex items-center justify-center transition-all hover:bg-white/5"
-                      style={{
-                        background: "rgba(255,255,255,0.06)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                      }}
-                    >
-                      Já tenho uma conta
-                    </Link>
-                  </div>
-                </>
-              )}
-            </div>
+            {!isPerson && engagementSection}
           </div>
-        </div>
-      </div>
+        </section>
+
+        {isPerson && (
+          <div className="mt-10 border-t border-white/[0.07] pt-8">
+            <PersonFilmography
+              filmography={filmography}
+              loading={filmographyLoading}
+              error={filmographyError}
+              retryPage={filmographyRetryPage}
+              onPageChange={loadFilmographyPage}
+              getCreditHref={(credit) =>
+                buildLink(
+                  buildInternalRoute(
+                    credit.media_type || (credit.title ? "movie" : "tv"),
+                    credit.id,
+                  ),
+                  user,
+                  encodedRoute,
+                )
+              }
+            />
+            {engagementSection}
+          </div>
+        )}
+
+        <footer className="mt-12 border-t border-white/[0.06] pt-4 text-center text-[11px] text-zinc-600">
+          Compartilhado pelo CineSorte
+        </footer>
+      </main>
     </div>
   );
 }
