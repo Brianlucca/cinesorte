@@ -9,13 +9,13 @@ function getCreditType(credit) {
   return credit.media_type || (credit.title ? "movie" : "tv");
 }
 
-function FilmographyCredit({ credit }) {
+function FilmographyCredit({ credit, href }) {
   const type = getCreditType(credit);
   const title = credit.title || credit.name || "Título sem nome";
 
   return (
     <Link
-      to={`/app/${type}/${credit.id}`}
+      to={href || `/app/${type}/${credit.id}`}
       className="group block min-w-0 rounded-lg border border-white/[0.06] bg-white/[0.018] px-3 py-2.5 transition-colors hover:border-white/[0.1] hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
     >
       <h4 className="truncate text-sm font-medium text-zinc-200 transition-colors group-hover:text-violet-200">
@@ -70,6 +70,7 @@ export default function PersonFilmography({
   error,
   retryPage,
   onPageChange,
+  getCreditHref,
 }) {
   const credits = filmography?.results || [];
   const years = new Map();
@@ -133,6 +134,7 @@ export default function PersonFilmography({
                   <FilmographyCredit
                     key={`${credit.media_type}-${credit.id}`}
                     credit={credit}
+                    href={getCreditHref?.(credit)}
                   />
                 ))}
               </div>
