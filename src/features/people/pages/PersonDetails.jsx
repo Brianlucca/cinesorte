@@ -2,18 +2,30 @@ import { useParams } from "react-router-dom";
 import PersonBio from "@features/people/components/PersonBio";
 import PersonFilmography from "@features/people/components/PersonFilmography";
 import PersonHeader from "@features/people/components/PersonHeader";
-import PersonImages from "@features/people/components/PersonImages";
 import PersonInfo from "@features/people/components/PersonInfo";
-import PersonReviewsSection from "@features/people/components/PersonReviewsSection";
+import ReviewsSection from "@features/media/components/reviews/ReviewsSection";
 import { usePersonDetails } from "@features/people/hooks/usePersonDetails";
 
 export default function PersonDetails() {
   const { id } = useParams();
-  const { details, reviews, loading, actions } = usePersonDetails(id);
+  const {
+    details,
+    reviews,
+    loading,
+    actions,
+    hasMorePersonImages,
+    loadingMoreImages,
+    loadMorePersonImages,
+    filmography,
+    filmographyLoading,
+    filmographyError,
+    filmographyRetryPage,
+    loadFilmographyPage,
+  } = usePersonDetails(id);
 
   if (loading) {
     return (
-      <div className="grid h-screen place-items-center bg-zinc-950">
+      <div className="grid h-screen place-items-center bg-[#111216]">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-violet-600 border-t-transparent" />
       </div>
     );
@@ -21,36 +33,68 @@ export default function PersonDetails() {
 
   if (!details) {
     return (
-      <div className="grid h-screen place-items-center bg-zinc-950 text-white">
+      <div className="grid h-screen place-items-center bg-[#111216] text-white">
         Pessoa não encontrada.
       </div>
     );
   }
 
   return (
-    <div className="relative isolate -mt-24 min-h-screen overflow-x-hidden bg-zinc-950 pb-24 text-white md:-mt-8">
+    <div className="relative isolate -mt-24 min-h-screen overflow-x-hidden bg-[#111216] pb-24 text-white md:-mt-8">
       <PersonHeader
         details={details}
+        hasMoreImages={hasMorePersonImages}
+        loadingMoreImages={loadingMoreImages}
+        onLoadMoreImages={loadMorePersonImages}
       />
 
-      <div className="relative z-20 mx-auto -mt-8 grid max-w-[1600px] grid-cols-1 gap-12 px-5 sm:px-8 md:-mt-12 md:px-12 lg:grid-cols-12 xl:px-16">
-        <main className="space-y-14 lg:col-span-8 md:space-y-16">
-          <PersonBio biography={details.biography} />
-          <PersonFilmography credits={details.combined_credits} />
-          {details.images?.profiles?.length > 0 && (
-            <PersonImages images={details.images} name={details.name} />
-          )}
+      <nav
+        aria-label="Navegação do perfil"
+        className="scrollbar-hide relative z-20 mx-auto flex max-w-[1380px] gap-3 overflow-x-auto px-4 py-3 after:absolute after:bottom-0 after:left-4 after:right-4 after:h-px after:bg-white/[0.06] sm:gap-5 sm:px-8 md:px-10 md:after:hidden xl:px-12"
+      >
+        {[
+          { href: "#person-filmography", label: "Filmografia", available: filmography?.total_results > 0 || filmographyLoading || Boolean(filmographyError) },
+          { href: "#person-reviews", label: "Comentários", available: true },
+        ]
+          .filter((item) => item.available)
+          .map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="shrink-0 whitespace-nowrap py-1 text-xs font-medium text-zinc-400 transition-colors hover:text-white"
+            >
+              {item.label}
+            </a>
+          ))}
+      </nav>
 
-          <section className="relative overflow-visible rounded-[2rem] border border-white/[0.07] bg-[radial-gradient(ellipse_at_top_left,rgba(124,58,237,0.08),transparent_38%)] p-5 sm:p-7 md:p-9">
+      <div className="relative z-20 mx-auto grid max-w-[1380px] min-w-0 grid-cols-1 gap-8 px-4 sm:px-8 md:px-10 lg:grid-cols-12 lg:gap-10 xl:gap-14 xl:px-12">
+        <aside className="order-1 min-w-0 pt-4 sm:pt-5 lg:order-2 lg:col-span-4 lg:pt-8">
+          <div className="lg:sticky lg:top-24">
+            <PersonInfo details={details} />
+          </div>
+        </aside>
+
+        <main className="order-2 min-w-0 space-y-10 lg:order-1 lg:col-span-8 lg:space-y-14">
+          {details.biography && <PersonBio biography={details.biography} />}
+          <PersonFilmography
+            filmography={filmography}
+            loading={filmographyLoading}
+            error={filmographyError}
+            retryPage={filmographyRetryPage}
+            onPageChange={loadFilmographyPage}
+          />
+
+          <section id="person-reviews" className="scroll-mt-24 border-t border-white/[0.07] pt-8">
             <div className="mb-7">
-              <span className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300">
                 Conversa da comunidade
               </span>
-              <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">
+              <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.02em] text-white md:text-2xl">
                 Comentários sobre {details.name}
               </h2>
             </div>
-            <PersonReviewsSection
+            <ReviewsSection
               reviews={reviews}
               onPostReview={actions.handlePostReview}
               onEditReview={actions.handleEditReview}
@@ -58,15 +102,11 @@ export default function PersonDetails() {
               onEditReply={actions.handleEditReply}
               onDelete={actions.handleDeleteReview}
               onDeleteComment={actions.handleDeleteComment}
+              onLike={actions.handleLikeReview}
+              onLoadReplies={actions.handleLoadReplies}
             />
           </section>
         </main>
-
-        <aside className="lg:col-span-4">
-          <div className="lg:sticky lg:top-24">
-            <PersonInfo details={details} />
-          </div>
-        </aside>
       </div>
     </div>
   );

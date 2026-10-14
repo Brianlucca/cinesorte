@@ -6,7 +6,7 @@ import {
   scheduleMovieDetailsPrefetch,
 } from '@shared/lib/mediaDetailsPrefetch';
 
-export default function MediaCard({ media, variant = 'default' }) {
+export default function MediaCard({ media, variant = 'default', subtitle }) {
   if (!media.poster_path) return null;
 
   const imageUrl = `https://image.tmdb.org/t/p/w500${media.poster_path}`;
@@ -52,6 +52,11 @@ export default function MediaCard({ media, variant = 'default' }) {
             {year && <span>•</span>}
             <span>{type === 'movie' ? 'Filme' : 'Série'}</span>
           </div>
+          {subtitle && (
+            <p className="mt-1 truncate text-[11px] text-zinc-500" title={subtitle}>
+              {subtitle}
+            </p>
+          )}
         </div>
       </Link>
     );

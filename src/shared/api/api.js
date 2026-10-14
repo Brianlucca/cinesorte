@@ -180,6 +180,10 @@ export const reconcileRatedReviews = () => api.post("/users/interactions/reconci
 });
 
 export const getMovieDetails = (type, id) => cachedGet(`/tmdb/details/${type}/${id}`, {}, 10 * 60 * 1000);
+export const getPersonTaggedImages = (id, page = 1) =>
+  cachedGet(`/tmdb/details/person/${id}/tagged-images`, { params: { page } }, 10 * 60 * 1000);
+export const getPersonFilmography = (id, page = 1) =>
+  cachedGet(`/tmdb/details/person/${id}/filmography`, { params: { page } }, 10 * 60 * 1000);
 export const getPersonExternalIds = (id) => api.get(`/tmdb/details/person/${id}/external_ids`).catch(() => ({}));
 export const getSeasonDetails = (tvId, seasonNumber) => cachedGet(`/tmdb/details/tv/${tvId}/season/${seasonNumber}`, {}, 10 * 60 * 1000);
 export const getEpisodeDetails = (tvId, seasonNumber, episodeNumber) =>
