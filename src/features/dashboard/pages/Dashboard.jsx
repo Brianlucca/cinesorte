@@ -407,10 +407,38 @@ export default function Dashboard() {
       </div>
     );
 
+  const becauseSeed = data.becauseSeed;
   const sections = [
-    { id: "recommendedMovies", title: user ? "Escolhidos para você" : "Filmes para descobrir", type: "movie", variant: "poster" },
-    { id: "trendingDay", title: "Em alta hoje", type: "movie", variant: "poster" },
-    { id: "recommendedSeries", title: user ? "Séries para a sua próxima maratona" : "Séries para maratonar", type: "movie", variant: "poster" },
+    { id: "recommendedMovies", title: user ? "Escolhidos para você" : "Filmes para descobrir", variant: "poster" },
+    {
+      id: "becauseYouWatched",
+      title: becauseSeed?.title
+        ? `Porque você assistiu ${becauseSeed.title}`
+        : "Recomendados para você",
+      variant: "poster",
+    },
+    { id: "trendingDay", title: "Em alta hoje", variant: "poster" },
+    {
+      id: "animeTrending",
+      title: "Central do anime",
+      variant: "landscape",
+    },
+    {
+      id: "animes",
+      title: "Descubra animes",
+      variant: "poster",
+    },
+    { id: "recommendedSeries", title: user ? "Séries para a sua próxima maratona" : "Séries para maratonar", variant: "poster" },
+    {
+      id: "animations",
+      title: "Animações em destaque",
+      variant: "poster",
+    },
+    {
+      id: "streaming",
+      title: "Disponíveis nos streamings",
+      variant: "poster",
+    },
     { id: "trailers", title: "Estreias em cena", type: "trailer" },
   ];
   const displayedHeroItems = user
@@ -428,7 +456,7 @@ export default function Dashboard() {
         onSlideChange={handleHeroSlideChange}
       />
 
-      <div className="relative z-0 -mt-10 flex flex-col gap-10 bg-[#111216] pt-16 md:-mt-16 md:gap-14 md:pt-24">
+      <div className="relative z-0 -mt-10 flex flex-col gap-8 bg-[#111216] pt-16 md:-mt-16 md:gap-10 md:pt-24">
         {user && <ContinueWatching />}
         {(data.trendingWeek || []).length > 0 && (
           <div className="space-y-1 md:space-y-2">
@@ -457,7 +485,11 @@ export default function Dashboard() {
                 {section.type === 'trailer' ? (
                   <TrailerRow title={section.title} items={items} />
                 ) : (
-                  <MovieRow title={section.title} items={items} variant={section.variant} />
+                  <MovieRow
+                    title={section.title}
+                    items={items}
+                    variant={section.variant}
+                  />
                 )}
               </RowWrapper>
 

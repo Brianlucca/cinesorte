@@ -7,15 +7,27 @@ import {
   getTrending,
   getDiscover,
   getNowPlaying,
+  getUserInteractions,
+  getUserReviewsOnly,
+  getUserLists,
+  getMovieDetails,
 } from "@shared/api/api";
 import { useAuth } from "@shared/context/useAuth";
 
 const CACHE_DAY_KEY = "cinesorte_trending_day";
 const CACHE_WEEK_KEY = "cinesorte_trending_week";
-const DASHBOARD_SECTIONS_CACHE_PREFIX = "cinesorte_dashboard_sections_v3";
+const DASHBOARD_SECTIONS_CACHE_PREFIX = "cinesorte_dashboard_sections_v5";
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
 const DASHBOARD_SECTIONS_TTL = 30 * 60 * 1000;
+
+const toMillis = (value) => {
+  if (!value) return 0;
+  if (typeof value.toMillis === "function") return value.toMillis();
+  if (typeof value.toDate === "function") return value.toDate().getTime();
+  const parsed = new Date(value).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+};
 
 function readCachedSections(cacheKey) {
   try {
@@ -53,8 +65,11 @@ export function useDashboardLogic() {
     trailers: [],
     animes: [],
     animations: [],
+    animeTrending: [],
     recommendedMovies: [],
     recommendedSeries: [],
+    becauseYouWatched: [],
+    becauseSeed: null,
     streaming: [],
     onTv: [],
     forRent: [],
@@ -339,6 +354,7 @@ export function useDashboardLogic() {
           getDiscover({ media_type: "tv", with_genres: topGenresIdsString, sort_by: 'popularity.desc', 'vote_count.gte': 50 }),
           getDiscover({ media_type: "movie", sort_by: "popularity.desc", page: 2 }),
           getDiscover({ media_type: "tv", sort_by: "popularity.desc", page: 2 }),
+          getDiscover({ media_type: "tv", with_genres: "16", provider_id: "283", sort_by: "popularity.desc" }),
         ]);
 
         if (!isMounted.current) return;
@@ -356,6 +372,12 @@ export function useDashboardLogic() {
         const fallbackGenreSeries = uniqueById(results[10].status === "fulfilled" ? results[10].value : []);
         const popularMovies = uniqueById(results[11].status === "fulfilled" ? results[11].value : []);
         const popularSeries = uniqueById(results[12].status === "fulfilled" ? results[12].value : []);
+        const animeTrendingRaw = uniqueById(results[13].status === "fulfilled" ? results[13].value : []);
+        const animeTrendingJapanese = animeTrendingRaw.filter(
+          (item) => item.original_language === "ja",
+        );
+        const animeTrending =
+          animeTrendingJapanese.length >= 8 ? animeTrendingJapanese : animeTrendingRaw;
 
         const potentialHeroes = [...recMovies, ...sortedDay].filter(
           (i) => i.backdrop_path && !i.trailerKey,
@@ -429,6 +451,7 @@ export function useDashboardLogic() {
           trailers,
           animes,
           animations,
+          animeTrending,
           recommendedMovies: smartRecMovies,
           recommendedSeries: smartRecSeries,
           streaming,
@@ -438,11 +461,12 @@ export function useDashboardLogic() {
         };
 
         writeCachedSections(dashboardCacheKey, nextSections);
-        setData({
+        setData((previous) => ({
+          ...previous,
           trendingDay: sortedDay,
           trendingWeek: sortedWeek,
           ...nextSections,
-        });
+        }));
         setHeroReady(true);
       } catch {
         if (!hasLoadedDashboard.current) {
@@ -462,6 +486,119 @@ export function useDashboardLogic() {
       isMounted.current = false;
     };
   }, [buildCompleteSection, excludeExisting, getPreferredGenreString, prioritizeContent, uniqueById, user, userGenreCountsKey, reloadVersion]);
+
+  useEffect(() => {
+    let active = true;
+
+    const clearBecause = () => {
+      if (!active) return;
+      setData((previous) => ({
+        ...previous,
+        becauseYouWatched: [],
+        becauseSeed: null,
+      }));
+    };
+
+    if (!user) {
+      clearBecause();
+      return () => {
+        active = false;
+      };
+    }
+
+    const toSeed = (rawId, mediaType, title) => {
+      const id = String(rawId ?? "").replace(/^(movie-|tv-)/, "");
+      if (!id || !title) return null;
+      return {
+        id,
+        mediaType: mediaType === "tv" ? "tv" : "movie",
+        title,
+      };
+    };
+
+    // Datas de itens de lista podem chegar como Timestamp do Firestore.
+    const savedAtMillis = (value) => {
+      if (value && typeof value === "object" && typeof value._seconds === "number") {
+        return value._seconds * 1000;
+      }
+      return toMillis(value);
+    };
+
+    const loadBecauseYouWatched = async () => {
+      try {
+        let seed = null;
+
+        // 1) Assistidos: interações salvas com `watched = true` (mais recentes primeiro).
+        const interactions = await getUserInteractions().catch(() => []);
+        if (Array.isArray(interactions)) {
+          const watched = interactions
+            .filter((item) => item?.mediaId && item.mediaTitle && item.watched)
+            .sort(
+              (first, second) =>
+                toMillis(second.watchedAt || second.lastInteraction || second.timestamp) -
+                toMillis(first.watchedAt || first.lastInteraction || first.timestamp),
+            );
+          seed = toSeed(watched[0]?.mediaId, watched[0]?.mediaType, watched[0]?.mediaTitle);
+        }
+
+        // 2) Reviews: avaliações escritas pelo usuário (mais recentes primeiro).
+        if (!seed && user?.username) {
+          const reviews = await getUserReviewsOnly(user.username).catch(() => null);
+          const reviewItems = Array.isArray(reviews?.items) ? reviews.items : [];
+          const candidate = reviewItems.find((item) => item?.mediaId && item.mediaTitle);
+          seed = toSeed(candidate?.mediaId, candidate?.mediaType, candidate?.mediaTitle);
+        }
+
+        // 3) Categorias salvas: itens das listas do usuário (mais recentes primeiro).
+        if (!seed) {
+          const lists = await getUserLists("me").catch(() => []);
+          if (Array.isArray(lists)) {
+            const savedItems = lists
+              .flatMap((list) => (Array.isArray(list?.items) ? [...list.items].reverse() : []))
+              .filter((item) => item?.id && (item.title || item.name));
+            savedItems.sort(
+              (first, second) => savedAtMillis(second.addedAt) - savedAtMillis(first.addedAt),
+            );
+            const item = savedItems[0];
+            seed = toSeed(item?.id, item?.media_type, item?.title || item?.name);
+          }
+        }
+
+        if (!seed || !active) return clearBecause();
+
+        const details = await getMovieDetails(seed.mediaType, seed.id).catch(
+          () => null,
+        );
+        const pool = details?.recommendations?.results?.length
+          ? details.recommendations.results
+          : details?.similar?.results || [];
+        const items = uniqueById(
+          pool.map((item) => ({ ...item, media_type: seed.mediaType })),
+        )
+          .filter(
+            (item) =>
+              String(item.id) !== String(seed.id) &&
+              (item.poster_path || item.backdrop_path),
+          )
+          .slice(0, 20);
+
+        if (!active) return;
+        setData((previous) => ({
+          ...previous,
+          becauseYouWatched: items,
+          becauseSeed: seed,
+        }));
+      } catch {
+        clearBecause();
+      }
+    };
+
+    loadBecauseYouWatched();
+
+    return () => {
+      active = false;
+    };
+  }, [uniqueById, user, reloadVersion]);
 
   return { data, currentHero, loading, heroReady, retry };
 }
