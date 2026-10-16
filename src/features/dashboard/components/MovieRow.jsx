@@ -70,11 +70,6 @@ export default function MovieRow({ title, items, variant = "poster" }) {
     >
       <div className="flex items-end justify-between px-5 sm:px-6 md:px-10 xl:px-14 2xl:px-16">
         <div>
-          {variant !== "poster" && (
-            <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300/70">
-              {isLandscape ? "Seleção panorâmica" : "Em destaque"}
-            </span>
-          )}
           <h2 className="flex items-center gap-3 text-lg font-semibold tracking-[-0.02em] text-zinc-100 sm:text-xl md:text-2xl">
             {title}
           </h2>
