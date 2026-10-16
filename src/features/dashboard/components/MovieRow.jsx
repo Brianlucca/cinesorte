@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { memo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import {
@@ -42,7 +42,7 @@ const getMediaType = (item) =>
 const getYear = (item) =>
   (item.release_date || item.first_air_date || "").slice(0, 4);
 
-export default function MovieRow({ title, items, variant = "poster" }) {
+function MovieRow({ title, items, variant = "poster" }) {
   const rowRef = useRef(null);
   const layout = variants[variant] || variants.poster;
   const isPoster = variant === "poster";
@@ -126,6 +126,8 @@ export default function MovieRow({ title, items, variant = "poster" }) {
                   alt={name}
                   className="h-full w-full object-cover"
                   loading="lazy"
+                  decoding="async"
+                  draggable={false}
                 />
 
                 <div
@@ -179,3 +181,5 @@ export default function MovieRow({ title, items, variant = "poster" }) {
     </section>
   );
 }
+
+export default memo(MovieRow);

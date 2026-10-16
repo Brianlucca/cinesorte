@@ -17,6 +17,7 @@ import { useAuth } from "@shared/context/useAuth";
 const CACHE_DAY_KEY = "cinesorte_trending_day";
 const CACHE_WEEK_KEY = "cinesorte_trending_week";
 const DASHBOARD_SECTIONS_CACHE_PREFIX = "cinesorte_dashboard_sections_v5";
+const DASHBOARD_BECAUSE_CACHE_PREFIX = "cinesorte_dashboard_because_v1";
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
 const DASHBOARD_SECTIONS_TTL = 30 * 60 * 1000;
@@ -506,6 +507,21 @@ export function useDashboardLogic() {
       };
     }
 
+    const becauseCacheKey = `${DASHBOARD_BECAUSE_CACHE_PREFIX}:${user.username || user.uid || "guest"}`;
+    const cachedBecause = readCachedSections(becauseCacheKey);
+    if (cachedBecause) {
+      setData((previous) => ({
+        ...previous,
+        becauseYouWatched: Array.isArray(cachedBecause.becauseYouWatched)
+          ? cachedBecause.becauseYouWatched
+          : [],
+        becauseSeed: cachedBecause.becauseSeed || null,
+      }));
+      return () => {
+        active = false;
+      };
+    }
+
     const toSeed = (rawId, mediaType, title) => {
       const id = String(rawId ?? "").replace(/^(movie-|tv-)/, "");
       if (!id || !title) return null;
@@ -564,7 +580,13 @@ export function useDashboardLogic() {
           }
         }
 
-        if (!seed || !active) return clearBecause();
+        if (!seed || !active) {
+          writeCachedSections(becauseCacheKey, {
+            becauseYouWatched: [],
+            becauseSeed: null,
+          });
+          return clearBecause();
+        }
 
         const details = await getMovieDetails(seed.mediaType, seed.id).catch(
           () => null,
@@ -583,6 +605,10 @@ export function useDashboardLogic() {
           .slice(0, 20);
 
         if (!active) return;
+        writeCachedSections(becauseCacheKey, {
+          becauseYouWatched: items,
+          becauseSeed: seed,
+        });
         setData((previous) => ({
           ...previous,
           becauseYouWatched: items,
