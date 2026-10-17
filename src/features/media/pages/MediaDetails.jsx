@@ -28,6 +28,8 @@ import ReviewsSection from "@features/media/components/reviews/ReviewsSection";
 import SeasonInfo from "@features/media/components/SeasonInfo";
 import TrailerModal from "@features/media/components/TrailerModal";
 import MediaRecommendations from "@features/media/components/MediaRecommendations";
+import { getReleaseStatus } from "@shared/lib/releaseStatus";
+import ReleaseBadge from "@shared/components/ui/ReleaseBadge";
 
 const SectionHeading = ({ eyebrow, children, aside }) => (
   <div className="mb-5 flex items-end justify-between gap-4">
@@ -166,6 +168,9 @@ export default function MediaDetails() {
         month: "long",
       })
     : "Data não informada";
+  const release = getReleaseStatus(media, media.first_air_date ? "tv" : "movie");
+  const releaseDateLabel =
+    release && release.kind !== "digital" ? release.fullDate || releaseLabel : releaseLabel;
   const runtime = media.runtime || media.episode_run_time?.[0];
   const communityAverage = communityStats
     ? Number(communityStats.average).toFixed(1)
@@ -210,6 +215,7 @@ export default function MediaDetails() {
         onClose={() => setModals((previous) => ({ ...previous, addToList: false }))}
         lists={userLists}
         onAdd={actions.handleAddToList}
+        onRemove={actions.handleRemoveFromList}
         onCreate={actions.handleCreateList}
         mediaId={media.id}
         addingToListId={addingToListId}
@@ -241,7 +247,7 @@ export default function MediaDetails() {
 
             <div className="max-w-3xl min-w-0 pb-1">
               <span className="mb-4 block h-1 w-12 rounded-full bg-[var(--media-accent)] shadow-[0_0_24px_var(--media-accent-glow)] transition-colors duration-700" />
-              <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1.5">
+              <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
                 {media.genres?.slice(0, 4).map((genre) => (
                   <span
                     key={genre.id}
@@ -250,6 +256,12 @@ export default function MediaDetails() {
                     {genre.name}
                   </span>
                 ))}
+                <ReleaseBadge
+                  media={media}
+                  mediaType={media.first_air_date ? "tv" : "movie"}
+                  size="md"
+                  tone="palette"
+                />
               </div>
 
               <h1 className="max-w-3xl text-4xl font-semibold leading-[0.98] tracking-[-0.045em] text-white sm:text-5xl xl:text-[3.4rem]">
@@ -264,7 +276,7 @@ export default function MediaDetails() {
 
               <div className="mt-4 flex flex-wrap items-center gap-4 text-xs font-medium text-zinc-300 md:text-sm">
                 <span className="inline-flex items-center gap-1.5">
-                  <Calendar size={15} /> {releaseLabel}
+                  <Calendar size={15} /> {releaseDateLabel}
                 </span>
                 {runtime && (
                   <span className="inline-flex items-center gap-1.5">
