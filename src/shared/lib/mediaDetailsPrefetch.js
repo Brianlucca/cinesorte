@@ -11,12 +11,15 @@ let mediaDetailsPagePromise;
 
 const SCROLL_IDLE_MS = 220;
 const POINTER_FRESH_MS = 600;
-const RAIL_PRELOAD_LIMIT = 4;
+const RAIL_WARM_AHEAD = 6;
+const RAIL_WARM_BEHIND = 3;
+const RAIL_EDGE_PX = 220;
 
 let isScrolling = false;
 let scrollIdleTimer = null;
 let lastPointerMoveAt = 0;
 let scrollBurst = 0;
+let activeRail = null;
 
 const hasFreshPointer = () => performance.now() - lastPointerMoveAt < POINTER_FRESH_MS;
 
@@ -25,25 +28,40 @@ export const isPointerFresh = hasFreshPointer;
 const isHorizontalRail = (element) =>
   element.clientHeight > 0 && element.scrollWidth - element.clientWidth > 4;
 
-const warmRailAhead = (rail, direction) => {
-  const railRect = rail.getBoundingClientRect();
+const decodeImage = (image) => {
+  if (!image || typeof image.decode !== "function") return;
+
+  const pending = image.decode();
+  if (pending && typeof pending.catch === "function") {
+    pending.catch(() => {});
+  }
+};
+
+const warmRailSide = (rail, railRect, direction, limit) => {
   const width = rail.clientWidth;
+  if (width <= 0) return;
+
   const images = rail.querySelectorAll("img");
   let warmed = 0;
 
-  for (let index = 0; index < images.length && warmed < RAIL_PRELOAD_LIMIT; index += 1) {
+  for (let index = 0; index < images.length && warmed < limit; index += 1) {
     const image = images[index];
     const rect = image.getBoundingClientRect();
     const start = rect.left - railRect.left;
     const end = rect.right - railRect.left;
     const upcoming =
-      direction > 0 ? start >= width - 160 && start < width * 2 : end <= 160 && end > -width;
+      direction > 0
+        ? start >= width - RAIL_EDGE_PX && start < width * 2
+        : end <= RAIL_EDGE_PX && end > -width;
 
     if (!upcoming) continue;
 
     warmed += 1;
 
-    if (image.complete && image.naturalWidth > 0) continue;
+    if (image.complete && image.naturalWidth > 0) {
+      decodeImage(image);
+      continue;
+    }
 
     const url = image.currentSrc || image.src;
     if (!url) continue;
@@ -51,7 +69,22 @@ const warmRailAhead = (rail, direction) => {
     const preload = new Image();
     preload.decoding = "async";
     preload.src = url;
+    decodeImage(preload);
   }
+};
+
+export const warmRail = (rail, direction = 0) => {
+  if (!rail || typeof rail.getBoundingClientRect !== "function") return;
+
+  const railRect = rail.getBoundingClientRect();
+
+  if (direction !== 0) {
+    warmRailSide(rail, railRect, direction > 0 ? 1 : -1, RAIL_WARM_AHEAD);
+    return;
+  }
+
+  warmRailSide(rail, railRect, 1, RAIL_WARM_AHEAD);
+  warmRailSide(rail, railRect, -1, RAIL_WARM_BEHIND);
 };
 
 const markScrolling = (event) => {
@@ -59,24 +92,27 @@ const markScrolling = (event) => {
 
   const target = event?.target;
 
-  if (target && target.nodeType === 1) {
-    if (railBursts.get(target) !== scrollBurst) {
-      railBursts.set(target, scrollBurst);
+  if (target && target.nodeType === 1 && railBursts.get(target) !== scrollBurst) {
+    railBursts.set(target, scrollBurst);
 
-      if (isHorizontalRail(target)) {
-        const previous = railPositions.get(target);
-        const direction = previous === undefined || target.scrollLeft >= previous ? 1 : -1;
-        warmRailAhead(target, direction);
-      }
+    if (isHorizontalRail(target)) {
+      const previous = railPositions.get(target);
+      const position = target.scrollLeft;
+
+      warmRail(target, previous === undefined || position >= previous ? 1 : -1);
+      activeRail = { element: target, position };
     }
-
-    railPositions.set(target, target.scrollLeft);
   }
 
   window.clearTimeout(scrollIdleTimer);
   scrollIdleTimer = window.setTimeout(() => {
     isScrolling = false;
     scrollBurst += 1;
+
+    if (activeRail) {
+      railPositions.set(activeRail.element, activeRail.element.scrollLeft);
+      activeRail = null;
+    }
   }, SCROLL_IDLE_MS);
 };
 
