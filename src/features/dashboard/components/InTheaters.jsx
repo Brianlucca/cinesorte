@@ -8,6 +8,7 @@ import {
   MapPin,
   Star,
 } from "lucide-react";
+import { mediaPrefetchHandlers } from "@shared/lib/mediaDetailsPrefetch";
 
 const IBGE_API = "https://servicodados.ibge.gov.br/api/v1/localidades";
 const LOCATION_STORAGE_KEY = "cinesorte_cinema_location_v1";
@@ -239,7 +240,7 @@ export default function InTheaters({ items = [] }) {
 
             return (
               <article key={item.id} className="w-[210px] flex-none snap-start overflow-hidden rounded-xl bg-white/[0.025] sm:w-[230px] md:w-[250px]">
-                <Link to={`/app/movie/${item.id}`} className="group relative block aspect-[16/9] overflow-hidden">
+                <Link to={`/app/movie/${item.id}`} {...mediaPrefetchHandlers("movie", item.id)} className="group relative block aspect-[16/9] overflow-hidden">
                   <img src={`https://image.tmdb.org/t/p/w780${imagePath}`} alt={title} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/5 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 p-3">
