@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { deleteWatchProgress, getWatchProgress } from "@shared/api/api";
 import { useAuth } from "@shared/context/useAuth";
-import { mediaPrefetchHandlers } from "@shared/lib/mediaDetailsPrefetch";
+import { mediaPrefetchHandlers, warmRail } from "@shared/lib/mediaDetailsPrefetch";
 
 const IMAGE = "https://image.tmdb.org/t/p/w780";
 const PROVIDERS = {
@@ -157,6 +157,7 @@ export default function ContinueWatching() {
 
   function slide(direction) {
     if (!rowRef.current) return;
+    warmRail(rowRef.current, direction === "left" ? -1 : 1);
     rowRef.current.scrollBy({
       left: (direction === "left" ? -1 : 1) * rowRef.current.clientWidth * 0.75,
       behavior: "smooth",
@@ -226,6 +227,7 @@ export default function ContinueWatching() {
 
       <div
         ref={rowRef}
+        onPointerEnter={(event) => warmRail(event.currentTarget)}
         className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-3 scrollbar-hide md:snap-none"
       >
           {continueItems.slice(0, 10).map((item) => {
