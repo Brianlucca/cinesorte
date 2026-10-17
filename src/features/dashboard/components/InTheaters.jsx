@@ -8,7 +8,7 @@ import {
   MapPin,
   Star,
 } from "lucide-react";
-import { mediaPrefetchHandlers } from "@shared/lib/mediaDetailsPrefetch";
+import { mediaPrefetchHandlers, warmRail } from "@shared/lib/mediaDetailsPrefetch";
 
 const IBGE_API = "https://servicodados.ibge.gov.br/api/v1/localidades";
 const LOCATION_STORAGE_KEY = "cinesorte_cinema_location_v1";
@@ -147,6 +147,7 @@ export default function InTheaters({ items = [] }) {
 
   const slide = (direction) => {
     if (!railRef.current) return;
+    warmRail(railRef.current, direction === "left" ? -1 : 1);
     railRef.current.scrollBy({
       left: (direction === "left" ? -1 : 1) * railRef.current.clientWidth * 0.78,
       behavior: "smooth",
@@ -225,7 +226,7 @@ export default function InTheaters({ items = [] }) {
 
       {locationError && <p className="px-5 pt-2 text-xs text-rose-300 sm:px-6 md:px-10 xl:px-14 2xl:px-16">{locationError}</p>}
 
-        <div ref={railRef} className="flex snap-x snap-mandatory scroll-px-6 gap-3 overflow-x-auto px-6 pb-1 pt-4 scroll-smooth scrollbar-hide md:snap-none md:scroll-px-10 md:px-10 xl:scroll-px-14 xl:px-14 2xl:scroll-px-16 2xl:px-16" style={{ scrollbarWidth: "none" }}>
+        <div ref={railRef} onPointerEnter={(event) => warmRail(event.currentTarget)} className="flex snap-x snap-mandatory scroll-px-6 gap-3 overflow-x-auto px-6 pb-1 pt-4 scroll-smooth scrollbar-hide md:snap-none md:scroll-px-10 md:px-10 xl:scroll-px-14 xl:px-14 2xl:scroll-px-16 2xl:px-16" style={{ scrollbarWidth: "none" }}>
           {visibleItems.map((item) => {
             const title = item.title || item.name;
             const imagePath = item.backdrop_path || item.poster_path;
