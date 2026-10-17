@@ -14,6 +14,7 @@ import {
 } from '@shared/api/api';
 import { AuthContext } from './AuthContextBase';
 import { endSessionCache } from '@shared/lib/sessionCache';
+import { setInteractionScope } from '@shared/lib/interactionCache';
 
 const CURRENT_TERMS_VERSION = '4.1';
 
@@ -36,6 +37,10 @@ export function AuthProvider({ children }) {
     }
     loadUser();
   }, []);
+
+  useEffect(() => {
+    setInteractionScope(user?.username || null);
+  }, [user]);
 
   useEffect(() => {
     if (!user?.uid) return undefined;

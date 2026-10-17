@@ -212,7 +212,7 @@ export default function ListGroup({
           </div>
         ) : (
           <div className="relative mt-7 border-t border-white/[0.06] pt-6">
-            {(railState.left || railState.right) && !selection.isActive && (
+            {(railState.left || railState.right) && (
               <div className="absolute right-0 top-[-2.85rem] hidden items-center gap-2 sm:flex">
                 <button
                   type="button"

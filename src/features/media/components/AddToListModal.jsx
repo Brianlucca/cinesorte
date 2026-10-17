@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Check, Clapperboard, Film, Loader2, Plus } from "lucide-react";
+import { ArrowLeft, Check, Clapperboard, Film, Loader2, Plus, Trash2 } from "lucide-react";
 import Modal from "@shared/components/ui/Modal";
 
 export default function AddToListModal({
@@ -7,6 +7,7 @@ export default function AddToListModal({
   onClose,
   lists,
   onAdd,
+  onRemove,
   onCreate,
   mediaId,
   addingToListId,
@@ -68,11 +69,20 @@ export default function AddToListModal({
                 return (
                   <button
                     key={list.id}
-                    onClick={() => !alreadyInList && !isThisLoading && onAdd(list.id)}
-                    disabled={alreadyInList || isThisLoading}
-                    className={`group flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition-colors ${
+                    type="button"
+                    onClick={() => {
+                      if (isThisLoading) return;
+                      if (alreadyInList) {
+                        onRemove?.(list.id);
+                      } else {
+                        onAdd(list.id);
+                      }
+                    }}
+                    disabled={isThisLoading}
+                    aria-label={alreadyInList ? `Remover de ${list.name}` : `Adicionar em ${list.name}`}
+                    className={`group flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition-colors disabled:opacity-60 ${
                       alreadyInList
-                        ? "cursor-default border-emerald-400/15 bg-emerald-500/[0.06]"
+                        ? "border-emerald-400/15 bg-emerald-500/[0.06] hover:border-red-400/35 hover:bg-red-500/[0.06]"
                         : "border-white/[0.06] bg-white/[0.018] hover:border-violet-400/25 hover:bg-white/[0.04]"
                     }`}
                   >
@@ -84,18 +94,35 @@ export default function AddToListModal({
                       )}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className={`block truncate text-sm font-medium transition-colors ${alreadyInList ? "text-emerald-300" : "text-zinc-100 group-hover:text-violet-200"}`}>
+                      <span className={`block truncate text-sm font-medium transition-colors ${
+                        alreadyInList
+                          ? "text-emerald-300 group-hover:text-red-300"
+                          : "text-zinc-100 group-hover:text-violet-200"
+                      }`}>
                         {list.name}
                       </span>
                       <span className="mt-1 block text-[10px] font-medium uppercase tracking-[0.12em] text-zinc-500">
-                        {list.items?.length || 0} {list.items?.length === 1 ? "item" : "itens"}
+                        {alreadyInList
+                          ? "Toque para remover"
+                          : `${list.items?.length || 0} ${list.items?.length === 1 ? "item" : "itens"}`}
                       </span>
                     </span>
 
-                    <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${
-                      alreadyInList ? "bg-emerald-500/10 text-emerald-300" : "bg-white/[0.045] text-zinc-400 transition-colors group-hover:bg-violet-500/15 group-hover:text-violet-200"
+                    <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full transition-colors ${
+                      alreadyInList
+                        ? "bg-emerald-500/10 text-emerald-300 group-hover:bg-red-500/15 group-hover:text-red-300"
+                        : "bg-white/[0.045] text-zinc-400 group-hover:bg-violet-500/15 group-hover:text-violet-200"
                     }`}>
-                      {isThisLoading ? <Loader2 size={16} className="animate-spin" /> : alreadyInList ? <Check size={16} /> : <Plus size={16} />}
+                      {isThisLoading ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : alreadyInList ? (
+                        <>
+                          <Check size={16} className="group-hover:hidden" />
+                          <Trash2 size={16} className="hidden group-hover:block" />
+                        </>
+                      ) : (
+                        <Plus size={16} />
+                      )}
                     </span>
                   </button>
                 );

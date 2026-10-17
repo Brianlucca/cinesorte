@@ -11,6 +11,9 @@ import {
   Star,
 } from "lucide-react";
 import { useAuth } from "@shared/context/useAuth";
+import { mediaPrefetchHandlers } from "@shared/lib/mediaDetailsPrefetch";
+import { getReleaseStatus } from "@shared/lib/releaseStatus";
+import ReleaseBadge from "@shared/components/ui/ReleaseBadge";
 
 const TMDB_IMAGE = "https://image.tmdb.org/t/p";
 const PAGE_X = "px-5 sm:px-6 md:px-10 xl:px-14 2xl:px-16";
@@ -40,6 +43,13 @@ function mediaPath(item = {}) {
   const id = item.mediaId || item.id;
   if (!id) return "/app";
   return `/app/${mediaType === "tv" ? "tv" : "movie"}/${String(id).replace(/^(movie-|tv-)/, "")}`;
+}
+
+function mediaTarget(item = {}) {
+  return {
+    mediaType: getMediaType(item),
+    mediaId: item.mediaId || item.id,
+  };
 }
 
 function reviewExcerpt(text = "") {
@@ -156,10 +166,14 @@ function SectionShell({ title, eyebrow, children, actionTo, actionLabel, rowRef,
 function TopItemCard({ item, index }) {
   const rating = Number(item.vote_average || item.rating || 0);
   const isTopThree = index < 3;
+  const { mediaType, mediaId } = mediaTarget(item);
+  const release = getReleaseStatus(item, mediaType);
+  const infoLabel = release?.dayLabel || getMediaYear(item);
 
   return (
     <Link
       to={mediaPath(item)}
+      {...mediaPrefetchHandlers(mediaType, mediaId)}
       className="group/card w-[168px] flex-none snap-start sm:w-[250px]"
     >
       <span className="relative flex h-[235px] items-end sm:h-[285px]">
@@ -175,7 +189,7 @@ function TopItemCard({ item, index }) {
         </span>
 
         <span className="relative z-10 h-full w-full overflow-hidden rounded-xl border border-white/[0.08] bg-[#111216] shadow-xl shadow-black/30 transition-transform duration-500 group-hover/card:-translate-y-1 sm:ml-[70px] sm:w-[180px]">
-          <MediaImage item={item} size="w500" className="h-full w-full transition-transform duration-700 group-hover/card:scale-[1.035]" />
+          <MediaImage item={item} size="w342" className="h-full w-full transition-transform duration-700 group-hover/card:scale-[1.035]" />
           <span className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/10" />
 
           <span
@@ -186,14 +200,21 @@ function TopItemCard({ item, index }) {
           </span>
 
           {rating > 0 && (
-            <span className="absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-lg border border-white/10 bg-black/60 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-md">
+            <span className="absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-lg border border-white/10 bg-black/60 px-2 py-1 text-[10px] font-semibold text-white">
               <Star size={10} className="fill-current text-yellow-300" />
               {rating.toFixed(1)}
             </span>
           )}
 
+          <ReleaseBadge
+            media={item}
+            mediaType={mediaType}
+            size="sm"
+            className="absolute left-2.5 top-2.5 z-10"
+          />
+
           {isTopThree && (
-            <span className="absolute bottom-2.5 right-2.5 rounded-lg bg-violet-500/15 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-violet-200 backdrop-blur-md sm:left-2.5 sm:right-auto">
+            <span className="absolute bottom-2.5 right-2.5 rounded-lg bg-violet-500/15 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-violet-200 sm:left-2.5 sm:right-auto">
               Top {index + 1}
             </span>
           )}
@@ -206,7 +227,7 @@ function TopItemCard({ item, index }) {
         </span>
         <span className="mt-1 flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.12em] text-zinc-600">
           <span>{getMediaType(item) === "tv" ? "Série" : "Filme"}</span>
-          {getMediaYear(item) && <span>{getMediaYear(item)}</span>}
+          {infoLabel && <span className={release ? "text-violet-300" : ""}>{infoLabel}</span>}
         </span>
       </span>
     </Link>
@@ -273,35 +294,40 @@ function ReviewSpotlight({ items = [] }) {
       actionLabel="Ver todas"
     >
       <div className={`mt-5 grid gap-x-8 border-y border-white/[0.06] md:mt-6 md:grid-cols-2 ${PAGE_X}`}>
-        {reviews.map((review) => (
-          <Link
-            key={review.uniqueKey || review.id}
-            to={mediaPath(review)}
-            className="group/review grid grid-cols-[64px_minmax(0,1fr)] gap-4 border-b border-white/[0.06] py-4 last:border-b-0 md:min-h-[132px] md:grid-cols-[72px_minmax(0,1fr)] md:[&:nth-last-child(-n+2)]:border-b-0"
-          >
-            <MediaImage
-              item={{ poster_path: review.posterPath, backdrop_path: review.backdropPath }}
-              size="w342"
-              className="aspect-[2/3] w-full self-start rounded-md bg-zinc-900 transition-transform duration-300 group-hover/review:-translate-y-0.5"
-            />
-            <span className="min-w-0 self-center">
-              <span className="flex items-center gap-2.5">
-                <span className="relative grid h-6 w-6 shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-zinc-800 text-[9px] font-semibold uppercase text-zinc-300">
-                  {(review.username || "C")[0]}
-                  {review.userPhoto && <img src={review.userPhoto} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(event) => event.currentTarget.remove()} />}
+        {reviews.map((review) => {
+          const { mediaType, mediaId } = mediaTarget(review);
+
+          return (
+            <Link
+              key={review.uniqueKey || review.id}
+              to={mediaPath(review)}
+              {...mediaPrefetchHandlers(mediaType, mediaId)}
+              className="group/review grid grid-cols-[64px_minmax(0,1fr)] gap-4 border-b border-white/[0.06] py-4 last:border-b-0 md:min-h-[132px] md:grid-cols-[72px_minmax(0,1fr)] md:[&:nth-last-child(-n+2)]:border-b-0"
+            >
+              <MediaImage
+                item={{ poster_path: review.posterPath, backdrop_path: review.backdropPath }}
+                size="w342"
+                className="aspect-[2/3] w-full self-start rounded-md bg-zinc-900 transition-transform duration-300 group-hover/review:-translate-y-0.5"
+              />
+              <span className="min-w-0 self-center">
+                <span className="flex items-center gap-2.5">
+                  <span className="relative grid h-6 w-6 shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-zinc-800 text-[9px] font-semibold uppercase text-zinc-300">
+                    {(review.username || "C")[0]}
+                    {review.userPhoto && <img src={review.userPhoto} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(event) => event.currentTarget.remove()} />}
+                  </span>
+                  <span className="truncate text-xs font-semibold text-zinc-300">@{review.username || "cinesorte"}</span>
+                  {review.rating !== null && review.rating !== undefined && <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-yellow-300"><Star size={11} className="fill-current" /> {Number(review.rating).toFixed(1)}</span>}
                 </span>
-                <span className="truncate text-xs font-semibold text-zinc-300">@{review.username || "cinesorte"}</span>
-                {review.rating !== null && review.rating !== undefined && <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-yellow-300"><Star size={11} className="fill-current" /> {Number(review.rating).toFixed(1)}</span>}
+                <span className="mt-2 line-clamp-2 block text-sm leading-5 text-zinc-200 sm:text-[15px]">{reviewExcerpt(review.text)}</span>
+                <span className="mt-2 flex min-w-0 items-center gap-3 text-[11px] text-zinc-500">
+                  <span className="truncate font-semibold text-white transition-colors group-hover/review:text-violet-300">{review.mediaTitle}</span>
+                  <span className="inline-flex shrink-0 items-center gap-1"><Heart size={11} /> {review.likesCount || 0}</span>
+                  <span className="inline-flex shrink-0 items-center gap-1"><MessageCircle size={11} /> {review.commentsCount || 0}</span>
+                </span>
               </span>
-              <span className="mt-2 line-clamp-2 block text-sm leading-5 text-zinc-200 sm:text-[15px]">{reviewExcerpt(review.text)}</span>
-              <span className="mt-2 flex min-w-0 items-center gap-3 text-[11px] text-zinc-500">
-                <span className="truncate font-semibold text-white transition-colors group-hover/review:text-violet-300">{review.mediaTitle}</span>
-                <span className="inline-flex shrink-0 items-center gap-1"><Heart size={11} /> {review.likesCount || 0}</span>
-                <span className="inline-flex shrink-0 items-center gap-1"><MessageCircle size={11} /> {review.commentsCount || 0}</span>
-              </span>
-            </span>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
     </SectionShell>
   );
@@ -407,82 +433,6 @@ function LibrarySection({ lists = [] }) {
   );
 }
 
-function CommunityCard({ item }) {
-  const detailTo = item.type === "list_share" ? `/app/lists/${item.username}/${item.attachmentId}` : mediaPath(item);
-  const profileTo = item.username ? `/app/profile/${item.username}` : "/app/feed";
-
-  return (
-    <article className="group/card w-[270px] flex-none overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.018] transition-colors hover:border-white/[0.14] sm:w-[310px] md:w-[340px]">
-      <Link to={detailTo} className="block">
-        <div className="relative h-32 overflow-hidden bg-zinc-900 sm:h-36">
-          {item.type === "list_share" && Array.isArray(item.listItems) && item.listItems.length > 0 ? (
-            <div className="grid h-full grid-cols-4 gap-1">
-              {item.listItems.slice(0, 4).map((listItem, index) => (
-                <MediaImage key={`${listItem.id || listItem.mediaId || index}-${index}`} item={listItem} size="w342" className="h-full w-full" />
-              ))}
-            </div>
-          ) : (
-            <MediaImage item={{ poster_path: item.posterPath, backdrop_path: item.backdropPath }} size="w780" preferred="backdrop" className="h-full w-full transition-transform duration-500 group-hover/card:scale-[1.035]" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
-          <span className="absolute bottom-2.5 left-2.5 rounded-lg border border-white/10 bg-black/50 px-2 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-zinc-200 backdrop-blur-md">
-            {item.type === "list_share" ? "Lista" : "Review"}
-          </span>
-        </div>
-      </Link>
-
-      <div className="p-3.5">
-        <Link to={profileTo} className="inline-flex max-w-full items-center gap-3">
-          <span className="grid h-9 w-9 flex-none place-items-center overflow-hidden rounded-xl bg-zinc-800 text-xs font-black uppercase text-zinc-300 ring-1 ring-white/10">
-            {item.userPhoto ? <img src={item.userPhoto} alt="" className="h-full w-full object-cover" loading="lazy" /> : (item.username || "C")[0]}
-          </span>
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-black text-white">@{item.username || "cinesorte"}</span>
-            <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-600">
-              {item.type === "list_share" ? "Lista compartilhada" : "Nova review"}
-            </span>
-          </span>
-        </Link>
-
-        <Link to={detailTo} className="mt-3 block">
-          <h3 className="line-clamp-1 text-base font-black leading-tight text-white">
-            {item.type === "list_share" ? item.listName : item.mediaTitle}
-          </h3>
-          {item.text && (
-            <p className="mt-1.5 line-clamp-1 text-sm text-zinc-500">
-              {item.text}
-            </p>
-          )}
-        </Link>
-      </div>
-    </article>
-  );
-}
-
-function CommunitySection({ items = [] }) {
-  const communityRef = useRef(null);
-  const featuredItems = items.filter((item) => item.type === "list_share").slice(0, 6);
-  const communityKey = featuredItems.map((item) => `${item.type}-${item.id}`).join("|");
-  const hasCommunityOverflow = useRailOverflow(communityRef, communityKey);
-
-  if (featuredItems.length === 0) return null;
-
-  return (
-    <SectionShell title="O que está ganhando conversa" eyebrow="Comunidade" actionTo="/app/feed" actionLabel="Abrir feed" rowRef={communityRef} hasOverflow={hasCommunityOverflow}>
-      <div
-        ref={communityRef}
-        className={`flex gap-4 overflow-x-auto scroll-smooth pt-5 pb-4 md:gap-5 md:pt-6 md:pb-6 ${PAGE_X} scrollbar-hide`}
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-      >
-        {featuredItems.map((item) => (
-          <CommunityCard key={`${item.type}-${item.id}`} item={item} />
-        ))}
-        <div className="w-1 flex-none md:w-6" aria-hidden="true" />
-      </div>
-    </SectionShell>
-  );
-}
-
 export default function HomeExperience({ variant, data, socialItems = [], lists = [] }) {
   if (variant === "top") {
     return <TopRail items={data.trendingWeek || []} />;
@@ -494,10 +444,6 @@ export default function HomeExperience({ variant, data, socialItems = [], lists 
 
   if (variant === "reviews") {
     return <ReviewSpotlight items={socialItems} />;
-  }
-
-  if (variant === "community") {
-    return <CommunitySection items={socialItems} />;
   }
 
   return null;

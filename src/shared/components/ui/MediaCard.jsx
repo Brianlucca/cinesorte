@@ -40,7 +40,7 @@ export default function MediaCard({ media, variant = 'default', subtitle }) {
             loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 via-transparent to-transparent opacity-50 transition-opacity duration-300 md:opacity-0 md:group-hover/card:opacity-100" />
-          <div className="absolute right-2.5 top-2.5 flex items-center gap-1.5 rounded-full bg-black/55 px-2 py-1 backdrop-blur-md md:right-3 md:top-3">
+          <div className="absolute right-2.5 top-2.5 flex items-center gap-1.5 rounded-full bg-black/55 px-2 py-1 md:right-3 md:top-3">
             <Star size={10} className="fill-yellow-400 text-yellow-400" />
             <span className="text-[10px] font-semibold text-white">{rating}</span>
           </div>

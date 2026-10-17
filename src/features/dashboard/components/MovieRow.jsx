@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { memo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import {
@@ -6,6 +6,8 @@ import {
   prefetchMovieDetails,
   scheduleMovieDetailsPrefetch,
 } from "@shared/lib/mediaDetailsPrefetch";
+import { getReleaseStatus } from "@shared/lib/releaseStatus";
+import ReleaseBadge from "@shared/components/ui/ReleaseBadge";
 
 const variants = {
   poster: {
@@ -14,7 +16,9 @@ const variants = {
     rail: "gap-3 md:gap-4",
     card: "w-[142px] sm:w-[158px] md:w-[184px] xl:w-[196px] 2xl:w-[204px]",
     frame: "aspect-[2/3]",
-    imageSize: "w500",
+    sizes:
+      "(min-width: 1536px) 204px, (min-width: 1280px) 196px, (min-width: 768px) 184px, (min-width: 640px) 158px, 142px",
+    imageSizes: [342, 500],
   },
   landscape: {
     section: "py-5 md:py-7",
@@ -23,7 +27,9 @@ const variants = {
     rail: "gap-4 md:gap-6",
     card: "w-[78vw] max-w-[310px] sm:w-[320px] sm:max-w-none md:w-[390px] xl:w-[430px] 2xl:w-[460px]",
     frame: "aspect-video",
-    imageSize: "w780",
+    sizes:
+      "(min-width: 1536px) 460px, (min-width: 1280px) 430px, (min-width: 768px) 390px, (min-width: 640px) 320px, 310px",
+    imageSizes: [500, 780],
   },
   spotlight: {
     section: "py-5 md:py-7",
@@ -32,9 +38,16 @@ const variants = {
     rail: "gap-4 md:gap-6",
     card: "w-[185px] sm:w-[215px] md:w-[270px] xl:w-[292px] 2xl:w-[310px]",
     frame: "aspect-[4/5]",
-    imageSize: "w500",
+    sizes:
+      "(min-width: 1536px) 310px, (min-width: 1280px) 292px, (min-width: 768px) 270px, (min-width: 640px) 215px, 185px",
+    imageSizes: [342, 500],
   },
 };
+
+const tmdbImage = (path, size) => `https://image.tmdb.org/t/p/w${size}${path}`;
+
+const buildSrcSet = (path, sizes) =>
+  sizes.map((size) => `${tmdbImage(path, size)} ${size}w`).join(", ");
 
 const getMediaType = (item) =>
   item.media_type || (item.first_air_date ? "tv" : "movie");
@@ -42,7 +55,7 @@ const getMediaType = (item) =>
 const getYear = (item) =>
   (item.release_date || item.first_air_date || "").slice(0, 4);
 
-export default function MovieRow({ title, items, variant = "poster" }) {
+function MovieRow({ title, items, variant = "poster" }) {
   const rowRef = useRef(null);
   const layout = variants[variant] || variants.poster;
   const isPoster = variant === "poster";
@@ -107,6 +120,8 @@ export default function MovieRow({ title, items, variant = "poster" }) {
             : item.poster_path || item.backdrop_path;
           const name = item.title || item.name;
           const year = getYear(item);
+          const release = getReleaseStatus(item, mediaType);
+          const infoLabel = release?.dayLabel || year;
 
           return (
             <Link
@@ -122,10 +137,14 @@ export default function MovieRow({ title, items, variant = "poster" }) {
                 className={`${layout.frame} relative overflow-hidden rounded-xl bg-white/[0.025]`}
               >
                 <img
-                  src={`https://image.tmdb.org/t/p/${layout.imageSize}${imagePath}`}
+                  src={tmdbImage(imagePath, layout.imageSizes[0])}
+                  srcSet={buildSrcSet(imagePath, layout.imageSizes)}
+                  sizes={layout.sizes}
                   alt={name}
                   className="h-full w-full object-cover"
                   loading="lazy"
+                  decoding="async"
+                  draggable={false}
                 />
 
                 <div
@@ -136,18 +155,29 @@ export default function MovieRow({ title, items, variant = "poster" }) {
                   } transition-opacity duration-300`}
                 />
 
-                <div className="absolute right-2.5 top-2.5 flex items-center gap-1.5 rounded-full bg-black/55 px-2 py-1 backdrop-blur-md md:right-3 md:top-3">
+                <div className="absolute right-2.5 top-2.5 flex items-center gap-1.5 rounded-full bg-black/55 px-2 py-1 md:right-3 md:top-3">
                   <Star size={10} className="text-yellow-400 fill-yellow-400" />
                   <span className="text-[10px] font-semibold text-white">
                     {Number(item.vote_average || 0).toFixed(1)}
                   </span>
                 </div>
 
+                <ReleaseBadge
+                  media={item}
+                  mediaType={mediaType}
+                  size="sm"
+                  className={
+                    isLandscape
+                      ? "absolute left-2.5 top-2.5 z-10 md:left-3 md:top-3"
+                      : "absolute bottom-2.5 left-2.5 z-10 md:bottom-3 md:left-3"
+                  }
+                />
+
                 {!isPoster && (
                   <div className="absolute inset-x-0 bottom-0 p-4 md:p-5">
                     <div className="mb-1.5 flex items-center gap-2 text-[9px] md:text-[10px] uppercase tracking-[0.16em] font-bold text-zinc-300">
-                      {year && <span>{year}</span>}
-                      {year && <span className="h-1 w-1 rounded-full bg-violet-400" />}
+                      {infoLabel && <span className={release ? "text-violet-200" : ""}>{infoLabel}</span>}
+                      {infoLabel && <span className="h-1 w-1 rounded-full bg-violet-400" />}
                       <span>{getMediaType(item) === "tv" ? "Série" : "Filme"}</span>
                     </div>
                     <h3 className="text-base md:text-xl font-bold text-white line-clamp-2 leading-tight drop-shadow-lg">
@@ -165,8 +195,12 @@ export default function MovieRow({ title, items, variant = "poster" }) {
                 <div className="px-0.5 pt-2.5">
                   <h3 className="text-sm font-semibold text-zinc-100 truncate">{name}</h3>
                   <div className="mt-0.5 flex items-center gap-2 text-[11px] text-zinc-500">
-                    {year && <span>{year}</span>}
-                    {year && <span>•</span>}
+                    {infoLabel && (
+                      <span className={release ? "font-semibold text-violet-300" : ""}>
+                        {infoLabel}
+                      </span>
+                    )}
+                    {infoLabel && <span>•</span>}
                     <span>{mediaType === "tv" ? "Série" : "Filme"}</span>
                   </div>
                 </div>
@@ -179,3 +213,5 @@ export default function MovieRow({ title, items, variant = "poster" }) {
     </section>
   );
 }
+
+export default memo(MovieRow);

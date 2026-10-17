@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import TrailerModal from "@features/media/components/TrailerModal";
+import { mediaPrefetchHandlers } from "@shared/lib/mediaDetailsPrefetch";
+import { getReleaseStatus } from "@shared/lib/releaseStatus";
+import ReleaseBadge from "@shared/components/ui/ReleaseBadge";
 import {
   ArrowRight,
   Calendar,
@@ -201,6 +204,8 @@ export default function Hero({
   const mediaType = getMediaType(item);
   const year = getYear(item);
   const rating = Number(item.vote_average || 0).toFixed(1);
+  const release = getReleaseStatus(item, mediaType);
+  const heroDateLabel = release && release.kind !== "digital" ? release.fullDate : year;
   const videoIsReady = Boolean(videoKey && readyVideoKey === videoKey);
   const backdrop = isLive
     ? item.backdrop_path
@@ -208,6 +213,8 @@ export default function Hero({
   const mobileArtwork = !isLive && item.poster_path
     ? `https://image.tmdb.org/t/p/w780${item.poster_path}`
     : backdrop;
+
+  const detailPrefetch = isLive ? {} : mediaPrefetchHandlers(mediaType, item.id);
 
   const changeSlide = (direction) => {
     setCurrentIndex((previous) => {
@@ -275,11 +282,17 @@ export default function Hero({
 
       <div className="relative z-20 mx-auto flex h-full max-w-[1380px] items-center px-5 pb-20 pt-20 sm:px-8 md:px-10 xl:px-12">
         <div key={`copy-${item.id}`} className="w-full max-w-xl hero-copy-reveal xl:max-w-2xl">
-          <div className="mb-4 flex items-center gap-2.5">
-            <span className="h-px w-7 bg-violet-400" />
-            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-violet-300">
-              {isLive ? "CineParty · Ao vivo" : "Seleção CineSorte"}
-            </span>
+          <div className="mb-4 flex min-h-[18px] flex-wrap items-center gap-2.5">
+            {isLive ? (
+              <>
+                <span className="h-px w-7 bg-violet-400" />
+                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-violet-300">
+                  CineParty · Ao vivo
+                </span>
+              </>
+            ) : (
+              <ReleaseBadge media={item} mediaType={mediaType} size="sm" />
+            )}
           </div>
 
           <h1 className="max-w-3xl text-4xl font-semibold leading-[0.98] tracking-[-0.045em] text-white text-balance sm:text-5xl xl:text-[3.35rem]">
@@ -292,9 +305,9 @@ export default function Hero({
               {rating}
             </span>}
             {isLive && <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/30 px-3 py-1.5"><UsersRound size={14} /> {item.participantCount} assistindo</span>}
-            {!isLive && year && (
+            {!isLive && heroDateLabel && (
               <span className="inline-flex items-center gap-1.5">
-                <Calendar size={14} /> {year}
+                <Calendar size={14} /> {heroDateLabel}
               </span>
             )}
             {!isLive && <span className="uppercase tracking-wider text-zinc-400">
@@ -312,6 +325,7 @@ export default function Hero({
           <div className="mt-6 flex flex-wrap items-center gap-2 sm:mt-7 sm:gap-2.5">
             <Link
               to={isLive ? "/app/watch-party/" + item.roomId : `/app/${mediaType}/${item.id}`}
+              {...detailPrefetch}
               className="group/button inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl bg-white px-4 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 sm:h-11 sm:px-5"
             >
               {isLive ? "Assistir agora" : "Ver detalhes"}

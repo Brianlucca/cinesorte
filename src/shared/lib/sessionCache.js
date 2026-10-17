@@ -1,7 +1,11 @@
+import { pruneStaleLocalCacheVersions } from "./localCacheKeys";
+
 const SESSION_MARKER = "cinesorte:session-cache-ready";
 const CACHE_PREFIXES = [
   "cinesorte_dashboard_sections",
+  "cinesorte_dashboard_because",
   "cinesorte_trending_",
+  "cinesorte_interactions_v1",
 ];
 
 const isDisposableCacheKey = (key) =>
@@ -24,14 +28,17 @@ export function clearDisposableSessionCache() {
 export function initializeSessionCache() {
   try {
     if (sessionStorage.getItem(SESSION_MARKER)) return;
+    pruneStaleLocalCacheVersions();
     clearDisposableSessionCache();
     sessionStorage.setItem(SESSION_MARKER, String(Date.now()));
   } catch {
+    pruneStaleLocalCacheVersions();
     clearDisposableSessionCache();
   }
 }
 
 export function endSessionCache() {
+  pruneStaleLocalCacheVersions();
   clearDisposableSessionCache();
   try {
     sessionStorage.removeItem(SESSION_MARKER);

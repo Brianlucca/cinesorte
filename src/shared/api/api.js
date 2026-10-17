@@ -1,4 +1,8 @@
 import axios from "axios";
+import {
+  DASHBOARD_BECAUSE_CACHE_PREFIX,
+  DASHBOARD_SECTIONS_CACHE_PREFIX,
+} from "@shared/lib/localCacheKeys";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -44,9 +48,11 @@ const invalidateTasteRecommendations = () => {
   clearApiCache("/tmdb/recommendations/");
 
   try {
-    Object.keys(localStorage)
-      .filter((key) => key.startsWith("cinesorte_dashboard_sections"))
-      .forEach((key) => localStorage.removeItem(key));
+    [DASHBOARD_SECTIONS_CACHE_PREFIX, DASHBOARD_BECAUSE_CACHE_PREFIX].forEach((prefix) => {
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith(prefix))
+        .forEach((key) => localStorage.removeItem(key));
+    });
   } catch {
     // Recommendations can still refresh through their normal expiration.
   }
@@ -137,7 +143,7 @@ export const shareList = (data) => api.post("/social/share-list", data);
 export const deleteListShare = (shareId) => api.delete(`/social/share-list/${shareId}`);
 export const getListDetails = (username, listId) => api.get(`/social/lists/${username}/${listId}`);
 
-export const getMediaReviews = (mediaId) => api.get(`/social/reviews/${mediaId}`);
+export const getMediaReviews = (mediaId) => cachedGet(`/social/reviews/${mediaId}`, {}, 15000);
 
 export const getUserReviews = (username, lastCreatedAt) =>
   api.get(`/social/user-reviews/${username}${lastCreatedAt ? `?lastCreatedAt=${lastCreatedAt}` : ""}`);
@@ -168,7 +174,7 @@ export const recordInteraction = (data) => api.post("/users/interact", data).the
   return response;
 });
 export const getUserInteractions = () => api.get("/users/interactions");
-export const getMediaInteraction = (mediaId) => api.get(`/users/interactions/${mediaId}`);
+export const getMediaInteraction = (mediaId) => cachedGet(`/users/interactions/${mediaId}`, {}, 15000);
 export const getWatchDiary = (year) => api.get("/users/diary", { params: { year } });
 export const getWatchProgress = () => api.get("/watch-progress");
 export const getExtensionStatus = () => api.get("/watch-progress/extension/status");

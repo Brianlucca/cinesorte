@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Play, Volume2 } from 'lucide-react';
 import TrailerModal from '@features/media/components/TrailerModal';
+import ReleaseBadge from '@shared/components/ui/ReleaseBadge';
+import { isPointerFresh } from '@shared/lib/mediaDetailsPrefetch';
 
 export default function TrailerRow({ title, items }) {
   const rowRef = useRef(null);
@@ -18,6 +20,7 @@ export default function TrailerRow({ title, items }) {
 
   const handleMouseEnter = (id) => {
     hoverTimeoutRef.current = setTimeout(() => {
+      if (!isPointerFresh()) return;
       setHoveredTrailerId(id);
     }, 280);
   };
@@ -96,7 +99,7 @@ export default function TrailerRow({ title, items }) {
                                     allow="autoplay; encrypted-media"
                                     allowFullScreen
                                 />
-                                <div className="absolute top-4 right-4 bg-black/50 p-2 rounded-full backdrop-blur-md animate-in fade-in zoom-in border border-white/10">
+                                <div className="absolute top-4 right-4 bg-black/50 p-2 rounded-full animate-in fade-in zoom-in border border-white/10">
                                     <Volume2 size={16} className="text-white" />
                                 </div>
                             </div>
@@ -116,6 +119,13 @@ export default function TrailerRow({ title, items }) {
                                 {item.overview}
                             </p>
                         </div>
+
+                        <ReleaseBadge
+                            media={item}
+                            mediaType="movie"
+                            size="sm"
+                            className="absolute left-3 top-3 z-10"
+                        />
                     </div>
                 </div>
             );

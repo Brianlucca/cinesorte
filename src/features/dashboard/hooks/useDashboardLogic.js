@@ -13,13 +13,18 @@ import {
   getMovieDetails,
 } from "@shared/api/api";
 import { useAuth } from "@shared/context/useAuth";
+import {
+  DASHBOARD_BECAUSE_CACHE_PREFIX,
+  DASHBOARD_SECTIONS_CACHE_PREFIX,
+} from "@shared/lib/localCacheKeys";
 
 const CACHE_DAY_KEY = "cinesorte_trending_day";
 const CACHE_WEEK_KEY = "cinesorte_trending_week";
-const DASHBOARD_SECTIONS_CACHE_PREFIX = "cinesorte_dashboard_sections_v5";
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
 const DASHBOARD_SECTIONS_TTL = 30 * 60 * 1000;
+const DASHBOARD_BECAUSE_EMPTY_TTL = 3 * 60 * 1000;
+const BECAUSE_SEED_ATTEMPTS = 3;
 
 const toMillis = (value) => {
   if (!value) return 0;
@@ -29,32 +34,100 @@ const toMillis = (value) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-function readCachedSections(cacheKey) {
+const CACHED_SECTIONS_SHAPE = [
+  "movies",
+  "series",
+  "trailers",
+  "animes",
+  "animations",
+  "animeTrending",
+  "recommendedMovies",
+  "recommendedSeries",
+  "streaming",
+  "onTv",
+  "forRent",
+  "inTheaters",
+]
+  .slice()
+  .sort()
+  .join("|");
+
+const CACHED_BECAUSE_SHAPE = ["becauseSeed", "becauseYouWatched"].sort().join("|");
+
+const shapeOf = (payload) => Object.keys(payload || {}).sort().join("|");
+
+function readCachedEntry(cacheKey, ttl = DASHBOARD_SECTIONS_TTL, expectedShape = null) {
   try {
     const cached = localStorage.getItem(cacheKey);
     if (!cached) return null;
 
     const parsed = JSON.parse(cached);
-    if (Date.now() - parsed.timestamp > DASHBOARD_SECTIONS_TTL) return null;
+    if (!Number.isFinite(parsed?.timestamp)) {
+      localStorage.removeItem(cacheKey);
+      return null;
+    }
+    if (Date.now() - parsed.timestamp > ttl) return null;
     if (!parsed.data || typeof parsed.data !== "object") return null;
+    if (expectedShape && parsed.shape !== expectedShape) {
+      localStorage.removeItem(cacheKey);
+      return null;
+    }
 
-    return parsed.data;
+    return { data: parsed.data, timestamp: parsed.timestamp };
   } catch {
     localStorage.removeItem(cacheKey);
     return null;
   }
 }
 
+function readCachedSections(cacheKey, ttl, expectedShape) {
+  return readCachedEntry(cacheKey, ttl, expectedShape)?.data || null;
+}
+
+function removeCachedSections(cacheKey) {
+  try {
+    localStorage.removeItem(cacheKey);
+  } catch {
+    return;
+  }
+}
+
 function writeCachedSections(cacheKey, payload) {
   try {
-    localStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), data: payload }));
+    localStorage.setItem(
+      cacheKey,
+      JSON.stringify({ timestamp: Date.now(), shape: shapeOf(payload), data: payload }),
+    );
   } catch {
     // Storage can be unavailable or full; the dashboard should still render.
   }
 }
 
+const hasUsableSections = (sections) =>
+  Boolean(sections) &&
+  Object.values(sections).some(
+    (value) => Array.isArray(value) && value.length > 0,
+  );
+
+const mergeSectionsKeepingContent = (previous, incoming) => {
+  const merged = { ...previous };
+  for (const [key, value] of Object.entries(incoming || {})) {
+    const previousValue = previous?.[key];
+    if (
+      Array.isArray(value) &&
+      value.length === 0 &&
+      Array.isArray(previousValue) &&
+      previousValue.length > 0
+    ) {
+      continue;
+    }
+    merged[key] = value;
+  }
+  return merged;
+};
+
 export function useDashboardLogic() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [heroQueue, setHeroQueue] = useState([]);
   const [currentHero, setCurrentHero] = useState(null);
   const [data, setData] = useState({
@@ -77,6 +150,7 @@ export function useDashboardLogic() {
   });
   const [loading, setLoading] = useState(true);
   const [heroReady, setHeroReady] = useState(false);
+  const [sectionsLoading, setSectionsLoading] = useState(false);
   const [reloadVersion, setReloadVersion] = useState(0);
   const isMounted = useRef(true);
   const hasLoadedDashboard = useRef(false);
@@ -237,14 +311,24 @@ export function useDashboardLogic() {
     return () => clearInterval(interval);
   }, [heroQueue]);
 
+  const userId = user?.uid || null;
+  const userName = user?.username || null;
+  const userScope = userName || userId || "guest";
+  const genreCountsRef = useRef(userGenreCountsKey);
+  genreCountsRef.current = userGenreCountsKey;
+
   useEffect(() => {
+    if (authLoading) return undefined;
+    const userGenres = Object.fromEntries(
+      JSON.parse(genreCountsRef.current || "[]"),
+    );
+    const hasUser = Boolean(userId);
+    const dashboardCacheScope = userScope;
+    const topGenresIdsString = getPreferredGenreString(userGenres);
     isMounted.current = true;
     async function loadContent() {
       if (!hasLoadedDashboard.current) setLoading(true);
       try {
-        const userGenres = Object.fromEntries(JSON.parse(userGenreCountsKey));
-        const dashboardCacheScope = user?.username || user?.uid || "guest";
-        const topGenresIdsString = getPreferredGenreString(userGenres);
 
         const cachedDay = localStorage.getItem(CACHE_DAY_KEY);
         const cachedWeek = localStorage.getItem(CACHE_WEEK_KEY);
@@ -311,7 +395,7 @@ export function useDashboardLogic() {
           .slice(0, 20);
         const firstHeroPool = initialHeroes.length > 0 ? initialHeroes : fallbackHeroes;
 
-        if (firstHeroPool.length > 0) {
+        if (firstHeroPool.length > 0 && !hasLoadedDashboard.current) {
           setHeroQueue(firstHeroPool);
           setCurrentHero(firstHeroPool[Math.floor(Math.random() * firstHeroPool.length)]);
         }
@@ -328,8 +412,12 @@ export function useDashboardLogic() {
         }
 
         const dashboardCacheKey = `${DASHBOARD_SECTIONS_CACHE_PREFIX}:${dashboardCacheScope}:${topGenresIdsString || "default"}`;
-        const cachedSections = readCachedSections(dashboardCacheKey);
-        if (cachedSections) {
+        const cachedSections = readCachedSections(
+          dashboardCacheKey,
+          undefined,
+          CACHED_SECTIONS_SHAPE,
+        );
+        if (hasUsableSections(cachedSections)) {
           setData((previous) => ({
             ...previous,
             ...cachedSections,
@@ -340,12 +428,14 @@ export function useDashboardLogic() {
           return;
         }
 
+        if (isMounted.current) setSectionsLoading(true);
+
         const results = await Promise.allSettled([
           getLatestTrailers(),
           getAnimeReleases(),
           getAnimations(),
-          user ? getRecommendations("movie") : Promise.resolve([]),
-          user ? getRecommendations("tv") : Promise.resolve([]),
+          hasUser ? getRecommendations("movie") : Promise.resolve([]),
+          hasUser ? getRecommendations("tv") : Promise.resolve([]),
           getDiscover({ provider_id: "8|119|337", monetization_types: "flatrate" }),
           getDiscover({ media_type: "tv", sort_by: "popularity.desc" }),
           getDiscover({ monetization_types: "rent" }),
@@ -460,12 +550,13 @@ export function useDashboardLogic() {
           inTheaters,
         };
 
-        writeCachedSections(dashboardCacheKey, nextSections);
+        if (hasUsableSections(nextSections)) {
+          writeCachedSections(dashboardCacheKey, nextSections);
+        }
         setData((previous) => ({
-          ...previous,
+          ...mergeSectionsKeepingContent(previous, nextSections),
           trendingDay: sortedDay,
           trendingWeek: sortedWeek,
-          ...nextSections,
         }));
         setHeroReady(true);
       } catch {
@@ -478,6 +569,7 @@ export function useDashboardLogic() {
         if (isMounted.current) {
           hasLoadedDashboard.current = true;
           setLoading(false);
+          setSectionsLoading(false);
         }
       }
     }
@@ -485,9 +577,10 @@ export function useDashboardLogic() {
     return () => {
       isMounted.current = false;
     };
-  }, [buildCompleteSection, excludeExisting, getPreferredGenreString, prioritizeContent, uniqueById, user, userGenreCountsKey, reloadVersion]);
+  }, [authLoading, buildCompleteSection, excludeExisting, getPreferredGenreString, prioritizeContent, uniqueById, userId, userScope, reloadVersion]);
 
   useEffect(() => {
+    if (authLoading) return undefined;
     let active = true;
 
     const clearBecause = () => {
@@ -499,11 +592,39 @@ export function useDashboardLogic() {
       }));
     };
 
-    if (!user) {
+    if (!userId) {
       clearBecause();
       return () => {
         active = false;
       };
+    }
+
+    const becauseCacheKey = `${DASHBOARD_BECAUSE_CACHE_PREFIX}:${userScope}`;
+    const cachedBecause = readCachedEntry(
+      becauseCacheKey,
+      DASHBOARD_SECTIONS_TTL,
+      CACHED_BECAUSE_SHAPE,
+    );
+    if (cachedBecause) {
+      const cachedItems = Array.isArray(cachedBecause.data?.becauseYouWatched)
+        ? cachedBecause.data.becauseYouWatched
+        : [];
+      const cacheIsUsable =
+        cachedItems.length > 0 ||
+        Date.now() - cachedBecause.timestamp <= DASHBOARD_BECAUSE_EMPTY_TTL;
+
+      if (cacheIsUsable) {
+        setData((previous) => ({
+          ...previous,
+          becauseYouWatched: cachedItems,
+          becauseSeed: cachedBecause.data.becauseSeed || null,
+        }));
+        return () => {
+          active = false;
+        };
+      }
+
+      removeCachedSections(becauseCacheKey);
     }
 
     const toSeed = (rawId, mediaType, title) => {
@@ -526,10 +647,23 @@ export function useDashboardLogic() {
 
     const loadBecauseYouWatched = async () => {
       try {
-        let seed = null;
+        let failed = false;
+        const candidates = [];
+        const addCandidate = (seed) => {
+          if (!seed || candidates.some((item) => item.id === seed.id)) return;
+          candidates.push(seed);
+        };
+        const collectSeeds = (items, buildSeed) => {
+          (items || [])
+            .slice(0, BECAUSE_SEED_ATTEMPTS)
+            .forEach((item) => addCandidate(buildSeed(item)));
+        };
 
         // 1) Assistidos: interações salvas com `watched = true` (mais recentes primeiro).
-        const interactions = await getUserInteractions().catch(() => []);
+        const interactions = await getUserInteractions().catch(() => {
+          failed = true;
+          return [];
+        });
         if (Array.isArray(interactions)) {
           const watched = interactions
             .filter((item) => item?.mediaId && item.mediaTitle && item.watched)
@@ -538,20 +672,29 @@ export function useDashboardLogic() {
                 toMillis(second.watchedAt || second.lastInteraction || second.timestamp) -
                 toMillis(first.watchedAt || first.lastInteraction || first.timestamp),
             );
-          seed = toSeed(watched[0]?.mediaId, watched[0]?.mediaType, watched[0]?.mediaTitle);
+          collectSeeds(watched, (item) =>
+            toSeed(item.mediaId, item.mediaType, item.mediaTitle),
+          );
         }
 
         // 2) Reviews: avaliações escritas pelo usuário (mais recentes primeiro).
-        if (!seed && user?.username) {
-          const reviews = await getUserReviewsOnly(user.username).catch(() => null);
+        if (candidates.length === 0 && userName) {
+          const reviews = await getUserReviewsOnly(userName).catch(() => {
+            failed = true;
+            return null;
+          });
           const reviewItems = Array.isArray(reviews?.items) ? reviews.items : [];
-          const candidate = reviewItems.find((item) => item?.mediaId && item.mediaTitle);
-          seed = toSeed(candidate?.mediaId, candidate?.mediaType, candidate?.mediaTitle);
+          collectSeeds(reviewItems, (item) =>
+            toSeed(item.mediaId, item.mediaType, item.mediaTitle),
+          );
         }
 
         // 3) Categorias salvas: itens das listas do usuário (mais recentes primeiro).
-        if (!seed) {
-          const lists = await getUserLists("me").catch(() => []);
+        if (candidates.length === 0) {
+          const lists = await getUserLists("me").catch(() => {
+            failed = true;
+            return [];
+          });
           if (Array.isArray(lists)) {
             const savedItems = lists
               .flatMap((list) => (Array.isArray(list?.items) ? [...list.items].reverse() : []))
@@ -559,30 +702,59 @@ export function useDashboardLogic() {
             savedItems.sort(
               (first, second) => savedAtMillis(second.addedAt) - savedAtMillis(first.addedAt),
             );
-            const item = savedItems[0];
-            seed = toSeed(item?.id, item?.media_type, item?.title || item?.name);
+            collectSeeds(savedItems, (item) =>
+              toSeed(item?.id, item?.media_type, item?.title || item?.name),
+            );
           }
         }
 
-        if (!seed || !active) return clearBecause();
+        let seed = null;
+        let items = [];
+        for (const candidate of candidates) {
+          if (!active) return;
 
-        const details = await getMovieDetails(seed.mediaType, seed.id).catch(
-          () => null,
-        );
-        const pool = details?.recommendations?.results?.length
-          ? details.recommendations.results
-          : details?.similar?.results || [];
-        const items = uniqueById(
-          pool.map((item) => ({ ...item, media_type: seed.mediaType })),
-        )
-          .filter(
-            (item) =>
-              String(item.id) !== String(seed.id) &&
-              (item.poster_path || item.backdrop_path),
+          const details = await getMovieDetails(candidate.mediaType, candidate.id).catch(() => {
+            failed = true;
+            return null;
+          });
+          const pool = details?.recommendations?.results?.length
+            ? details.recommendations.results
+            : details?.similar?.results || [];
+          const candidateItems = uniqueById(
+            pool.map((item) => ({ ...item, media_type: candidate.mediaType })),
           )
-          .slice(0, 20);
+            .filter(
+              (item) =>
+                String(item.id) !== String(candidate.id) &&
+                (item.poster_path || item.backdrop_path),
+            )
+            .slice(0, 20);
+
+          if (candidateItems.length > 0) {
+            seed = candidate;
+            items = candidateItems;
+            break;
+          }
+        }
 
         if (!active) return;
+
+        if (!seed) {
+          if (failed) {
+            removeCachedSections(becauseCacheKey);
+          } else {
+            writeCachedSections(becauseCacheKey, {
+              becauseYouWatched: [],
+              becauseSeed: null,
+            });
+          }
+          return clearBecause();
+        }
+
+        writeCachedSections(becauseCacheKey, {
+          becauseYouWatched: items,
+          becauseSeed: seed,
+        });
         setData((previous) => ({
           ...previous,
           becauseYouWatched: items,
@@ -598,7 +770,7 @@ export function useDashboardLogic() {
     return () => {
       active = false;
     };
-  }, [uniqueById, user, reloadVersion]);
+  }, [authLoading, uniqueById, userId, userName, userScope, reloadVersion]);
 
-  return { data, currentHero, loading, heroReady, retry };
+  return { data, currentHero, loading, heroReady, sectionsLoading, retry };
 }

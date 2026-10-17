@@ -220,8 +220,8 @@ export function useEpisodeDetailsLogic() {
       setReviews((prev) =>
         prev.map((r) => (r.id === reviewId ? { ...r, replies: comments } : r))
       );
-    } catch {
-      toast.error('Erro', 'Não foi possível carregar as respostas.');
+    } catch (error) {
+      toast.error('Erro', error?.message || 'Não foi possível carregar as respostas.');
     }
   };
 

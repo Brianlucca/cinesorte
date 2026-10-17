@@ -100,12 +100,12 @@ export default function MediaRecommendations({ items }) {
                       <h3 className="line-clamp-2 text-base font-bold leading-tight text-white md:text-lg">
                         {name}
                       </h3>
-                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/15 bg-black/30 text-white backdrop-blur-md transition-all group-hover:bg-white group-hover:text-black">
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/15 bg-black/30 text-white transition-all group-hover:bg-white group-hover:text-black">
                         <ArrowUpRight size={15} />
                       </span>
                     </div>
                   </div>
-                  <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-lg border border-white/10 bg-black/45 px-2 py-1 text-[10px] font-black text-white backdrop-blur-md">
+                  <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-lg border border-white/10 bg-black/45 px-2 py-1 text-[10px] font-black text-white">
                     <Star size={10} className="fill-yellow-300 text-yellow-300" />
                     {Number(item.vote_average || 0).toFixed(1)}
                   </span>
