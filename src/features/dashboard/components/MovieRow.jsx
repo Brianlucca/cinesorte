@@ -5,6 +5,7 @@ import {
   cancelMovieDetailsPrefetch,
   prefetchMovieDetails,
   scheduleMovieDetailsPrefetch,
+  warmRail,
 } from "@shared/lib/mediaDetailsPrefetch";
 import { getReleaseStatus } from "@shared/lib/releaseStatus";
 import ReleaseBadge from "@shared/components/ui/ReleaseBadge";
@@ -66,6 +67,7 @@ function MovieRow({ title, items, variant = "poster" }) {
 
   const slide = (direction) => {
     if (!rowRef.current) return;
+    warmRail(rowRef.current, direction === "left" ? -1 : 1);
     const { clientWidth } = rowRef.current;
     const amount = clientWidth * 0.75;
     rowRef.current.scrollBy({
@@ -110,6 +112,7 @@ function MovieRow({ title, items, variant = "poster" }) {
 
       <div
         ref={rowRef}
+        onPointerEnter={(event) => warmRail(event.currentTarget)}
         className={`flex ${layout.rail} w-full snap-x snap-mandatory scroll-px-6 overflow-x-auto px-6 pb-2 pt-4 scroll-smooth scrollbar-hide md:snap-none md:scroll-px-10 md:px-10 md:pt-5 xl:scroll-px-14 xl:px-14 2xl:scroll-px-16 2xl:px-16`}
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
