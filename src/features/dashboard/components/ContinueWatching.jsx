@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { deleteWatchProgress, getWatchProgress } from "@shared/api/api";
 import { useAuth } from "@shared/context/useAuth";
+import { mediaPrefetchHandlers } from "@shared/lib/mediaDetailsPrefetch";
 
 const IMAGE = "https://image.tmdb.org/t/p/w780";
 const PROVIDERS = {
@@ -230,6 +231,9 @@ export default function ContinueWatching() {
           {continueItems.slice(0, 10).map((item) => {
             const percent = realProgress(item);
             const details = detailsPath(item);
+            const detailPrefetch = details && !details.includes("/season/")
+              ? mediaPrefetchHandlers(item.mediaType === "tv" ? "tv" : "movie", item.tmdbId)
+              : {};
             return (
               <article
                 key={item.id}
@@ -290,6 +294,7 @@ export default function ContinueWatching() {
                     {details && (
                       <Link
                         to={details}
+                        {...detailPrefetch}
                         className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-black/35 px-3 py-2 text-xs font-black text-white transition hover:bg-white/10"
                       >
                         <Info size={13} />
