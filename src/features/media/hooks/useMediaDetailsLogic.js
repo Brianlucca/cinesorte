@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   getMovieDetails,
@@ -9,6 +9,7 @@ import {
   createOrUpdateList,
   getUserLists,
   addMediaToList,
+  removeMediaFromList,
   postComment,
   deleteReview,
   deleteComment,
@@ -19,9 +20,11 @@ import {
   getComments,
   getUserFollowing,
   getWatchProgress,
+  clearApiCache,
 } from "@shared/api/api";
 import { useToast } from "@shared/context/useToast";
 import { useAuth } from "@shared/context/useAuth";
+import { readInteraction, writeInteraction } from "@shared/lib/interactionCache";
 
 export function useMediaDetailsLogic() {
   const { type, id } = useParams();
@@ -29,6 +32,7 @@ export function useMediaDetailsLogic() {
   const navigate = useNavigate();
   const toast = useToast();
   const { user } = useAuth();
+  const userScope = user?.username || null;
 
   const [media, setMedia] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -36,10 +40,12 @@ export function useMediaDetailsLogic() {
   const [similar, setSimilar] = useState([]);
   const [loading, setLoading] = useState(true);
   const [interactions, setInteractions] = useState({ liked: false, watched: false });
+  const interactionsRef = useRef({ liked: false, watched: false });
   const [userLists, setUserLists] = useState([]);
   const [followingList, setFollowingList] = useState([]);
   const [addingToListId, setAddingToListId] = useState(null);
   const [watchProgress, setWatchProgress] = useState(null);
+  const interactionTouchedRef = useRef(false);
 
   const [modals, setModals] = useState({
     trailer: false,
@@ -67,6 +73,20 @@ export function useMediaDetailsLogic() {
     return eliteTitles.includes(levelTitle);
   };
 
+  const applyInteractionState = useCallback((nextState, { persist = true } = {}) => {
+    interactionsRef.current = nextState;
+    setInteractions(nextState);
+    if (persist) writeInteraction(userScope, type, id, nextState);
+  }, [userScope, type, id]);
+
+  const invalidateReviewsCache = useCallback(() => {
+    clearApiCache(`/social/reviews/${id}`);
+  }, [id]);
+
+  const invalidateInteractionCache = useCallback(() => {
+    clearApiCache("/users/interactions/");
+  }, []);
+
   const communityStats = useMemo(() => {
     if (!reviews || reviews.length === 0) return null;
     const validReviews = reviews.filter((r) => r.rating !== undefined && r.rating !== null);
@@ -79,19 +99,92 @@ export function useMediaDetailsLogic() {
   }, [reviews]);
 
   useEffect(() => {
+    let cancelled = false;
+    const alive = () => !cancelled;
+
     async function loadData() {
       if (!id) return;
       setLoading(true);
-      try {
-        const mediaPromise = getMovieDetails(type, id);
-        const providersPromise = getProviders(type, id);
-        const reviewsPromise = getMediaReviews(id);
-        const interactionsPromise = user?.username ? getMediaInteraction(id) : Promise.resolve(null);
-        const listsPromise = user?.username ? getUserLists("me") : Promise.resolve([]);
-        const followingPromise = user?.username ? getUserFollowing(user.username) : Promise.resolve([]);
-        const progressPromise = user?.username ? getWatchProgress() : Promise.resolve([]);
+      interactionTouchedRef.current = false;
+      applyInteractionState(
+        (userScope ? readInteraction(userScope, type, id) : null) || {
+          liked: false,
+          watched: false,
+        },
+        { persist: false },
+      );
+      setWatchProgress(null);
+      setReviews([]);
+      setProviders([]);
+      setSimilar([]);
 
-        const mediaData = await mediaPromise;
+      getProviders(type, id)
+        .then((value) => {
+          if (alive()) setProviders(Array.isArray(value) ? value : []);
+        })
+        .catch(() => {
+          if (alive()) setProviders([]);
+        });
+
+      getMediaReviews(id)
+        .then((reviewsRaw) => {
+          if (!alive()) return;
+          setReviews(
+            Array.isArray(reviewsRaw)
+              ? reviewsRaw.map((r) => ({
+                  ...r,
+                  isLikedByCurrentUser: !!r.isLikedByCurrentUser,
+                  likesCount: Number(r.likesCount) || 0,
+                  replies: r.replies || [],
+                  isEliteReview: r.isEliteReview === true,
+                }))
+              : [],
+          );
+        })
+        .catch(() => {
+          if (alive()) setReviews([]);
+        });
+
+      if (user?.username) {
+        getMediaInteraction(id)
+          .then((myInter) => {
+            if (!alive() || interactionTouchedRef.current) return;
+            const serverState = {
+              liked: !!myInter?.liked,
+              watched: !!myInter?.watched,
+            };
+            applyInteractionState(serverState);
+          })
+          .catch(() => {});
+
+        getUserLists("me")
+          .then((value) => {
+            if (alive()) setUserLists(Array.isArray(value) ? value : []);
+          })
+          .catch(() => {});
+
+        getUserFollowing(user.username)
+          .then((value) => {
+            if (alive()) setFollowingList(Array.isArray(value) ? value : []);
+          })
+          .catch(() => {});
+
+        getWatchProgress()
+          .then((items) => {
+            if (!alive()) return;
+            const progressItems = Array.isArray(items) ? items : [];
+            setWatchProgress(
+              progressItems.find(
+                (item) => String(item.tmdbId) === String(id) && item.mediaType === type,
+              ) || null,
+            );
+          })
+          .catch(() => {});
+      }
+
+      try {
+        const mediaData = await getMovieDetails(type, id);
+        if (!alive()) return;
         setMedia(mediaData);
         const recommendations = mediaData.recommendations?.results || [];
         const similarItems = mediaData.similar?.results || [];
@@ -99,74 +192,33 @@ export function useMediaDetailsLogic() {
           .filter((item) => item.id !== Number(id) && item.poster_path)
           .slice(0, 16);
         setSimilar(relatedContent);
-        setLoading(false);
-
-        const results = await Promise.allSettled([
-          providersPromise,
-          reviewsPromise,
-          interactionsPromise,
-          listsPromise,
-          followingPromise,
-          progressPromise,
-        ]);
-        setProviders(results[0].status === "fulfilled" ? results[0].value : []);
-        const progressItems = results[5]?.status === "fulfilled" && Array.isArray(results[5].value) ? results[5].value : [];
-        setWatchProgress(progressItems.find((item) => String(item.tmdbId) === String(id) && item.mediaType === type) || null);
-
-        const reviewsRaw = results[1].status === "fulfilled" ? results[1].value : [];
-        const safeReviews = Array.isArray(reviewsRaw) ? reviewsRaw.map(r => ({
-            ...r,
-            isLikedByCurrentUser: !!r.isLikedByCurrentUser,
-            likesCount: Number(r.likesCount) || 0,
-            replies: r.replies || [],
-            isEliteReview: r.isEliteReview === true 
-        })) : [];
-        setReviews(safeReviews);
-
-        if (user?.username) {
-          const interactionsRaw = results[2].status === "fulfilled" ? results[2].value : [];
-          const listsRaw = results[3].status === "fulfilled" ? results[3].value : [];
-          const followingRaw = results[4].status === "fulfilled" ? results[4].value : [];
-
-          const myLists = Array.isArray(listsRaw) ? listsRaw : [];
-          const myFollowing = Array.isArray(followingRaw) ? followingRaw : [];
-
-          setUserLists(myLists);
-          setFollowingList(myFollowing);
-
-          const myInter = interactionsRaw;
-          
-          if (myInter) {
-            setInteractions({
-              liked: !!myInter.liked,
-              watched: !!myInter.watched,
-            });
-          } else {
-            setInteractions({ liked: false, watched: false });
-          }
-        }
       } catch {
+        if (!alive()) return;
         setMedia(null);
         setReviews([]);
         setProviders([]);
         setSimilar([]);
       } finally {
-        setLoading(false);
+        if (alive()) setLoading(false);
       }
     }
+
     loadData();
-  }, [type, id, user?.username]);
+    return () => {
+      cancelled = true;
+    };
+  }, [type, id, user?.username, userScope, applyInteractionState]);
 
   const handleInteract = async (action) => {
     if (!user) return requireLogin("Entre para interagir com este título.");
 
     const key = action === "like" ? "liked" : "watched";
-    const previousState = interactions[key];
+    const current = interactionsRef.current;
+    const previousState = current[key];
+    const nextState = { ...current, [key]: !previousState };
+    interactionTouchedRef.current = true;
 
-    setInteractions(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+    applyInteractionState(nextState);
 
     try {
       await recordInteraction({
@@ -178,11 +230,10 @@ export function useMediaDetailsLogic() {
         backdropPath: media.backdrop_path || '',
       });
     } catch {
-      setInteractions(prev => ({
-        ...prev,
-        [key]: previousState
-      }));
+      applyInteractionState({ ...interactionsRef.current, [key]: previousState });
       toast.error("Erro", "Falha ao salvar interação.");
+    } finally {
+      invalidateInteractionCache();
     }
   };
 
@@ -200,9 +251,13 @@ export function useMediaDetailsLogic() {
         isEliteReview: isElite 
       });
       if (rating !== null && Number(rating) >= 1) {
-        setInteractions((prev) => ({ ...prev, watched: true }));
+        applyInteractionState(
+          { ...interactionsRef.current, watched: true },
+          { persist: false },
+        );
       }
       toast.success("Sucesso", "Publicado com sucesso!");
+      invalidateReviewsCache();
       const updated = await getMediaReviews(id);
       setReviews(updated);
     } catch (error) {
@@ -219,8 +274,12 @@ export function useMediaDetailsLogic() {
         rating: newRating !== null ? Number(newRating) : null,
       });
       if (newRating !== null && Number(newRating) >= 1) {
-        setInteractions((prev) => ({ ...prev, watched: true }));
+        applyInteractionState(
+          { ...interactionsRef.current, watched: true },
+          { persist: false },
+        );
       }
+      invalidateReviewsCache();
       setReviews(prev => prev.map(r => 
         r.id === reviewId
           ? { ...r, text: newText, rating: newRating !== null ? Number(newRating) : null, isEdited: true }
@@ -236,6 +295,7 @@ export function useMediaDetailsLogic() {
     if (!user) return requireLogin("Entre para responder à comunidade.");
     try {
       await postComment({ reviewId, text, parentId });
+      invalidateReviewsCache();
       toast.success("Sucesso", "Resposta enviada!");
       const comments = await getComments(reviewId);
       setReviews(prev => prev.map(r => {
@@ -254,6 +314,7 @@ export function useMediaDetailsLogic() {
   const handleEditReply = async (commentId, newText, reviewId) => {
     try {
         await updateComment(commentId, { text: newText });
+        invalidateReviewsCache();
         const comments = await getComments(reviewId);
         setReviews(prev => prev.map(r => {
             if (r.id === reviewId) {
@@ -270,6 +331,7 @@ export function useMediaDetailsLogic() {
   const handleDeleteReview = async (reviewId) => {
     try {
       await deleteReview(reviewId);
+      invalidateReviewsCache();
       setReviews((prev) => prev.filter((r) => r.id !== reviewId));
       toast.success("Apagado", "Publicação removida.");
     } catch {
@@ -280,6 +342,7 @@ export function useMediaDetailsLogic() {
   const handleDeleteComment = async (commentId) => {
     try {
       await deleteComment(commentId);
+      invalidateReviewsCache();
       setReviews(prev => prev.map(r => {
           const hasComment = r.replies?.some(c => c.id === commentId);
           if (hasComment) {
@@ -315,18 +378,57 @@ export function useMediaDetailsLogic() {
       first_air_date: media.first_air_date || null,
     };
 
+    setUserLists((currentLists) => currentLists.map((list) =>
+      String(list.id) === String(listId)
+        ? { ...list, items: [...(list.items || []), mediaItem] }
+        : list,
+    ));
+
     try {
       await addMediaToList(listId, mediaItem);
       toast.success("Salvo", "Adicionado à sua lista.");
-      setUserLists((currentLists) => currentLists.map((list) =>
-        String(list.id) === String(listId)
-          ? { ...list, items: [...(list.items || []), mediaItem] }
-          : list,
-      ));
       return true;
     } catch (e) {
       const msg = e.response?.data?.message || "Falha ao adicionar.";
       toast.error("Aviso", msg);
+      setUserLists((currentLists) => currentLists.map((list) =>
+        String(list.id) === String(listId)
+          ? { ...list, items: (list.items || []).filter((item) => String(item.id) !== String(media.id)) }
+          : list,
+      ));
+      return false;
+    } finally {
+      setAddingToListId(null);
+    }
+  };
+
+  const handleRemoveFromList = async (listId) => {
+    if (!user) {
+      requireLogin("Entre para gerenciar suas listas.");
+      return false;
+    }
+    const previousItems =
+      userLists.find((list) => String(list.id) === String(listId))?.items || [];
+
+    setAddingToListId(listId);
+    setUserLists((currentLists) => currentLists.map((list) =>
+      String(list.id) === String(listId)
+        ? { ...list, items: (list.items || []).filter((item) => String(item.id) !== String(media.id)) }
+        : list,
+    ));
+
+    try {
+      await removeMediaFromList(listId, media.id);
+      toast.success("Removido", "Título removido da coleção.");
+      return true;
+    } catch (e) {
+      const msg = e.response?.data?.message || "Falha ao remover.";
+      toast.error("Aviso", msg);
+      setUserLists((currentLists) => currentLists.map((list) =>
+        String(list.id) === String(listId)
+          ? { ...list, items: previousItems }
+          : list,
+      ));
       return false;
     } finally {
       setAddingToListId(null);
@@ -398,6 +500,7 @@ export function useMediaDetailsLogic() {
               setReviews((prev) => prev);
             }
         }
+        invalidateReviewsCache();
         delete likeClickCounts.current[reviewId];
         delete likeTimeouts.current[reviewId];
     }, 1000); 
@@ -410,8 +513,8 @@ export function useMediaDetailsLogic() {
               if (r.id === reviewId) { return { ...r, replies: comments }; }
               return r;
           }));
-      } catch {
-          toast.error("Erro", "Não foi possível carregar as respostas.");
+      } catch (error) {
+          toast.error("Erro", error?.message || "Não foi possível carregar as respostas.");
       }
   };
 
@@ -440,6 +543,7 @@ export function useMediaDetailsLogic() {
       handleDeleteReview,
       handleDeleteComment,
       handleAddToList,
+      handleRemoveFromList,
       handleCreateList,
       handleLikeReview,
       handleLoadReplies,
