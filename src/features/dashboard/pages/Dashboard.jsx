@@ -136,7 +136,7 @@ const buildHeroItems = (data, currentHero, rotation = 0) => {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { data, currentHero, loading, heroReady, retry } = useDashboardLogic();
+  const { data, currentHero, loading, heroReady, sectionsLoading, retry } = useDashboardLogic();
   const heroCacheScope = user?.username || user?.uid || "guest";
   const heroCacheKey = `${HERO_SET_CACHE_PREFIX}:${heroCacheScope}`;
   const initialHeroStateRef = useRef(undefined);
@@ -475,6 +475,21 @@ export default function Dashboard() {
           lists={userLists}
         />
 
+        {sectionsLoading && !sections.some((section) => (data[section.id] || []).length > 0) && (
+          <div className="px-5 sm:px-6 md:px-10 xl:px-14 2xl:px-16" role="status" aria-label="Carregando as fileiras">
+            {[0, 1, 2].map((row) => (
+              <div key={row} className={row > 0 ? "mt-8 md:mt-10" : ""}>
+                <div className="mb-4 h-6 w-48 animate-pulse rounded bg-white/[0.06]" />
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+                  {Array.from({ length: 6 }, (_, index) => (
+                    <div key={index} className="aspect-[2/3] animate-pulse rounded-2xl bg-white/[0.04]" />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {sections.map((section) => {
           const items = data[section.id];
           if (!items || items.length === 0) return null;
@@ -492,17 +507,6 @@ export default function Dashboard() {
                   />
                 )}
               </RowWrapper>
-
-
-              {user && section.id === "trendingDay" && (
-                <HomeExperience
-                  variant="community"
-                  data={data}
-                  socialItems={socialPreview.items}
-                  lists={userLists}
-                />
-              )}
-
             </div>
           );
         })}
