@@ -11,7 +11,7 @@ import {
   Star,
 } from "lucide-react";
 import { useAuth } from "@shared/context/useAuth";
-import { mediaPrefetchHandlers } from "@shared/lib/mediaDetailsPrefetch";
+import { mediaPrefetchHandlers, warmRail } from "@shared/lib/mediaDetailsPrefetch";
 import { getReleaseStatus } from "@shared/lib/releaseStatus";
 import ReleaseBadge from "@shared/components/ui/ReleaseBadge";
 
@@ -77,6 +77,7 @@ function MediaImage({ item, size = "w500", preferred = "poster", className = "" 
 
 function slideRail(rowRef, direction) {
   if (!rowRef.current) return;
+  warmRail(rowRef.current, direction === "left" ? -1 : 1);
   const { clientWidth } = rowRef.current;
   rowRef.current.scrollBy({
     left: direction === "left" ? -(clientWidth * 0.75) : clientWidth * 0.75,
@@ -252,6 +253,7 @@ function TopRail({ items = [] }) {
       <div className="mt-5 border-y border-white/[0.06] bg-[#181a20] py-6 md:mt-6 md:py-8">
         <div
           ref={topRef}
+          onPointerEnter={(event) => warmRail(event.currentTarget)}
           className="flex snap-x snap-proximity gap-3 overflow-x-auto overscroll-x-contain scroll-smooth px-2 pb-2 pt-1 sm:gap-4 sm:px-5 md:gap-6 scrollbar-hide"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
@@ -417,6 +419,7 @@ function LibrarySection({ lists = [] }) {
     <SectionShell title="Sua biblioteca" eyebrow="Continue sua curadoria" actionTo="/app/lists" actionLabel="Ver listas" rowRef={railRef} hasOverflow={hasOverflow}>
       <div
         ref={railRef}
+        onPointerEnter={(event) => warmRail(event.currentTarget)}
         className={`flex gap-4 overflow-x-auto scroll-smooth pt-5 pb-4 md:gap-5 md:pt-6 md:pb-6 ${PAGE_X} scrollbar-hide`}
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
