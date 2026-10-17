@@ -21,6 +21,8 @@ import {
   prefetchMovieDetails,
   scheduleMovieDetailsPrefetch,
 } from "@shared/lib/mediaDetailsPrefetch";
+import { getReleaseStatus } from "@shared/lib/releaseStatus";
+import ReleaseBadge from "@shared/components/ui/ReleaseBadge";
 
 const ARTWORK_ROTATION_MS = 10 * 60 * 1000;
 
@@ -119,6 +121,8 @@ function MediaSearchResultCard({ item, onClose }) {
   const year = getYear(item);
   const imagePath = item.poster_path;
   const rating = Number(item.vote_average || 0).toFixed(1);
+  const release = getReleaseStatus(item, type);
+  const infoLabel = release?.dayLabel || year;
 
   return (
     <Link
@@ -148,13 +152,23 @@ function MediaSearchResultCard({ item, onClose }) {
           <Star size={10} className="fill-yellow-400 text-yellow-400" />
           <span className="text-[10px] font-semibold text-white">{rating}</span>
         </div>
+        <ReleaseBadge
+          media={item}
+          mediaType={type}
+          size="sm"
+          className="absolute bottom-2.5 left-2.5 z-10 md:bottom-3 md:left-3"
+        />
       </article>
 
       <div className="px-0.5 pt-2.5">
         <h3 className="truncate text-sm font-semibold text-zinc-100">{title}</h3>
         <div className="mt-0.5 flex items-center gap-2 text-[11px] text-zinc-500">
-          {year && <span>{year}</span>}
-          {year && <span>&bull;</span>}
+          {infoLabel && (
+            <span className={release ? "font-semibold text-violet-300" : ""}>
+              {infoLabel}
+            </span>
+          )}
+          {infoLabel && <span>&bull;</span>}
           <span>{type === "tv" ? <>S&eacute;rie</> : "Filme"}</span>
         </div>
         <div className="hidden">
