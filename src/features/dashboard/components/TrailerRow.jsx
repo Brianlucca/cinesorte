@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Play, Volume2 } from 'lucide-react';
 import TrailerModal from '@features/media/components/TrailerModal';
 import ReleaseBadge from '@shared/components/ui/ReleaseBadge';
-import { isPointerFresh } from '@shared/lib/mediaDetailsPrefetch';
+import { isPointerFresh, warmRail } from '@shared/lib/mediaDetailsPrefetch';
 
 export default function TrailerRow({ title, items }) {
   const rowRef = useRef(null);
@@ -12,6 +12,7 @@ export default function TrailerRow({ title, items }) {
 
   const slide = (direction) => {
     if (rowRef.current) {
+      warmRail(rowRef.current, direction === 'left' ? -1 : 1);
       const { clientWidth } = rowRef.current;
       const scrollAmount = direction === 'left' ? -(clientWidth * 0.8) : clientWidth * 0.8;
       rowRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
@@ -66,6 +67,7 @@ export default function TrailerRow({ title, items }) {
       
       <div 
         ref={rowRef} 
+        onPointerEnter={(event) => warmRail(event.currentTarget)}
         className="flex w-full gap-4 overflow-x-auto px-5 pb-2 pt-4 scroll-smooth scrollbar-hide sm:px-6 md:gap-5 md:px-10 md:pt-5 xl:px-14 2xl:px-16"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
