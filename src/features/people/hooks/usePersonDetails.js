@@ -350,8 +350,8 @@ export const usePersonDetails = (id) => {
             : review,
         ),
       );
-    } catch {
-      toast.error('Erro', 'Não foi possível carregar as respostas.');
+    } catch (error) {
+      toast.error('Erro', error?.message || 'Não foi possível carregar as respostas.');
     }
   };
 
