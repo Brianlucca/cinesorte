@@ -1,77 +1,133 @@
-import { Trophy, Crown, Sparkles, Zap, Shield, Star, Flame, Eye } from "lucide-react";
+import { Award, Crown, Eye, MessageSquare, PenTool, Sparkles, Star, Zap } from "lucide-react";
 
-export default function LevelBadge({ title, size = "md" }) {
-  
-  const getStyle = (title) => {
-    switch (title) {
-      case "Divindade do Cinema":
-        return {
-          container: "bg-black border border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.6)] animate-pulse",
-          text: "bg-gradient-to-r from-cyan-300 via-white to-blue-500 text-transparent bg-clip-text font-black animate-gradient bg-[length:200%_auto]",
-          icon: <Eye className="text-cyan-400 animate-bounce" size={size === "lg" ? 20 : 14} />,
-          effect: "raios-cyan"
-        };
-      case "Entidade Cinematográfica":
-        return {
-          container: "bg-black border border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.5)]",
-          text: "bg-gradient-to-r from-fuchsia-500 via-purple-300 to-pink-500 text-transparent bg-clip-text font-black",
-          icon: <Sparkles className="text-fuchsia-400 animate-spin-slow" size={size === "lg" ? 20 : 14} />,
-          effect: "aura-roxa"
-        };
-      case "Oráculo da Sétima Arte":
-        return {
-          container: "bg-black border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.4)]",
-          text: "bg-gradient-to-r from-emerald-400 via-green-200 to-teal-500 text-transparent bg-clip-text font-extrabold",
-          icon: <Zap className="text-emerald-400" size={size === "lg" ? 20 : 14} />,
-          effect: "brilho-verde"
-        };
-      case "Mestre da Crítica":
-        return {
-          container: "bg-yellow-950/30 border border-yellow-500/50 shadow-[0_0_10px_rgba(234,179,8,0.3)]",
-          text: "text-yellow-400 font-bold",
-          icon: <Crown className="text-yellow-500 fill-yellow-500" size={size === "lg" ? 20 : 14} />,
-          effect: "ouro"
-        };
-      case "Cinéfilo Experiente":
-        return {
-          container: "bg-zinc-800 border border-zinc-600",
-          text: "text-zinc-300 font-bold",
-          icon: <Star className="text-zinc-400" size={size === "lg" ? 20 : 14} />,
-          effect: "prata"
-        };
-      case "Cinéfilo":
-        return {
-          container: "bg-zinc-900 border border-zinc-700",
-          text: "text-zinc-400 font-medium",
-          icon: <Flame className="text-orange-700" size={size === "lg" ? 20 : 14} />,
-          effect: "bronze"
-        };
-      default:
-        return {
-          container: "bg-zinc-900/50 border border-zinc-800",
-          text: "text-zinc-500 font-medium",
-          icon: <Shield className="text-zinc-600" size={size === "lg" ? 20 : 14} />,
-          effect: "padrao"
-        };
-    }
-  };
+const TIERS = [
+  {
+    id: "divindade",
+    minReviews: 500,
+    title: "divindade do cinema",
+    icon: Crown,
+    main: "Divindade",
+    sub: "do cinema",
+  },
+  {
+    id: "entidade",
+    minReviews: 250,
+    title: "entidade cinematografica",
+    icon: Zap,
+    main: "Entidade",
+    sub: "cinematográfica",
+  },
+  {
+    id: "oraculo",
+    minReviews: 100,
+    title: "oraculo da setima arte",
+    icon: Sparkles,
+    main: "Oráculo",
+    sub: "da sétima arte",
+  },
+  {
+    id: "mestre",
+    minReviews: 50,
+    title: "mestre da critica",
+    icon: Award,
+    main: "Mestre",
+    sub: "da crítica",
+  },
+  {
+    id: "experiente",
+    minReviews: 20,
+    title: "cinefilo experiente",
+    icon: Star,
+    main: "Cinéfilo",
+    sub: "experiente",
+  },
+  {
+    id: "cinefilo",
+    minReviews: 10,
+    title: "cinefilo",
+    icon: MessageSquare,
+    main: "Cinéfilo",
+  },
+  {
+    id: "iniciante",
+    minReviews: 5,
+    title: "critico iniciante",
+    icon: PenTool,
+    main: "Crítico",
+    sub: "iniciante",
+  },
+  {
+    id: "espectador",
+    minReviews: 0,
+    title: "espectador",
+    icon: Eye,
+    main: "Espectador",
+  },
+];
 
-  const style = getStyle(title);
-  
-  const sizeClasses = size === "lg" 
-    ? "px-4 py-2 text-sm md:text-base rounded-xl" 
-    : "px-2.5 py-1 text-[10px] rounded-lg";
+const DEFAULT_TIER = TIERS[TIERS.length - 1];
+
+const normalize = (value) =>
+  String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+const getTierByReviews = (reviewsCount) => {
+  if (reviewsCount === null || reviewsCount === undefined || reviewsCount === "") return null;
+
+  const count = Number(reviewsCount);
+  if (!Number.isFinite(count)) return null;
+
+  return TIERS.find((tier) => count >= tier.minReviews) || DEFAULT_TIER;
+};
+
+const getTierByTitle = (title) => {
+  const key = normalize(title);
+  if (!key) return DEFAULT_TIER;
+
+  return TIERS.find((tier) => normalize(`${tier.main} ${tier.sub || ""}`) === key || tier.title === key) || DEFAULT_TIER;
+};
+
+const resolveTier = (title, reviewsCount) => getTierByReviews(reviewsCount) || getTierByTitle(title);
+
+export function LevelMedal({ title, reviewsCount, className = "" }) {
+  const tier = resolveTier(title, reviewsCount);
+  const Icon = tier.icon;
 
   return (
-    <div className={`relative inline-flex items-center gap-2 ${sizeClasses} ${style.container} backdrop-blur-md overflow-hidden group select-none`}>
-      {(style.effect === 'raios-cyan' || style.effect === 'aura-roxa') && (
-        <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-      )}
+    <span
+      className={`tb-medal${className ? ` ${className}` : ""}`}
+      data-tier={tier.id}
+      aria-hidden="true"
+    >
+      <Icon />
+    </span>
+  );
+}
 
-      <span className="relative z-10">{style.icon}</span>
-      <span className={`relative z-10 uppercase tracking-wider ${style.text}`}>
-        {title}
+export default function LevelBadge({ title, reviewsCount, compact = false, className = "" }) {
+  const tier = resolveTier(title, reviewsCount);
+  const Icon = tier.icon;
+
+  return (
+    <span
+      className={`tb${compact ? " tb--compact" : ""}${className ? ` ${className}` : ""}`}
+      data-tier={tier.id}
+    >
+      <span className="tb__icon" aria-hidden="true">
+        <Icon />
       </span>
-    </div>
+      <span className="tb__text">
+        <span className="tb__main">{tier.main}</span>
+        {tier.sub && (
+          <>
+            <span className="tb__dot" aria-hidden="true" />
+            <span className="tb__sub">{tier.sub}</span>
+          </>
+        )}
+      </span>
+    </span>
   );
 }
