@@ -1,12 +1,16 @@
 export const DASHBOARD_SECTIONS_CACHE_PREFIX = "cinesorte_dashboard_sections_v7";
-export const DASHBOARD_BECAUSE_CACHE_PREFIX = "cinesorte_dashboard_because_v2";
+export const DASHBOARD_BECAUSE_CACHE_PREFIX = "cinesorte_dashboard_because_v3";
 export const DASHBOARD_HERO_SET_CACHE_PREFIX = "cinesorte_dashboard_hero_set_v2";
+export const DASHBOARD_SOCIAL_CACHE_PREFIX = "cinesorte_dashboard_social_v1";
+export const DASHBOARD_LISTS_CACHE_PREFIX = "cinesorte_dashboard_lists_v1";
 export const INTERACTIONS_CACHE_PREFIX = "cinesorte_interactions_v1";
 
 const VERSIONED_PREFIXES = [
   DASHBOARD_SECTIONS_CACHE_PREFIX,
   DASHBOARD_BECAUSE_CACHE_PREFIX,
   DASHBOARD_HERO_SET_CACHE_PREFIX,
+  DASHBOARD_SOCIAL_CACHE_PREFIX,
+  DASHBOARD_LISTS_CACHE_PREFIX,
   INTERACTIONS_CACHE_PREFIX,
 ];
 
