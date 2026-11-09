@@ -1,6 +1,6 @@
 import { Calendar, Camera, Edit3, Image as ImageIcon, Settings, UserPlus, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import LevelBadge from '@shared/components/ui/LevelBadge';
+import LevelBadge, { LevelMedal } from '@shared/components/ui/LevelBadge';
 
 const getCreatedYear = (value) => {
   if (!value) return null;
@@ -19,14 +19,14 @@ export default function ProfileHeader({ user, onEditAvatar, onEditBackground, on
             key={user.backgroundURL}
             src={user.backgroundURL}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover object-center opacity-85 transition-transform duration-[1400ms] group-hover/header:scale-[1.02]"
+            className="absolute inset-0 h-full w-full object-cover object-center saturate-[1.06] transition-transform duration-[1400ms] group-hover/header:scale-[1.02]"
           />
         ) : (
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(124,58,237,0.18),transparent_36%),linear-gradient(135deg,#181a20_0%,#111216_100%)]" />
         )}
 
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,18,22,0.97)_0%,rgba(17,18,22,0.70)_44%,rgba(17,18,22,0.20)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(0deg,#181a20_0%,rgba(24,26,32,0.76)_18%,transparent_62%,rgba(17,18,22,0.22)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,18,22,0.94)_0%,rgba(17,18,22,0.64)_30%,rgba(17,18,22,0.16)_58%,transparent_82%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(0deg,#181a20_0%,rgba(24,26,32,0.74)_14%,rgba(24,26,32,0.18)_38%,transparent_62%)]" />
 
         <button
           type="button"
@@ -64,10 +64,12 @@ export default function ProfileHeader({ user, onEditAvatar, onEditBackground, on
                 </div>
               </div>
 
-              {user?.levelTitle && (
-                <div className="absolute -bottom-4 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap drop-shadow-xl">
-                  <LevelBadge title={user.levelTitle} size="md" />
-                </div>
+              {(user?.levelTitle || user?.reviewsCount != null) && (
+                <LevelMedal
+                  reviewsCount={user?.reviewsCount}
+                  title={user.levelTitle}
+                  className="pointer-events-none absolute bottom-1.5 right-1.5 z-20"
+                />
               )}
             </div>
 
@@ -85,7 +87,12 @@ export default function ProfileHeader({ user, onEditAvatar, onEditBackground, on
                   <h2 className="break-words text-2xl font-semibold leading-tight tracking-[-0.035em] text-white sm:text-3xl md:text-4xl">
                     {user?.name || 'Usuario'}
                   </h2>
-                  <p className="mt-1.5 text-sm font-medium text-violet-300 md:text-base">@{user?.username}</p>
+                  <div className="mt-1.5 flex flex-wrap items-center justify-center gap-x-[10px] gap-y-2 md:justify-start">
+                    <p className="text-sm font-medium text-violet-300 md:text-base">@{user?.username}</p>
+                    {(user?.levelTitle || user?.reviewsCount != null) && (
+                      <LevelBadge reviewsCount={user?.reviewsCount} title={user.levelTitle} />
+                    )}
+                  </div>
                 </div>
 
                 <Link

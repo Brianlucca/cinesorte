@@ -24,12 +24,19 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
 const DASHBOARD_SECTIONS_TTL = 30 * 60 * 1000;
 const DASHBOARD_BECAUSE_EMPTY_TTL = 3 * 60 * 1000;
-const BECAUSE_SEED_ATTEMPTS = 3;
+const BECAUSE_SEED_ATTEMPTS = 4;
 
 const toMillis = (value) => {
   if (!value) return 0;
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
   if (typeof value.toMillis === "function") return value.toMillis();
   if (typeof value.toDate === "function") return value.toDate().getTime();
+  if (typeof value === "object" && typeof value._seconds === "number") {
+    return value._seconds * 1000;
+  }
+  if (typeof value === "object" && typeof value.seconds === "number") {
+    return value.seconds * 1000;
+  }
   const parsed = new Date(value).getTime();
   return Number.isFinite(parsed) ? parsed : 0;
 };
@@ -82,6 +89,10 @@ function readCachedEntry(cacheKey, ttl = DASHBOARD_SECTIONS_TTL, expectedShape =
 
 function readCachedSections(cacheKey, ttl, expectedShape) {
   return readCachedEntry(cacheKey, ttl, expectedShape)?.data || null;
+}
+
+function readStaleSections(cacheKey, expectedShape) {
+  return readCachedEntry(cacheKey, Number.MAX_SAFE_INTEGER, expectedShape)?.data || null;
 }
 
 function removeCachedSections(cacheKey) {
@@ -328,43 +339,90 @@ export function useDashboardLogic() {
     isMounted.current = true;
     async function loadContent() {
       if (!hasLoadedDashboard.current) setLoading(true);
+
+      const dashboardCacheKey = `${DASHBOARD_SECTIONS_CACHE_PREFIX}:${dashboardCacheScope}:${topGenresIdsString || "default"}`;
+      const cachedSections = readCachedSections(
+        dashboardCacheKey,
+        undefined,
+        CACHED_SECTIONS_SHAPE,
+      );
+      const hasCachedSections = hasUsableSections(cachedSections);
+      const firstPaintSections = hasCachedSections
+        ? cachedSections
+        : readStaleSections(dashboardCacheKey, CACHED_SECTIONS_SHAPE);
+      const hasFirstPaintSections = hasUsableSections(firstPaintSections);
+
+      let cachedDay = null;
+      let cachedWeek = null;
       try {
+        cachedDay = localStorage.getItem(CACHE_DAY_KEY);
+        cachedWeek = localStorage.getItem(CACHE_WEEK_KEY);
+      } catch {
+        cachedDay = null;
+        cachedWeek = null;
+      }
+      let dayData = null,
+        weekData = null,
+        staleDayData = null,
+        staleWeekData = null;
 
-        const cachedDay = localStorage.getItem(CACHE_DAY_KEY);
-        const cachedWeek = localStorage.getItem(CACHE_WEEK_KEY);
-        let dayData = null,
-          weekData = null;
-
-        if (cachedDay) {
-          try {
-            const parsed = JSON.parse(cachedDay);
-            if (
-              Date.now() - parsed.timestamp < ONE_DAY &&
-              Array.isArray(parsed.data) &&
-              parsed.data.length > 0 &&
-              parsed.data.some((i) => i.backdrop_path && !i.trailerKey)
-            ) {
+      if (cachedDay) {
+        try {
+          const parsed = JSON.parse(cachedDay);
+          if (
+            Array.isArray(parsed.data) &&
+            parsed.data.length > 0 &&
+            parsed.data.some((i) => i.backdrop_path && !i.trailerKey)
+          ) {
+            if (Date.now() - parsed.timestamp < ONE_DAY) {
               dayData = parsed.data;
+            } else {
+              staleDayData = parsed.data;
             }
-          } catch {
-            localStorage.removeItem(CACHE_DAY_KEY);
           }
+        } catch {
+          localStorage.removeItem(CACHE_DAY_KEY);
         }
-        if (cachedWeek) {
-          try {
-            const parsed = JSON.parse(cachedWeek);
-            if (
-              Date.now() - parsed.timestamp < ONE_WEEK &&
-              Array.isArray(parsed.data) &&
-              parsed.data.length > 0 &&
-              parsed.data.some((i) => i.backdrop_path && !i.trailerKey)
-            ) {
+      }
+      if (cachedWeek) {
+        try {
+          const parsed = JSON.parse(cachedWeek);
+          if (
+            Array.isArray(parsed.data) &&
+            parsed.data.length > 0 &&
+            parsed.data.some((i) => i.backdrop_path && !i.trailerKey)
+          ) {
+            if (Date.now() - parsed.timestamp < ONE_WEEK) {
               weekData = parsed.data;
+            } else {
+              staleWeekData = parsed.data;
             }
-          } catch {
-            localStorage.removeItem(CACHE_WEEK_KEY);
           }
+        } catch {
+          localStorage.removeItem(CACHE_WEEK_KEY);
         }
+      }
+
+      const firstPaintDay = dayData || staleDayData;
+      const firstPaintWeek = weekData || staleWeekData;
+      const cachedSortedDay = firstPaintDay
+        ? uniqueById(prioritizeContent(firstPaintDay, userGenres))
+        : [];
+      const cachedSortedWeek = firstPaintWeek
+        ? uniqueById(prioritizeContent(firstPaintWeek, userGenres))
+        : [];
+
+      if ((hasFirstPaintSections || cachedSortedWeek.length > 0) && isMounted.current) {
+        setData((previous) => ({
+          ...previous,
+          ...(hasFirstPaintSections ? firstPaintSections : {}),
+          ...(cachedSortedDay.length > 0 ? { trendingDay: cachedSortedDay } : {}),
+          ...(cachedSortedWeek.length > 0 ? { trendingWeek: cachedSortedWeek } : {}),
+        }));
+        setSectionsLoading(false);
+      }
+
+      try {
 
         const [resDay, resWeek] = await Promise.all([
           dayData ? Promise.resolve({ results: dayData }) : getTrending("day"),
@@ -411,13 +469,7 @@ export function useDashboardLogic() {
           setLoading(false);
         }
 
-        const dashboardCacheKey = `${DASHBOARD_SECTIONS_CACHE_PREFIX}:${dashboardCacheScope}:${topGenresIdsString || "default"}`;
-        const cachedSections = readCachedSections(
-          dashboardCacheKey,
-          undefined,
-          CACHED_SECTIONS_SHAPE,
-        );
-        if (hasUsableSections(cachedSections)) {
+        if (hasCachedSections) {
           setData((previous) => ({
             ...previous,
             ...cachedSections,
@@ -599,6 +651,7 @@ export function useDashboardLogic() {
       };
     }
 
+    let staleFallback = null;
     const becauseCacheKey = `${DASHBOARD_BECAUSE_CACHE_PREFIX}:${userScope}`;
     const cachedBecause = readCachedEntry(
       becauseCacheKey,
@@ -625,6 +678,26 @@ export function useDashboardLogic() {
       }
 
       removeCachedSections(becauseCacheKey);
+    } else {
+      const staleBecause = readCachedEntry(
+        becauseCacheKey,
+        Number.MAX_SAFE_INTEGER,
+        CACHED_BECAUSE_SHAPE,
+      );
+      const staleItems = Array.isArray(staleBecause?.data?.becauseYouWatched)
+        ? staleBecause.data.becauseYouWatched
+        : [];
+      if (staleItems.length > 0) {
+        staleFallback = {
+          items: staleItems,
+          seed: staleBecause.data.becauseSeed || null,
+        };
+        setData((previous) => ({
+          ...previous,
+          becauseYouWatched: staleItems,
+          becauseSeed: staleBecause.data.becauseSeed || null,
+        }));
+      }
     }
 
     const toSeed = (rawId, mediaType, title) => {
@@ -710,7 +783,25 @@ export function useDashboardLogic() {
 
         let seed = null;
         let items = [];
-        for (const candidate of candidates) {
+
+        let lastSeedId = null;
+        try {
+          const rawBecauseCache = JSON.parse(localStorage.getItem(becauseCacheKey));
+          lastSeedId = rawBecauseCache?.data?.becauseSeed?.id || null;
+        } catch {
+          lastSeedId = null;
+        }
+
+        const mostRecent = candidates[0];
+        const shouldRotate =
+          candidates.length > 1 &&
+          lastSeedId != null &&
+          String(mostRecent?.id) === String(lastSeedId);
+        const orderedCandidates = shouldRotate
+          ? [...candidates.slice(1), candidates[0]]
+          : candidates;
+
+        for (const candidate of orderedCandidates) {
           if (!active) return;
 
           const details = await getMovieDetails(candidate.mediaType, candidate.id).catch(() => {
@@ -741,6 +832,7 @@ export function useDashboardLogic() {
 
         if (!seed) {
           if (failed) {
+            if (staleFallback) return;
             removeCachedSections(becauseCacheKey);
           } else {
             writeCachedSections(becauseCacheKey, {
@@ -761,7 +853,7 @@ export function useDashboardLogic() {
           becauseSeed: seed,
         }));
       } catch {
-        clearBecause();
+        if (!staleFallback) clearBecause();
       }
     };
 

@@ -228,10 +228,12 @@ export default function FeedCard({ item, onDelete, onLike, onLoadComments }) {
               <Link to={`/app/profile/${item.username}`} className="text-sm font-semibold text-white transition-colors hover:text-violet-300">
                 @{displayUsername}
               </Link>
-              {item.levelTitle && (
-                <div className="origin-left scale-[0.92]">
-                  <LevelBadge title={item.levelTitle} />
-                </div>
+              {(item.levelTitle || item.reviewsCount != null || item.user?.reviewsCount != null) && (
+                <LevelBadge
+                  reviewsCount={item.reviewsCount ?? item.user?.reviewsCount}
+                  title={item.levelTitle}
+                  compact
+                />
               )}
             </div>
 

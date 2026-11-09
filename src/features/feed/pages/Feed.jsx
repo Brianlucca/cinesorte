@@ -351,9 +351,13 @@ export default function Feed() {
                         <Link to={`/app/profile/${suggestedUser.username}`} className="block truncate text-xs font-black text-zinc-200 hover:text-violet-300">
                           @{suggestedUser.username}
                         </Link>
-                        {suggestedUser.levelTitle ? (
-                          <div className="mt-1.5 origin-left scale-[0.78]">
-                            <LevelBadge title={suggestedUser.levelTitle} />
+                        {suggestedUser.levelTitle || suggestedUser.reviewsCount != null || suggestedUser.user?.reviewsCount != null ? (
+                          <div className="mt-1.5">
+                            <LevelBadge
+                              reviewsCount={suggestedUser.reviewsCount ?? suggestedUser.user?.reviewsCount}
+                              title={suggestedUser.levelTitle}
+                              compact
+                            />
                           </div>
                         ) : (
                           <span className="mt-1 block text-[9px] uppercase tracking-wider text-zinc-600">Explorador CineSorte</span>

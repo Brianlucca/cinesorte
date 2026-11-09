@@ -151,6 +151,9 @@ export const getUserReviews = (username, lastCreatedAt) =>
 export const getUserReviewsOnly = (username, lastCreatedAt) =>
   api.get(`/social/reviews-only/${username}${lastCreatedAt ? `?lastCreatedAt=${lastCreatedAt}` : ""}`);
 
+export const getUserReviewsCount = (username) =>
+  api.get(`/social/reviews-count/${username}`);
+
 export const postReview = (reviewData) => api.post("/social/reviews", reviewData).then((response) => {
   invalidateTasteRecommendations();
   return response;

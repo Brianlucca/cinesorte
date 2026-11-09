@@ -365,7 +365,10 @@ export default function ReviewItem({
                 >
                   @{review.username}
                 </Link>
-                <LevelBadge title={review.levelTitle} size="md" />
+                <LevelBadge
+                  reviewsCount={review.reviewsCount ?? review.user?.reviewsCount ?? review.author?.reviewsCount}
+                  title={review.levelTitle}
+                />
                 {isElite && (
                   <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] ${eliteTheme.chip}`}>
                     <Pin size={12} /> Fixado

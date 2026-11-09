@@ -2,14 +2,13 @@ import {
   Calendar,
   Loader2,
   MessageCircle,
-  MessageSquare,
   Sparkles,
   UserCheck,
   UserPlus,
   Users,
   Ban,
 } from 'lucide-react';
-import LevelBadge from '@shared/components/ui/LevelBadge';
+import LevelBadge, { LevelMedal } from '@shared/components/ui/LevelBadge';
 import { useAuth } from '@shared/context/useAuth';
 
 const getCreatedYear = (value) => {
@@ -17,6 +16,11 @@ const getCreatedYear = (value) => {
   const date = value._seconds ? new Date(value._seconds * 1000) : new Date(value);
   return Number.isNaN(date.getTime()) ? null : date.getFullYear();
 };
+
+const metaChip = 'inline-flex h-8 items-center gap-1.5 rounded-xl border border-white/[0.10] bg-[#111216]/80 px-3 text-[11px] font-semibold text-zinc-300 backdrop-blur-xl';
+const counterChip = 'inline-flex h-8 items-center gap-2 rounded-xl border border-white/[0.10] bg-[#111216]/80 px-3 text-[11px] font-semibold text-zinc-400 backdrop-blur-xl';
+const focusRing = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111216]';
+const secondaryButton = `inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/[0.12] bg-[#111216]/85 px-4 text-sm font-semibold text-zinc-100 backdrop-blur-xl transition-colors hover:border-white/[0.25] hover:bg-[#181a20] disabled:cursor-not-allowed disabled:opacity-60 ${focusRing}`;
 
 export default function PublicProfileHeader({
   user,
@@ -33,6 +37,7 @@ export default function PublicProfileHeader({
   const { user: currentUser } = useAuth();
   const isMe = currentUser?.username === user?.username;
   const createdYear = getCreatedYear(user?.createdAt);
+  const bio = typeof user?.bio === 'string' ? user.bio.trim() : '';
 
   return (
     <section className="group/header relative overflow-hidden rounded-xl border border-white/[0.06] bg-[#181a20]">
@@ -42,17 +47,17 @@ export default function PublicProfileHeader({
             key={user.backgroundURL}
             src={user.backgroundURL}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover object-center opacity-85 transition-transform duration-[1400ms] group-hover/header:scale-[1.02]"
+            className="absolute inset-0 h-full w-full object-cover object-center saturate-[1.06] transition-transform duration-[1400ms] group-hover/header:scale-[1.02]"
           />
         ) : (
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(124,58,237,0.18),transparent_36%),linear-gradient(135deg,#181a20_0%,#111216_100%)]" />
         )}
 
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,18,22,0.97)_0%,rgba(17,18,22,0.70)_44%,rgba(17,18,22,0.20)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(0deg,#181a20_0%,rgba(24,26,32,0.76)_18%,transparent_62%,rgba(17,18,22,0.22)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,18,22,0.94)_0%,rgba(17,18,22,0.64)_30%,rgba(17,18,22,0.16)_58%,transparent_82%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(0deg,#181a20_0%,rgba(24,26,32,0.74)_14%,rgba(24,26,32,0.18)_38%,transparent_62%)]" />
 
-        <div className="relative z-10 flex min-h-[390px] flex-col justify-end px-5 pb-7 pt-20 sm:px-7 md:min-h-[420px] md:px-9 md:pb-8 xl:px-10">
-          <div className="flex flex-col gap-6 md:flex-row md:items-end">
+        <div className="relative z-10 flex min-h-[390px] flex-col justify-end px-5 pb-6 pt-20 sm:px-7 md:min-h-[420px] md:px-9 md:pb-7 xl:px-10">
+          <div className="flex flex-col gap-5 md:flex-row md:items-end md:gap-6">
             <div className="relative mx-auto shrink-0 md:mx-0">
               <div className="relative h-32 w-32 overflow-hidden rounded-xl border border-white/[0.08] bg-[#181a20] p-1 shadow-[0_20px_50px_rgba(0,0,0,0.45)] md:h-40 md:w-40">
                 <div className="group/avatar relative h-full w-full overflow-hidden rounded-lg bg-[#181a20]">
@@ -66,53 +71,75 @@ export default function PublicProfileHeader({
                 </div>
               </div>
 
-              {user?.levelTitle && (
-                <div className="absolute -bottom-4 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap drop-shadow-xl">
-                  <LevelBadge title={user.levelTitle} size="md" />
-                </div>
+              {(user?.levelTitle || user?.reviewsCount != null) && (
+                <LevelMedal
+                  reviewsCount={user?.reviewsCount}
+                  title={user?.levelTitle}
+                  className="pointer-events-none absolute bottom-1.5 right-1.5 z-20"
+                />
               )}
             </div>
 
             <div className="min-w-0 flex-1 text-center md:text-left">
-              <div className="mb-3 flex flex-wrap items-center justify-center gap-2 md:justify-start">
-                {createdYear && (
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.06] bg-white/[0.018] px-3 py-1.5 text-[10px] font-semibold text-zinc-300 backdrop-blur-xl">
-                    <Calendar size={13} /> Desde {createdYear}
-                  </span>
-                )}
+              <h2 className="break-words text-2xl font-semibold leading-tight tracking-[-0.035em] text-white sm:text-3xl md:text-4xl">
+                {user?.name || 'Usuário'}
+              </h2>
 
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-x-[10px] gap-y-2 md:justify-start">
+                <p className="text-sm font-medium text-violet-300 md:text-base">@{user?.username}</p>
+                {(user?.levelTitle || user?.reviewsCount != null) && (
+                  <LevelBadge reviewsCount={user?.reviewsCount} title={user?.levelTitle} />
+                )}
                 {followsYou && !isMe && (
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.06] bg-white/[0.018] px-3 py-1.5 text-[10px] font-semibold text-zinc-300 backdrop-blur-xl">
-                    <UserCheck size={13} /> Te segue
-                  </span>
-                )}
-
-                {compatibility > 0 && !isMe && (
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/15 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-semibold text-emerald-300 backdrop-blur-xl">
-                    <Sparkles size={13} /> {compatibility}% compatível
+                  <span className={metaChip}>
+                    <UserCheck size={13} className="text-violet-300" /> Te segue
                   </span>
                 )}
               </div>
 
-              <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
-                <div className="min-w-0">
-                  <h2 className="break-words text-2xl font-semibold leading-tight tracking-[-0.035em] text-white sm:text-3xl md:text-4xl">
-                    {user?.name || 'Usuário'}
-                  </h2>
-                  <p className="mt-1.5 text-sm font-medium text-violet-300 md:text-base">@{user?.username}</p>
+              {bio && (
+                <p className="mx-auto mt-3 max-w-3xl text-sm font-medium leading-7 text-zinc-300 md:mx-0">
+                  {bio}
+                </p>
+              )}
+
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2 md:justify-start">
+                {createdYear && (
+                  <span className={metaChip}>
+                    <Calendar size={13} className="text-violet-300" /> Desde {createdYear}
+                  </span>
+                )}
+
+                {compatibility > 0 && !isMe && (
+                  <span className={metaChip}>
+                    <Sparkles size={13} className="text-emerald-300" /> {compatibility}% compatível
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+                <div className="flex flex-wrap items-center justify-center gap-2 md:justify-start">
+                  <div className={counterChip}>
+                    <Users size={14} className="text-violet-300" />
+                    <strong className="text-white">{user?.followersCount || 0}</strong>
+                    seguidores
+                  </div>
+
+                  <div className={counterChip}>
+                    <UserPlus size={14} className="text-violet-300" />
+                    <strong className="text-white">{user?.followingCount || 0}</strong>
+                    seguindo
+                  </div>
                 </div>
 
                 {!isMe && (
-                  <div className="flex flex-col gap-2 sm:flex-row lg:justify-end">
+                  <div className="grid w-full grid-cols-2 gap-2.5 lg:flex lg:w-auto lg:items-center">
                     <button
                       type="button"
                       onClick={onFollow}
                       disabled={isBlocked}
-                      className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition-colors ${
-                        isFollowing
-                          ? 'border border-white/[0.06] bg-white/[0.018] text-zinc-300 hover:border-red-300/20 hover:bg-red-500/10 hover:text-red-300'
-                          : 'bg-white text-zinc-950 hover:bg-violet-100'
-                      }`}
+                      aria-label={isFollowing ? `Deixar de seguir @${user?.username}` : `Seguir @${user?.username}`}
+                      className={secondaryButton}
                     >
                       {isFollowing ? <UserCheck size={17} /> : <UserPlus size={17} />}
                       {isFollowing ? 'Seguindo' : 'Seguir'}
@@ -122,7 +149,8 @@ export default function PublicProfileHeader({
                       type="button"
                       onClick={onMessage}
                       disabled={messaging || isBlocked}
-                      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.018] px-5 text-sm font-semibold text-zinc-200 transition-colors hover:bg-white/[0.06] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                      aria-label={`Enviar mensagem para @${user?.username}`}
+                      className={secondaryButton}
                     >
                       {messaging ? <Loader2 size={17} className="animate-spin" /> : <MessageCircle size={17} />}
                       Mensagem
@@ -132,41 +160,18 @@ export default function PublicProfileHeader({
                       type="button"
                       onClick={onBlock}
                       disabled={blocking}
-                      className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors disabled:opacity-60 ${isBlocked ? 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200' : 'border-red-400/15 bg-red-500/[0.07] text-red-300 hover:bg-red-500/15'}`}
+                      aria-label={isBlocked ? `Desbloquear @${user?.username}` : `Bloquear @${user?.username}`}
+                      className={`col-span-2 inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 lg:col-span-1 ${focusRing} ${
+                        isBlocked
+                          ? 'border-emerald-400/25 bg-emerald-500/[0.07] text-emerald-200 hover:border-emerald-400/40 hover:bg-emerald-500/[0.12]'
+                          : 'border-red-400/25 bg-red-500/[0.07] text-red-300 hover:border-red-400/40 hover:bg-red-500/[0.12]'
+                      }`}
                     >
                       {blocking ? <Loader2 size={16} className="animate-spin" /> : <Ban size={16} />}
                       {isBlocked ? 'Desbloquear' : 'Bloquear'}
                     </button>
                   </div>
                 )}
-              </div>
-
-              <div className="mt-6">
-                {user?.bio ? (
-                  <p className="mx-auto max-w-3xl text-sm font-medium leading-7 text-zinc-300 md:mx-0">
-                    {user.bio}
-                  </p>
-                ) : (
-                  <div className="mx-auto inline-flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.018] px-4 py-3 text-xs font-semibold text-zinc-500 md:mx-0">
-                    <MessageSquare size={15} />
-                    Sem biografia ainda
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5 md:justify-start">
-                <div className="group inline-flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.018] px-4 py-2.5 text-xs font-semibold text-zinc-400 backdrop-blur-xl">
-                  <Users size={15} className="text-violet-300" />
-                  <strong className="text-white">{user?.followersCount || 0}</strong>
-                  seguidores
-                </div>
-
-                <div className="group inline-flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.018] px-4 py-2.5 text-xs font-semibold text-zinc-400 backdrop-blur-xl">
-                  <UserPlus size={15} className="text-violet-300" />
-                  <strong className="text-white">{user?.followingCount || 0}</strong>
-                  seguindo
-                </div>
-
               </div>
             </div>
           </div>
