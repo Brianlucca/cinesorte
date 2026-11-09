@@ -72,6 +72,7 @@ export default function PublicProfile() {
   const {
     profile,
     reviews,
+    reviewsTotal,
     isFollowing,
     followsYou,
     loading,
@@ -178,7 +179,7 @@ export default function PublicProfile() {
               totalXp={profile.totalXp}
               watchedCount={profile.watchedCount}
               likesCount={profile.likesCount}
-              reviewsCount={profile.reviewsCount}
+              reviewsCount={reviewsTotal ?? profile.reviewsCount ?? 0}
             />
           </div>
         </div>
@@ -214,10 +215,16 @@ export default function PublicProfile() {
           <div className="mb-5 flex flex-col justify-between gap-4 border-b border-white/[0.06] pb-3 md:flex-row md:items-center">
             <div className="scrollbar-hide flex gap-5 overflow-x-auto">
               <button className="flex items-center gap-2 whitespace-nowrap border-b-2 border-violet-400 pb-3 text-sm font-semibold text-white transition-colors">
-                <MessageSquare size={17} /> Reviews <span className="text-[10px] text-zinc-600">{profile.reviewsCount || reviews.length || 0}</span>
+                <MessageSquare size={17} /> Reviews <span className="text-[10px] text-zinc-600">{reviewsTotal ?? profile.reviewsCount ?? 0}</span>
               </button>
             </div>
           </div>
+
+          {reviewsTotal != null && reviews.length < reviewsTotal && (
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600">
+              Mostrando {reviews.length} de {reviewsTotal} reviews
+            </p>
+          )}
 
           <div className="animate-in fade-in duration-300">
             <ReviewsList
