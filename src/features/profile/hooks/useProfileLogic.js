@@ -4,6 +4,7 @@ import { useToast } from '@shared/context/useToast';
 import { 
     getUserInteractions, 
     getUserReviewsOnly,
+    getUserReviewsCount,
     getUserStats, 
     getUserFollowersPage,
     getUserFollowingPage,
@@ -77,6 +78,7 @@ export function useProfileLogic() {
 
   const [allInteractions, setAllInteractions] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
+  const [reviewsTotal, setReviewsTotal] = useState(authUser?.reviewsCount ?? null);
   const [userLists, setUserLists] = useState([]);
   const [dbProfile, setDbProfile] = useState(authUser || {});
   const [userStats, setUserStats] = useState({ 
@@ -121,15 +123,33 @@ export function useProfileLogic() {
     setDbProfile(authUser);
     setLoading(false);
     try {
-      const [interactionsResult, reviewsResult, statsResult, listsResult] = await Promise.allSettled([
+      const [interactionsResult, reviewsResult, statsResult, listsResult, reviewsCountResult] = await Promise.allSettled([
           getUserInteractions(),
           getUserReviewsOnly(authUser.username),
           getUserStats(),
-          getUserLists('me')
+          getUserLists('me'),
+          getUserReviewsCount(authUser.username),
       ]);
 
       if (statsResult.status === 'fulfilled') setUserStats(statsResult.value);
       if (listsResult.status === 'fulfilled') setUserLists(listsResult.value);
+
+      const countPayload = reviewsCountResult.status === 'fulfilled' ? reviewsCountResult.value : null;
+      const countFromApi = Number(countPayload?.reviewsCount);
+      const statsCount = Number(statsResult.status === 'fulfilled' ? statsResult.value?.reviewsCount : NaN);
+      const authCount = Number(authUser?.reviewsCount);
+      const resolvedTotal = Number.isFinite(countFromApi)
+        ? countFromApi
+        : Number.isFinite(statsCount)
+          ? statsCount
+          : Number.isFinite(authCount)
+            ? authCount
+            : null;
+
+      if (resolvedTotal != null) setReviewsTotal(resolvedTotal);
+      if (countPayload?.levelTitle) {
+        setUserStats(prev => ({ ...prev, levelTitle: countPayload.levelTitle }));
+      }
 
       const reviewsResponse = reviewsResult.status === 'fulfilled' ? reviewsResult.value : {};
       const rawReviews = reviewsResponse?.items || [];
@@ -346,6 +366,7 @@ export function useProfileLogic() {
     ...userStats,
     ...dbProfile, 
     ...localUpdates,
+    reviewsCount: reviewsTotal ?? authUser?.reviewsCount ?? 0,
     bio: dbProfile.bio || authUser.bio || ''
   };
 
@@ -358,7 +379,7 @@ export function useProfileLogic() {
       interactionsCount: allInteractions.length,
       watchedCount: userStats.watchedCount || allInteractions.filter(i => i.action === 'watched').length,
       likesCount: userStats.likesCount || allInteractions.filter(i => i.action === 'like').length,
-      reviewsCount: userStats.reviewsCount || allReviews.length,
+      reviewsCount: reviewsTotal ?? userStats.reviewsCount ?? 0,
       followersList,
       followingList,
       hasMoreFollowers,
