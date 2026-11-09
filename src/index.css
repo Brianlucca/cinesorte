@@ -114,6 +114,203 @@ body {
   animation: spin 3s linear infinite;
 }
 
+/* Title badges */
+.tb {
+  --c: #9ca3af;
+  --bg: #101113;
+  --m: #d1d5db;
+  --s: #7b8088;
+  --g: 0;
+  display: inline-flex;
+  align-items: stretch;
+  flex: none;
+  height: 28px;
+  border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
+  border-radius: 7px;
+  background: var(--bg);
+  overflow: hidden;
+  vertical-align: middle;
+  box-shadow: 0 0 calc(var(--g) * 14px) color-mix(in srgb, var(--c) 22%, transparent);
+}
+
+.tb__icon {
+  width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--c) 16%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--c) 35%, transparent);
+  color: var(--c);
+}
+
+.tb__icon svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+
+.tb__text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tb__main {
+  color: var(--m);
+}
+
+.tb__sub {
+  color: var(--s);
+}
+
+.tb__dot {
+  width: 3px;
+  height: 3px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--c);
+}
+
+.tb-medal {
+  --c: #9ca3af;
+  --bg: #101113;
+  --g: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--c);
+  box-shadow: 0 0 calc(var(--g) * 14px) color-mix(in srgb, var(--c) 22%, transparent);
+}
+
+.tb-medal svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2;
+}
+
+:is(.tb, .tb-medal)[data-tier="divindade"] {
+  --c: #22d3ee;
+  --bg: #06141a;
+  --m: #a5f3fc;
+  --s: #5fb7c6;
+  --g: 1.3;
+}
+
+:is(.tb, .tb-medal)[data-tier="entidade"] {
+  --c: #c084fc;
+  --bg: #130a1c;
+  --m: #e9d5ff;
+  --s: #9d7fc0;
+  --g: 1.1;
+}
+
+:is(.tb, .tb-medal)[data-tier="oraculo"] {
+  --c: #34d399;
+  --bg: #07110e;
+  --m: #a7f3d0;
+  --s: #5fae93;
+  --g: 1;
+}
+
+:is(.tb, .tb-medal)[data-tier="mestre"] {
+  --c: #fbbf24;
+  --bg: #171005;
+  --m: #fde68a;
+  --s: #b89a4a;
+  --g: 0.5;
+}
+
+:is(.tb, .tb-medal)[data-tier="experiente"] {
+  --c: #60a5fa;
+  --bg: #08111c;
+  --m: #bfdbfe;
+  --s: #6b93c4;
+}
+
+:is(.tb, .tb-medal)[data-tier="cinefilo"] {
+  --c: #818cf8;
+  --bg: #0d0e1f;
+  --m: #c7d2fe;
+  --s: #7c83c4;
+}
+
+:is(.tb, .tb-medal)[data-tier="iniciante"] {
+  --c: #9ca3af;
+  --bg: #101113;
+  --m: #d1d5db;
+  --s: #7b8088;
+}
+
+:is(.tb, .tb-medal)[data-tier="espectador"] {
+  --c: #6b7280;
+  --bg: #0e0f10;
+  --m: #9ca3af;
+  --s: #5f646c;
+}
+
+.tb--compact {
+  height: 22px;
+}
+
+.tb--compact .tb__icon {
+  width: 22px;
+}
+
+.tb--compact .tb__icon svg {
+  width: 13px;
+  height: 13px;
+}
+
+.tb--compact .tb__text {
+  padding: 0 8px 0 7px;
+  font-size: 10px;
+  gap: 4px;
+}
+
+.tb--compact .tb__dot,
+.tb--compact .tb__sub {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .tb {
+    height: 22px;
+  }
+
+  .tb .tb__icon {
+    width: 22px;
+  }
+
+  .tb .tb__icon svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .tb .tb__text {
+    padding: 0 8px 0 7px;
+    font-size: 10px;
+    gap: 4px;
+  }
+
+  .tb .tb__dot,
+  .tb .tb__sub {
+    display: none;
+  }
+}
+
+
 @keyframes hero-ken-burns {
   from { transform: scale(1.02); }
   to { transform: scale(1.09); }
