@@ -8,9 +8,47 @@ import TrailerRow from "@features/dashboard/components/TrailerRow";
 import ContinueWatching from "@features/dashboard/components/ContinueWatching";
 import InTheaters from "@features/dashboard/components/InTheaters";
 import { useAuth } from "@shared/context/useAuth";
+import {
+  DASHBOARD_HERO_SET_CACHE_PREFIX,
+  DASHBOARD_LISTS_CACHE_PREFIX,
+  DASHBOARD_SOCIAL_CACHE_PREFIX,
+} from "@shared/lib/localCacheKeys";
 
-const HERO_SET_CACHE_PREFIX = "cinesorte_dashboard_hero_set_v2";
+const HERO_SET_CACHE_PREFIX = DASHBOARD_HERO_SET_CACHE_PREFIX;
 const HERO_SET_DURATION = 5 * 60 * 1000;
+const HOME_SOCIAL_CACHE_PREFIX = DASHBOARD_SOCIAL_CACHE_PREFIX;
+const HOME_LISTS_CACHE_PREFIX = DASHBOARD_LISTS_CACHE_PREFIX;
+const HOME_EXTRAS_TTL = 10 * 60 * 1000;
+const HOME_EXTRAS_MAX_CHARS = 200000;
+
+const readCachedExtras = (cacheKey, ttl = HOME_EXTRAS_TTL) => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(cacheKey));
+    if (
+      !parsed ||
+      !Number.isFinite(parsed.timestamp) ||
+      Date.now() - parsed.timestamp > ttl
+    ) {
+      localStorage.removeItem(cacheKey);
+      return null;
+    }
+
+    return parsed.data;
+  } catch {
+    localStorage.removeItem(cacheKey);
+    return null;
+  }
+};
+
+const writeCachedExtras = (cacheKey, data) => {
+  try {
+    const serialized = JSON.stringify({ timestamp: Date.now(), data });
+    if (serialized.length > HOME_EXTRAS_MAX_CHARS) return;
+    localStorage.setItem(cacheKey, serialized);
+  } catch {
+    return;
+  }
+};
 
 const readCachedHeroSet = (cacheKey) => {
   try {
@@ -254,6 +292,12 @@ export default function Dashboard() {
     let cancelled = false;
     let followingItems = [];
     let globalItems = [];
+    const socialCacheKey = `${HOME_SOCIAL_CACHE_PREFIX}:${user.username || user.uid || "guest"}`;
+
+    const cachedSocial = readCachedExtras(socialCacheKey);
+    if (Array.isArray(cachedSocial) && cachedSocial.length > 0) {
+      setSocialPreview((previous) => ({ ...previous, items: cachedSocial }));
+    }
 
     const publishSocialItems = () => {
       if (cancelled) return;
@@ -265,6 +309,7 @@ export default function Dashboard() {
         return true;
       });
 
+      if (items.length > 0) writeCachedExtras(socialCacheKey, items);
       setSocialPreview((previous) => ({ ...previous, items }));
     };
 
@@ -296,6 +341,11 @@ export default function Dashboard() {
     }
 
     let cancelled = false;
+    const listsCacheKey = `${HOME_LISTS_CACHE_PREFIX}:${user.username || user.uid || "guest"}`;
+    const cachedLists = readCachedExtras(listsCacheKey);
+    if (Array.isArray(cachedLists) && cachedLists.length > 0) {
+      setUserLists(cachedLists);
+    }
 
     async function loadHomeExperience() {
       try {
@@ -313,6 +363,9 @@ export default function Dashboard() {
           ? liveResult.value
           : [];
 
+        if (listsResult.status === "fulfilled") {
+          writeCachedExtras(listsCacheKey, lists);
+        }
         setUserLists(lists);
         setLiveHeroItems(liveRooms.map((room) => ({
           id: "live-" + room.id,
@@ -332,12 +385,12 @@ export default function Dashboard() {
       }
     }
 
-    if (!loading) loadHomeExperience();
+    loadHomeExperience();
 
     return () => {
       cancelled = true;
     };
-  }, [loading, user]);
+  }, [user]);
 
   useEffect(() => {
     if (!user) {
