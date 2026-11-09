@@ -18,6 +18,5 @@ export function endSessionCache() {
   try {
     sessionStorage.removeItem(SESSION_MARKER);
   } catch {
-    // Encerrar a sessão não deve falhar por indisponibilidade do storage.
   }
 }
