@@ -11,6 +11,7 @@ import BackgroundSelectorModal from '@shared/components/ui/BackgroundSelectorMod
 import UserListModal from '@shared/components/ui/UserListModal';
 import UserSearch from '@shared/components/UserSearch';
 import Modal from '@shared/components/ui/Modal';
+import LevelBadge from '@shared/components/ui/LevelBadge';
 import {
   Award,
   BookOpen,
@@ -26,7 +27,6 @@ import {
   PenTool,
   Play,
   ShieldCheck,
-  Sparkles,
   Star,
   Trophy,
   Zap,
@@ -221,12 +221,19 @@ export default function Profile() {
           <div className="animate-in fade-in duration-300">
             {ui.activeTab === 'likes' && <ActivityFeed interactions={data.displayItems} />}
             {ui.activeTab === 'reviews' && (
-              <ReviewsList
-                reviews={data.displayItems}
-                hasMore={ui.hasMoreReviews}
-                loadingMore={ui.loadingMoreReviews}
-                onLoadMore={actions.loadMoreReviews}
-              />
+              <>
+                {data.displayItems.length < data.reviewsCount && (
+                  <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600">
+                    Mostrando {data.displayItems.length} de {data.reviewsCount} reviews
+                  </p>
+                )}
+                <ReviewsList
+                  reviews={data.displayItems}
+                  hasMore={ui.hasMoreReviews}
+                  loadingMore={ui.loadingMoreReviews}
+                  onLoadMore={actions.loadMoreReviews}
+                />
+              </>
             )}
             {ui.activeTab === 'diary' && <Diary items={data.diaryItems} />}
           </div>
@@ -241,6 +248,7 @@ export default function Profile() {
         onClose={() => actions.closeModal('followers')}
         title="Seguidores"
         users={data.followersList}
+        total={user.followersCount}
         loading={ui.loadingLists}
         hasMore={data.hasMoreFollowers}
         loadingMore={data.loadingMoreUsers}
@@ -251,6 +259,7 @@ export default function Profile() {
         onClose={() => actions.closeModal('following')}
         title="Seguindo"
         users={data.followingList}
+        total={user.followingCount}
         loading={ui.loadingLists}
         hasMore={data.hasMoreFollowing}
         loadingMore={data.loadingMoreUsers}
@@ -287,28 +296,20 @@ export default function Profile() {
             </div>
             <div className="content-scrollbar max-h-[320px] space-y-3 overflow-y-auto pr-2">
               {[
-                { title: 'Divindade do Cinema', subtitle: '500+ reviews', icon: Crown, tone: 'text-cyan-300 bg-cyan-500/10 border-cyan-400/15' },
-                { title: 'Entidade Cinematográfica', subtitle: '250+ reviews', icon: Zap, tone: 'text-purple-300 bg-purple-500/10 border-purple-400/15' },
-                { title: 'Oráculo da Sétima Arte', subtitle: '100+ reviews', icon: Sparkles, tone: 'text-emerald-300 bg-emerald-500/10 border-emerald-400/15' },
-                { title: 'Mestre da Crítica', subtitle: '50+ reviews', icon: Award, tone: 'text-amber-300 bg-amber-500/10 border-amber-400/15' },
-                { title: 'Cinéfilo Experiente', subtitle: '20+ reviews', icon: Star, tone: 'text-blue-300 bg-blue-500/10 border-blue-400/15' },
-                { title: 'Cinéfilo', subtitle: '10+ reviews', icon: MessageSquare, tone: 'text-indigo-300 bg-indigo-500/10 border-indigo-400/15' },
-                { title: 'Crítico Iniciante', subtitle: '5+ reviews', icon: PenTool, tone: 'text-zinc-300 bg-white/[0.04] border-white/[0.06]' },
-                { title: 'Espectador', subtitle: 'Menos de 5 reviews', icon: Eye, tone: 'text-zinc-500 bg-black/25 border-white/[0.05]' },
-              ].map((level) => {
-                const LevelIcon = level.icon;
-                return (
-                  <div key={level.title} className="flex items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.018] p-4">
-                    <span className={`grid h-11 w-11 place-items-center rounded-xl border ${level.tone}`}>
-                      <LevelIcon size={18} />
-                    </span>
-                    <div>
-                      <span className="block text-sm font-bold text-zinc-100">{level.title}</span>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">{level.subtitle}</span>
-                    </div>
-                  </div>
-                );
-              })}
+                { title: 'Divindade do Cinema', subtitle: '500+ reviews' },
+                { title: 'Entidade Cinematográfica', subtitle: '250+ reviews' },
+                { title: 'Oráculo da Sétima Arte', subtitle: '100+ reviews' },
+                { title: 'Mestre da Crítica', subtitle: '50+ reviews' },
+                { title: 'Cinéfilo Experiente', subtitle: '20+ reviews' },
+                { title: 'Cinéfilo', subtitle: '10+ reviews' },
+                { title: 'Crítico Iniciante', subtitle: '5+ reviews' },
+                { title: 'Espectador', subtitle: 'Menos de 5 reviews' },
+              ].map((level) => (
+                <div key={level.title} className="flex flex-col items-start gap-2 rounded-xl border border-white/[0.06] bg-white/[0.018] p-4">
+                  <LevelBadge title={level.title} />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">{level.subtitle}</span>
+                </div>
+              ))}
             </div>
           </section>
         </div>
