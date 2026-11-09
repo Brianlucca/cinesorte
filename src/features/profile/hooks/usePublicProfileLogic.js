@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   getPublicProfile,
   getUserReviewsOnly,
+  getUserReviewsCount,
   followUser,
   unfollowUser,
   checkFollowStatus,
@@ -17,6 +18,7 @@ import { useAuth } from '@shared/context/useAuth';
 export function usePublicProfileLogic(username) {
   const [profile, setProfile] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [reviewsTotal, setReviewsTotal] = useState(null);
   const [reviewsCursor, setReviewsCursor] = useState(null);
   const [hasMoreReviews, setHasMoreReviews] = useState(false);
   const [loadingMoreReviews, setLoadingMoreReviews] = useState(false);
@@ -38,6 +40,7 @@ export function usePublicProfileLogic(username) {
       setLoading(true);
       try {
         const reviewsPromise = getUserReviewsOnly(username);
+        const reviewsCountPromise = getUserReviewsCount(username);
         const profileData = await getPublicProfile(username);
 
         if (!isMounted) return;
@@ -76,12 +79,31 @@ export function usePublicProfileLogic(username) {
               });
           }
 
-          const reviewsResponse = await reviewsPromise.catch(() => ({}));
+          const [reviewsResponse, reviewsCountResponse] = await Promise.all([
+            reviewsPromise.catch(() => ({})),
+            reviewsCountPromise.catch(() => null),
+          ]);
           if (!isMounted) return;
+
           const items = reviewsResponse?.items || [];
           setReviews(items);
           setHasMoreReviews(reviewsResponse?.hasMore || false);
           setReviewsCursor(reviewsResponse?.nextCursor || null);
+
+          const countFromApi = Number(reviewsCountResponse?.reviewsCount);
+          const countFromProfile = Number(profileData?.reviewsCount);
+          const resolvedTotal = Number.isFinite(countFromApi)
+            ? countFromApi
+            : Number.isFinite(countFromProfile)
+              ? countFromProfile
+              : null;
+
+          if (resolvedTotal != null) setReviewsTotal(resolvedTotal);
+          setProfile((prev) => (prev ? {
+            ...prev,
+            reviewsCount: resolvedTotal ?? prev.reviewsCount,
+            levelTitle: reviewsCountResponse?.levelTitle || prev.levelTitle,
+          } : prev));
         }
       } catch {
         if (isMounted) {
@@ -204,6 +226,7 @@ export function usePublicProfileLogic(username) {
   return {
     profile,
     reviews,
+    reviewsTotal,
     isFollowing,
     followsYou,
     loading,
