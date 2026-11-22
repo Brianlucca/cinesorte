@@ -115,6 +115,7 @@ export const getUserLists = (username) => api.get(`/users/lists/${username}`);
 export const createOrUpdateList = (listData) => api.post("/users/lists", listData);
 export const cloneList = (data) => api.post("/users/lists/clone", data);
 export const addMediaToList = (listId, mediaItem) => api.post("/users/lists/add", { listId, mediaItem });
+export const moveMediaBetweenLists = (data) => api.post("/users/lists/move", data);
 export const removeMediaFromList = (listId, mediaId) => api.delete(`/users/lists/${listId}/media/${mediaId}`);
 export const deleteList = (listId) => api.delete(`/users/lists/${listId}`);
 
@@ -201,7 +202,11 @@ export const getProviders = (type, id) => cachedGet(`/tmdb/providers/${type}/${i
 export const getTrending = (timeWindow) => cachedGet(`/tmdb/trending/${timeWindow}`, { timeout: 12000 }, 5 * 60 * 1000);
 export const getDiscover = (params) => cachedGet("/tmdb/discover", { params }, 5 * 60 * 1000);
 export const getNowPlaying = () => cachedGet("/tmdb/now-playing", {}, 5 * 60 * 1000);
-export const getTmdbSearch = (query) => cachedGet("/tmdb/search", { params: { query: query.trim() } }, 2 * 60 * 1000);
+export const getTmdbSearch = (query, language) => cachedGet(
+  "/tmdb/search",
+  { params: { query: query.trim(), language } },
+  2 * 60 * 1000,
+);
 export const getGenres = () => cachedGet("/tmdb/genres", {}, 24 * 60 * 60 * 1000);
 export const getRecommendations = (mediaType) => cachedGet(`/tmdb/recommendations/${mediaType}`, {}, 5 * 60 * 1000);
 export const getLatestTrailers = () => cachedGet("/tmdb/latest-trailers", {}, 10 * 60 * 1000);
