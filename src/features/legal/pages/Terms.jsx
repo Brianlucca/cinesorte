@@ -2,7 +2,6 @@ import { createElement } from 'react';
 import {
   AlertTriangle,
   ArrowLeft,
-  Check,
   ChevronRight,
   Clapperboard,
   Eye,
@@ -76,8 +75,6 @@ export default function Terms() {
           </article>
         </div>
       </div>
-
-      <footer className="relative mt-8 border-t border-white/[0.06] px-5 py-8 sm:px-8 lg:px-12 xl:px-16"><div className="mx-auto flex max-w-[1312px] flex-col gap-3 text-xs text-zinc-600 sm:flex-row sm:items-center sm:justify-between"><span>© 2026 CineSorte. Termos públicos e acessíveis sem login.</span><span className="inline-flex items-center gap-2"><Check size={13} className="text-emerald-500" /> Última revisão: 13 de julho de 2026</span></div></footer>
     </main>
   );
 }

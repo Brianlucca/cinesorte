@@ -120,6 +120,22 @@ const hasUsableSections = (sections) =>
     (value) => Array.isArray(value) && value.length > 0,
   );
 
+const warmPublicDashboardCatalog = () =>
+  Promise.allSettled([
+    getTrending("day"),
+    getTrending("week"),
+    getLatestTrailers(),
+    getAnimeReleases(),
+    getAnimations(),
+    getDiscover({ provider_id: "8|119|337", monetization_types: "flatrate" }),
+    getDiscover({ media_type: "tv", sort_by: "popularity.desc" }),
+    getDiscover({ monetization_types: "rent" }),
+    getNowPlaying(),
+    getDiscover({ media_type: "movie", sort_by: "popularity.desc", page: 2 }),
+    getDiscover({ media_type: "tv", sort_by: "popularity.desc", page: 2 }),
+    getDiscover({ media_type: "tv", with_genres: "16", provider_id: "283", sort_by: "popularity.desc" }),
+  ]);
+
 const mergeSectionsKeepingContent = (previous, incoming) => {
   const merged = { ...previous };
   for (const [key, value] of Object.entries(incoming || {})) {
@@ -170,6 +186,13 @@ export function useDashboardLogic() {
       firstId.localeCompare(secondId),
     ),
   );
+
+  useEffect(() => {
+    if (!authLoading) return undefined;
+
+    void warmPublicDashboardCatalog();
+    return undefined;
+  }, [authLoading]);
 
   const prioritizeContent = useCallback((items, userGenreCounts) => {
     if (!items || !Array.isArray(items) || items.length === 0) return [];
@@ -422,6 +445,42 @@ export function useDashboardLogic() {
         setSectionsLoading(false);
       }
 
+      const publishSection = (key, request) => {
+        request
+          .then((items) => {
+            if (!isMounted.current || !Array.isArray(items) || items.length === 0) return;
+            const nextItems = key === "trailers" ? items : uniqueById(items);
+            setData((previous) => mergeSectionsKeepingContent(previous, { [key]: nextItems }));
+          })
+          .catch(() => undefined);
+        return request;
+      };
+
+      const sectionsRequest = hasCachedSections
+        ? null
+        : Promise.allSettled([
+            publishSection("trailers", getLatestTrailers()),
+            publishSection("animes", getAnimeReleases()),
+            publishSection("animations", getAnimations()),
+            publishSection("recommendedMovies", hasUser ? getRecommendations("movie") : Promise.resolve([])),
+            publishSection("recommendedSeries", hasUser ? getRecommendations("tv") : Promise.resolve([])),
+            publishSection("streaming", getDiscover({ provider_id: "8|119|337", monetization_types: "flatrate" })),
+            publishSection("onTv", getDiscover({ media_type: "tv", sort_by: "popularity.desc" })),
+            publishSection("forRent", getDiscover({ monetization_types: "rent" })),
+            publishSection("inTheaters", getNowPlaying()),
+            hasUser
+              ? getDiscover({ with_genres: topGenresIdsString, sort_by: "popularity.desc", "vote_count.gte": 50 })
+              : publishSection("recommendedMovies", getDiscover({ with_genres: topGenresIdsString, sort_by: "popularity.desc", "vote_count.gte": 50 })),
+            hasUser
+              ? getDiscover({ media_type: "tv", with_genres: topGenresIdsString, sort_by: "popularity.desc", "vote_count.gte": 50 })
+              : publishSection("recommendedSeries", getDiscover({ media_type: "tv", with_genres: topGenresIdsString, sort_by: "popularity.desc", "vote_count.gte": 50 })),
+            getDiscover({ media_type: "movie", sort_by: "popularity.desc", page: 2 }),
+            getDiscover({ media_type: "tv", sort_by: "popularity.desc", page: 2 }),
+            publishSection("animeTrending", getDiscover({ media_type: "tv", with_genres: "16", provider_id: "283", sort_by: "popularity.desc" })),
+          ]);
+
+      if (sectionsRequest && isMounted.current) setSectionsLoading(true);
+
       try {
 
         const [resDay, resWeek] = await Promise.all([
@@ -480,24 +539,7 @@ export function useDashboardLogic() {
           return;
         }
 
-        if (isMounted.current) setSectionsLoading(true);
-
-        const results = await Promise.allSettled([
-          getLatestTrailers(),
-          getAnimeReleases(),
-          getAnimations(),
-          hasUser ? getRecommendations("movie") : Promise.resolve([]),
-          hasUser ? getRecommendations("tv") : Promise.resolve([]),
-          getDiscover({ provider_id: "8|119|337", monetization_types: "flatrate" }),
-          getDiscover({ media_type: "tv", sort_by: "popularity.desc" }),
-          getDiscover({ monetization_types: "rent" }),
-          getNowPlaying(),
-          getDiscover({ with_genres: topGenresIdsString, sort_by: 'popularity.desc', 'vote_count.gte': 50 }),
-          getDiscover({ media_type: "tv", with_genres: topGenresIdsString, sort_by: 'popularity.desc', 'vote_count.gte': 50 }),
-          getDiscover({ media_type: "movie", sort_by: "popularity.desc", page: 2 }),
-          getDiscover({ media_type: "tv", sort_by: "popularity.desc", page: 2 }),
-          getDiscover({ media_type: "tv", with_genres: "16", provider_id: "283", sort_by: "popularity.desc" }),
-        ]);
+        const results = await sectionsRequest;
 
         if (!isMounted.current) return;
 

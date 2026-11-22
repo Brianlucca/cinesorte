@@ -22,9 +22,8 @@ const variants = {
     imageSizes: [342, 500],
   },
   landscape: {
-    section: "py-5 md:py-7",
-    background:
-      "linear-gradient(to bottom, transparent 0%, rgba(8, 47, 73, 0.10) 16%, rgba(8, 47, 73, 0.18) 38%, rgba(46, 16, 101, 0.14) 68%, transparent 100%)",
+    section: "isolate overflow-hidden py-7 md:py-10",
+    background: undefined,
     rail: "gap-4 md:gap-6",
     card: "w-[78vw] max-w-[310px] sm:w-[320px] sm:max-w-none md:w-[390px] xl:w-[430px] 2xl:w-[460px]",
     frame: "aspect-video",
@@ -56,13 +55,20 @@ const getMediaType = (item) =>
 const getYear = (item) =>
   (item.release_date || item.first_air_date || "").slice(0, 4);
 
-function MovieRow({ title, items, variant = "poster" }) {
+function MovieRow({ title, items, variant = "poster", withBackdrop = false }) {
   const rowRef = useRef(null);
   const layout = variants[variant] || variants.poster;
   const isPoster = variant === "poster";
   const isLandscape = variant === "landscape";
+  const hasBackdrop = withBackdrop || isLandscape;
   const visibleItems = (items || []).filter(
     (item) => item?.id && (item.poster_path || item.backdrop_path),
+  );
+  const availableBackdrops = visibleItems.filter((item) => item.backdrop_path);
+  const backgroundItems = (
+    availableBackdrops.length > 5
+      ? availableBackdrops.slice(3, 6)
+      : availableBackdrops.slice(0, 3)
   );
 
   const slide = (direction) => {
@@ -80,10 +86,34 @@ function MovieRow({ title, items, variant = "poster" }) {
 
   return (
     <section
-      className={`group/row relative z-10 w-full ${layout.section}`}
+      className={`group/row relative z-10 w-full ${
+        hasBackdrop ? "isolate overflow-hidden py-7 md:py-10" : layout.section
+      }`}
       style={{ background: layout.background }}
     >
-      <div className="flex items-end justify-between px-5 sm:px-6 md:px-10 xl:px-14 2xl:px-16">
+      {hasBackdrop && backgroundItems.length > 0 && (
+        <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+          <div className="absolute inset-0 grid grid-cols-2 bg-[#181a20] opacity-60 md:grid-cols-3">
+            {backgroundItems.map((backgroundItem, index) => (
+              <img
+                key={`section-backdrop-${backgroundItem.id}`}
+                src={tmdbImage(backgroundItem.backdrop_path, 780)}
+                alt=""
+                className={`h-full w-full scale-105 object-cover saturate-[0.88] contrast-[0.96] blur-[1px] ${
+                  index === 2 ? "hidden md:block" : ""
+                }`}
+                loading="lazy"
+                decoding="async"
+              />
+            ))}
+          </div>
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,#111216_0%,rgba(17,18,22,0.7)_9%,rgba(17,18,22,0.24)_28%,rgba(17,18,22,0.12)_50%,rgba(17,18,22,0.24)_72%,rgba(17,18,22,0.7)_91%,#111216_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(0deg,#111216_0%,rgba(17,18,22,0.82)_8%,rgba(17,18,22,0.3)_25%,rgba(17,18,22,0.1)_50%,rgba(17,18,22,0.3)_75%,rgba(17,18,22,0.82)_92%,#111216_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_45%,rgba(124,58,237,0.16)_0%,rgba(88,28,135,0.07)_38%,transparent_72%)] mix-blend-color" />
+        </div>
+      )}
+
+      <div className="relative z-10 flex items-end justify-between px-5 sm:px-6 md:px-10 xl:px-14 2xl:px-16">
         <div>
           <h2 className="flex items-center gap-3 text-lg font-semibold tracking-[-0.02em] text-zinc-100 sm:text-xl md:text-2xl">
             {title}
@@ -113,7 +143,7 @@ function MovieRow({ title, items, variant = "poster" }) {
       <div
         ref={rowRef}
         onPointerEnter={(event) => warmRail(event.currentTarget)}
-        className={`flex ${layout.rail} w-full snap-x snap-mandatory scroll-px-6 overflow-x-auto px-6 pb-2 pt-4 scroll-smooth scrollbar-hide md:snap-none md:scroll-px-10 md:px-10 md:pt-5 xl:scroll-px-14 xl:px-14 2xl:scroll-px-16 2xl:px-16`}
+        className={`relative z-10 flex ${layout.rail} w-full snap-x snap-mandatory scroll-px-6 overflow-x-auto px-6 pb-2 pt-4 scroll-smooth scrollbar-hide md:snap-none md:scroll-px-10 md:px-10 md:pt-5 xl:scroll-px-14 xl:px-14 2xl:scroll-px-16 2xl:px-16`}
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {visibleItems.map((item, index) => {

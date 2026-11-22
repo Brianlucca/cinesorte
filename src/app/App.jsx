@@ -1,8 +1,9 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useLayoutEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@shared/context/useAuth';
 import { HelmetProvider } from 'react-helmet-async';
 import { WatchPartyBroadcastProvider } from '@features/watch-party/context/WatchPartyBroadcastContext';
+import SiteFooter from '@shared/components/layout/SiteFooter';
 
 const AuthLayout = lazy(() => import('@app/layouts/AuthLayout'));
 const AppLayout = lazy(() => import('@app/layouts/AppLayout'));
@@ -62,6 +63,23 @@ const LegacyAuthRedirect = ({ mode }) => {
   return <Navigate to={`/?${params.toString()}`} replace state={location.state} />;
 };
 
+const RouteScrollReset = () => {
+  const location = useLocation();
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname]);
+
+  return null;
+};
+
+const StandalonePage = ({ children }) => (
+  <div className="min-h-screen bg-[#111216] text-white selection:bg-violet-500/30 selection:text-violet-200">
+    {children}
+    <SiteFooter />
+  </div>
+);
+
 function AppRoutes() {
   return (
     <Suspense fallback={<RouteFallback />}>
@@ -70,10 +88,10 @@ function AppRoutes() {
           <Route index element={<Dashboard />} />
         </Route>
         
-        <Route path="/share/:type/:id" element={<SharedMediaPreview />} />
-        <Route path="/privacidade" element={<Privacy />} />
-        <Route path="/termos" element={<Terms />} />
-        <Route path="/extension/connect" element={<PrivateRoute><ExtensionConnect /></PrivateRoute>} />
+        <Route path="/share/:type/:id" element={<StandalonePage><SharedMediaPreview /></StandalonePage>} />
+        <Route path="/privacidade" element={<StandalonePage><Privacy /></StandalonePage>} />
+        <Route path="/termos" element={<StandalonePage><Terms /></StandalonePage>} />
+        <Route path="/extension/connect" element={<StandalonePage><PrivateRoute><ExtensionConnect /></PrivateRoute></StandalonePage>} />
         
         <Route path="/login" element={<LegacyAuthRedirect mode="login" />} />
         <Route path="/register" element={<LegacyAuthRedirect mode="register" />} />
@@ -111,6 +129,7 @@ export default function App() {
   return (
     <HelmetProvider>
       <BrowserRouter>
+        <RouteScrollReset />
         <WatchPartyBroadcastProvider><AppRoutes /></WatchPartyBroadcastProvider>
       </BrowserRouter>
     </HelmetProvider>

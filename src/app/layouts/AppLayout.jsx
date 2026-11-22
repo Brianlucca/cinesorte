@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@shared/context/useAuth";
 import { getMessageUnreadCount } from "@shared/api/api";
 import NotificationBell from "@shared/components/ui/NotificationBell";
+import SiteFooter from "@shared/components/layout/SiteFooter";
 
 const SearchModal = lazy(() => import("@shared/components/ui/SearchModal"));
 const TermsModal = lazy(() => import("@shared/components/ui/TermsModal"));
@@ -67,18 +68,11 @@ export default function AppLayout() {
     ? requestedAuthMode
     : null;
 
-  useEffect(() => {
-    if (/^\/app\/lists\/[^/]+\/[^/]+$/.test(location.pathname)) {
-      mainScrollRef.current?.scrollTo({ top: 0 });
-      setIsHeaderScrolled(false);
-    }
-
-    const frame = window.requestAnimationFrame(() => {
-      setIsHeaderScrolled((mainScrollRef.current?.scrollTop || 0) > 12);
-    });
+  useLayoutEffect(() => {
+    mainScrollRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    setIsHeaderScrolled(false);
     setIsMobileMenuOpen(false);
     setIsProfileMenuOpen(false);
-    return () => window.cancelAnimationFrame(frame);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -250,7 +244,10 @@ export default function AppLayout() {
           onScroll={(event) => setIsHeaderScrolled(event.currentTarget.scrollTop > 12)}
           className="relative h-full min-w-0 overflow-x-hidden overflow-y-auto bg-[#111216]"
         >
-          <div className={`h-full w-full pt-16 ${location.pathname === "/app/roulette" ? "md:pt-[72px]" : "md:pt-0"}`}><Outlet /></div>
+          <div className={`min-h-full w-full pt-16 ${location.pathname === "/app/roulette" ? "md:pt-[72px]" : "md:pt-0"}`}>
+            <Outlet />
+            <SiteFooter />
+          </div>
         </main>
 
         {isSearchOpen && (
@@ -432,7 +429,10 @@ export default function AppLayout() {
         onScroll={(event) => setIsHeaderScrolled(event.currentTarget.scrollTop > 12)}
         className="relative h-full min-w-0 overflow-x-hidden overflow-y-auto bg-[#111216]"
       >
-        <div className={`h-full w-full ${immersiveRoute ? "pt-0" : "pt-16 md:pt-[72px]"}`}><Outlet /></div>
+        <div className={`min-h-full w-full ${immersiveRoute ? "pt-0" : "pt-16 md:pt-[72px]"}`}>
+          <Outlet />
+          <SiteFooter />
+        </div>
       </main>
 
       {isMessagesLoaded && (
