@@ -11,6 +11,7 @@ import {
   Edit3,
   Film,
   MoreHorizontal,
+  MoveRight,
   Share2,
   Trash2,
   User,
@@ -25,6 +26,7 @@ export default function ListGroup({
   onEditList,
   onManageItems,
   onShareList,
+  onMoveItem,
   selection,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -184,7 +186,7 @@ export default function ListGroup({
                       }}
                       className="flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-xs font-bold text-zinc-300 transition-colors hover:bg-white/[0.06] hover:text-white"
                     >
-                      <CheckSquare size={15} className="text-zinc-500" /> Gerenciar itens
+                      <CheckSquare size={15} className="text-zinc-500" /> Excluir itens
                     </button>
                     <div className="my-1 h-px bg-white/[0.06]" />
                     <button
@@ -251,11 +253,22 @@ export default function ListGroup({
                 return (
                   <div
                     key={`${item.media_type || "movie"}-${item.id}`}
-                    className="relative w-[142px] flex-none snap-start sm:w-[158px] md:w-[184px] xl:w-[196px]"
+                    className="group/item relative w-[142px] flex-none snap-start sm:w-[158px] md:w-[184px] xl:w-[196px]"
                   >
                     <div className={canSelect ? "pointer-events-none" : ""}>
                       <MediaCard media={item} variant="home" />
                     </div>
+                    {!selection.isActive && (
+                      <button
+                        type="button"
+                        aria-label={`Mover ${item.title || item.name || "título"} para outra lista`}
+                        title="Mover para outra lista"
+                        onClick={() => onMoveItem(list, item)}
+                        className="absolute left-2.5 top-2.5 z-20 grid h-8 w-8 place-items-center rounded-xl border border-white/15 bg-black/65 text-white opacity-100 shadow-lg backdrop-blur-xl transition-all hover:border-violet-300/35 hover:bg-violet-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 md:opacity-0 md:group-hover/item:opacity-100 md:group-focus-within/item:opacity-100"
+                      >
+                        <MoveRight size={15} />
+                      </button>
+                    )}
                     {canSelect && (
                       <button
                         type="button"
