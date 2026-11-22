@@ -1,4 +1,4 @@
-export const DASHBOARD_SECTIONS_CACHE_PREFIX = "cinesorte_dashboard_sections_v7";
+export const DASHBOARD_SECTIONS_CACHE_PREFIX = "cinesorte_dashboard_sections_v8";
 export const DASHBOARD_BECAUSE_CACHE_PREFIX = "cinesorte_dashboard_because_v3";
 export const DASHBOARD_HERO_SET_CACHE_PREFIX = "cinesorte_dashboard_hero_set_v2";
 export const DASHBOARD_SOCIAL_CACHE_PREFIX = "cinesorte_dashboard_social_v1";
