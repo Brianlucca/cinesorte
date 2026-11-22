@@ -417,10 +417,6 @@ export default function SharedMediaPreview() {
             {engagementSection}
           </div>
         )}
-
-        <footer className="mt-12 border-t border-white/[0.06] pt-4 text-center text-[11px] text-zinc-600">
-          Compartilhado pelo CineSorte
-        </footer>
       </main>
     </div>
   );
