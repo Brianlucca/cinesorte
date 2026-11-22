@@ -1,12 +1,18 @@
+import { useState } from 'react';
 import { useMyListsLogic } from '@features/lists/hooks/useMyListsLogic';
 import ListsHeader from '@features/lists/components/ListsHeader';
 import EmptyListsState from '@features/lists/components/EmptyListsState';
 import ListGroup from '@features/lists/components/ListGroup';
+import LetterboxdImportModal from '@features/lists/components/LetterboxdImportModal';
+import MoveMediaModal from '@features/lists/components/MoveMediaModal';
 import Modal from '@shared/components/ui/Modal';
 import { AlertTriangle, CheckSquare, Trash2, X } from 'lucide-react';
 
 export default function MyLists() {
   const { lists, loading, modals, selection, actions } = useMyListsLogic();
+  const [isLetterboxdImportOpen, setIsLetterboxdImportOpen] = useState(false);
+  const [moveSelection, setMoveSelection] = useState(null);
+  const [isMovingMedia, setIsMovingMedia] = useState(false);
 
   if (loading) return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#111216] animate-in fade-in duration-500">
@@ -16,6 +22,17 @@ export default function MyLists() {
   );
 
   const listBeingDeleted = lists.find((list) => list.id === modals.deleteList.listId);
+
+  const handleMoveMedia = async (targetListId) => {
+    if (!moveSelection || isMovingMedia) return;
+    setIsMovingMedia(true);
+    try {
+      const moved = await actions.handleMoveMedia(moveSelection.list.id, targetListId, moveSelection.item);
+      if (moved) setMoveSelection(null);
+    } finally {
+      setIsMovingMedia(false);
+    }
+  };
 
   return (
     <main className="relative min-h-screen bg-[#111216] pb-24 animate-in fade-in duration-500">
@@ -28,7 +45,7 @@ export default function MyLists() {
                     <CheckSquare size={18} />
                 </div>
                 <div>
-                    <h3 className="text-sm font-semibold text-white">Gerenciar itens</h3>
+                    <h3 className="text-sm font-semibold text-white">Excluir itens</h3>
                     <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-300/70">
                         {selection.items.length} {selection.items.length === 1 ? 'item selecionado' : 'itens selecionados'}
                     </p>
@@ -53,7 +70,11 @@ export default function MyLists() {
         </div>
       )}
 
-      <ListsHeader lists={lists} onCreate={actions.openCreateModal} />
+      <ListsHeader
+        lists={lists}
+        onCreate={actions.openCreateModal}
+        onImport={() => setIsLetterboxdImportOpen(true)}
+      />
 
       {lists.length === 0 ? (
         <EmptyListsState onCreate={actions.openCreateModal} />
@@ -68,6 +89,7 @@ export default function MyLists() {
                     onDeleteList={actions.promptDeleteList}
                     onEditList={actions.openEditModal}
                     onShareList={actions.handleShareList}
+                    onMoveItem={(listToMoveFrom, item) => setMoveSelection({ list: listToMoveFrom, item })}
                     onManageItems={selection.startManaging}
                 />
             ))}
@@ -215,6 +237,22 @@ export default function MyLists() {
             </div>
         </div>
       </Modal>
+
+      <LetterboxdImportModal
+        isOpen={isLetterboxdImportOpen}
+        onClose={() => setIsLetterboxdImportOpen(false)}
+        onImported={actions.refresh}
+        existingLists={lists}
+      />
+
+      <MoveMediaModal
+        item={moveSelection?.item}
+        lists={lists}
+        currentListId={moveSelection?.list.id}
+        isMoving={isMovingMedia}
+        onClose={() => setMoveSelection(null)}
+        onMove={handleMoveMedia}
+      />
 
       </div>
     </main>
