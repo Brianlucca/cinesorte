@@ -1,6 +1,6 @@
-import { Film, Layers3, Plus } from "lucide-react";
+import { Download, Film, Layers3, Plus } from "lucide-react";
 
-export default function ListsHeader({ lists, onCreate }) {
+export default function ListsHeader({ lists, onCreate, onImport }) {
   const totalItems = lists.reduce(
     (total, list) => total + (list.items?.length || 0),
     0,
@@ -34,14 +34,24 @@ export default function ListsHeader({ lists, onCreate }) {
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={onCreate}
-            className="group inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-white px-4 text-xs font-semibold text-black transition-colors hover:bg-violet-100"
-          >
-            <Plus size={14} className="transition-transform duration-300 group-hover:rotate-90" />
-            Nova lista
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onImport}
+              className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 text-xs font-semibold text-zinc-200 transition-colors hover:bg-white/[0.07] hover:text-white sm:flex-none"
+            >
+              <Download size={14} className="text-violet-300" />
+              Importar Letterboxd
+            </button>
+            <button
+              type="button"
+              onClick={onCreate}
+              className="group inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-xl bg-white px-4 text-xs font-semibold text-black transition-colors hover:bg-violet-100 sm:flex-none"
+            >
+              <Plus size={14} className="transition-transform duration-300 group-hover:rotate-90" />
+              Nova lista
+            </button>
+          </div>
         </div>
       </div>
     </header>
