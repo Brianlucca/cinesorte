@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import api, { shareList } from '@shared/api/api';
+import api, { moveMediaBetweenLists, shareList } from '@shared/api/api';
 import { useToast } from '@shared/context/useToast';
 
 export function useMyListsLogic() {
@@ -215,6 +215,39 @@ export function useMyListsLogic() {
     }
   }, [toast]);
 
+  const handleMoveMedia = useCallback(async (sourceListId, targetListId, mediaItem) => {
+    try {
+      await moveMediaBetweenLists({
+        sourceListId,
+        targetListId,
+        mediaId: mediaItem.id,
+      });
+
+      setLists((current) => current.map((list) => {
+        if (list.id === sourceListId) {
+          return {
+            ...list,
+            items: (list.items || []).filter((item) => String(item.id) !== String(mediaItem.id)),
+          };
+        }
+        if (list.id === targetListId) {
+          const alreadyContains = (list.items || []).some(
+            (item) => String(item.id) === String(mediaItem.id),
+          );
+          return alreadyContains
+            ? list
+            : { ...list, items: [...(list.items || []), mediaItem] };
+        }
+        return list;
+      }));
+      toast.success('Título movido', 'O título foi transferido para a lista escolhida.');
+      return true;
+    } catch (error) {
+      toast.error('Não foi possível mover', error.response?.data?.message || 'Tente novamente em instantes.');
+      return false;
+    }
+  }, [toast]);
+
   const updateModalState = useCallback((modalName, field, value) => {
     setModals(prev => ({
       ...prev,
@@ -248,6 +281,8 @@ export function useMyListsLogic() {
       openEditModal,
       handleEditList,
       handleShareList,
+      handleMoveMedia,
+      refresh: loadLists,
       updateModalState
     }
   };
