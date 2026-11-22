@@ -6,14 +6,21 @@ import {
   Copy,
   Film,
   Layers3,
+  MoveRight,
   Search,
   User,
   X,
 } from "lucide-react";
-import { cloneList, getListDetails } from "@shared/api/api";
+import {
+  cloneList,
+  getListDetails,
+  getUserLists,
+  moveMediaBetweenLists,
+} from "@shared/api/api";
 import { useToast } from "@shared/context/useToast";
 import { useAuth } from "@shared/context/useAuth";
 import MediaCard from "@shared/components/ui/MediaCard";
+import MoveMediaModal from "@features/lists/components/MoveMediaModal";
 
 const getTitle = (item) => item.title || item.name || "Sem título";
 const getType = (item) => item.media_type || (item.first_air_date ? "tv" : "movie");
@@ -29,6 +36,9 @@ export default function ListDetails() {
   const [list, setList] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cloning, setCloning] = useState(false);
+  const [ownedLists, setOwnedLists] = useState([]);
+  const [moveItem, setMoveItem] = useState(null);
+  const [moving, setMoving] = useState(false);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
 
@@ -48,6 +58,26 @@ export default function ListDetails() {
     load();
   }, [username, listId, navigate]);
 
+  useEffect(() => {
+    if (!user?.username || user.username !== username) {
+      setOwnedLists([]);
+      return undefined;
+    }
+
+    let active = true;
+    getUserLists("me")
+      .then((data) => {
+        if (active) setOwnedLists(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (active) setOwnedLists([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [user?.username, username]);
+
   const handleClone = async () => {
     if (!user) return toast.error("Login necessário", "Entre para salvar a lista.");
     if (user.username === username) return toast.error("Ops", "Você já é o dono desta lista.");
@@ -64,6 +94,49 @@ export default function ListDetails() {
       toast.error("Erro", error.response?.data?.message || "Falha ao salvar a lista.");
     } finally {
       setCloning(false);
+    }
+  };
+
+  const handleMove = async (targetListId) => {
+    if (!moveItem || !list?.id || moving) return;
+
+    setMoving(true);
+    try {
+      await moveMediaBetweenLists({
+        sourceListId: list.id,
+        targetListId,
+        mediaId: moveItem.id,
+      });
+
+      setList((current) => ({
+        ...current,
+        items: (current.items || []).filter((item) => String(item.id) !== String(moveItem.id)),
+      }));
+      setOwnedLists((current) => current.map((ownedList) => {
+        if (ownedList.id === list.id) {
+          return {
+            ...ownedList,
+            items: (ownedList.items || []).filter((item) => String(item.id) !== String(moveItem.id)),
+          };
+        }
+        if (ownedList.id === targetListId) {
+          const alreadyContains = (ownedList.items || []).some(
+            (item) => String(item.id) === String(moveItem.id),
+          );
+          return alreadyContains
+            ? ownedList
+            : { ...ownedList, items: [...(ownedList.items || []), moveItem] };
+        }
+        return ownedList;
+      }));
+
+      const targetList = ownedLists.find((ownedList) => ownedList.id === targetListId);
+      toast.success("Título movido", `${getTitle(moveItem)} agora está em ${targetList?.name || "outra lista"}.`);
+      setMoveItem(null);
+    } catch (error) {
+      toast.error("Não foi possível mover", error.response?.data?.message || "Tente novamente em instantes.");
+    } finally {
+      setMoving(false);
     }
   };
 
@@ -247,10 +320,21 @@ export default function ListDetails() {
         </div>
 
         {visibleItems.length > 0 ? (
-          <div className="mt-7 flex flex-wrap gap-x-3 gap-y-7 sm:gap-x-4 animate-in fade-in slide-in-from-bottom-3 duration-500">
+          <div className="mt-7 grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 animate-in fade-in slide-in-from-bottom-3 duration-500">
             {visibleItems.map((item) => (
-              <div key={`${getType(item)}-${item.id}`} className="w-[calc(50%_-_0.375rem)] max-w-[196px] sm:w-[158px] md:w-[184px] xl:w-[196px]">
+              <div key={`${getType(item)}-${item.id}`} className="group/item relative min-w-0">
                 <MediaCard media={item} variant="home" />
+                {isOwner && (
+                  <button
+                    type="button"
+                    aria-label={`Mover ${getTitle(item)} para outra lista`}
+                    title="Mover para outra lista"
+                    onClick={() => setMoveItem(item)}
+                    className="absolute left-2.5 top-2.5 z-20 grid h-8 w-8 place-items-center rounded-xl border border-white/15 bg-black/65 text-white opacity-100 shadow-lg backdrop-blur-xl transition-all hover:border-violet-300/35 hover:bg-violet-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 md:opacity-0 md:group-hover/item:opacity-100 md:group-focus-within/item:opacity-100"
+                  >
+                    <MoveRight size={15} />
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -270,6 +354,17 @@ export default function ListDetails() {
           </div>
         )}
       </section>
+
+      {isOwner && (
+        <MoveMediaModal
+          item={moveItem}
+          lists={ownedLists}
+          currentListId={list.id}
+          isMoving={moving}
+          onClose={() => setMoveItem(null)}
+          onMove={handleMove}
+        />
+      )}
     </main>
   );
 }
