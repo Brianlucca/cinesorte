@@ -481,7 +481,12 @@ export default function Dashboard() {
       title: "Descubra animes",
       variant: "poster",
     },
-    { id: "recommendedSeries", title: user ? "Séries para a sua próxima maratona" : "Séries para maratonar", variant: "poster" },
+    {
+      id: "recommendedSeries",
+      title: user ? "Séries para a sua próxima maratona" : "Séries para maratonar",
+      variant: "poster",
+      withBackdrop: true,
+    },
     {
       id: "animations",
       title: "Animações em destaque",
@@ -491,6 +496,7 @@ export default function Dashboard() {
       id: "streaming",
       title: "Disponíveis nos streamings",
       variant: "poster",
+      withBackdrop: true,
     },
     { id: "trailers", title: "Estreias em cena", type: "trailer" },
   ];
@@ -557,6 +563,7 @@ export default function Dashboard() {
                     title={section.title}
                     items={items}
                     variant={section.variant}
+                    withBackdrop={section.withBackdrop}
                   />
                 )}
               </RowWrapper>
